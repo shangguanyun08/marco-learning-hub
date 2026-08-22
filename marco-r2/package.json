@@ -1,0 +1,8 @@
+{
+  "name": "marco-r2-missed-word-mastery",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests.mjs"
+  }
+}

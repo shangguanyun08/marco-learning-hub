@@ -4,6 +4,7 @@ A single launchpad for every published learning site in the `shangguanyun08` Git
 
 The hub links to:
 
+- Marco R2 · Missed-Word Mastery
 - Marco’s ISEE Hard-Question Mastery
 - Marco’s ISEE Missed-Question Mastery
 - Marco’s ISEE Math Mastery
