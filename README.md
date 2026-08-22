@@ -7,5 +7,5 @@ The hub links to:
 - Marco’s ISEE Hard-Question Mastery
 - Marco’s ISEE Missed-Question Mastery
 - Marco’s ISEE Math Mastery
-- Harry’s 1,500-word Vocabulary Library
+- Harry’s 1500 Word List
 - Harry’s 1,500-word Vocabulary Practice
