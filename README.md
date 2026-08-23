@@ -4,6 +4,7 @@ A single launchpad for every published learning site in the `shangguanyun08` Git
 
 The hub links to:
 
+- Marco's Complete ISEE Vocabulary
 - Marco R2 · Missed-Word Mastery
 - Marco’s ISEE Hard-Question Mastery
 - ISEE Mock Test VR 2026
