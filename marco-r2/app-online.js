@@ -31,7 +31,6 @@ let onlineResults = [];
 let syncState = "connecting";
 let syncError = "";
 let lastSyncedAt = "";
-let onlineReady = false;
 let refreshInFlight = false;
 
 function migrateProgress(saved) {
@@ -287,7 +286,6 @@ async function refreshOnline({ initial = false, quiet = false } = {}) {
       initial,
     );
     onlineResults = resultsBody.results || [];
-    onlineReady = true;
     syncState = "online";
     syncError = "";
     lastSyncedAt = new Date().toISOString();
@@ -300,7 +298,6 @@ async function refreshOnline({ initial = false, quiet = false } = {}) {
       );
     }
   } catch (error) {
-    onlineReady = true;
     syncState = "error";
     syncError =
       error instanceof Error ? error.message : "Online R2 sync is unavailable.";
@@ -653,7 +650,7 @@ function bindActions() {
       notice = "";
       resultMessage = "";
       render();
-      if (onlineReady) void syncSession(sessionNumber);
+      void syncSession(sessionNumber);
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   });
@@ -687,7 +684,7 @@ function chooseAnswer(letter) {
   saveProgress();
   notice = "";
   render();
-  if (onlineReady) void syncSession(sessionNumber);
+  void syncSession(sessionNumber);
 }
 
 function goForward() {
@@ -710,11 +707,9 @@ function goForward() {
 
   saveProgress();
   render();
-  if (onlineReady) {
-    void syncSession(sessionNumber);
-    if (finishing) {
-      void saveFinishedRound(sessionNumber, attemptId, finishedRound);
-    }
+  void syncSession(sessionNumber);
+  if (finishing) {
+    void saveFinishedRound(sessionNumber, attemptId, finishedRound);
   }
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -733,7 +728,7 @@ function restartSelected() {
     "A new R2 attempt started. Earlier online results remain in Results.";
   resultMessage = "";
   render();
-  if (onlineReady) void syncSession(sessionNumber);
+  void syncSession(sessionNumber);
 }
 
 window.addEventListener("keydown", (event) => {
@@ -769,4 +764,3 @@ setInterval(() => {
 
 render();
 void refreshOnline({ initial: true });
-
