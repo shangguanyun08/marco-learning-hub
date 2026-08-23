@@ -1,4 +1,4 @@
-const PROGRESS_VERSION = 1;
+const PROGRESS_VERSION = 2;
 
 function now() {
   return new Date().toISOString();
@@ -23,6 +23,7 @@ function freshSession(meta, questions, started, initialRound) {
     .filter((question) => question.r2Session === meta.number)
     .map((question) => question.id);
   return {
+    attemptId: crypto.randomUUID(),
     started,
     completed: false,
     round: started ? createRound(initialRound, ids) : null,
@@ -54,7 +55,13 @@ export function isProgressValid(progress, sessions, questions) {
   const validIds = new Set(questions.map((question) => question.id));
   return sessions.every((meta) => {
     const session = progress.sessions?.[String(meta.number)];
-    if (!session || !Array.isArray(session.history)) return false;
+    if (
+      !session ||
+      !Array.isArray(session.history) ||
+      !/^[a-zA-Z0-9-]{8,80}$/.test(session.attemptId || "")
+    ) {
+      return false;
+    }
     if (!session.round) return session.completed || !session.started;
     return (
       Array.isArray(session.round.questionIds) &&

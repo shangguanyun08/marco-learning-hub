@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 
 import { questionBank } from "./questions.js";
 import {
@@ -36,6 +37,7 @@ test("new progress begins with R2 Session 1 at Round 2", () => {
   assert.equal(progress.selectedSession, 1);
   assert.equal(progress.sessions["1"].round.roundNumber, 2);
   assert.equal(progress.sessions["1"].round.questionIds.length, 50);
+  assert.match(progress.sessions["1"].attemptId, /^[a-zA-Z0-9-]{8,80}$/);
   assert.equal(progress.sessions["2"].started, false);
 });
 
@@ -96,4 +98,16 @@ test("a fully correct final session is mastered", () => {
   assert.equal(progress.sessions["5"].completed, true);
   assert.equal(progress.sessions["5"].round, null);
   assert.equal(progress.sessions["5"].history[0].correctCount, 49);
+});
+
+test("the published app uses shared online progress and live polling", async () => {
+  const app = await readFile(
+    new URL("./app-online.js", import.meta.url),
+    "utf8",
+  );
+  assert.match(app, /alexsoton\.chatgpt\.site\/api\/r2/);
+  assert.match(app, /POLL_INTERVAL_MS = 5000/);
+  assert.match(app, /saveFinishedRound/);
+  assert.match(app, /migrateProgress/);
+  assert.match(app, /Online record · all devices/);
 });

@@ -1,0 +1,10 @@
+.sync-note.error {
+  color: #a2353d;
+  background: #fff3f4;
+  border-color: #f0c8cc;
+}
+
+.sync-note.error span {
+  background: var(--red);
+  box-shadow: 0 0 0 4px #dc4c5724;
+}

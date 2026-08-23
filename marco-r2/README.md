@@ -6,7 +6,9 @@ A static GitHub Pages practice site containing the 249 unique words Marco missed
 - answers lock after the first choice
 - instant feedback
 - only misses advance to the next mastery round
-- progress and finished rounds saved in the browser with `localStorage`
+- every answer and finished round uploads to the shared online record
+- the Results screen refreshes automatically across devices
+- `localStorage` remains an offline safety copy
 
 ## Verify locally
 
