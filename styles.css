@@ -99,6 +99,11 @@ section { margin-top: 70px; }
 .site-card.featured { background: linear-gradient(145deg, rgba(238,243,255,.98), rgba(247,243,255,.98)); border-color: rgba(82,104,232,.2); }
 .site-card.warm { background: linear-gradient(145deg, rgba(255,255,255,.97), rgba(255,250,243,.94)); }
 .site-card.warm::after { background: rgba(255,183,98,.13); }
+.archive-section { padding-top: 18px; border-top: 1px solid var(--line); }
+.site-card.archived { min-height: 380px; border-style: dashed; background: rgba(245,247,251,.78); box-shadow: 0 12px 32px rgba(60,76,120,.07); }
+.site-card.archived::after { background: rgba(111,122,148,.08); }
+.archived .card-topline span { color: #778198; }
+.archived .icon { margin-top: 45px; background: linear-gradient(135deg, #707b92, #9da7b9); box-shadow: 0 12px 28px rgba(75,86,111,.15); }
 .card-topline { position: relative; z-index: 1; display: flex; justify-content: space-between; color: var(--muted); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; }
 .card-topline span { color: var(--cyan); font-weight: 700; }
 .warm .card-topline span { color: var(--gold); }
