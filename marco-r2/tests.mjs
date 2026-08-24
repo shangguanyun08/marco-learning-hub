@@ -73,6 +73,10 @@ test("misses alone advance from Round 2 to Round 3", () => {
   assert.equal(progress.sessions["1"].round.roundNumber, 3);
   assert.deepEqual(progress.sessions["1"].round.questionIds, [missedId]);
   assert.deepEqual(progress.sessions["1"].history[0].wrongIds, [missedId]);
+  assert.equal(
+    progress.sessions["1"].history[0].attemptId,
+    progress.sessions["1"].attemptId,
+  );
 });
 
 test("a fully correct final session is mastered", () => {
@@ -108,6 +112,10 @@ test("the published app uses shared online progress and live polling", async () 
   assert.match(app, /alexsoton\.chatgpt\.site\/api\/r2/);
   assert.match(app, /POLL_INTERVAL_MS = 5000/);
   assert.match(app, /saveFinishedRound/);
+  assert.match(app, /recoverLocalHistory/);
+  assert.match(app, /Round-by-round wrong answers/);
+  assert.match(app, /source misses/);
   assert.match(app, /migrateProgress/);
   assert.match(app, /Online record · all devices/);
 });
+

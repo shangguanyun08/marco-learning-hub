@@ -139,6 +139,7 @@ export function advanceQuestion(progress, answerKey) {
     (id) => round.answers[String(id)] !== answerKey[id],
   );
   const record = {
+    attemptId: session.attemptId,
     roundNumber: round.roundNumber,
     questionIds: [...round.questionIds],
     answers: { ...round.answers },
@@ -183,3 +184,4 @@ export function sessionStatus(session) {
   if (!session.started) return "Not started";
   return `Round ${session.round?.roundNumber ?? 2} · ${answeredCount(session)}/${session.round?.questionIds.length ?? 0}`;
 }
+

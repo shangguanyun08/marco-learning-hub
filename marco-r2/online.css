@@ -8,3 +8,150 @@
   background: var(--red);
   box-shadow: 0 0 0 4px #dc4c5724;
 }
+
+.round-history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin: 26px 0 10px;
+}
+
+.round-history-heading div {
+  display: grid;
+  gap: 3px;
+}
+
+.round-history-heading strong {
+  font-size: 20px;
+}
+
+.round-history-heading span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.history-recovery-note {
+  display: grid;
+  gap: 3px;
+  margin-bottom: 10px;
+  padding: 13px 15px;
+  border: 1px solid #e4cf94;
+  border-radius: 13px;
+  color: #755514;
+  background: #fff9e8;
+}
+
+.history-recovery-note span {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.history-table-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 8px 26px #1e2a480d;
+}
+
+.history-table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.history-table th,
+.history-table td {
+  min-width: 116px;
+  padding: 13px 14px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.history-table tr:last-child th,
+.history-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.history-table th:last-child,
+.history-table td:last-child {
+  border-right: 0;
+}
+
+.history-table thead th {
+  color: var(--muted);
+  background: #f7f8fb;
+  letter-spacing: .055em;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.history-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 155px;
+  text-align: left;
+  background: #fff;
+}
+
+.history-table strong,
+.history-table small {
+  display: block;
+}
+
+.history-table td > strong {
+  font-size: 22px;
+}
+
+.history-table small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.history-table .source-round {
+  color: var(--blue-dark);
+  background: var(--blue-soft);
+}
+
+.history-table .finished-round {
+  color: #a42f38;
+  background: #fff5f5;
+}
+
+.history-table .active-round {
+  color: #815e12;
+  background: #fff9e8;
+}
+
+.history-table .empty-round {
+  color: #a4abba;
+  background: #fbfcfd;
+}
+
+.history-table .history-status {
+  min-width: 175px;
+  color: #287448;
+  background: #f1faf4;
+}
+
+@media (width <= 560px) {
+  .round-history-heading strong {
+    font-size: 18px;
+  }
+
+  .history-table th,
+  .history-table td {
+    padding: 11px 12px;
+  }
+}
+

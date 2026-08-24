@@ -32,14 +32,18 @@ let syncState = "connecting";
 let syncError = "";
 let lastSyncedAt = "";
 let refreshInFlight = false;
+let historyRecoveryInFlight = false;
 
 function migrateProgress(saved) {
-  if (!saved || saved.version !== 1) return saved;
+  if (!saved || ![1, 2].includes(saved.version)) return saved;
   const migrated = structuredClone(saved);
-  migrated.version = 2;
+  if (migrated.version === 1) migrated.version = 2;
   for (const session of Object.values(migrated.sessions || {})) {
     session.attemptId ||= crypto.randomUUID();
     session.history ||= [];
+    for (const record of session.history) {
+      record.attemptId ||= session.attemptId;
+    }
   }
   return migrated;
 }
@@ -224,32 +228,42 @@ async function syncSession(wordSession, quiet = false) {
   render();
 }
 
+function resultKey(sessionId, roundNumber) {
+  return `${sessionId}:${roundNumber}`;
+}
+
+function rememberOnlineResult(result) {
+  const key = resultKey(result.sessionId, result.roundNumber);
+  onlineResults = [
+    result,
+    ...onlineResults.filter(
+      (item) => resultKey(item.sessionId, item.roundNumber) !== key,
+    ),
+  ];
+}
+
+async function postFinishedRound(wordSession, attemptId, round) {
+  const response = await fetch(`${API_BASE}/results`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      studentName: "Marco",
+      sessionId: attemptId,
+      wordSession,
+      roundNumber: round.roundNumber,
+      questionIds: round.questionIds,
+      answers: round.answers,
+      startedAt: round.startedAt,
+    }),
+  });
+  const body = await parseResponse(response, "Could not upload R2 result.");
+  rememberOnlineResult(body.result);
+  return body.result;
+}
+
 async function saveFinishedRound(wordSession, attemptId, round) {
   try {
-    const response = await fetch(`${API_BASE}/results`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        studentName: "Marco",
-        sessionId: attemptId,
-        wordSession,
-        roundNumber: round.roundNumber,
-        questionIds: round.questionIds,
-        answers: round.answers,
-        startedAt: round.startedAt,
-      }),
-    });
-    const body = await parseResponse(response, "Could not upload R2 result.");
-    onlineResults = [
-      body.result,
-      ...onlineResults.filter(
-        (item) =>
-          !(
-            item.sessionId === body.result.sessionId &&
-            item.roundNumber === body.result.roundNumber
-          ),
-      ),
-    ];
+    await postFinishedRound(wordSession, attemptId, round);
     syncState = "online";
     syncError = "";
     lastSyncedAt = new Date().toISOString();
@@ -259,6 +273,39 @@ async function saveFinishedRound(wordSession, attemptId, round) {
     syncError =
       error instanceof Error ? error.message : "Could not upload R2 result.";
     render();
+  }
+}
+
+async function recoverLocalHistory() {
+  if (historyRecoveryInFlight) return 0;
+  historyRecoveryInFlight = true;
+  try {
+    const savedKeys = new Set(
+      onlineResults.map((item) => resultKey(item.sessionId, item.roundNumber)),
+    );
+    const missing = [];
+    for (const meta of questionBank.sessions) {
+      const session = progress.sessions[String(meta.number)];
+      for (const record of session.history || []) {
+        const attemptId = record.attemptId || session.attemptId;
+        const key = resultKey(attemptId, record.roundNumber);
+        if (!savedKeys.has(key)) {
+          missing.push({ wordSession: meta.number, attemptId, record });
+          savedKeys.add(key);
+        }
+      }
+    }
+
+    for (const item of missing) {
+      await postFinishedRound(
+        item.wordSession,
+        item.attemptId,
+        item.record,
+      );
+    }
+    return missing.length;
+  } finally {
+    historyRecoveryInFlight = false;
   }
 }
 
@@ -291,6 +338,14 @@ async function refreshOnline({ initial = false, quiet = false } = {}) {
     lastSyncedAt = new Date().toISOString();
     saveProgress();
     render();
+
+    const recoveredRounds = await recoverLocalHistory();
+    if (recoveredRounds) {
+      syncState = "online";
+      syncError = "";
+      lastSyncedAt = new Date().toISOString();
+      render();
+    }
 
     if (pushSessions.length) {
       await Promise.all(
@@ -493,29 +548,125 @@ function masteredMarkup(meta) {
 }
 
 function resultRecords() {
-  if (onlineResults.length) {
-    return onlineResults.map((record) => {
-      const meta = questionBank.sessions.find(
-        (item) => item.number === Number(record.wordSession),
-      );
-      return {
-        ...record,
-        sessionNumber: Number(record.wordSession),
-        sessionRange: meta?.range || "",
-      };
+  const records = new Map();
+  for (const record of onlineResults) {
+    const sessionNumber = Number(record.wordSession);
+    const meta = questionBank.sessions.find(
+      (item) => item.number === sessionNumber,
+    );
+    records.set(resultKey(record.sessionId, record.roundNumber), {
+      ...record,
+      sessionNumber,
+      sessionRange: meta?.range || "",
     });
   }
-  return questionBank.sessions.flatMap((meta) =>
-    progress.sessions[String(meta.number)].history.map((record) => ({
-      ...record,
-      sessionNumber: meta.number,
-      sessionRange: meta.range,
-    })),
+
+  for (const meta of questionBank.sessions) {
+    const session = progress.sessions[String(meta.number)];
+    for (const record of session.history || []) {
+      const sessionId = record.attemptId || session.attemptId;
+      const key = resultKey(sessionId, record.roundNumber);
+      if (!records.has(key)) {
+        records.set(key, {
+          ...record,
+          sessionId,
+          sessionNumber: meta.number,
+          sessionRange: meta.range,
+        });
+      }
+    }
+  }
+
+  return [...records.values()].sort(
+    (left, right) => Date.parse(right.finishedAt) - Date.parse(left.finishedAt),
   );
+}
+
+function visibleAttemptRecords(records, sessionNumber) {
+  const currentAttempt = progress.sessions[String(sessionNumber)].attemptId;
+  const sessionRecords = records.filter(
+    (record) => record.sessionNumber === sessionNumber,
+  );
+  const currentRecords = sessionRecords.filter(
+    (record) => record.sessionId === currentAttempt,
+  );
+  if (currentRecords.length) return currentRecords;
+
+  const latest = sessionRecords[0];
+  return latest
+    ? sessionRecords.filter((record) => record.sessionId === latest.sessionId)
+    : [];
+}
+
+function roundHistoryMarkup(records) {
+  const highestRound = Math.max(
+    4,
+    ...records.map((record) => record.roundNumber),
+    ...questionBank.sessions.map(
+      (meta) => progress.sessions[String(meta.number)].round?.roundNumber || 2,
+    ),
+  );
+  const rounds = Array.from({ length: highestRound }, (_, index) => index + 1);
+
+  return `
+    <div class="history-table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th scope="col">Session</th>
+            ${rounds.map((roundNumber) => `<th scope="col">Round ${roundNumber}</th>`).join("")}
+            <th scope="col">Current status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${questionBank.sessions
+            .map((meta) => {
+              const session = progress.sessions[String(meta.number)];
+              const attemptRecords = visibleAttemptRecords(records, meta.number);
+              const byRound = new Map(
+                attemptRecords.map((record) => [record.roundNumber, record]),
+              );
+              return `
+                <tr>
+                  <th scope="row"><strong>R2 Session ${meta.number}</strong><small>${escapeHtml(meta.range)}</small></th>
+                  ${rounds
+                    .map((roundNumber) => {
+                      if (roundNumber === 1) {
+                        return `<td class="source-round"><strong>${meta.count}</strong><small>source misses</small></td>`;
+                      }
+                      const record = byRound.get(roundNumber);
+                      if (record) {
+                        return `<td class="finished-round"><strong>${record.wrongIds.length}</strong><small>wrong</small></td>`;
+                      }
+                      if (session.round?.roundNumber === roundNumber) {
+                        const answeredIds = session.round.questionIds.filter(
+                          (id) => Boolean(session.round.answers[String(id)]),
+                        );
+                        const wrongSoFar = answeredIds.filter(
+                          (id) => session.round.answers[String(id)] !== answerKey[id],
+                        ).length;
+                        return `<td class="active-round"><strong>${wrongSoFar}</strong><small>wrong so far · ${answeredIds.length} answered</small></td>`;
+                      }
+                      return '<td class="empty-round"><strong>—</strong><small>not finished</small></td>';
+                    })
+                    .join("")}
+                  <td class="history-status"><strong>${session.completed ? "Mastered" : sessionStatus(session)}</strong><small>${session.started ? formatDate(session.updatedAt) : "Not started"}</small></td>
+                </tr>`;
+            })
+            .join("")}
+        </tbody>
+      </table>
+    </div>`;
 }
 
 function resultsMarkup() {
   const finishedRounds = resultRecords();
+  const missingCompletedHistory = questionBank.sessions.some((meta) => {
+    const session = progress.sessions[String(meta.number)];
+    return session.completed && !finishedRounds.some(
+      (record) => record.sessionNumber === meta.number,
+    );
+  });
   return `
     <section class="results-card">
       <div class="results-heading">
@@ -530,6 +681,15 @@ function resultsMarkup() {
       </div>
 
       ${syncNoteMarkup()}
+
+      <div class="round-history-heading">
+        <div>
+          <strong>Round-by-round wrong answers</strong>
+          <span>Round 1 shows the original misses that created R2; later columns show this mastery course.</span>
+        </div>
+      </div>
+      ${missingCompletedHistory ? '<div class="history-recovery-note"><strong>Earlier results are still safe on Marco’s iPad.</strong><span>Open this R2 page once on the iPad and its saved round details will be copied online automatically.</span></div>' : ""}
+      ${roundHistoryMarkup(finishedRounds)}
 
       <div class="live-progress-heading">
         <div><strong>Live R2 progress</strong><span>Updated online after every locked answer</span></div>
@@ -560,21 +720,32 @@ function resultsMarkup() {
 function finishedRoundsMarkup(records) {
   const groups = new Map();
   for (const record of records) {
-    const group = groups.get(record.sessionNumber) || [];
-    group.push(record);
-    groups.set(record.sessionNumber, group);
+    const key = `${record.sessionNumber}:${record.sessionId}`;
+    const group = groups.get(key) || {
+      sessionNumber: record.sessionNumber,
+      sessionId: record.sessionId,
+      items: [],
+    };
+    group.items.push(record);
+    groups.set(key, group);
   }
 
-  return `<div class="session-list">${[...groups]
-    .map(([sessionNumber, items]) => {
+  return `<div class="session-list">${[...groups.values()]
+    .sort(
+      (left, right) =>
+        Date.parse(right.items[0].finishedAt) -
+        Date.parse(left.items[0].finishedAt),
+    )
+    .map(({ sessionNumber, items }) => {
       const first = items[0];
       return `
         <article class="session-card">
           <div class="session-title">
             <div>
               <strong>R2 Session ${sessionNumber} · ${escapeHtml(first.sessionRange)}</strong>
-              <span>${items.length} finished round${items.length === 1 ? "" : "s"}</span>
+              <span>Attempt saved ${formatDate(first.finishedAt)}</span>
             </div>
+            <span>${items.length} finished round${items.length === 1 ? "" : "s"}</span>
           </div>
           <div class="round-list">
             ${items
@@ -764,3 +935,4 @@ setInterval(() => {
 
 render();
 void refreshOnline({ initial: true });
+
