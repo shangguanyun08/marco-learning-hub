@@ -6,7 +6,7 @@ The hub links to:
 
 - Marco's Complete ISEE Vocabulary
 - Marco's Piqosity Upper Vocabulary
-- Marco's Hardest + Upper ISEE Vocabulary
+- Build the Words. Reach for 9.
 - Marco R2 · Missed-Word Mastery
 - Marco’s ISEE Hard-Question Mastery
 - ISEE Mock Test VR 2026
