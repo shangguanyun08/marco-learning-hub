@@ -1,26 +1,104 @@
-const answers = new Map([
-  [1, 729],
-  [2, 1648],
-  [3, 651],
-  [4, 85],
-  [5, 364],
-  [6, 683],
-  [7, 131],
-  [8, 163],
-  [9, 72],
-  [10, 323],
-]);
+const questionSets = {
+  1: [
+    [243, "×", 3, 729, "Multiply"],
+    [412, "×", 4, 1648, "Multiply"],
+    [217, "×", 3, 651, "Multiply"],
+    [425, "÷", 5, 85, "Divide"],
+    [728, "÷", 2, 364, "Divide"],
+    [420, "+", 263, 683, "Add"],
+    [46, "+", 85, 131, "Add"],
+    [230, "−", 67, 163, "Subtract"],
+    [320, "−", 248, 72, "Subtract"],
+    [640, "−", 317, 323, "Subtract"],
+  ],
+  2: [
+    [254, "×", 3, 762, "Multiply"],
+    [421, "×", 4, 1684, "Multiply"],
+    [236, "×", 3, 708, "Multiply"],
+    [435, "÷", 5, 87, "Divide"],
+    [846, "÷", 2, 423, "Divide"],
+    [431, "+", 268, 699, "Add"],
+    [57, "+", 86, 143, "Add"],
+    [240, "−", 68, 172, "Subtract"],
+    [330, "−", 249, 81, "Subtract"],
+    [650, "−", 328, 322, "Subtract"],
+  ],
+  3: [
+    [312, "×", 3, 936, "Multiply"],
+    [234, "×", 4, 936, "Multiply"],
+    [208, "×", 3, 624, "Multiply"],
+    [455, "÷", 5, 91, "Divide"],
+    [964, "÷", 2, 482, "Divide"],
+    [512, "+", 176, 688, "Add"],
+    [68, "+", 75, 143, "Add"],
+    [250, "−", 76, 174, "Subtract"],
+    [410, "−", 286, 124, "Subtract"],
+    [720, "−", 394, 326, "Subtract"],
+  ],
+  4: [
+    [326, "×", 3, 978, "Multiply"],
+    [403, "×", 4, 1612, "Multiply"],
+    [245, "×", 3, 735, "Multiply"],
+    [465, "÷", 5, 93, "Divide"],
+    [786, "÷", 2, 393, "Divide"],
+    [324, "+", 358, 682, "Add"],
+    [79, "+", 64, 143, "Add"],
+    [260, "−", 87, 173, "Subtract"],
+    [500, "−", 268, 232, "Subtract"],
+    [810, "−", 486, 324, "Subtract"],
+  ],
+  5: [
+    [318, "×", 3, 954, "Multiply"],
+    [432, "×", 4, 1728, "Multiply"],
+    [227, "×", 3, 681, "Multiply"],
+    [475, "÷", 5, 95, "Divide"],
+    [918, "÷", 2, 459, "Divide"],
+    [536, "+", 147, 683, "Add"],
+    [87, "+", 56, 143, "Add"],
+    [270, "−", 98, 172, "Subtract"],
+    [620, "−", 347, 273, "Subtract"],
+    [900, "−", 578, 322, "Subtract"],
+  ],
+};
 
 const cards = [...document.querySelectorAll("[data-question]")];
 const solved = new Set();
 const count = document.querySelector("#solved-count");
 const fill = document.querySelector("#score-fill");
 const complete = document.querySelector("#complete-card");
+const completeTitle = document.querySelector("#complete-title");
+const setButtons = [...document.querySelectorAll(".set-button")];
+let activeSet = 1;
+
+function activeQuestions() {
+  return questionSets[activeSet];
+}
+
+function renderExpression(element, question) {
+  const [left, operator, right] = question;
+  element.replaceChildren();
+  element.append(`${left} `);
+
+  if (operator === "÷") {
+    const division = document.createElement("span");
+    division.className = "division-mark";
+    division.setAttribute("aria-label", "divided by");
+    division.textContent = "÷";
+    element.append(division);
+  } else {
+    element.append(operator);
+  }
+
+  const equals = document.createElement("span");
+  equals.textContent = "=";
+  element.append(` ${right} `, equals);
+}
 
 function updateProgress() {
   count.textContent = String(solved.size);
   fill.style.width = `${solved.size * 10}%`;
-  complete.hidden = solved.size !== answers.size;
+  complete.hidden = solved.size !== activeQuestions().length;
+  completeTitle.textContent = `You solved all 10 in Set ${activeSet}!`;
 }
 
 function resetPractice() {
@@ -40,8 +118,25 @@ function resetPractice() {
   cards[0].querySelector("input").focus();
 }
 
-cards.forEach((card) => {
-  const id = Number(card.dataset.question);
+function loadSet(setNumber) {
+  activeSet = setNumber;
+  const questions = activeQuestions();
+
+  cards.forEach((card, index) => {
+    card.querySelector(".skill").textContent = questions[index][4];
+    renderExpression(card.querySelector(".expression"), questions[index]);
+  });
+
+  setButtons.forEach((button) => {
+    const selected = Number(button.dataset.set) === activeSet;
+    button.classList.toggle("active", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+
+  resetPractice();
+}
+
+cards.forEach((card, index) => {
   const form = card.querySelector("form");
   const input = card.querySelector("input");
   const button = card.querySelector("button[type='submit']");
@@ -57,19 +152,19 @@ cards.forEach((card) => {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const typed = input.value.trim();
-    const isRight = typed !== "" && Number(typed) === answers.get(id);
+    const isRight = typed !== "" && Number(typed) === activeQuestions()[index][3];
 
     card.classList.toggle("right", isRight);
     card.classList.toggle("wrong", !isRight);
 
     if (isRight) {
-      solved.add(id);
+      solved.add(index);
       input.disabled = true;
       button.disabled = true;
       button.textContent = "Solved";
       feedback.textContent = "✓ You got it!";
     } else {
-      solved.delete(id);
+      solved.delete(index);
       feedback.textContent = "↻ Not yet—recalculate and try again.";
       input.focus();
       input.select();
@@ -80,4 +175,7 @@ cards.forEach((card) => {
 
 document.querySelector("#reset-top").addEventListener("click", resetPractice);
 document.querySelector("#reset-bottom").addEventListener("click", resetPractice);
-updateProgress();
+setButtons.forEach((button) => {
+  button.addEventListener("click", () => loadSet(Number(button.dataset.set)));
+});
+loadSet(1);

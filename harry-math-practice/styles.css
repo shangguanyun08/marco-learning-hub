@@ -51,6 +51,15 @@ button { color: inherit; }
 .practice-guide b { display: inline-grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; color: #315ecb; background: #e8edff; }
 .practice-guide button { margin-left: auto; padding: 8px 12px; border: 0; background: transparent; color: #a05246; font-size: 12px; font-weight: 800; cursor: pointer; }
 
+.set-picker { display: flex; align-items: center; justify-content: space-between; gap: 24px; margin: 0 0 18px; padding: 19px 21px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 12px 32px rgba(60,76,120,.08); }
+.set-picker p { margin: 0 0 5px; color: #5268e8; font: 800 10px/1 Manrope, sans-serif; letter-spacing: .13em; }
+.set-picker h2 { margin: 0; font: 700 clamp(18px, 2.5vw, 24px)/1.2 Manrope, sans-serif; letter-spacing: -.025em; }
+.set-buttons { display: grid; grid-template-columns: repeat(5, minmax(72px, 1fr)); gap: 8px; }
+.set-button { min-height: 45px; padding: 9px 14px; border: 1px solid #cbd3e4; border-radius: 11px; background: #f7f9ff; color: #4d5a78; font-weight: 800; cursor: pointer; }
+.set-button:hover { border-color: rgba(82,104,232,.55); color: #3153aa; }
+.set-button.active { border-color: #3656a1; background: #3656a1; color: #fff; box-shadow: 0 7px 18px rgba(54,86,161,.22); }
+.set-button:focus-visible { outline: 3px solid rgba(82,104,232,.28); outline-offset: 2px; }
+
 .question-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .question-card { padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 14px 36px rgba(60,76,120,.1); transition: transform .2s ease, border-color .2s ease; }
 .question-card:focus-within { transform: translateY(-2px); border-color: rgba(82,104,232,.5); }
@@ -104,6 +113,9 @@ footer a:hover { text-decoration: underline; }
   .score-track { align-self: start; }
   .practice-guide { align-items: flex-start; flex-direction: column; gap: 10px; }
   .practice-guide button { margin-left: 0; padding-left: 0; }
+  .set-picker { align-items: stretch; flex-direction: column; gap: 15px; padding: 17px; }
+  .set-buttons { width: 100%; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .set-button { min-width: 0; min-height: 43px; padding: 8px 4px; font-size: 12px; }
   .question-grid { grid-template-columns: 1fr; }
   .question-card { padding: 19px; }
   .expression { font-size: 36px; }

@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Ten mixed calculation questions for Harry with instant retry feedback and no revealed answers." />
+    <meta name="description" content="Five sets of mixed calculation questions for Harry with instant retry feedback and no revealed answers." />
     <meta name="theme-color" content="#172f61" />
-    <title>Harry’s Calculation Retry Practice</title>
+    <title>Harry’s Calculation Retry Practice · 5 Sets</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=2" />
-    <script src="./app.js?v=1" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=3" />
+    <script src="./app.js?v=2" defer></script>
   </head>
   <body>
     <main class="practice-shell">
@@ -35,6 +35,20 @@
         <span><b>2</b> Type your answer</span>
         <span><b>3</b> Check and keep trying</span>
         <button id="reset-top" type="button">Start over</button>
+      </section>
+
+      <section class="set-picker" aria-labelledby="set-picker-title">
+        <div>
+          <p>CHOOSE A ROUND</p>
+          <h2 id="set-picker-title">Pick Set 1, 2, 3, 4, or 5</h2>
+        </div>
+        <div class="set-buttons" role="group" aria-label="Choose a question set">
+          <button class="set-button active" type="button" data-set="1" aria-pressed="true">Set 1</button>
+          <button class="set-button" type="button" data-set="2" aria-pressed="false">Set 2</button>
+          <button class="set-button" type="button" data-set="3" aria-pressed="false">Set 3</button>
+          <button class="set-button" type="button" data-set="4" aria-pressed="false">Set 4</button>
+          <button class="set-button" type="button" data-set="5" aria-pressed="false">Set 5</button>
+        </div>
       </section>
 
       <section class="question-grid" aria-label="Ten calculation questions">
@@ -111,7 +125,7 @@
 
       <section class="complete-card" id="complete-card" role="status" hidden>
         <span aria-hidden="true">★</span>
-        <div><strong>You solved all 10!</strong><p>Strong work, Harry. Start over whenever you want another round.</p></div>
+        <div><strong id="complete-title">You solved all 10 in Set 1!</strong><p>Strong work, Harry. Pick another set whenever you want a new round.</p></div>
         <button id="reset-bottom" type="button">Practice again</button>
       </section>
 
