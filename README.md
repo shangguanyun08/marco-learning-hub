@@ -12,6 +12,7 @@ The hub links to:
 - ISEE Mock Test VR 2026
 - Marco’s ISEE Missed-Question Mastery
 - Marco’s ISEE Math Mastery
+- Marco's ISEE Math Redo (14 summer mistake sessions)
 - Harry’s 1500 Word List
 - Harry’s 1,500-word Vocabulary Practice
 - Harry’s Calculation Retry Practice
