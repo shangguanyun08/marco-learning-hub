@@ -3,6 +3,7 @@
 
   const APP_ID = "marco-summer-isee-math-write-in-v1";
   const STORAGE_KEY = `${APP_ID}:state`;
+  const MAX_ATTEMPTS = 2;
   const app = document.querySelector("#app");
   const encoder = new TextEncoder();
   let bank = null;
@@ -101,15 +102,30 @@
     return questionAttempts(session, questionId).some((attempt) => attempt.correct);
   }
 
+  function isExhausted(session, questionId) {
+    const attempts = questionAttempts(session, questionId);
+    return !attempts.some((attempt) => attempt.correct) && attempts.length >= MAX_ATTEMPTS;
+  }
+
+  function isQuestionComplete(session, questionId) {
+    return isMastered(session, questionId) || isExhausted(session, questionId);
+  }
+
   function metrics(day) {
     const session = latestSession(day.day);
     const attempts = attemptsFor(session);
+    const firstTryWrong = attempts.filter((attempt) => !attempt.correct && attempt.attemptNumber === 1).length;
+    const secondTryWrong = attempts.filter((attempt) => !attempt.correct && attempt.attemptNumber === 2).length;
     return {
       session,
       attempts,
       mastered: day.questions.filter((question) => isMastered(session, question.id)).length,
+      completedQuestions: day.questions.filter((question) => isQuestionComplete(session, question.id)).length,
+      answersRevealed: day.questions.filter((question) => isExhausted(session, question.id)).length,
       checked: new Set(attempts.map((attempt) => attempt.questionId)).size,
       wrongChecks: attempts.filter((attempt) => !attempt.correct).length,
+      firstTryWrong,
+      secondTryWrong,
       completed: Boolean(session?.completedAt),
     };
   }
@@ -118,6 +134,8 @@
     const questionIds = new Set(bank.days.flatMap((day) => day.questions).map((question) => question.id));
     const recordedAttempts = state.attempts.filter((attempt) => questionIds.has(attempt.questionId));
     const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
+    const firstTryWrong = wrongAttempts.filter((attempt) => attempt.attemptNumber === 1);
+    const secondTryWrong = wrongAttempts.filter((attempt) => attempt.attemptNumber === 2);
     const wrongQuestionIds = new Set(wrongAttempts.map((attempt) => attempt.questionId));
     const rows = bank.days.map((day) => {
       const historyAttempts = recordedAttempts.filter((attempt) => attempt.day === day.day);
@@ -126,6 +144,8 @@
         ...metrics(day),
         historyAttempts,
         historyWrongChecks: historyAttempts.filter((attempt) => !attempt.correct).length,
+        historyFirstTryWrong: historyAttempts.filter((attempt) => !attempt.correct && attempt.attemptNumber === 1).length,
+        historySecondTryWrong: historyAttempts.filter((attempt) => !attempt.correct && attempt.attemptNumber === 2).length,
       };
     });
     return {
@@ -134,6 +154,9 @@
       masteredQuestions: rows.reduce((sum, row) => sum + row.mastered, 0),
       wrongQuestions: wrongQuestionIds.size,
       wrongChecks: wrongAttempts.length,
+      firstTryWrong: firstTryWrong.length,
+      secondTryWrong: secondTryWrong.length,
+      answersRevealed: secondTryWrong.length,
       totalChecks: recordedAttempts.length,
       recoveredQuestions: [...wrongQuestionIds].filter((questionId) => recordedAttempts.some((attempt) => attempt.questionId === questionId && attempt.correct)).length,
     };
@@ -478,7 +501,7 @@
   }
 
   async function gradeQuestion(question, session) {
-    if (isMastered(session, question.id)) return false;
+    if (isQuestionComplete(session, question.id)) return false;
     const answer = String(state.drafts[question.id] ?? "").trim();
     if (!answer) {
       messages[question.id] = { kind: "empty", text: "Write an answer before checking." };
@@ -504,14 +527,17 @@
       correct,
       createdAt: new Date().toISOString(),
     });
+    const attemptNumber = attempts.length + 1;
     messages[question.id] = correct
-      ? { kind: "correct", text: "Right — this question is complete." }
-      : { kind: "wrong", text: "Not right yet. Rework it and try again — the answer stays hidden." };
+      ? { kind: "correct", text: `Right on ${attemptNumber === 1 ? "the first try" : "the second try"}.` }
+      : attemptNumber >= MAX_ATTEMPTS
+        ? { kind: "wrong", text: "The second try was not right. The correct answer is shown below." }
+        : { kind: "wrong", text: "Not right yet. Change the answer and use the second try." };
     return true;
   }
 
   function finishIfReady(day, session) {
-    if (!session.completedAt && day.questions.every((question) => isMastered(session, question.id))) {
+    if (!session.completedAt && day.questions.every((question) => isQuestionComplete(session, question.id))) {
       session.completedAt = new Date().toISOString();
       return true;
     }
@@ -535,7 +561,7 @@
     const session = ensureSession(day.day);
     let changed = false;
     for (const question of day.questions) {
-      if (String(state.drafts[question.id] ?? "").trim() && !isMastered(session, question.id)) {
+      if (String(state.drafts[question.id] ?? "").trim() && !isQuestionComplete(session, question.id)) {
         changed = (await gradeQuestion(question, session)) || changed;
       }
     }
@@ -583,10 +609,10 @@
         </div>
       </header>
       <section class="hero-strip write-in-summary">
-        <div><strong>${stats.completedDays}<small>/14</small></strong><span>sessions all right</span></div>
+        <div><strong>${stats.completedDays}<small>/14</small></strong><span>sessions finished</span></div>
         <div><strong>${stats.masteredQuestions}<small>/${bank.totalQuestions}</small></strong><span>answers mastered</span></div>
-        <div><strong>${stats.wrongChecks}</strong><span>reworked answers</span></div>
-        <div><strong>100%</strong><span>is the finish line</span></div>
+        <div><strong>${stats.firstTryWrong}</strong><span>wrong on first try</span></div>
+        <div><strong>${stats.secondTryWrong}</strong><span>wrong on second try</span></div>
       </section>`;
   }
 
@@ -597,7 +623,7 @@
         <div class="day-list">${bank.days.map((day) => {
           const dayStats = metrics(day);
           return `<button class="${day.day === activeDay ? "active" : ""} ${dayStats.completed ? "done" : ""}" data-action="day" data-day="${day.day}" type="button">
-            <span>${dayStats.completed ? "✓" : String(day.day).padStart(2, "0")}</span><b>Day ${day.day}</b><small>${dayStats.mastered}/${day.questionCount}</small>
+            <span>${dayStats.completed ? "✓" : String(day.day).padStart(2, "0")}</span><b>Day ${day.day}</b><small>${dayStats.completedQuestions}/${day.questionCount}</small>
           </button>`;
         }).join("")}</div>
       </section>`;
@@ -607,26 +633,38 @@
     const attempts = questionAttempts(session, question.id);
     const last = attempts.at(-1);
     const mastered = attempts.some((attempt) => attempt.correct);
+    const exhausted = !mastered && attempts.length >= MAX_ATTEMPTS;
+    const locked = mastered || exhausted;
     const message = messages[question.id] || (last
       ? last.correct
-        ? { kind: "correct", text: "Right — this question is complete." }
-        : { kind: "wrong", text: "Not right yet. Rework it and try again — the answer stays hidden." }
+        ? { kind: "correct", text: `Right on ${last.attemptNumber === 1 ? "the first try" : "the second try"}.` }
+        : exhausted
+          ? { kind: "wrong", text: "The second try was not right. The correct answer is shown below." }
+          : { kind: "wrong", text: "Not right yet. Change the answer and use the second try." }
       : null);
     const value = answerValue(question, session);
-    const statusClass = mastered ? "status-correct" : last ? "status-wrong" : "status-open";
-    const statusLabel = mastered ? "Correct" : last ? "Keep working" : "Not checked";
+    const statusClass = mastered ? "status-correct" : exhausted ? "status-revealed" : last ? "status-wrong" : "status-open";
+    const statusLabel = mastered ? "Correct" : exhausted ? "Answer shown" : last ? "Second try" : "Not checked";
+    const attemptLabel = mastered
+      ? `Correct on try ${last.attemptNumber}`
+      : exhausted
+        ? "2 tries used"
+        : attempts.length === 1
+          ? "1 chance left"
+          : "2 chances";
     return `
       <article class="write-question ${statusClass}" id="${question.id}">
-        <div class="write-question-number"><span>${mastered ? "✓" : question.position}</span><small>Original #${esc(question.sourceNumber)}</small></div>
+        <div class="write-question-number"><span>${mastered ? "✓" : exhausted ? "!" : question.position}</span><small>Original #${esc(question.sourceNumber)}</small></div>
         <div class="write-question-body">
-          <div class="question-status"><span>${statusLabel}</span><small>${attempts.length ? `${attempts.length} ${attempts.length === 1 ? "check" : "checks"}` : "Write it yourself"}</small></div>
+          <div class="question-status"><span>${statusLabel}</span><small>${attemptLabel}</small></div>
           <div class="problem">${question.questionHtml}</div>
           <div class="answer-row">
             <label for="answer-${question.id}">Your answer</label>
-            <input id="answer-${question.id}" data-question="${question.id}" inputmode="text" autocomplete="off" spellcheck="false" value="${esc(value)}" placeholder="Type the value, expression, or conclusion" ${mastered ? "disabled" : ""} />
-            <button data-action="check" data-question="${question.id}" type="button" ${mastered ? "disabled" : ""}>${mastered ? "Completed" : "Check answer"}</button>
+            <input id="answer-${question.id}" data-question="${question.id}" inputmode="text" autocomplete="off" spellcheck="false" value="${esc(value)}" placeholder="Type the value, expression, or conclusion" ${locked ? "disabled" : ""} />
+            <button data-action="check" data-question="${question.id}" type="button" ${locked ? "disabled" : ""}>${mastered ? "Completed" : exhausted ? "Answer shown" : "Check answer"}</button>
           </div>
           ${message ? `<div class="answer-feedback ${message.kind}" role="status">${message.kind === "correct" ? "✓" : message.kind === "wrong" ? "↻" : "!"}<span>${esc(message.text)}</span></div>` : ""}
+          ${exhausted ? `<div class="answer-reveal"><strong>Correct answer</strong><div>${question.answerHtml}</div></div>` : ""}
         </div>
       </article>`;
   }
@@ -639,18 +677,18 @@
       ${dayPickerHtml(day.day)}
       <section class="session-heading">
         <div><p class="eyebrow">Session ${day.day} of 14</p><h2>Day ${day.day}: write every answer</h2></div>
-        <p>All ${day.questionCount} questions are shown together. Correct answers lock in; answers that need work stay editable. The site never reveals the solution.</p>
+        <p>Marco gets 2 tries for each question. After a second wrong answer, the correct answer is shown and the question closes.</p>
       </section>
       <section class="session-toolbar ${complete ? "complete" : ""}">
-        <div><strong>${complete ? "Session mastered" : `${dayStats.mastered} of ${day.questionCount} right`}</strong><span>${complete ? "Every answer is correct." : "Keep revising until the whole day reaches 100%."}</span></div>
-        <div class="toolbar-track" aria-label="${dayStats.mastered} of ${day.questionCount} correct"><i style="width:${(dayStats.mastered / day.questionCount) * 100}%"></i></div>
+        <div><strong>${complete ? "Session finished" : `${dayStats.completedQuestions} of ${day.questionCount} finished`}</strong><span>${dayStats.mastered} right · ${dayStats.answersRevealed} answers shown</span></div>
+        <div class="toolbar-track" aria-label="${dayStats.completedQuestions} of ${day.questionCount} finished"><i style="width:${(dayStats.completedQuestions / day.questionCount) * 100}%"></i></div>
         ${complete
           ? `<button class="secondary-action" data-action="restart" type="button">Practice Day ${day.day} again</button>`
           : `<button class="primary-action" data-action="check-all" type="button">Check written answers</button>`}
       </section>
-      <section class="no-reveal-note"><strong>Independent mode</strong><span>You will see only “right” or “not right yet.” The correct answer is never shown.</span></section>
+      <section class="no-reveal-note"><strong>2-try mode</strong><span>First miss: one more chance. Second miss: the correct answer appears.</span></section>
       <section class="write-question-list">${day.questions.map((question) => questionCardHtml(question, dayStats.session)).join("")}</section>
-      <footer class="session-footer"><strong>${dayStats.mastered} of ${day.questionCount} right</strong><button class="primary-action" data-action="check-all" type="button" ${complete ? "disabled" : ""}>${complete ? "All answers correct" : "Check written answers"}</button></footer>`;
+      <footer class="session-footer"><strong>${dayStats.completedQuestions} of ${day.questionCount} finished · ${dayStats.mastered} right</strong><button class="primary-action" data-action="check-all" type="button" ${complete ? "disabled" : ""}>${complete ? "Session finished" : "Check written answers"}</button></footer>`;
   }
 
   function progressHtml(stats) {
@@ -662,42 +700,47 @@
         const question = questionMap.get(questionId);
         const attempts = recordedAttempts.filter((attempt) => attempt.questionId === questionId);
         const wrong = attempts.filter((attempt) => !attempt.correct);
+        const firstWrong = wrong.filter((attempt) => attempt.attemptNumber === 1);
+        const secondWrong = wrong.filter((attempt) => attempt.attemptNumber === 2);
         return {
           question,
           attempts,
           wrong,
+          firstWrong,
+          secondWrong,
           recovered: attempts.some((attempt) => attempt.correct),
+          revealed: secondWrong.length > 0,
           lastChecked: attempts.at(-1)?.createdAt,
         };
       })
       .sort((a, b) => new Date(b.lastChecked || 0) - new Date(a.lastChecked || 0));
     return `
       <section class="write-progress-heading">
-        <div><p class="eyebrow">Independent mastery record</p><h2>Progress without answer reveals</h2><p>Every check is saved online. This history shows how many questions Marco missed and exactly how many wrong attempts each one needed.</p></div>
+        <div><p class="eyebrow">Two-attempt record</p><h2>First-try and second-try results</h2><p>Every check is saved online. First-attempt and second-attempt mistakes are counted separately.</p></div>
         <button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button>
       </section>
       <section class="write-history-summary" aria-label="Wrong-answer totals">
         <div><strong>${stats.wrongQuestions}</strong><span>questions missed</span></div>
-        <div><strong>${stats.wrongChecks}</strong><span>total wrong checks</span></div>
-        <div><strong>${stats.recoveredQuestions}</strong><span>fixed after a miss</span></div>
-        <div><strong>${stats.totalChecks}</strong><span>all checks recorded</span></div>
+        <div><strong>${stats.firstTryWrong}</strong><span>first tries wrong</span></div>
+        <div><strong>${stats.secondTryWrong}</strong><span>second tries wrong</span></div>
+        <div><strong>${stats.answersRevealed}</strong><span>answers shown</span></div>
       </section>
       <section class="write-progress-grid">${stats.rows.map((row) => `
         <button data-action="day" data-day="${row.day.day}" type="button" class="${row.completed ? "complete" : ""}">
-          <span>Day ${row.day.day}</span><strong>${row.mastered}<small>/${row.day.questionCount}</small></strong>
-          <div class="mini-track"><i style="width:${(row.mastered / row.day.questionCount) * 100}%"></i></div>
-          <small>${row.completed ? "All right · " : ""}${row.historyWrongChecks} wrong · ${row.historyAttempts.length} total checks</small>
+          <span>Day ${row.day.day}</span><strong>${row.completedQuestions}<small>/${row.day.questionCount}</small></strong>
+          <div class="mini-track"><i style="width:${(row.completedQuestions / row.day.questionCount) * 100}%"></i></div>
+          <small>${row.mastered} right · ${row.historyFirstTryWrong} first-try wrong · ${row.historySecondTryWrong} second-try wrong</small>
         </button>`).join("")}</section>
       <section class="write-history">
-        <div class="write-history-heading"><h3>Wrong-answer history</h3><span>${stats.wrongChecks} wrong checks recorded</span></div>
+        <div class="write-history-heading"><h3>Wrong-answer history</h3><span>${stats.firstTryWrong + stats.secondTryWrong} mistakes recorded</span></div>
         ${historyRows.length === 0 ? '<div class="write-history-empty">No wrong answers yet. Each miss will appear here after Marco checks it.</div>' : `
           <div class="write-history-table" role="table" aria-label="Write-in wrong-answer history">
-            <div class="write-history-row write-history-header" role="row"><span>Question</span><span>Wrong times</span><span>Total checks</span><span>Current status</span><span>Last checked</span></div>
+            <div class="write-history-row write-history-header" role="row"><span>Question</span><span>First try</span><span>Second try</span><span>Result</span><span>Last checked</span></div>
             ${historyRows.map((row) => `<div class="write-history-row" role="row">
               <span><b>Day ${row.question.day} · Q${row.question.position}</b><small>Original #${esc(row.question.sourceNumber || "—")}</small></span>
-              <span><i class="write-wrong-count">${row.wrong.length}×</i></span>
-              <span><b>${row.attempts.length}</b></span>
-              <span><i class="write-history-status ${row.recovered ? "fixed" : "working"}">${row.recovered ? "Fixed" : "Still working"}</i></span>
+              <span><i class="write-wrong-count">${row.firstWrong.length} wrong</i></span>
+              <span><i class="write-wrong-count">${row.secondWrong.length} wrong</i></span>
+              <span><i class="write-history-status ${row.recovered ? "fixed" : "working"}">${row.recovered ? "Fixed" : row.revealed ? "Answer shown" : "1 chance left"}</i></span>
               <span><small>${new Date(row.lastChecked).toLocaleString()}</small></span>
             </div>`).join("")}
           </div>`}

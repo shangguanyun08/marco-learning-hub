@@ -172,6 +172,7 @@ math { font-size: 1.05em; }
   .write-question { grid-template-columns: 46px minmax(0, 1fr); }
   .write-question-body { padding: 20px 16px; }
   .answer-row { grid-template-columns: 1fr; }
+  .answer-reveal { grid-template-columns: 1fr; gap: 6px; }
 }
 
 .write-in-actions { display: flex; align-items: center; gap: 12px; }
@@ -186,12 +187,20 @@ math { font-size: 1.05em; }
 .write-question.status-correct .write-question-number span, .write-question.status-correct .question-status span { background: var(--green); color: white; }
 .write-question.status-wrong { border-color: #efb1aa; }
 .write-question.status-wrong .question-status span { background: #fff0ed; color: #a94239; }
+.write-question.status-revealed { border-color: #e0bb69; }
+.write-question.status-revealed .write-question-number { background: #fff7e7; }
+.write-question.status-revealed .write-question-number span, .write-question.status-revealed .question-status span { background: #a96f12; color: white; }
 .answer-row input:disabled { border-color: #9fd2bd; background: #f1fbf7; color: #176e52; opacity: 1; }
 .answer-row button:disabled { border-color: #86c8ae; background: #86c8ae; cursor: default; }
+.write-question.status-revealed .answer-row input:disabled { border-color: #e0c58c; background: #fffaf0; color: #76531c; }
+.write-question.status-revealed .answer-row button:disabled { border-color: #c89b45; background: #c89b45; }
 .answer-feedback { display: flex; align-items: center; gap: 9px; margin-top: 12px; border-radius: 11px; padding: 11px 13px; font-size: 12px; font-weight: 800; }
 .answer-feedback.correct { background: var(--mint); color: var(--green); }
 .answer-feedback.wrong { background: #fff0ed; color: #a94239; }
 .answer-feedback.empty { background: #fff7e7; color: #8b641c; }
+.answer-reveal { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 14px; margin-top: 12px; border: 1px solid #e4c782; border-radius: 11px; background: #fff8e9; padding: 13px 15px; color: #634714; }
+.answer-reveal > strong { font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
+.answer-reveal > div { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; line-height: 1.45; }
 .session-toolbar { position: sticky; top: 8px; z-index: 20; display: grid; grid-template-columns: minmax(190px, auto) minmax(140px, 1fr) auto; align-items: center; gap: 18px; margin-bottom: 12px; border: 1px solid #c9d6df; border-radius: 15px; background: rgba(255, 253, 248, .96); padding: 13px 15px; box-shadow: 0 10px 26px rgba(39, 55, 66, .1); backdrop-filter: blur(10px); }
 .session-toolbar > div:first-child { display: flex; flex-direction: column; gap: 3px; }
 .session-toolbar strong { color: #173957; font-family: Georgia, 'Times New Roman', serif; font-size: 17px; }
