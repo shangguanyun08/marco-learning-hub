@@ -10,6 +10,7 @@
   let position = 0;
   let view = "practice";
   let feedback = null;
+  let selectedIndex = null;
   let sync = null;
 
   function freshState() {
@@ -106,7 +107,19 @@
     selectedDay = dayNumber;
     position = nextOpen(day);
     feedback = null;
+    selectedIndex = null;
     view = "practice";
+    render();
+  }
+
+  function selectAnswer(index) {
+    const day = bank.days.find((item) => item.day === selectedDay);
+    const question = day?.questions[position];
+    const session = latestSession(selectedDay);
+    const previous = questionAttempts(session, question?.id);
+    if (!question || resolved(previous) || previous.some((attempt) => attempt.selectedIndex === index)) return;
+    selectedIndex = index;
+    feedback = null;
     render();
   }
 
@@ -143,6 +156,7 @@
         ? { correctHtml: question.correctHtml, explanation: question.explanation }
         : null,
     };
+    selectedIndex = null;
     saveState();
     render();
   }
@@ -159,6 +173,7 @@
     });
     position = 0;
     feedback = null;
+    selectedIndex = null;
     saveState();
     render();
   }
@@ -167,6 +182,7 @@
     const day = bank.days.find((item) => item.day === selectedDay);
     if (!day || !feedback?.resolved) return;
     feedback = null;
+    selectedIndex = null;
     position = Math.min(position + 1, day.questionCount);
     render();
   }
@@ -242,9 +258,12 @@
     const currentResolved = resolved(saved);
     const options = question.options.map((option, index) => {
       const attempt = saved.find((item) => item.selectedIndex === index);
-      const className = attempt ? (attempt.correct ? "right" : "wrong") : "";
+      const className = [
+        attempt ? (attempt.correct ? "right" : "wrong") : "",
+        selectedIndex === index && !attempt ? "selected" : "",
+      ].filter(Boolean).join(" ");
       const disabled = currentResolved || Boolean(attempt && !attempt.correct);
-      return `<button class="${className}" ${disabled ? "disabled" : ""} data-action="answer" data-index="${index}" type="button">
+      return `<button class="${className}" ${disabled ? "disabled" : ""} data-action="select-answer" data-index="${index}" type="button" aria-pressed="${selectedIndex === index}">
         <span class="option-letter">${esc(option.label)}</span><span class="option-content">${option.html}</span>
       </button>`;
     }).join("");
@@ -272,8 +291,10 @@
         <div class="options">${options}</div>
         ${feedbackHtml}
         <footer class="question-footer">
-          <span>${dayMetrics.resolved} of ${day.questionCount} finished · Run ${session?.runNumber || 1}</span>
-          ${feedback?.resolved ? `<button class="primary-action" data-action="advance" type="button">${position === day.questionCount - 1 ? "Finish Day" : "Next Question"} →</button>` : ""}
+          <span>${dayMetrics.resolved} of ${day.questionCount} finished · Select a choice, then check it</span>
+          ${feedback?.resolved
+            ? `<button class="primary-action" data-action="advance" type="button">${position === day.questionCount - 1 ? "Finish Day" : "Next Question"} →</button>`
+            : `<button class="primary-action" data-action="check-answer" type="button" ${selectedIndex === null ? "disabled" : ""}>Check answer</button>`}
         </footer>
       </section>`;
   }
@@ -284,7 +305,7 @@
     return `
       <section class="progress-page">
         <div class="progress-heading">
-          <div><p class="eyebrow">Online record</p><h2>Marco's Progress</h2><p>Every answer is saved when he chooses it. The two miss columns show exactly where review is still needed.</p></div>
+          <div><p class="eyebrow">Online record</p><h2>Marco's Progress</h2><p>Every answer is saved when he presses “Check answer.” The two miss columns show exactly where review is still needed.</p></div>
           <button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button>
         </div>
         <div class="day-summary-grid">
@@ -332,9 +353,10 @@
     const button = event.target.closest("button[data-action]");
     if (!button) return;
     const action = button.dataset.action;
-    if (action === "view") { view = button.dataset.view || "practice"; feedback = null; render(); }
+    if (action === "view") { view = button.dataset.view || "practice"; feedback = null; selectedIndex = null; render(); }
     if (action === "day") chooseDay(Number(button.dataset.day));
-    if (action === "answer") answer(Number(button.dataset.index));
+    if (action === "select-answer") selectAnswer(Number(button.dataset.index));
+    if (action === "check-answer" && selectedIndex !== null) answer(selectedIndex);
     if (action === "advance") advance();
     if (action === "restart") startAgain();
   });
@@ -364,6 +386,7 @@
           const activeDay = bank.days.find((day) => day.day === selectedDay);
           if (activeDay) position = nextOpen(activeDay);
           feedback = null;
+          selectedIndex = null;
           render();
         },
       });

@@ -46,6 +46,8 @@ h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; 
 .options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .options button { display: grid; grid-template-columns: 38px minmax(0, 1fr); align-items: center; min-height: 68px; border: 1px solid #d7dcde; border-radius: 14px; background: white; padding: 12px 16px; color: var(--ink); text-align: left; cursor: pointer; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
 .options button:hover { transform: translateY(-1px); border-color: #9bb9ef; box-shadow: 0 7px 18px rgba(36,104,229,.08); }
+.options button.selected { border-color: var(--blue); background: var(--blue-soft); box-shadow: 0 0 0 3px rgba(36,104,229,.12); }
+.options button.selected .option-letter { background: var(--blue); color: white; }
 .option-letter { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #f0f2f3; color: #5e6d77; font-weight: 900; }
 .options button:disabled { cursor: default; opacity: .88; transform: none; }
 .options button.right { border-color: #7bc7aa; background: var(--mint); }
@@ -66,6 +68,7 @@ h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; 
 .try-row i { display: block; width: 18px; height: 7px; border-radius: 99px; background: #dfe4e6; }
 .try-row i.used { background: #ef8a80; }
 .question-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 22px; border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 12px; font-weight: 700; }
+.question-footer .primary-action:disabled { border-color: #aebbc4; background: #aebbc4; cursor: not-allowed; opacity: .72; }
 .primary-action, .secondary-action, .text-action { border-radius: 11px; padding: 11px 16px; font-size: 13px; font-weight: 900; cursor: pointer; }
 .primary-action { border: 1px solid var(--blue); background: var(--blue); color: white; }
 .secondary-action { border: 1px solid #ccd3d7; background: white; color: var(--ink); }
