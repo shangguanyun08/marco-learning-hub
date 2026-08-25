@@ -161,9 +161,314 @@
     return text;
   }
 
+  function gcd(left, right) {
+    left = left < 0n ? -left : left;
+    right = right < 0n ? -right : right;
+    while (right) [left, right] = [right, left % right];
+    return left || 1n;
+  }
+
+  function fraction(numerator, denominator = 1n) {
+    if (!denominator) return null;
+    if (denominator < 0n) {
+      numerator = -numerator;
+      denominator = -denominator;
+    }
+    const divisor = gcd(numerator, denominator);
+    return { numerator: numerator / divisor, denominator: denominator / divisor };
+  }
+
+  function addFractions(left, right) {
+    return fraction(
+      left.numerator * right.denominator + right.numerator * left.denominator,
+      left.denominator * right.denominator,
+    );
+  }
+
+  function multiplyFractions(left, right) {
+    return fraction(left.numerator * right.numerator, left.denominator * right.denominator);
+  }
+
+  function decimalFraction(value) {
+    const match = String(value).match(/^([+-]?)(\d*)(?:\.(\d*))?$/);
+    if (!match || (!match[2] && !match[3])) return null;
+    const decimals = match[3] || "";
+    const denominator = 10n ** BigInt(decimals.length);
+    const digits = `${match[2] || "0"}${decimals}`;
+    const numerator = BigInt(digits || "0") * (match[1] === "-" ? -1n : 1n);
+    return fraction(numerator, denominator);
+  }
+
+  function normalizeTypedAnswer(value) {
+    const superscripts = { "⁰": "0", "¹": "1", "²": "2", "³": "3", "⁴": "4", "⁵": "5", "⁶": "6", "⁷": "7", "⁸": "8", "⁹": "9", "⁻": "-" };
+    return String(value ?? "")
+      .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+/g, (run) => `^${[...run].map((character) => superscripts[character]).join("")}`)
+      .normalize("NFKC")
+      .toLowerCase()
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .replace(/[−–—]/g, "-")
+      .replace(/[×·∙⋅]/g, "*")
+      .replace(/÷/g, "/")
+      .replace(/π/g, "pi")
+      .replace(/⁄/g, "/")
+      .replace(/％/g, "%")
+      .replace(/：/g, ":")
+      .replace(/＝/g, "=")
+      .replace(/\bpercent\b/g, "%")
+      .replace(/\bsquared\b/g, "^2")
+      .replace(/\bcubed\b/g, "^3")
+      .replace(/[“”"'`]/g, "")
+      .trim();
+  }
+
+  function parseSimpleFraction(value) {
+    let text = normalizeTypedAnswer(value)
+      .replace(/^\s*(?:the\s+)?answer\s*(?:is|:)?\s*/, "")
+      .replace(/\$/g, "")
+      .replace(/,/g, "")
+      .trim();
+    const direction = text.match(/\s+(increase|decrease)$/)?.[1] || "";
+    if (direction) text = text.slice(0, -direction.length).trim();
+    text = text.replace(/\s*(?:square|sq\.?|cubic|cu\.?)?\s*(?:millimeters?|centimeters?|kilometers?|meters?|inches?|feet|foot|yards?|miles?|gallons?|liters?|hours?|minutes?|seconds?|degrees?(?:\s*[cf])?|dollars?|points?|packs?|batches?|laps?|slices?|balls?|blocks?|people)$/i, "").trim();
+
+    let percent = false;
+    if (text.endsWith("%")) {
+      percent = true;
+      text = text.slice(0, -1).trim();
+    }
+
+    const repeating = text.match(/^([+-]?)(\d*)\.(\d*)\((\d+)\)$/);
+    if (repeating) {
+      const sign = repeating[1] === "-" ? -1n : 1n;
+      const whole = BigInt(repeating[2] || "0");
+      const prefix = repeating[3];
+      const repeat = repeating[4];
+      const prefixScale = 10n ** BigInt(prefix.length);
+      const repeatScale = 10n ** BigInt(repeat.length) - 1n;
+      const prefixValue = BigInt(prefix || "0");
+      const repeatValue = BigInt(repeat);
+      const result = fraction(sign * (whole * prefixScale * repeatScale + prefixValue * repeatScale + repeatValue), prefixScale * repeatScale);
+      return { value: percent ? fraction(result.numerator, result.denominator * 100n) : result, direction };
+    }
+
+    const mixed = text.match(/^([+-]?\d+)\s+(\d+)\s*\/\s*(\d+)$/);
+    if (mixed) {
+      const whole = BigInt(mixed[1]);
+      const denominator = BigInt(mixed[3]);
+      const remainder = BigInt(mixed[2]);
+      const sign = whole < 0n ? -1n : 1n;
+      const result = fraction(whole * denominator + sign * remainder, denominator);
+      if (!result) return null;
+      return { value: percent ? fraction(result.numerator, result.denominator * 100n) : result, direction };
+    }
+
+    const ratio = text.match(/^([+-]?\d+(?:\.\d+)?)\s*(?:\/|:|\bto\b|\bout\s+of\b)\s*([+-]?\d+(?:\.\d+)?)$/);
+    if (ratio) {
+      const left = decimalFraction(ratio[1]);
+      const right = decimalFraction(ratio[2]);
+      if (!left || !right || !right.numerator) return null;
+      const result = multiplyFractions(left, fraction(right.denominator, right.numerator));
+      return { value: percent ? fraction(result.numerator, result.denominator * 100n) : result, direction };
+    }
+
+    const result = decimalFraction(text);
+    if (!result) return null;
+    return { value: percent ? fraction(result.numerator, result.denominator * 100n) : result, direction };
+  }
+
+  function fractionForms(parsed) {
+    if (!parsed?.value) return [];
+    const { numerator, denominator } = parsed.value;
+    const suffix = parsed.direction ? ` ${parsed.direction}` : "";
+    const forms = new Set();
+    const add = (value) => {
+      forms.add(suffix ? `${value}${suffix}` : String(value));
+    };
+    add(denominator === 1n ? String(numerator) : `${numerator}/${denominator}`);
+    if (denominator !== 1n) {
+      add(`${numerator}:${denominator}`);
+      add(`${numerator} to ${denominator}`);
+      add(`${numerator} out of ${denominator}`);
+      const absolute = numerator < 0n ? -numerator : numerator;
+      if (absolute > denominator) {
+        const whole = absolute / denominator;
+        const remainder = absolute % denominator;
+        if (remainder) add(`${numerator < 0n ? "-" : ""}${whole} ${remainder}/${denominator}`);
+      }
+    }
+
+    let terminatingDenominator = denominator;
+    while (terminatingDenominator % 2n === 0n) terminatingDenominator /= 2n;
+    while (terminatingDenominator % 5n === 0n) terminatingDenominator /= 5n;
+    if (terminatingDenominator === 1n) {
+      const decimal = Number(numerator) / Number(denominator);
+      if (Number.isFinite(decimal)) add(String(decimal));
+    }
+    const percent = Number(numerator) * 100 / Number(denominator);
+    const parsedPercent = decimalFraction(String(percent));
+    const percentAsFraction = parsedPercent && fraction(parsedPercent.numerator, parsedPercent.denominator * 100n);
+    if (Number.isFinite(percent) && percentAsFraction && percentAsFraction.numerator === numerator && percentAsFraction.denominator === denominator) {
+      add(`${percent}%`);
+    }
+    return [...forms];
+  }
+
+  function evaluateArithmetic(value) {
+    const text = normalizeTypedAnswer(value).replace(/\$/g, "").replace(/,/g, "").replace(/\s+/g, "");
+    if (!text || text.length > 80 || !/^[\d.+\-*/^()]+$/.test(text)) return null;
+    let position = 0;
+    const peek = () => text[position];
+    const take = () => text[position++];
+    const parsePrimary = () => {
+      if (peek() === "(") {
+        take();
+        const result = parseExpression();
+        if (take() !== ")") throw new Error("Missing parenthesis");
+        return result;
+      }
+      const match = text.slice(position).match(/^\d+(?:\.\d+)?|^\.\d+/);
+      if (!match) throw new Error("Expected number");
+      position += match[0].length;
+      return decimalFraction(match[0]);
+    };
+    const parseUnary = () => {
+      if (peek() === "+") { take(); return parseUnary(); }
+      if (peek() === "-") { take(); const result = parseUnary(); return fraction(-result.numerator, result.denominator); }
+      return parsePrimary();
+    };
+    const parsePower = () => {
+      let result = parseUnary();
+      if (peek() === "^") {
+        take();
+        const exponent = parseUnary();
+        if (exponent.denominator !== 1n || exponent.numerator < -12n || exponent.numerator > 12n) throw new Error("Unsupported exponent");
+        let count = exponent.numerator < 0n ? -exponent.numerator : exponent.numerator;
+        let powered = fraction(1n);
+        while (count--) powered = multiplyFractions(powered, result);
+        result = exponent.numerator < 0n ? fraction(powered.denominator, powered.numerator) : powered;
+      }
+      return result;
+    };
+    const parseTerm = () => {
+      let result = parsePower();
+      while (peek() === "*" || peek() === "/") {
+        const operator = take();
+        const right = parsePower();
+        result = operator === "*"
+          ? multiplyFractions(result, right)
+          : multiplyFractions(result, fraction(right.denominator, right.numerator));
+      }
+      return result;
+    };
+    const parseExpression = () => {
+      let result = parseTerm();
+      while (peek() === "+" || peek() === "-") {
+        const operator = take();
+        const right = parseTerm();
+        result = addFractions(result, operator === "+" ? right : fraction(-right.numerator, right.denominator));
+      }
+      return result;
+    };
+    try {
+      const result = parseExpression();
+      return position === text.length ? { value: result, direction: "" } : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function answerCandidates(question, value) {
+    const candidates = new Set();
+    const add = (candidate) => {
+      const text = String(candidate ?? "").trim();
+      if (text) candidates.add(text);
+    };
+    const typed = normalizeTypedAnswer(value);
+    add(value);
+    add(typed);
+    add(typed.replace(/^\s*(?:the\s+)?answer\s*(?:is|:)?\s*/, ""));
+    add(typed.replace(/[;|]/g, ","));
+    add(typed.replace(/\bpercent\b/g, "%"));
+
+    const compactMath = typed.replace(/\s+/g, "");
+    add(compactMath);
+    add(compactMath.replace(/(\d|\))\*(?=(?:[a-z]|pi|\())/g, "$1"));
+    add(compactMath.replace(/(\d)(?=[a-z(])/g, "$1*"));
+    add(compactMath.replace(/\*pi/g, "pi"));
+
+    const unitless = typed.replace(/\s*(?:square|sq\.?|cubic|cu\.?)?\s*(?:millimeters?|centimeters?|kilometers?|meters?|inches?|feet|foot|yards?|miles?|gallons?|liters?|hours?|minutes?|seconds?|degrees?(?:\s*[cf])?|dollars?|points?|packs?|batches?|laps?|slices?|balls?|blocks?|people)\s*$/i, "").trim();
+    add(unitless);
+    const unitlessMath = unitless.replace(/\s+/g, "");
+    add(unitlessMath);
+    add(unitlessMath.replace(/(\d|\))\*(?=(?:[a-z]|pi|\())/g, "$1"));
+
+    const unitAliases = typed
+      .replace(/\bfeet\b|\bfoot\b/g, "ft")
+      .replace(/\binches?\b/g, "in")
+      .replace(/\bmeters?\b/g, "m")
+      .replace(/\bcentimeters?\b/g, "cm")
+      .replace(/\bmillimeters?\b/g, "mm")
+      .replace(/\bhours?\b/g, "hr");
+    add(unitAliases);
+    add(unitAliases.replace(/\bhr\b/g, "hours"));
+
+    for (const parsed of [parseSimpleFraction(typed), evaluateArithmetic(unitless)]) {
+      for (const form of fractionForms(parsed)) add(form);
+    }
+
+    const equation = typed.split("=");
+    if (equation.length === 2) {
+      const [left, right] = equation.map((part) => part.trim());
+      add(`${left}=${right}`);
+      if (/^[a-z]$/.test(left)) add(right);
+      if (/^[a-z]$/.test(right)) add(left);
+    } else if (/equation of (?:a |the )?line/i.test(question.questionText || "") && typed) {
+      add(`y=${typed}`);
+    }
+
+    const choice = typed.match(/^(?:(?:choice|option|answer|column)\s*)?([a-d])$/i);
+    if (choice) {
+      const letter = choice[1].toLowerCase();
+      add(letter);
+      add(`choice ${letter}`);
+      add(`option ${letter}`);
+      add(`answer ${letter}`);
+      add(`column ${letter}`);
+    }
+
+    const comparison = (() => {
+      if (/cannot\s+be\s+determined|not\s+enough\s+information|insufficient\s+information|cant\s+tell/.test(typed)) return "d";
+      if (/\bequal\b|same\s+(?:value|amount|quantity)/.test(typed)) return "c";
+      if (/(?:column\s*)?a\s+is\s+greater|a\s*>\s*b/.test(typed)) return "a";
+      if (/(?:column\s*)?b\s+is\s+greater|b\s*>\s*a/.test(typed)) return "b";
+      return "";
+    })();
+    if (comparison) {
+      const phrases = {
+        a: "The quantity in Column A is greater.",
+        b: "The quantity in Column B is greater.",
+        c: "The two quantities are equal.",
+        d: "The relationship cannot be determined from the information given.",
+      };
+      add(comparison);
+      add(`column ${comparison}`);
+      add(phrases[comparison]);
+    }
+
+    if (/\biqr\b/.test(typed)) add(typed.replace(/\biqr\b/g, "interquartile range"));
+    add(typed.replace(/\baverage\b/g, "mean"));
+    add(typed.replace(/\bmean\b/g, "average"));
+    return [...candidates];
+  }
+
   async function hashAnswer(value) {
     const bytes = await crypto.subtle.digest("SHA-256", encoder.encode(canonicalize(value)));
     return [...new Uint8Array(bytes)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+
+  async function answerIsCorrect(question, value) {
+    const hashes = await Promise.all(answerCandidates(question, value).map(hashAnswer));
+    return hashes.some((hash) => question.answerHashes.includes(hash));
   }
 
   function answerValue(question, session) {
@@ -187,8 +492,7 @@
       return false;
     }
 
-    const answerHash = await hashAnswer(answer);
-    const correct = question.answerHashes.includes(answerHash);
+    const correct = await answerIsCorrect(question, answer);
     state.attempts.push({
       id: newId(),
       sessionId: session.id,
