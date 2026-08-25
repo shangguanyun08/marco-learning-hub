@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Ten mixed calculation questions for Harry with instant retry feedback and no revealed answers." />
+    <meta name="theme-color" content="#172f61" />
+    <title>Harry’s Calculation Retry Practice</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css?v=1" />
+    <script src="./app.js?v=1" defer></script>
+  </head>
+  <body>
+    <main class="practice-shell">
+      <nav class="practice-nav" aria-label="Learning Hub navigation">
+        <a href="../">← Back to Learning Hub</a>
+        <span>Harry’s Math Practice</span>
+      </nav>
+
+      <header class="practice-hero">
+        <div class="hero-copy">
+          <p class="eyebrow">CALCULATE · CHECK · TRY AGAIN</p>
+          <h1>Choose a problem.<br /><em>Make it yours.</em></h1>
+          <p>Do the questions in any order. Check each answer when you are ready. If it is not right yet, recalculate and try again.</p>
+        </div>
+        <div class="score-card" aria-live="polite">
+          <strong><span id="solved-count">0</span><small>/10</small></strong>
+          <p>questions solved</p>
+          <div class="score-track" aria-hidden="true"><span id="score-fill"></span></div>
+        </div>
+      </header>
+
+      <section class="practice-guide" aria-label="How to use this practice">
+        <span><b>1</b> Pick any card</span>
+        <span><b>2</b> Type your answer</span>
+        <span><b>3</b> Check and keep trying</span>
+        <button id="reset-top" type="button">Start over</button>
+      </section>
+
+      <section class="question-grid" aria-label="Ten calculation questions">
+        <article class="question-card" data-question="1">
+          <div class="card-top"><span class="number">1</span><span class="skill">Multiply</span></div>
+          <p class="expression">243 × 3 <span>=</span></p>
+          <form><label for="answer-1">Your answer</label><div class="answer-row"><input id="answer-1" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-1" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="2">
+          <div class="card-top"><span class="number">2</span><span class="skill">Multiply</span></div>
+          <p class="expression">412 × 4 <span>=</span></p>
+          <form><label for="answer-2">Your answer</label><div class="answer-row"><input id="answer-2" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-2" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="3">
+          <div class="card-top"><span class="number">3</span><span class="skill">Multiply</span></div>
+          <p class="expression">217 × 3 <span>=</span></p>
+          <form><label for="answer-3">Your answer</label><div class="answer-row"><input id="answer-3" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-3" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="4">
+          <div class="card-top"><span class="number">4</span><span class="skill">Divide</span></div>
+          <p class="expression">425 ÷ 5 <span>=</span></p>
+          <form><label for="answer-4">Your answer</label><div class="answer-row"><input id="answer-4" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-4" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="5">
+          <div class="card-top"><span class="number">5</span><span class="skill">Divide</span></div>
+          <p class="expression">728 ÷ 2 <span>=</span></p>
+          <form><label for="answer-5">Your answer</label><div class="answer-row"><input id="answer-5" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-5" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="6">
+          <div class="card-top"><span class="number">6</span><span class="skill">Add</span></div>
+          <p class="expression">420 + 263 <span>=</span></p>
+          <form><label for="answer-6">Your answer</label><div class="answer-row"><input id="answer-6" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-6" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="7">
+          <div class="card-top"><span class="number">7</span><span class="skill">Add</span></div>
+          <p class="expression">46 + 85 <span>=</span></p>
+          <form><label for="answer-7">Your answer</label><div class="answer-row"><input id="answer-7" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-7" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="8">
+          <div class="card-top"><span class="number">8</span><span class="skill">Subtract</span></div>
+          <p class="expression">230 − 67 <span>=</span></p>
+          <form><label for="answer-8">Your answer</label><div class="answer-row"><input id="answer-8" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-8" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="9">
+          <div class="card-top"><span class="number">9</span><span class="skill">Subtract</span></div>
+          <p class="expression">320 − 248 <span>=</span></p>
+          <form><label for="answer-9">Your answer</label><div class="answer-row"><input id="answer-9" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-9" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="10">
+          <div class="card-top"><span class="number">10</span><span class="skill">Subtract</span></div>
+          <p class="expression">640 − 317 <span>=</span></p>
+          <form><label for="answer-10">Your answer</label><div class="answer-row"><input id="answer-10" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-10" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+      </section>
+
+      <section class="complete-card" id="complete-card" role="status" hidden>
+        <span aria-hidden="true">★</span>
+        <div><strong>You solved all 10!</strong><p>Strong work, Harry. Start over whenever you want another round.</p></div>
+        <button id="reset-bottom" type="button">Practice again</button>
+      </section>
+
+      <footer><a href="../">← Return to Marco &amp; Harry Learning Hub</a></footer>
+    </main>
+  </body>
+</html>
