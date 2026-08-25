@@ -188,13 +188,24 @@
   }
 
   function summary() {
-    const rows = bank.days.map((day) => ({ day, ...metrics(day) }));
+    const wrongAttempts = state.attempts.filter((attempt) => !attempt.correct);
+    const rows = bank.days.map((day) => {
+      const dayWrongAttempts = wrongAttempts.filter((attempt) => attempt.day === day.day);
+      return {
+        day,
+        ...metrics(day),
+        historyFirstWrong: dayWrongAttempts.filter((attempt) => attempt.attemptNumber === 1).length,
+        historySecondWrong: dayWrongAttempts.filter((attempt) => attempt.attemptNumber === 2).length,
+      };
+    });
     return {
       rows,
       completedDays: rows.filter((row) => row.completed).length,
       resolvedQuestions: rows.reduce((sum, row) => sum + row.resolved, 0),
-      firstMisses: rows.reduce((sum, row) => sum + row.firstWrong, 0),
-      secondMisses: rows.reduce((sum, row) => sum + row.secondWrong, 0),
+      wrongQuestions: new Set(wrongAttempts.map((attempt) => attempt.questionId)).size,
+      wrongChecks: wrongAttempts.length,
+      firstMisses: wrongAttempts.filter((attempt) => attempt.attemptNumber === 1).length,
+      secondMisses: wrongAttempts.filter((attempt) => attempt.attemptNumber === 2).length,
     };
   }
 
@@ -300,38 +311,55 @@
   }
 
   function progressHtml(stats) {
-    const wrongKeys = [...new Set(state.attempts.filter((attempt) => !attempt.correct).map((attempt) => `${attempt.sessionId}|${attempt.questionId}`))];
     const questionMap = new Map(bank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
+    const recordedAttempts = state.attempts.filter((attempt) => questionMap.has(attempt.questionId));
+    const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
+    const historyRows = [...new Set(wrongAttempts.map((attempt) => attempt.questionId))]
+      .map((questionId) => {
+        const question = questionMap.get(questionId);
+        const attempts = recordedAttempts.filter((attempt) => attempt.questionId === questionId);
+        const wrong = attempts.filter((attempt) => !attempt.correct);
+        return {
+          question,
+          attempts,
+          wrong,
+          firstWrong: wrong.filter((attempt) => attempt.attemptNumber === 1).length,
+          secondWrong: wrong.filter((attempt) => attempt.attemptNumber === 2).length,
+          lastChecked: attempts.at(-1)?.createdAt,
+        };
+      })
+      .sort((a, b) => new Date(b.lastChecked || 0) - new Date(a.lastChecked || 0));
     return `
       <section class="progress-page">
         <div class="progress-heading">
           <div><p class="eyebrow">Online record</p><h2>Marco's Progress</h2><p>Every answer is saved when he presses “Check answer.” The two miss columns show exactly where review is still needed.</p></div>
           <button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button>
         </div>
+        <div class="history-summary" aria-label="Wrong-answer totals">
+          <div><strong>${stats.wrongQuestions}</strong><span>questions missed</span></div>
+          <div><strong>${stats.wrongChecks}</strong><span>total wrong checks</span></div>
+          <div><strong>${stats.firstMisses}</strong><span>wrong on first try</span></div>
+          <div><strong>${stats.secondMisses}</strong><span>wrong on second try</span></div>
+        </div>
         <div class="day-summary-grid">
           ${stats.rows.map((row) => `<button data-action="day" data-day="${row.day.day}" type="button">
             <span>Day ${row.day.day}</span><strong>${row.resolved}/${row.day.questionCount}</strong>
             <div class="mini-track"><i style="width:${(row.resolved / row.day.questionCount) * 100}%"></i></div>
-            <small>${row.completed ? "Complete" : row.session ? "In progress" : "Not started"} · 1st miss ${row.firstWrong} · 2nd miss ${row.secondWrong}</small>
+            <small>${row.completed ? "Complete" : row.session ? "In progress" : "Not started"} · all-time 1st miss ${row.historyFirstWrong} · 2nd miss ${row.historySecondWrong}</small>
           </button>`).join("")}
         </div>
         <section class="miss-record">
-          <div class="record-heading"><h3>Questions to review</h3><span>${stats.secondMisses} missed twice</span></div>
-          ${wrongKeys.length === 0 ? '<div class="empty-record">No wrong attempts yet. The record will update after Marco starts.</div>' : `
+          <div class="record-heading"><h3>Wrong-answer history</h3><span>${stats.wrongChecks} wrong checks recorded</span></div>
+          ${historyRows.length === 0 ? '<div class="empty-record">No wrong attempts yet. The record will update after Marco starts.</div>' : `
             <div class="record-table" role="table" aria-label="Wrong answer record">
-              <div class="record-row record-header" role="row"><span>Question</span><span>First try</span><span>Second try</span><span>Saved</span></div>
-              ${wrongKeys.map((key) => {
-                const [sessionId, questionId] = key.split("|");
-                const attempts = state.attempts.filter((attempt) => attempt.sessionId === sessionId && attempt.questionId === questionId);
-                const sample = attempts[0];
-                const itemQuestion = questionMap.get(questionId);
-                const firstWrong = attempts.some((attempt) => attempt.attemptNumber === 1 && !attempt.correct);
-                const secondWrong = attempts.some((attempt) => attempt.attemptNumber === 2 && !attempt.correct);
+              <div class="record-row record-header" role="row"><span>Question</span><span>Wrong times</span><span>First-try</span><span>Second-try</span><span>Last checked</span></div>
+              ${historyRows.map((row) => {
                 return `<div class="record-row" role="row">
-                  <span><b>Day ${sample.day} · Q${sample.questionPosition}</b><small>Original #${esc(itemQuestion?.sourceNumber || "—")}</small></span>
-                  <span><i class="${firstWrong ? "miss-mark" : "clear-mark"}">${firstWrong ? "Wrong" : "—"}</i></span>
-                  <span><i class="${secondWrong ? "miss-mark strong" : "clear-mark"}">${secondWrong ? "Wrong again" : "Recovered"}</i></span>
-                  <span><small>${new Date(attempts.at(-1)?.createdAt || sample.createdAt).toLocaleString()}</small></span>
+                  <span><b>Day ${row.question.day} · Q${row.question.position}</b><small>Original #${esc(row.question.sourceNumber || "—")}</small></span>
+                  <span><i class="wrong-count">${row.wrong.length}×</i></span>
+                  <span><i class="${row.firstWrong ? "miss-mark" : "clear-mark"}">${row.firstWrong || "—"}</i></span>
+                  <span><i class="${row.secondWrong ? "miss-mark strong" : "clear-mark"}">${row.secondWrong || "—"}</i></span>
+                  <span><small>${new Date(row.lastChecked).toLocaleString()}</small></span>
                 </div>`;
               }).join("")}
             </div>`}

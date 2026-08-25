@@ -96,6 +96,10 @@ h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; 
 .progress-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-bottom: 20px; border: 1px solid #ddd8ce; border-radius: 20px; background: var(--paper); padding: clamp(24px, 4vw, 42px); box-shadow: 0 14px 35px rgba(43, 55, 64, .06); }
 .progress-heading h2 { margin-bottom: 8px; }
 .progress-heading p:last-child { max-width: 680px; margin: 0; color: var(--muted); line-height: 1.6; }
+.history-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0 20px; }
+.history-summary div { display: flex; flex-direction: column; gap: 3px; border: 1px solid #ddd8ce; border-radius: 14px; background: var(--paper); padding: 15px 17px; }
+.history-summary strong { color: #173957; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; }
+.history-summary span { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
 .day-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
 .day-summary-grid button { border: 1px solid #ddd8ce; border-radius: 15px; background: var(--paper); padding: 16px; color: var(--ink); text-align: left; cursor: pointer; }
 .day-summary-grid button:hover { border-color: #9bb9ef; box-shadow: 0 8px 20px rgba(36,104,229,.08); }
@@ -109,7 +113,7 @@ h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; 
 .record-heading h3 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; }
 .record-heading span { border-radius: 999px; background: #fff0ed; padding: 6px 10px; color: #a94239; font-size: 11px; font-weight: 900; }
 .empty-record { padding: 40px; color: var(--muted); text-align: center; }
-.record-row { display: grid; grid-template-columns: 1.2fr .7fr .85fr 1fr; align-items: center; gap: 14px; padding: 13px 24px; border-bottom: 1px solid #eceeed; }
+.record-row { display: grid; grid-template-columns: 1.2fr .65fr .75fr .75fr 1fr; align-items: center; gap: 14px; padding: 13px 24px; border-bottom: 1px solid #eceeed; }
 .record-row:last-child { border-bottom: 0; }
 .record-header { background: #f6f3ed; color: var(--muted); font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .08em; }
 .record-row > span:first-child { display: flex; flex-direction: column; gap: 3px; }
@@ -118,6 +122,7 @@ h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; 
 .miss-mark { background: #fff0ed; color: #a94239; }
 .miss-mark.strong { background: #a94239; color: white; }
 .clear-mark { background: var(--mint); color: var(--green); }
+.wrong-count { display: inline-block; color: #a94239; font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-style: normal; font-weight: 900; }
 .katex-html { display: none !important; }
 .katex-mathml { display: inline !important; }
 math { font-size: 1.05em; }
@@ -144,6 +149,7 @@ math { font-size: 1.05em; }
   .question-footer { align-items: stretch; flex-direction: column; }
   .progress-heading { align-items: flex-start; flex-direction: column; }
   .day-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .record-row { grid-template-columns: 1.2fr .8fr .9fr; padding: 12px 14px; }
-  .record-row > span:last-child { display: none; }
+  .history-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .record-table { overflow-x: auto; }
+  .record-row { grid-template-columns: 1.2fr .65fr .75fr .75fr 1fr; min-width: 670px; padding: 12px 14px; }
 }

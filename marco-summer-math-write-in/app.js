@@ -115,13 +115,27 @@
   }
 
   function summary() {
-    const rows = bank.days.map((day) => ({ day, ...metrics(day) }));
+    const questionIds = new Set(bank.days.flatMap((day) => day.questions).map((question) => question.id));
+    const recordedAttempts = state.attempts.filter((attempt) => questionIds.has(attempt.questionId));
+    const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
+    const wrongQuestionIds = new Set(wrongAttempts.map((attempt) => attempt.questionId));
+    const rows = bank.days.map((day) => {
+      const historyAttempts = recordedAttempts.filter((attempt) => attempt.day === day.day);
+      return {
+        day,
+        ...metrics(day),
+        historyAttempts,
+        historyWrongChecks: historyAttempts.filter((attempt) => !attempt.correct).length,
+      };
+    });
     return {
       rows,
       completedDays: rows.filter((row) => row.completed).length,
       masteredQuestions: rows.reduce((sum, row) => sum + row.mastered, 0),
-      wrongChecks: rows.reduce((sum, row) => sum + row.wrongChecks, 0),
-      totalChecks: rows.reduce((sum, row) => sum + row.attempts.length, 0),
+      wrongQuestions: wrongQuestionIds.size,
+      wrongChecks: wrongAttempts.length,
+      totalChecks: recordedAttempts.length,
+      recoveredQuestions: [...wrongQuestionIds].filter((questionId) => recordedAttempts.some((attempt) => attempt.questionId === questionId && attempt.correct)).length,
     };
   }
 
@@ -336,17 +350,54 @@
   }
 
   function progressHtml(stats) {
+    const questionMap = new Map(bank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
+    const recordedAttempts = state.attempts.filter((attempt) => questionMap.has(attempt.questionId));
+    const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
+    const historyRows = [...new Set(wrongAttempts.map((attempt) => attempt.questionId))]
+      .map((questionId) => {
+        const question = questionMap.get(questionId);
+        const attempts = recordedAttempts.filter((attempt) => attempt.questionId === questionId);
+        const wrong = attempts.filter((attempt) => !attempt.correct);
+        return {
+          question,
+          attempts,
+          wrong,
+          recovered: attempts.some((attempt) => attempt.correct),
+          lastChecked: attempts.at(-1)?.createdAt,
+        };
+      })
+      .sort((a, b) => new Date(b.lastChecked || 0) - new Date(a.lastChecked || 0));
     return `
       <section class="write-progress-heading">
-        <div><p class="eyebrow">Independent mastery record</p><h2>Progress without answer reveals</h2><p>This record shows which sessions Marco has solved completely and how many answers he reworked along the way.</p></div>
+        <div><p class="eyebrow">Independent mastery record</p><h2>Progress without answer reveals</h2><p>Every check is saved online. This history shows how many questions Marco missed and exactly how many wrong attempts each one needed.</p></div>
         <button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button>
+      </section>
+      <section class="write-history-summary" aria-label="Wrong-answer totals">
+        <div><strong>${stats.wrongQuestions}</strong><span>questions missed</span></div>
+        <div><strong>${stats.wrongChecks}</strong><span>total wrong checks</span></div>
+        <div><strong>${stats.recoveredQuestions}</strong><span>fixed after a miss</span></div>
+        <div><strong>${stats.totalChecks}</strong><span>all checks recorded</span></div>
       </section>
       <section class="write-progress-grid">${stats.rows.map((row) => `
         <button data-action="day" data-day="${row.day.day}" type="button" class="${row.completed ? "complete" : ""}">
           <span>Day ${row.day.day}</span><strong>${row.mastered}<small>/${row.day.questionCount}</small></strong>
           <div class="mini-track"><i style="width:${(row.mastered / row.day.questionCount) * 100}%"></i></div>
-          <small>${row.completed ? "All right" : `${row.wrongChecks} reworked · ${row.attempts.length} checks`}</small>
-        </button>`).join("")}</section>`;
+          <small>${row.completed ? "All right · " : ""}${row.historyWrongChecks} wrong · ${row.historyAttempts.length} total checks</small>
+        </button>`).join("")}</section>
+      <section class="write-history">
+        <div class="write-history-heading"><h3>Wrong-answer history</h3><span>${stats.wrongChecks} wrong checks recorded</span></div>
+        ${historyRows.length === 0 ? '<div class="write-history-empty">No wrong answers yet. Each miss will appear here after Marco checks it.</div>' : `
+          <div class="write-history-table" role="table" aria-label="Write-in wrong-answer history">
+            <div class="write-history-row write-history-header" role="row"><span>Question</span><span>Wrong times</span><span>Total checks</span><span>Current status</span><span>Last checked</span></div>
+            ${historyRows.map((row) => `<div class="write-history-row" role="row">
+              <span><b>Day ${row.question.day} · Q${row.question.position}</b><small>Original #${esc(row.question.sourceNumber || "—")}</small></span>
+              <span><i class="write-wrong-count">${row.wrong.length}×</i></span>
+              <span><b>${row.attempts.length}</b></span>
+              <span><i class="write-history-status ${row.recovered ? "fixed" : "working"}">${row.recovered ? "Fixed" : "Still working"}</i></span>
+              <span><small>${new Date(row.lastChecked).toLocaleString()}</small></span>
+            </div>`).join("")}
+          </div>`}
+      </section>`;
   }
 
   function render() {

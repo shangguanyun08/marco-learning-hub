@@ -209,6 +209,10 @@ math { font-size: 1.05em; }
 .write-progress-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 30px; margin-top: 22px; border: 1px solid #ddd8ce; border-radius: 20px; background: var(--paper); padding: clamp(24px, 4vw, 42px); box-shadow: 0 14px 35px rgba(43, 55, 64, .06); }
 .write-progress-heading h2 { margin: 2px 0 9px; color: #173957; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(29px, 4vw, 44px); }
 .write-progress-heading p:last-child { max-width: 690px; margin: 0; color: var(--muted); line-height: 1.6; }
+.write-history-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 14px 0 18px; }
+.write-history-summary div { display: flex; flex-direction: column; gap: 3px; border: 1px solid #ddd8ce; border-radius: 14px; background: var(--paper); padding: 15px 17px; }
+.write-history-summary strong { color: #173957; font-family: Georgia, 'Times New Roman', serif; font-size: 27px; }
+.write-history-summary span { color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .05em; text-transform: uppercase; }
 .write-progress-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
 .write-progress-grid button { border: 1px solid #ddd8ce; border-radius: 15px; background: var(--paper); padding: 18px; color: var(--ink); text-align: left; cursor: pointer; }
 .write-progress-grid button:hover { border-color: #99b8ee; box-shadow: 0 8px 20px rgba(36,104,229,.08); }
@@ -217,11 +221,26 @@ math { font-size: 1.05em; }
 .write-progress-grid button > strong { display: block; margin: 7px 0 10px; font-family: Georgia, 'Times New Roman', serif; font-size: 30px; }
 .write-progress-grid button > strong small { color: var(--muted); font-family: Arial, Helvetica, sans-serif; font-size: 12px; }
 .write-progress-grid button > small { display: block; margin-top: 9px; color: var(--muted); font-size: 10px; }
+.write-history { margin-top: 18px; overflow: hidden; border: 1px solid #ddd8ce; border-radius: 20px; background: var(--paper); box-shadow: 0 14px 35px rgba(43, 55, 64, .06); }
+.write-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 22px 24px; border-bottom: 1px solid var(--line); }
+.write-history-heading h3 { margin: 0; font-family: Georgia, 'Times New Roman', serif; font-size: 22px; }
+.write-history-heading span { border-radius: 999px; background: #fff0ed; padding: 6px 10px; color: #a94239; font-size: 11px; font-weight: 900; }
+.write-history-empty { padding: 38px 24px; color: var(--muted); text-align: center; }
+.write-history-row { display: grid; grid-template-columns: 1.2fr .65fr .65fr .9fr 1fr; align-items: center; gap: 14px; padding: 13px 24px; border-bottom: 1px solid #eceeed; }
+.write-history-row:last-child { border-bottom: 0; }
+.write-history-header { background: #f6f3ed; color: var(--muted); font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.write-history-row > span:first-child { display: flex; flex-direction: column; gap: 3px; }
+.write-history-row small { color: var(--muted); font-size: 10px; }
+.write-wrong-count { color: #a94239; font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-style: normal; font-weight: 900; }
+.write-history-status { display: inline-block; border-radius: 999px; padding: 5px 8px; font-size: 10px; font-style: normal; font-weight: 900; }
+.write-history-status.fixed { background: var(--mint); color: var(--green); }
+.write-history-status.working { background: #fff0ed; color: #a94239; }
 
 @media (max-width: 900px) {
   .session-toolbar { grid-template-columns: 1fr auto; }
   .toolbar-track { grid-column: 1 / -1; grid-row: 2; }
   .write-progress-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .write-history-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -234,4 +253,6 @@ math { font-size: 1.05em; }
   .no-reveal-note, .session-footer, .write-progress-heading { align-items: flex-start; flex-direction: column; }
   .session-footer button { width: 100%; }
   .write-progress-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .write-history-table { overflow-x: auto; }
+  .write-history-row { min-width: 680px; padding: 12px 14px; }
 }
