@@ -61,6 +61,16 @@ button { color: inherit; }
 .skill { color: #7a8499; font: 800 10px/1 Manrope, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .expression { margin: 20px 0 23px; font: 800 clamp(31px, 4vw, 43px)/1 Manrope, sans-serif; letter-spacing: -.035em; }
 .expression span { color: var(--coral); }
+.expression .division-mark {
+  display: inline-block;
+  margin: 0 .12em;
+  color: #c94435;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.18em;
+  font-weight: 900;
+  line-height: .8;
+  vertical-align: .02em;
+}
 .question-card label { display: block; margin-bottom: 7px; color: #68738b; font-size: 10px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; }
 .answer-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; }
 .answer-row input { width: 100%; min-height: 48px; padding: 8px 12px; border: 2px solid #cbd3e4; border-radius: 11px; outline: 0; background: #fff; color: var(--ink); font-size: 20px; font-weight: 700; }
