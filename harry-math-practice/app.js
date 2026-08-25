@@ -63,10 +63,12 @@ const questionSets = {
 
 const cards = [...document.querySelectorAll("[data-question]")];
 const solved = new Set();
+const firstAttempts = new Map();
 const count = document.querySelector("#solved-count");
 const fill = document.querySelector("#score-fill");
 const complete = document.querySelector("#complete-card");
 const completeTitle = document.querySelector("#complete-title");
+const finalScore = document.querySelector("#final-score");
 const setButtons = [...document.querySelectorAll(".set-button")];
 let activeSet = 1;
 
@@ -97,12 +99,18 @@ function renderExpression(element, question) {
 function updateProgress() {
   count.textContent = String(solved.size);
   fill.style.width = `${solved.size * 10}%`;
-  complete.hidden = solved.size !== activeQuestions().length;
-  completeTitle.textContent = `You solved all 10 in Set ${activeSet}!`;
+  const isComplete = solved.size === activeQuestions().length;
+  complete.hidden = !isComplete;
+  completeTitle.textContent = `You finished Day ${activeSet}!`;
+  if (isComplete) {
+    const firstAnswerScore = [...firstAttempts.values()].filter(Boolean).length;
+    finalScore.textContent = `First-answer score: ${firstAnswerScore}/10. You corrected every question.`;
+  }
 }
 
 function resetPractice() {
   solved.clear();
+  firstAttempts.clear();
   cards.forEach((card) => {
     const input = card.querySelector("input");
     const button = card.querySelector("button[type='submit']");
@@ -152,7 +160,15 @@ cards.forEach((card, index) => {
   form.addEventListener("submit", (event) => {
     event.preventDefault();
     const typed = input.value.trim();
-    const isRight = typed !== "" && Number(typed) === activeQuestions()[index][3];
+    if (!typed) {
+      card.classList.add("wrong");
+      feedback.textContent = "Enter an answer before checking.";
+      input.focus();
+      return;
+    }
+
+    const isRight = Number(typed) === activeQuestions()[index][3];
+    if (!firstAttempts.has(index)) firstAttempts.set(index, isRight);
 
     card.classList.toggle("right", isRight);
     card.classList.toggle("wrong", !isRight);
