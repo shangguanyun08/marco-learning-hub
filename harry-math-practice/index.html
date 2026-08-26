@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Five days of mixed calculation questions for Harry with instant retry feedback and a first-answer score." />
+    <meta name="description" content="Four saved calculation sets for Harry with first-try scoring and a permanent right-and-wrong record on this browser." />
     <meta name="theme-color" content="#172f61" />
-    <title>Harry’s Calculation Retry Practice · 5 Days</title>
+    <title>Harry’s Math Practice · 4 Saved Sets</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=3" />
-    <script src="./app.js?v=4" defer></script>
+    <link rel="stylesheet" href="./styles.css?v=4" />
+    <script src="./app.js?v=5" defer></script>
   </head>
   <body>
     <main class="practice-shell">
@@ -24,31 +24,41 @@
           <p>Do the questions in any order. Check each answer when you are ready. If it is not right yet, recalculate and try again.</p>
         </div>
         <div class="score-card" aria-live="polite">
-          <strong><span id="solved-count">0</span><small>/10</small></strong>
-          <p>questions solved</p>
+          <strong><span id="first-try-score">0</span><small>/10</small></strong>
+          <p>first-try score</p>
+          <div class="attempt-summary" id="attempt-summary">0 right · 0 wrong</div>
           <div class="score-track" aria-hidden="true"><span id="score-fill"></span></div>
+          <small class="solved-summary" id="solved-summary">0/10 solved · 0/10 first tries recorded</small>
         </div>
       </header>
 
       <section class="practice-guide" aria-label="How to use this practice">
         <span><b>1</b> Pick any card</span>
         <span><b>2</b> Type your answer</span>
-        <span><b>3</b> Check and keep trying</span>
-        <button id="reset-top" type="button">Start over</button>
+        <span><b>3</b> First try is saved</span>
+        <span><b>4</b> Correct every problem</span>
       </section>
 
       <section class="set-picker" aria-labelledby="set-picker-title">
         <div>
-          <p>CHOOSE A ROUND</p>
-          <h2 id="set-picker-title">Pick Day 1, 2, 3, 4, or 5</h2>
+          <p>CHOOSE A SET</p>
+          <h2 id="set-picker-title">Pick Set 1, 2, 3, or 4</h2>
         </div>
-        <div class="set-buttons" role="group" aria-label="Choose a practice day">
-          <button class="set-button active" type="button" data-set="1" aria-pressed="true">Day 1</button>
-          <button class="set-button" type="button" data-set="2" aria-pressed="false">Day 2</button>
-          <button class="set-button" type="button" data-set="3" aria-pressed="false">Day 3</button>
-          <button class="set-button" type="button" data-set="4" aria-pressed="false">Day 4</button>
-          <button class="set-button" type="button" data-set="5" aria-pressed="false">Day 5</button>
+        <div class="set-buttons" role="group" aria-label="Choose a practice set">
+          <button class="set-button active" type="button" data-set="1" aria-pressed="true">Set 1</button>
+          <button class="set-button" type="button" data-set="2" aria-pressed="false">Set 2</button>
+          <button class="set-button" type="button" data-set="3" aria-pressed="false">Set 3</button>
+          <button class="set-button" type="button" data-set="4" aria-pressed="false">Set 4</button>
         </div>
+      </section>
+
+      <section class="record-card" aria-labelledby="record-title">
+        <div class="record-heading">
+          <p>FIRST-TRY RECORD</p>
+          <h2 id="record-title">Harry’s saved scores</h2>
+          <small>Right and wrong answers are saved automatically on this browser.</small>
+        </div>
+        <div class="record-grid" id="record-grid" aria-live="polite"></div>
       </section>
 
       <section class="question-grid" aria-label="Ten calculation questions">
@@ -125,11 +135,11 @@
 
       <section class="complete-card" id="complete-card" role="status" hidden>
         <span aria-hidden="true">★</span>
-        <div><strong id="complete-title">You finished Day 1!</strong><p id="final-score">First-answer score: 0/10. You corrected every question.</p></div>
-        <button id="reset-bottom" type="button">Practice again</button>
+        <div><strong id="complete-title">Set 1 complete!</strong><p id="final-score">First-try score: 0/10.</p></div>
       </section>
 
       <footer><a href="../">← Return to Marco &amp; Harry Learning Hub</a></footer>
     </main>
   </body>
 </html>
+
