@@ -328,3 +328,158 @@ window.STAR_MATH_TESTS = [
     ],
   },
 ];
+
+window.STAR_MATH_SIMILAR = {
+  "2026-08-09-q1": {
+    promptHtml: "What is the mean of the following numbers?<div class=\"star-equation\">18, 12, 9, 13</div>",
+    choicesHtml: ["14", "13", "12", "15"], correctIndex: 1,
+    explanation: "Add the numbers to get 52, then divide by 4. 52 ÷ 4 = 13.",
+  },
+  "2026-08-09-q2": {
+    promptHtml: "Identify a ray.",
+    choicesHtml: ["ray SQ", "segment ST", "line TR", "ray PR"], correctIndex: 0,
+    explanation: "A ray has one endpoint and continues in one direction. SQ is the ray.", visual: "geometry-similar",
+  },
+  "2026-08-09-q3": {
+    promptHtml: "In what place is the digit 4 in the number <strong>615.48</strong>?",
+    choicesHtml: ["tens", "tenths", "hundreds", "hundredths"], correctIndex: 1,
+    explanation: "The 4 is the first digit to the right of the decimal point, so it is in the tenths place.",
+  },
+  "2026-08-09-q4": {
+    promptHtml: "The clocks show two times in the same morning. How much time has passed?",
+    choicesHtml: ["7 minutes", "17 minutes", "27 minutes", "37 minutes"], correctIndex: 1,
+    explanation: "From 9:10 to 9:27 is 17 minutes.", visual: "clocks-similar",
+  },
+  "2026-08-09-q5": {
+    promptHtml: "Which rule can be used to find the output numbers in this table?",
+    choicesHtml: ["Multiply the input number by 5.", "Add 7 to the input number.", "Multiply the input number by 7.", "Divide the input number by 7."], correctIndex: 2,
+    explanation: "Every output is 7 times its input.", visual: "input-output-similar",
+  },
+  "2026-08-09-q11": {
+    promptHtml: `<div class="star-equation">${fraction(2, 7)} + ${fraction(3, 7)} = ?</div>`,
+    choicesHtml: [fraction(5, 14), fraction(5, 7), fraction(6, 7), fraction(3, 7)], correctIndex: 1,
+    explanation: "The denominators match, so add 2 + 3 and keep the denominator 7. The answer is 5/7.",
+  },
+  "2026-08-09-q14": {
+    promptHtml: `<div class="star-equation">${fraction(3, 4)} = ${fraction("?", 12)}</div>`,
+    choicesHtml: ["6", "8", "9", "16"], correctIndex: 2,
+    explanation: "The denominator 4 is multiplied by 3 to make 12, so multiply 3 by 3. The missing numerator is 9.",
+  },
+  "2026-08-09-q17": {
+    promptHtml: "Estimate:<div class=\"star-equation\">71 ÷ 8</div>",
+    choicesHtml: ["9", "8", "7", "10"], correctIndex: 0,
+    explanation: "Use the nearby compatible number 72. Since 72 ÷ 8 = 9, the best estimate is 9.",
+  },
+  "2026-08-09-q18": {
+    promptHtml: "Which expression has the same value as <strong>2,483 × 4</strong>?",
+    choicesHtml: ["(2,000 × 4) + (400 × 4) + (80 × 4) + (3 × 4)", "(2 × 4) + (400 × 4) + (80 × 4) + (3 × 4)", "(2,000 × 4) + (40 × 4) + (8 × 4) + (3 × 4)", "(2,000 × 4) + (400 × 4) + (8 × 4) + (3 × 4)"], correctIndex: 0,
+    explanation: "Break 2,483 into 2,000 + 400 + 80 + 3, then multiply every part by 4.",
+  },
+  "2026-08-09-q19": {
+    promptHtml: "What is <strong>47,652</strong> rounded to the thousands place?",
+    choicesHtml: ["47,000", "47,700", "48,000", "50,000"], correctIndex: 2,
+    explanation: "The hundreds digit is 6, so round 47,000 up to 48,000.",
+  },
+  "2026-08-09-q21": {
+    promptHtml: "What number is closest to the value of P on the number line?",
+    choicesHtml: ["2.06", "0.6", "2.8", "2.6"], correctIndex: 3,
+    explanation: "P is six tenths past 2, so its value is about 2.6.", visual: "number-line-similar",
+  },
+  "2026-08-09-q23": {
+    promptHtml: "What is the perimeter of the rectangle?",
+    choicesHtml: ["70 feet", "140 feet", "1,176 feet", "84 feet"], correctIndex: 1,
+    explanation: "Add all four sides: 42 + 28 + 42 + 28 = 140 feet.", visual: "rectangle-similar",
+  },
+  "2026-08-09-q24": {
+    promptHtml: "There are 19 students in a classroom with 4 tables. If 4 students can sit at a table, how many students <strong>cannot</strong> sit down at tables?",
+    choicesHtml: ["3", "4", "15", "16"], correctIndex: 0,
+    explanation: "Four tables seat 16 students, and 19 − 16 = 3 students cannot sit at the tables.",
+  },
+  "2026-08-09-q25": {
+    promptHtml: "Multiply:<div class=\"star-equation\">3 × 14 × 5</div>",
+    choicesHtml: ["42", "70", "210", "2,100"], correctIndex: 2,
+    explanation: "First 3 × 14 = 42, then 42 × 5 = 210.",
+  },
+  "2026-08-09-q28": {
+    promptHtml: "<div class=\"star-equation\">0.627 = ?</div>",
+    choicesHtml: ["six hundred twenty-seven hundredths", "six hundred seventy-two thousandths", "six hundred twenty-seven thousandths", "six thousand twenty-seven thousandths"], correctIndex: 2,
+    explanation: "There are three digits after the decimal point, so 0.627 is six hundred twenty-seven thousandths.",
+  },
+
+  "2026-08-16-q5": {
+    promptHtml: "The length of a pencil would be about _____.",
+    choicesHtml: ["18 kilometers", "18 meters", "18 centimeters", "18 millimeters"], correctIndex: 2,
+    explanation: "A pencil is a small everyday object, so 18 centimeters is a reasonable length.",
+  },
+  "2026-08-16-q7": {
+    promptHtml: "Add.",
+    choicesHtml: ["4,104", "4,204", "4,294", "4,304"], correctIndex: 1,
+    explanation: "3,642 + 57 + 89 + 416 = 4,204.", visual: "vertical-addition-similar",
+  },
+  "2026-08-16-q18": {
+    promptHtml: "What is the greatest common factor of <strong>18</strong> and <strong>42</strong>?",
+    choicesHtml: ["3", "6", "9", "12"], correctIndex: 1,
+    explanation: "The greatest number that divides both 18 and 42 is 6.",
+  },
+  "2026-08-16-q22": {
+    promptHtml: "There are 757 stickers. A teacher packs them in groups of 5. How many stickers are left after making all the complete groups?",
+    choicesHtml: ["0", "1", "2", "3"], correctIndex: 2,
+    explanation: "757 = 5 × 151 + 2, so 2 stickers are left.",
+  },
+  "2026-08-16-q23": {
+    promptHtml: "Nora buys an eraser for $0.47 and has $0.16 left. Which amount is a reasonable estimate of the money she had to start with?",
+    choicesHtml: ["$0.30", "$0.60", "$0.80", "$1.00"], correctIndex: 1,
+    explanation: "$0.47 + $0.16 = $0.63, which is reasonably estimated as $0.60.",
+  },
+  "2026-08-16-q25": {
+    promptHtml: "A fire has 5 bundles of wood with 8 pieces in each bundle. It burns 5 pieces each hour. How many hours will the wood last?",
+    choicesHtml: ["6 hours", "7 hours", "8 hours", "10 hours"], correctIndex: 2,
+    explanation: "There are 5 × 8 = 40 pieces. Then 40 ÷ 5 = 8 hours.",
+  },
+  "2026-08-16-q31": {
+    promptHtml: "Find the quotient.",
+    choicesHtml: [fraction(1, 10), fraction(1, 24), fraction(4, 6), fraction(2, 3)], correctIndex: 1,
+    explanation: "Dividing 1/6 into 4 equal parts gives 1/(6 × 4), or 1/24.", visual: "unit-fraction-division-similar",
+  },
+  "2026-08-16-q34": {
+    promptHtml: "Which expression is another way to write <strong>47,308</strong>?",
+    choicesHtml: ["4 × 10,000 + 7 × 1,000 + 3 × 100 + 8", "4 × 10,000 + 7 × 100 + 3 × 10 + 8", "4 × 1,000 + 7 × 1,000 + 3 × 100 + 8", "4 × 10,000 + 7 × 1,000 + 3 × 10 + 8"], correctIndex: 0,
+    explanation: "47,308 has 4 ten-thousands, 7 thousands, 3 hundreds, 0 tens, and 8 ones.",
+  },
+
+  "2026-08-23-q4": {
+    promptHtml: "A disc jockey has 164 albums with 12 songs on each album and 136 singles with 1 song each. How many total songs does the disc jockey have?",
+    choicesHtml: ["1,968", "2,104", "2,300", "3,320"], correctIndex: 1,
+    explanation: "164 × 12 = 1,968. Then add 136 singles: 1,968 + 136 = 2,104 songs.",
+  },
+  "2026-08-23-q13": {
+    promptHtml: "Multiply.",
+    choicesHtml: ["9.6", "0.96", "0.096", "0.0096"], correctIndex: 2,
+    explanation: "48 × 2 = 96. The factors have three decimal places altogether, so the product is 0.096.", visual: "decimal-multiplication-similar",
+  },
+  "2026-08-23-q22": {
+    promptHtml: "Which fraction is equal to <strong>0.6</strong>?",
+    choicesHtml: [fraction(3, 5), fraction(1, 6), fraction(2, 5), fraction(3, 4)], correctIndex: 0,
+    explanation: "0.6 means six tenths. 6/10 simplifies to 3/5.",
+  },
+  "2026-08-23-q25": {
+    promptHtml: "A home builder uses the land shown for each house and has the total land shown. How many houses can she build?",
+    choicesHtml: ["6", "8", "9", "12"], correctIndex: 1,
+    explanation: "Each house uses 3/4 acre. Six acres contains eight groups of 3/4, so she can build 8 houses.", visual: "land-similar",
+  },
+  "2026-08-23-q27": {
+    promptHtml: "The diameter of a circle is 34 centimeters. What is its radius?",
+    choicesHtml: ["8.5 cm", "17 cm", "34 cm", "68 cm"], correctIndex: 1,
+    explanation: "The radius is half the diameter. 34 ÷ 2 = 17 centimeters.", visual: "circle-similar",
+  },
+  "2026-08-23-q29": {
+    promptHtml: "Find the missing numerator.",
+    choicesHtml: ["11", "28", "35", "80"], correctIndex: 2,
+    explanation: "The denominator 4 is multiplied by 5 to make 20, so multiply 7 by 5. The missing numerator is 35.", visual: "equivalent-fraction-similar",
+  },
+  "2026-08-23-q31": {
+    promptHtml: "In what place is the digit 6 in the number <strong>305.067</strong>?",
+    choicesHtml: ["ones", "tenths", "hundredths", "thousandths"], correctIndex: 2,
+    explanation: "The 6 is the second digit to the right of the decimal point, so it is in the hundredths place.",
+  },
+};
