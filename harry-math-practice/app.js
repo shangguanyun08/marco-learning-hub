@@ -1,56 +1,40 @@
 const questionSets = {
-  1: [
-    [254, "×", 3, 762, "Multiply"],
-    [421, "×", 4, 1684, "Multiply"],
-    [236, "×", 3, 708, "Multiply"],
-    [435, "÷", 5, 87, "Divide"],
-    [846, "÷", 2, 423, "Divide"],
-    [431, "+", 268, 699, "Add"],
-    [57, "+", 86, 143, "Add"],
-    [240, "−", 68, 172, "Subtract"],
-    [330, "−", 249, 81, "Subtract"],
-    [650, "−", 328, 322, "Subtract"],
-  ],
-  2: [
-    [312, "×", 3, 936, "Multiply"],
-    [234, "×", 4, 936, "Multiply"],
-    [208, "×", 3, 624, "Multiply"],
-    [455, "÷", 5, 91, "Divide"],
-    [964, "÷", 2, 482, "Divide"],
-    [512, "+", 176, 688, "Add"],
-    [68, "+", 75, 143, "Add"],
-    [250, "−", 76, 174, "Subtract"],
-    [410, "−", 286, 124, "Subtract"],
-    [720, "−", 394, 326, "Subtract"],
-  ],
   3: [
-    [326, "×", 3, 978, "Multiply"],
-    [403, "×", 4, 1612, "Multiply"],
-    [245, "×", 3, 735, "Multiply"],
-    [465, "÷", 5, 93, "Divide"],
-    [786, "÷", 2, 393, "Divide"],
-    [324, "+", 358, 682, "Add"],
-    [79, "+", 64, 143, "Add"],
-    [260, "−", 87, 173, "Subtract"],
-    [500, "−", 268, 232, "Subtract"],
-    [810, "−", 486, 324, "Subtract"],
+    { left: 326, operator: "×", right: 3, answer: 978, skill: "Multiply" },
+    { left: 403, operator: "×", right: 4, answer: 1612, skill: "Multiply" },
+    { left: 245, operator: "×", right: 3, answer: 735, skill: "Multiply" },
+    { left: 465, operator: "÷", right: 5, answer: 93, skill: "Divide" },
+    { left: 786, operator: "÷", right: 2, answer: 393, skill: "Divide" },
+    { left: 324, operator: "+", right: 358, answer: 682, skill: "Add" },
+    { left: 79, operator: "+", right: 64, answer: 143, skill: "Add" },
+    { left: 260, operator: "−", right: 87, answer: 173, skill: "Subtract" },
+    { left: 500, operator: "−", right: 268, answer: 232, skill: "Subtract" },
+    { left: 810, operator: "−", right: 486, answer: 324, skill: "Subtract" },
+    { numerator: 11, denominator: 5, equivalentDenominator: 35, answer: 77, skill: "Equivalent Fraction", kind: "fraction" },
+    { numerator: 7, denominator: 4, equivalentDenominator: 28, answer: 49, skill: "Equivalent Fraction", kind: "fraction" },
+    { numerator: 13, denominator: 6, equivalentDenominator: 42, answer: 91, skill: "Equivalent Fraction", kind: "fraction" },
+    { numerator: 9, denominator: 8, equivalentDenominator: 56, answer: 63, skill: "Equivalent Fraction", kind: "fraction" },
   ],
   4: [
-    [318, "×", 3, 954, "Multiply"],
-    [432, "×", 4, 1728, "Multiply"],
-    [227, "×", 3, 681, "Multiply"],
-    [475, "÷", 5, 95, "Divide"],
-    [918, "÷", 2, 459, "Divide"],
-    [536, "+", 147, 683, "Add"],
-    [87, "+", 56, 143, "Add"],
-    [270, "−", 98, 172, "Subtract"],
-    [620, "−", 347, 273, "Subtract"],
-    [900, "−", 578, 322, "Subtract"],
+    { left: 318, operator: "×", right: 3, answer: 954, skill: "Multiply" },
+    { left: 432, operator: "×", right: 4, answer: 1728, skill: "Multiply" },
+    { left: 227, operator: "×", right: 3, answer: 681, skill: "Multiply" },
+    { left: 475, operator: "÷", right: 5, answer: 95, skill: "Divide" },
+    { left: 918, operator: "÷", right: 2, answer: 459, skill: "Divide" },
+    { left: 536, operator: "+", right: 147, answer: 683, skill: "Add" },
+    { left: 87, operator: "+", right: 56, answer: 143, skill: "Add" },
+    { left: 270, operator: "−", right: 98, answer: 172, skill: "Subtract" },
+    { left: 620, operator: "−", right: 347, answer: 273, skill: "Subtract" },
+    { left: 900, operator: "−", right: 578, answer: 322, skill: "Subtract" },
+    { numerator: 5, denominator: 3, equivalentDenominator: 21, answer: 35, skill: "Equivalent Fraction", kind: "fraction" },
+    { numerator: 12, denominator: 7, equivalentDenominator: 35, answer: 60, skill: "Equivalent Fraction", kind: "fraction" },
+    { numerator: 7, denominator: 9, equivalentDenominator: 63, answer: 49, skill: "Equivalent Fraction", kind: "fraction" },
+    { numerator: 15, denominator: 4, equivalentDenominator: 32, answer: 120, skill: "Equivalent Fraction", kind: "fraction" },
   ],
 };
 
 const STORAGE_KEY = "harry-math-practice-record-v1";
-const SET_COUNT = Object.keys(questionSets).length;
+const SET_NUMBERS = Object.keys(questionSets).map(Number);
 const cards = [...document.querySelectorAll("[data-question]")];
 const firstTryScore = document.querySelector("#first-try-score");
 const attemptSummary = document.querySelector("#attempt-summary");
@@ -61,7 +45,7 @@ const completeTitle = document.querySelector("#complete-title");
 const finalScore = document.querySelector("#final-score");
 const recordGrid = document.querySelector("#record-grid");
 const setButtons = [...document.querySelectorAll(".set-button")];
-let activeSet = 1;
+let activeSet = SET_NUMBERS[0];
 
 function emptyQuestionRecord() {
   return { firstTry: null, attempts: 0, solved: false, lastAnswer: "" };
@@ -85,20 +69,22 @@ function loadRecords() {
   }
 
   return Object.fromEntries(
-    Array.from({ length: SET_COUNT }, (_, index) => {
-      const setNumber = index + 1;
+    SET_NUMBERS.map((setNumber) => {
       const savedQuestions = Array.isArray(saved[setNumber]?.questions)
         ? saved[setNumber].questions
         : [];
       return [
         setNumber,
         {
-          questions: Array.from({ length: 10 }, (_, questionIndex) =>
-            savedQuestions[questionIndex]
-              ? normalizeQuestionRecord(savedQuestions[questionIndex])
-              : emptyQuestionRecord(),
+          questions: Array.from(
+            { length: questionSets[setNumber].length },
+            (_, questionIndex) =>
+              savedQuestions[questionIndex]
+                ? normalizeQuestionRecord(savedQuestions[questionIndex])
+                : emptyQuestionRecord(),
           ),
           completedAt:
+            savedQuestions.length === questionSets[setNumber].length &&
             typeof saved[setNumber]?.completedAt === "string"
               ? saved[setNumber].completedAt
               : null,
@@ -136,24 +122,67 @@ function recordStats(setNumber) {
   };
 }
 
-function renderExpression(element, question) {
-  const [left, operator, right] = question;
-  element.replaceChildren();
-  element.append(`${left} `);
+function scoreOutOf100(stats, questionCount) {
+  return Math.round((stats.right / questionCount) * 100);
+}
 
-  if (operator === "÷") {
+function formatCompletedAt(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
+
+function makeFraction(numerator, denominator, unknown = false) {
+  const fraction = document.createElement("span");
+  fraction.className = "fraction";
+  fraction.setAttribute(
+    "aria-label",
+    `${unknown ? "unknown" : numerator} over ${denominator}`,
+  );
+
+  const top = document.createElement("span");
+  top.className = "fraction-top";
+  top.textContent = unknown ? "?" : String(numerator);
+  const bottom = document.createElement("span");
+  bottom.className = "fraction-bottom";
+  bottom.textContent = String(denominator);
+  fraction.append(top, bottom);
+  return fraction;
+}
+
+function renderExpression(element, question) {
+  element.replaceChildren();
+
+  if (question.kind === "fraction") {
+    element.classList.add("fraction-expression");
+    element.append(
+      makeFraction(question.numerator, question.denominator),
+      " = ",
+      makeFraction(null, question.equivalentDenominator, true),
+    );
+    return;
+  }
+
+  element.classList.remove("fraction-expression");
+  element.append(`${question.left} `);
+
+  if (question.operator === "÷") {
     const division = document.createElement("span");
     division.className = "division-mark";
     division.setAttribute("aria-label", "divided by");
     division.textContent = "÷";
     element.append(division);
   } else {
-    element.append(operator);
+    element.append(question.operator);
   }
 
   const equals = document.createElement("span");
   equals.textContent = "=";
-  element.append(` ${right} `, equals);
+  element.append(` ${question.right} `, equals);
 }
 
 function feedbackFor(question) {
@@ -186,8 +215,11 @@ function renderQuestionState(card, index) {
 
 function renderRecordSummary() {
   recordGrid.replaceChildren();
-  for (let setNumber = 1; setNumber <= SET_COUNT; setNumber += 1) {
+  for (const setNumber of SET_NUMBERS) {
     const stats = recordStats(setNumber);
+    const questionCount = questionSets[setNumber].length;
+    const completedAt = formatCompletedAt(records[setNumber].completedAt);
+    const scoreValue = scoreOutOf100(stats, questionCount);
     const item = document.createElement("div");
     item.className = "record-item";
     if (setNumber === activeSet) item.classList.add("active");
@@ -195,9 +227,15 @@ function renderRecordSummary() {
     const label = document.createElement("strong");
     label.textContent = `Set ${setNumber}`;
     const score = document.createElement("span");
-    score.textContent = stats.answered ? `${stats.right}/10 first try` : "Not started";
+    score.textContent = completedAt
+      ? `Score: ${scoreValue}/100`
+      : stats.answered
+        ? `In progress · ${stats.answered}/${questionCount} scored`
+        : "Not started";
     const detail = document.createElement("small");
-    detail.textContent = `${stats.right} right · ${stats.wrong} wrong · ${stats.solved} solved`;
+    detail.textContent = completedAt
+      ? `Completed ${completedAt}`
+      : `${stats.right} right · ${stats.wrong} wrong · ${stats.solved} solved`;
     item.append(label, score, detail);
     recordGrid.append(item);
   }
@@ -205,10 +243,12 @@ function renderRecordSummary() {
 
 function updateProgress() {
   const stats = recordStats(activeSet);
-  firstTryScore.textContent = String(stats.right);
+  const questionCount = activeQuestions().length;
+  const scoreValue = scoreOutOf100(stats, questionCount);
+  firstTryScore.textContent = String(scoreValue);
   attemptSummary.textContent = `${stats.right} right · ${stats.wrong} wrong`;
-  solvedSummary.textContent = `${stats.solved}/10 solved · ${stats.answered}/10 first tries recorded`;
-  fill.style.width = `${stats.answered * 10}%`;
+  solvedSummary.textContent = `${stats.solved}/${questionCount} solved · ${stats.answered}/${questionCount} first tries recorded`;
+  fill.style.width = `${(stats.answered / questionCount) * 100}%`;
 
   const isComplete = stats.solved === activeQuestions().length;
   if (isComplete && !activeRecord().completedAt) {
@@ -217,7 +257,8 @@ function updateProgress() {
   }
   complete.hidden = !isComplete;
   completeTitle.textContent = `Set ${activeSet} complete!`;
-  finalScore.textContent = `First-try score: ${stats.right}/10 — ${stats.right} right and ${stats.wrong} wrong.`;
+  const completedAt = formatCompletedAt(activeRecord().completedAt);
+  finalScore.textContent = `Final score: ${scoreValue}/100 · ${stats.right} right and ${stats.wrong} wrong${completedAt ? ` · ${completedAt}` : ""}.`;
   renderRecordSummary();
 }
 
@@ -226,7 +267,7 @@ function loadSet(setNumber) {
   const questions = activeQuestions();
 
   cards.forEach((card, index) => {
-    card.querySelector(".skill").textContent = questions[index][4];
+    card.querySelector(".skill").textContent = questions[index].skill;
     renderExpression(card.querySelector(".expression"), questions[index]);
     renderQuestionState(card, index);
   });
@@ -270,7 +311,7 @@ cards.forEach((card, index) => {
     }
 
     const question = activeRecord().questions[index];
-    const isRight = Number(typed) === activeQuestions()[index][3];
+    const isRight = Number(typed) === activeQuestions()[index].answer;
     if (question.firstTry === null) question.firstTry = isRight;
     question.attempts += 1;
     question.lastAnswer = typed;
@@ -299,4 +340,4 @@ setButtons.forEach((button) => {
   button.addEventListener("click", () => loadSet(Number(button.dataset.set)));
 });
 
-loadSet(1);
+loadSet(SET_NUMBERS[0]);
