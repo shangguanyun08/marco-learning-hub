@@ -17,3 +17,4 @@ The hub links to:
 - Harry’s 1500 Word List
 - Harry’s 1,500-word Vocabulary Practice
 - Harry’s Calculation Retry Practice
+- Harry’s ThinkAcademy Lesson Sessions (dated two-try mistake archive)

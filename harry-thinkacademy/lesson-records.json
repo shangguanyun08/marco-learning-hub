@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "student": "Harry",
+  "records": [
+    {
+      "lesson": 10,
+      "title": "Grids and Shifts",
+      "recordedOn": "2026-08-26",
+      "originalSummary": {
+        "correct": 6,
+        "incorrect": 5,
+        "partiallyCorrect": 1,
+        "noAnswer": 1
+      },
+      "includedQuestionNumbers": [5, 6, 7, 10, 11, 12, 13],
+      "questionGroups": 7,
+      "answerBoxes": 15,
+      "practiceRule": "Two attempts per answer box; reveal the answer after the second incorrect attempt."
+    }
+  ]
+}
