@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Two saved math practice sets for Harry with first-try scoring out of 100 and dated completion records on this browser." />
+    <meta name="description" content="Two online-synced math practice sets for Harry with first-try scoring out of 100 and dated completion records." />
     <meta name="theme-color" content="#172f61" />
     <title>Harry’s Math Practice · Sets 3 &amp; 4</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles.css?v=5" />
-    <script src="./app.js?v=6" defer></script>
+    <script src="../shared-online-sync.js?v=1" defer></script>
+    <script src="./app.js?v=7" defer></script>
   </head>
   <body>
     <main class="practice-shell">
@@ -54,7 +55,7 @@
         <div class="record-heading">
           <p>FIRST-TRY RECORD</p>
           <h2 id="record-title">Harry’s saved scores</h2>
-          <small>Final scores and completion times are saved automatically on this browser.</small>
+          <small>Final scores and completion times save online and live-sync across devices.</small>
         </div>
         <div class="record-grid" id="record-grid" aria-live="polite"></div>
       </section>
