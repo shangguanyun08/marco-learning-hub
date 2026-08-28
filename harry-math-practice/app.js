@@ -1,20 +1,4 @@
 const questionSets = {
-  3: [
-    { left: 326, operator: "×", right: 3, answer: 978, skill: "Multiply" },
-    { left: 403, operator: "×", right: 4, answer: 1612, skill: "Multiply" },
-    { left: 245, operator: "×", right: 3, answer: 735, skill: "Multiply" },
-    { left: 465, operator: "÷", right: 5, answer: 93, skill: "Divide" },
-    { left: 786, operator: "÷", right: 2, answer: 393, skill: "Divide" },
-    { left: 324, operator: "+", right: 358, answer: 682, skill: "Add" },
-    { left: 79, operator: "+", right: 64, answer: 143, skill: "Add" },
-    { left: 260, operator: "−", right: 87, answer: 173, skill: "Subtract" },
-    { left: 500, operator: "−", right: 268, answer: 232, skill: "Subtract" },
-    { left: 810, operator: "−", right: 486, answer: 324, skill: "Subtract" },
-    { numerator: 11, denominator: 5, equivalentDenominator: 35, answer: 77, skill: "Equivalent Fraction", kind: "fraction" },
-    { numerator: 7, denominator: 4, equivalentDenominator: 28, answer: 49, skill: "Equivalent Fraction", kind: "fraction" },
-    { numerator: 13, denominator: 6, equivalentDenominator: 42, answer: 91, skill: "Equivalent Fraction", kind: "fraction" },
-    { numerator: 9, denominator: 8, equivalentDenominator: 56, answer: 63, skill: "Equivalent Fraction", kind: "fraction" },
-  ],
   4: [
     { left: 318, operator: "×", right: 3, answer: 954, skill: "Multiply" },
     { left: 432, operator: "×", right: 4, answer: 1728, skill: "Multiply" },
