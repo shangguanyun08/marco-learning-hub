@@ -30,12 +30,16 @@ const questionSets = {
     { numerator: 12, denominator: 7, equivalentDenominator: 35, answer: 60, skill: "Equivalent Fraction", kind: "fraction" },
     { numerator: 7, denominator: 9, equivalentDenominator: 63, answer: 49, skill: "Equivalent Fraction", kind: "fraction" },
     { numerator: 15, denominator: 4, equivalentDenominator: 32, answer: 120, skill: "Equivalent Fraction", kind: "fraction" },
+    { left: 0.46, operator: "×", right: 0.2, answer: 0.092, skill: "Decimal Multiply" },
+    { left: 0.37, operator: "×", right: 0.4, answer: 0.148, skill: "Decimal Multiply" },
   ],
 };
 
 const STORAGE_KEY = "harry-math-practice-record-v1";
+const APP_ID = "harry-math-practice-v1";
 const SET_NUMBERS = Object.keys(questionSets).map(Number);
 const cards = [...document.querySelectorAll("[data-question]")];
+const questionGrid = document.querySelector(".question-grid");
 const firstTryScore = document.querySelector("#first-try-score");
 const attemptSummary = document.querySelector("#attempt-summary");
 const solvedSummary = document.querySelector("#solved-summary");
@@ -60,14 +64,7 @@ function normalizeQuestionRecord(value) {
   };
 }
 
-function loadRecords() {
-  let saved = {};
-  try {
-    saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
-  } catch {
-    saved = {};
-  }
-
+function normalizeRecords(saved = {}) {
   return Object.fromEntries(
     SET_NUMBERS.map((setNumber) => {
       const savedQuestions = Array.isArray(saved[setNumber]?.questions)
@@ -94,14 +91,50 @@ function loadRecords() {
   );
 }
 
-const records = loadRecords();
+function loadRecords() {
+  try {
+    return normalizeRecords(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {});
+  } catch {
+    return normalizeRecords();
+  }
+}
 
-function saveRecords() {
+function isValidRecords(value) {
+  return Boolean(
+    value &&
+      typeof value === "object" &&
+      SET_NUMBERS.every((setNumber) => Array.isArray(value[setNumber]?.questions)),
+  );
+}
+
+function syncScore(value) {
+  const normalized = normalizeRecords(value);
+  return SET_NUMBERS.reduce(
+    (total, setNumber) =>
+      total +
+      normalized[setNumber].questions.reduce(
+        (setTotal, question) =>
+          setTotal + (question.solved ? 1000 : 0) + (question.firstTry !== null ? 1 : 0),
+        0,
+      ),
+    0,
+  );
+}
+
+let records = loadRecords();
+let sync = null;
+
+function storeRecords() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
   } catch {
     // Practice still works when browser storage is unavailable.
   }
+}
+
+function saveRecords() {
+  storeRecords();
+  sync?.push(records);
 }
 
 function activeQuestions() {
@@ -265,10 +298,20 @@ function updateProgress() {
 function loadSet(setNumber) {
   activeSet = setNumber;
   const questions = activeQuestions();
+  questionGrid.setAttribute(
+    "aria-label",
+    `${questions.length} math questions in Set ${setNumber}`,
+  );
 
   cards.forEach((card, index) => {
-    card.querySelector(".skill").textContent = questions[index].skill;
-    renderExpression(card.querySelector(".expression"), questions[index]);
+    const question = questions[index];
+    card.hidden = !question;
+    if (!question) return;
+    const input = card.querySelector("input");
+    input.step = Number.isInteger(question.answer) ? "1" : "any";
+    input.inputMode = Number.isInteger(question.answer) ? "numeric" : "decimal";
+    card.querySelector(".skill").textContent = question.skill;
+    renderExpression(card.querySelector(".expression"), question);
     renderQuestionState(card, index);
   });
 
@@ -280,7 +323,7 @@ function loadSet(setNumber) {
 
   updateProgress();
   const firstOpenCard = cards.find(
-    (_, index) => !activeRecord().questions[index].solved,
+    (_, index) => activeRecord().questions[index] && !activeRecord().questions[index].solved,
   );
   firstOpenCard?.querySelector("input").focus();
 }
@@ -293,6 +336,7 @@ cards.forEach((card, index) => {
 
   input.addEventListener("input", () => {
     const question = activeRecord().questions[index];
+    if (!question) return;
     if (card.classList.contains("wrong")) card.classList.remove("wrong");
     feedback.textContent =
       question.firstTry === false
@@ -302,6 +346,9 @@ cards.forEach((card, index) => {
 
   form.addEventListener("submit", (event) => {
     event.preventDefault();
+    const question = activeRecord().questions[index];
+    const activeQuestion = activeQuestions()[index];
+    if (!question || !activeQuestion) return;
     const typed = input.value.trim();
     if (!typed) {
       card.classList.add("wrong");
@@ -310,8 +357,7 @@ cards.forEach((card, index) => {
       return;
     }
 
-    const question = activeRecord().questions[index];
-    const isRight = Number(typed) === activeQuestions()[index].answer;
+    const isRight = Number(typed) === activeQuestion.answer;
     if (question.firstTry === null) question.firstTry = isRight;
     question.attempts += 1;
     question.lastAnswer = typed;
@@ -341,3 +387,19 @@ setButtons.forEach((button) => {
 });
 
 loadSet(SET_NUMBERS[0]);
+
+const isLocalPreview = location.hostname === "127.0.0.1" || location.hostname === "localhost";
+if (window.MarcoOnlineSync && !isLocalPreview) {
+  sync = window.MarcoOnlineSync.create({
+    appId: APP_ID,
+    studentName: "Harry",
+    validate: isValidRecords,
+    score: syncScore,
+    onRemote(remote) {
+      records = normalizeRecords(remote);
+      storeRecords();
+      loadSet(activeSet);
+    },
+  });
+  void sync.start(records);
+}

@@ -3,12 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Two saved math practice sets for Harry with first-try scoring out of 100 and dated completion records on this browser." />
+    <meta name="description" content="Two online-synced math practice sets for Harry with first-try scoring out of 100 and dated completion records." />
     <meta name="theme-color" content="#172f61" />
     <title>Harry’s Math Practice · Sets 3 &amp; 4</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="./styles.css?v=5" />
-    <script src="./app.js?v=6" defer></script>
+    <script src="../shared-online-sync.js?v=1" defer></script>
+    <script src="./app.js?v=7" defer></script>
   </head>
   <body>
     <main class="practice-shell">
@@ -54,12 +55,12 @@
         <div class="record-heading">
           <p>FIRST-TRY RECORD</p>
           <h2 id="record-title">Harry’s saved scores</h2>
-          <small>Final scores and completion times are saved automatically on this browser.</small>
+          <small>Final scores and completion times save online and live-sync across devices.</small>
         </div>
         <div class="record-grid" id="record-grid" aria-live="polite"></div>
       </section>
 
-      <section class="question-grid" aria-label="Fourteen math questions">
+      <section class="question-grid" aria-label="14 math questions in Set 3">
         <article class="question-card" data-question="1">
           <div class="card-top"><span class="number">1</span><span class="skill">Multiply</span></div>
           <p class="expression">263 × 3 <span>=</span></p>
@@ -156,6 +157,20 @@
           <p class="expression fraction-expression"></p>
           <form><label for="answer-14">Missing numerator</label><div class="answer-row"><input id="answer-14" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-14" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="15">
+          <div class="card-top"><span class="number">15</span><span class="skill">Decimal Multiply</span></div>
+          <p class="expression">0.46 × 0.2 <span>=</span></p>
+          <form><label for="answer-15">Your answer</label><div class="answer-row"><input id="answer-15" type="number" inputmode="decimal" step="any" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-15" aria-live="polite">Enter your answer when you are ready.</p>
+        </article>
+
+        <article class="question-card" data-question="16">
+          <div class="card-top"><span class="number">16</span><span class="skill">Decimal Multiply</span></div>
+          <p class="expression">0.37 × 0.4 <span>=</span></p>
+          <form><label for="answer-16">Your answer</label><div class="answer-row"><input id="answer-16" type="number" inputmode="decimal" step="any" autocomplete="off" /><button type="submit">Check</button></div></form>
+          <p class="feedback" id="feedback-16" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
       </section>
 
