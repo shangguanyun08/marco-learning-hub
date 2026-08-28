@@ -6,10 +6,10 @@ const questionSets = {
     { left: 475, operator: "÷", right: 5, answer: 95, skill: "Divide" },
     { left: 918, operator: "÷", right: 2, answer: 459, skill: "Divide" },
     { left: 536, operator: "+", right: 147, answer: 683, skill: "Add" },
-    { left: 87, operator: "+", right: 56, answer: 143, skill: "Add" },
+    { left: 87, operator: "+", right: 56, answer: 143, skill: "Add", removed: true },
     { left: 270, operator: "−", right: 98, answer: 172, skill: "Subtract" },
     { left: 620, operator: "−", right: 347, answer: 273, skill: "Subtract" },
-    { left: 900, operator: "−", right: 578, answer: 322, skill: "Subtract" },
+    { left: 900, operator: "−", right: 578, answer: 322, skill: "Subtract", removed: true },
     { numerator: 5, denominator: 3, equivalentDenominator: 21, answer: 35, skill: "Equivalent Fraction", kind: "fraction" },
     { numerator: 12, denominator: 7, equivalentDenominator: 35, answer: 60, skill: "Equivalent Fraction", kind: "fraction" },
     { numerator: 7, denominator: 9, equivalentDenominator: 63, answer: 49, skill: "Equivalent Fraction", kind: "fraction" },
@@ -129,8 +129,14 @@ function activeRecord() {
   return records[activeSet];
 }
 
+function questionCount(setNumber) {
+  return questionSets[setNumber].filter((question) => !question.removed).length;
+}
+
 function recordStats(setNumber) {
-  const questions = records[setNumber].questions;
+  const questions = records[setNumber].questions.filter(
+    (_, index) => !questionSets[setNumber][index].removed,
+  );
   return {
     answered: questions.filter((question) => question.firstTry !== null).length,
     right: questions.filter((question) => question.firstTry === true).length,
@@ -234,9 +240,9 @@ function renderRecordSummary() {
   recordGrid.replaceChildren();
   for (const setNumber of SET_NUMBERS) {
     const stats = recordStats(setNumber);
-    const questionCount = questionSets[setNumber].length;
+    const setQuestionCount = questionCount(setNumber);
     const completedAt = formatCompletedAt(records[setNumber].completedAt);
-    const scoreValue = scoreOutOf100(stats, questionCount);
+    const scoreValue = scoreOutOf100(stats, setQuestionCount);
     const item = document.createElement("div");
     item.className = "record-item";
     if (setNumber === activeSet) item.classList.add("active");
@@ -247,7 +253,7 @@ function renderRecordSummary() {
     score.textContent = completedAt
       ? `Score: ${scoreValue}/100`
       : stats.answered
-        ? `In progress · ${stats.answered}/${questionCount} scored`
+        ? `In progress · ${stats.answered}/${setQuestionCount} scored`
         : "Not started";
     const detail = document.createElement("small");
     detail.textContent = completedAt
@@ -260,14 +266,14 @@ function renderRecordSummary() {
 
 function updateProgress() {
   const stats = recordStats(activeSet);
-  const questionCount = activeQuestions().length;
-  const scoreValue = scoreOutOf100(stats, questionCount);
+  const activeQuestionCount = questionCount(activeSet);
+  const scoreValue = scoreOutOf100(stats, activeQuestionCount);
   firstTryScore.textContent = String(scoreValue);
   attemptSummary.textContent = `${stats.right} right · ${stats.wrong} wrong`;
-  solvedSummary.textContent = `${stats.solved}/${questionCount} solved · ${stats.answered}/${questionCount} first tries recorded`;
-  fill.style.width = `${(stats.answered / questionCount) * 100}%`;
+  solvedSummary.textContent = `${stats.solved}/${activeQuestionCount} solved · ${stats.answered}/${activeQuestionCount} first tries recorded`;
+  fill.style.width = `${(stats.answered / activeQuestionCount) * 100}%`;
 
-  const isComplete = stats.solved === activeQuestions().length;
+  const isComplete = stats.solved === activeQuestionCount;
   if (isComplete && !activeRecord().completedAt) {
     activeRecord().completedAt = new Date().toISOString();
     saveRecords();
@@ -284,13 +290,16 @@ function loadSet(setNumber) {
   const questions = activeQuestions();
   questionGrid.setAttribute(
     "aria-label",
-    `${questions.length} math questions in Set ${setNumber}`,
+    `${questionCount(setNumber)} math questions in Set ${setNumber}`,
   );
 
+  let displayNumber = 0;
   cards.forEach((card, index) => {
     const question = questions[index];
-    card.hidden = !question;
-    if (!question) return;
+    card.hidden = !question || question.removed;
+    if (!question || question.removed) return;
+    displayNumber += 1;
+    card.querySelector(".number").textContent = String(displayNumber);
     const input = card.querySelector("input");
     input.step = Number.isInteger(question.answer) ? "1" : "any";
     input.inputMode = Number.isInteger(question.answer) ? "numeric" : "decimal";
@@ -307,7 +316,10 @@ function loadSet(setNumber) {
 
   updateProgress();
   const firstOpenCard = cards.find(
-    (_, index) => activeRecord().questions[index] && !activeRecord().questions[index].solved,
+    (_, index) =>
+      !activeQuestions()[index]?.removed &&
+      activeRecord().questions[index] &&
+      !activeRecord().questions[index].solved,
   );
   firstOpenCard?.querySelector("input").focus();
 }
@@ -320,7 +332,7 @@ cards.forEach((card, index) => {
 
   input.addEventListener("input", () => {
     const question = activeRecord().questions[index];
-    if (!question) return;
+    if (!question || activeQuestions()[index]?.removed) return;
     if (card.classList.contains("wrong")) card.classList.remove("wrong");
     feedback.textContent =
       question.firstTry === false
@@ -332,7 +344,7 @@ cards.forEach((card, index) => {
     event.preventDefault();
     const question = activeRecord().questions[index];
     const activeQuestion = activeQuestions()[index];
-    if (!question || !activeQuestion) return;
+    if (!question || !activeQuestion || activeQuestion.removed) return;
     const typed = input.value.trim();
     if (!typed) {
       card.classList.add("wrong");
