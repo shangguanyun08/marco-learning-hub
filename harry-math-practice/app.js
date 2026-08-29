@@ -26,12 +26,12 @@ const questionSets = {
     { left: 458, operator: "+", right: 236, answer: 694, skill: "Add" },
     { left: 740, operator: "−", right: 268, answer: 472, skill: "Subtract" },
     { left: 905, operator: "−", right: 487, answer: 418, skill: "Subtract" },
-    { prompt: "Which fraction is equal to 0.3?", decimal: 0.3, answer: "3/10", skill: "Decimal to Fraction", kind: "decimalFraction" },
-    { prompt: "Which fraction is equal to 0.6?", decimal: 0.6, answer: "3/5", skill: "Decimal to Fraction", kind: "decimalFraction" },
-    { prompt: "In what place is the digit 7 in 438.72?", answer: "tenths", accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue" },
-    { prompt: "In what place is the digit 5 in 906.153?", answer: "hundredths", accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue" },
-    { left: 0.48, operator: "×", right: 0.3, answer: 0.144, skill: "Decimal Multiply" },
-    { left: 0.26, operator: "×", right: 0.4, answer: 0.104, skill: "Decimal Multiply" },
+    { prompt: "Which fraction is equal to 0.3?", decimal: 0.3, answer: "3/10", choices: ["1/10", "3/10", "3/5", "7/10"], skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "Which fraction is equal to 0.6?", decimal: 0.6, answer: "3/5", choices: ["1/6", "3/5", "2/3", "6/100"], skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "In what place is the digit 7 in 438.72?", answer: "tenths", choices: ["ones", "tenths", "hundredths", "thousandths"], accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { prompt: "In what place is the digit 5 in 906.153?", answer: "hundredths", choices: ["tenths", "hundredths", "thousandths", "ones"], accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { left: 0.48, operator: "×", right: 0.3, answer: 0.144, choices: [1.44, 0.0144, 0.144, 0.84], skill: "Decimal Multiply" },
+    { left: 0.26, operator: "×", right: 0.4, answer: 0.104, choices: [0.66, 0.0104, 1.04, 0.104], skill: "Decimal Multiply" },
   ],
   6: [
     { left: 327, operator: "×", right: 3, answer: 981, skill: "Multiply" },
@@ -42,12 +42,12 @@ const questionSets = {
     { left: 367, operator: "+", right: 428, answer: 795, skill: "Add" },
     { left: 830, operator: "−", right: 356, answer: 474, skill: "Subtract" },
     { left: 704, operator: "−", right: 289, answer: 415, skill: "Subtract" },
-    { prompt: "Which fraction is equal to 0.4?", decimal: 0.4, answer: "2/5", skill: "Decimal to Fraction", kind: "decimalFraction" },
-    { prompt: "Which fraction is equal to 0.75?", decimal: 0.75, answer: "3/4", skill: "Decimal to Fraction", kind: "decimalFraction" },
-    { prompt: "In what place is the digit 6 in 524.68?", answer: "tenths", accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue" },
-    { prompt: "In what place is the digit 2 in 381.024?", answer: "hundredths", accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue" },
-    { left: 0.53, operator: "×", right: 0.2, answer: 0.106, skill: "Decimal Multiply" },
-    { left: 0.42, operator: "×", right: 0.3, answer: 0.126, skill: "Decimal Multiply" },
+    { prompt: "Which fraction is equal to 0.4?", decimal: 0.4, answer: "2/5", choices: ["1/4", "2/5", "4/5", "4/100"], skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "Which fraction is equal to 0.75?", decimal: 0.75, answer: "3/4", choices: ["1/4", "1/2", "3/4", "4/5"], skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "In what place is the digit 6 in 524.68?", answer: "tenths", choices: ["ones", "tenths", "hundredths", "thousandths"], accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { prompt: "In what place is the digit 2 in 381.024?", answer: "hundredths", choices: ["tenths", "hundredths", "thousandths", "ones"], accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { left: 0.53, operator: "×", right: 0.2, answer: 0.106, choices: [0.73, 0.0106, 0.106, 1.06], skill: "Decimal Multiply" },
+    { left: 0.42, operator: "×", right: 0.3, answer: 0.126, choices: [0.126, 0.72, 1.26, 0.0126], skill: "Decimal Multiply" },
   ],
 };
 
@@ -279,11 +279,57 @@ function feedbackFor(question) {
   return "Enter your answer when you are ready.";
 }
 
+function renderChoiceOptions(card, index, question, record) {
+  const form = card.querySelector("form");
+  const input = card.querySelector("input");
+  const answerRow = card.querySelector(".answer-row");
+  form.querySelector(".choice-grid")?.remove();
+
+  const hasChoices = Array.isArray(question.choices);
+  answerRow.hidden = hasChoices;
+  input.hidden = hasChoices;
+  if (!hasChoices) return;
+
+  const grid = document.createElement("div");
+  grid.className = "choice-grid";
+  grid.setAttribute("role", "group");
+  grid.setAttribute("aria-labelledby", `choice-label-${index + 1}`);
+
+  question.choices.forEach((choice) => {
+    const value = String(choice);
+    const option = document.createElement("button");
+    option.type = "button";
+    option.className = "choice-option";
+    option.textContent = value;
+    option.dataset.value = value;
+    option.disabled = record.solved;
+
+    const selected = record.lastAnswer === value;
+    option.classList.toggle("selected", selected);
+    option.setAttribute("aria-pressed", String(selected));
+    if (record.solved && isCorrectAnswer(value, question)) {
+      option.classList.add("correct");
+    } else if (selected && record.firstTry === false) {
+      option.classList.add("incorrect");
+    }
+
+    option.addEventListener("click", () => {
+      input.value = value;
+      card.classList.remove("wrong");
+      form.requestSubmit();
+    });
+    grid.append(option);
+  });
+
+  answerRow.before(grid);
+}
+
 function renderQuestionState(card, index) {
   const question = activeRecord().questions[index];
   const input = card.querySelector("input");
   const button = card.querySelector("button[type='submit']");
   const feedback = card.querySelector(".feedback");
+  const activeQuestion = activeQuestions()[index];
 
   card.classList.toggle("right", question.solved);
   card.classList.toggle("wrong", question.firstTry === false && !question.solved);
@@ -292,6 +338,7 @@ function renderQuestionState(card, index) {
   button.disabled = question.solved;
   button.textContent = question.solved ? "Solved" : "Check";
   feedback.textContent = feedbackFor(question);
+  renderChoiceOptions(card, index, activeQuestion, question);
 }
 
 function renderRecordSummary() {
@@ -366,13 +413,17 @@ function loadSet(setNumber) {
     input.inputMode = numericAnswer
       ? Number.isInteger(question.answer) ? "numeric" : "decimal"
       : "text";
-    label.textContent = question.kind === "decimalFraction"
-      ? "Type a fraction (example: 1/5)"
-      : question.kind === "placeValue"
-        ? "Type the place value"
-        : question.kind === "fraction"
-          ? "Missing numerator"
-          : "Your answer";
+    label.id = `choice-label-${index + 1}`;
+    label.htmlFor = question.choices ? "" : input.id;
+    label.textContent = question.choices
+      ? "Choose one answer"
+      : question.kind === "decimalFraction"
+        ? "Type a fraction (example: 1/5)"
+        : question.kind === "placeValue"
+          ? "Type the place value"
+          : question.kind === "fraction"
+            ? "Missing numerator"
+            : "Your answer";
     card.querySelector(".skill").textContent = question.skill;
     renderExpression(card.querySelector(".expression"), question);
     renderQuestionState(card, index);
@@ -391,7 +442,9 @@ function loadSet(setNumber) {
       activeRecord().questions[index] &&
       !activeRecord().questions[index].solved,
   );
-  firstOpenCard?.querySelector("input").focus();
+  firstOpenCard
+    ?.querySelector(".choice-option:not(:disabled), input:not([hidden])")
+    ?.focus();
 }
 
 cards.forEach((card, index) => {
@@ -430,17 +483,8 @@ cards.forEach((card, index) => {
     if (isRight) question.solved = true;
 
     saveRecords();
-    card.classList.toggle("right", isRight);
-    card.classList.toggle("wrong", !isRight);
-
-    if (isRight) {
-      input.disabled = true;
-      button.disabled = true;
-      button.textContent = "Solved";
-      feedback.textContent = feedbackFor(question);
-    } else {
-      feedback.textContent =
-        "First try recorded as incorrect. Recalculate and try again.";
+    renderQuestionState(card, index);
+    if (!isRight && !activeQuestion.choices) {
       input.focus();
       input.select();
     }
