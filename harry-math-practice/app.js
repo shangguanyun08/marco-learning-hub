@@ -17,6 +17,38 @@ const questionSets = {
     { left: 0.46, operator: "×", right: 0.2, answer: 0.092, skill: "Decimal Multiply" },
     { left: 0.37, operator: "×", right: 0.4, answer: 0.148, skill: "Decimal Multiply" },
   ],
+  5: [
+    { left: 346, operator: "×", right: 3, answer: 1038, skill: "Multiply" },
+    { left: 425, operator: "×", right: 4, answer: 1700, skill: "Multiply" },
+    { left: 218, operator: "×", right: 3, answer: 654, skill: "Multiply" },
+    { left: 735, operator: "÷", right: 5, answer: 147, skill: "Divide" },
+    { left: 864, operator: "÷", right: 2, answer: 432, skill: "Divide" },
+    { left: 458, operator: "+", right: 236, answer: 694, skill: "Add" },
+    { left: 740, operator: "−", right: 268, answer: 472, skill: "Subtract" },
+    { left: 905, operator: "−", right: 487, answer: 418, skill: "Subtract" },
+    { prompt: "Which fraction is equal to 0.3?", decimal: 0.3, answer: "3/10", skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "Which fraction is equal to 0.6?", decimal: 0.6, answer: "3/5", skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "In what place is the digit 7 in 438.72?", answer: "tenths", accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { prompt: "In what place is the digit 5 in 906.153?", answer: "hundredths", accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { left: 0.48, operator: "×", right: 0.3, answer: 0.144, skill: "Decimal Multiply" },
+    { left: 0.26, operator: "×", right: 0.4, answer: 0.104, skill: "Decimal Multiply" },
+  ],
+  6: [
+    { left: 327, operator: "×", right: 3, answer: 981, skill: "Multiply" },
+    { left: 414, operator: "×", right: 4, answer: 1656, skill: "Multiply" },
+    { left: 236, operator: "×", right: 3, answer: 708, skill: "Multiply" },
+    { left: 845, operator: "÷", right: 5, answer: 169, skill: "Divide" },
+    { left: 936, operator: "÷", right: 2, answer: 468, skill: "Divide" },
+    { left: 367, operator: "+", right: 428, answer: 795, skill: "Add" },
+    { left: 830, operator: "−", right: 356, answer: 474, skill: "Subtract" },
+    { left: 704, operator: "−", right: 289, answer: 415, skill: "Subtract" },
+    { prompt: "Which fraction is equal to 0.4?", decimal: 0.4, answer: "2/5", skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "Which fraction is equal to 0.75?", decimal: 0.75, answer: "3/4", skill: "Decimal to Fraction", kind: "decimalFraction" },
+    { prompt: "In what place is the digit 6 in 524.68?", answer: "tenths", accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { prompt: "In what place is the digit 2 in 381.024?", answer: "hundredths", accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue" },
+    { left: 0.53, operator: "×", right: 0.2, answer: 0.106, skill: "Decimal Multiply" },
+    { left: 0.42, operator: "×", right: 0.3, answer: 0.126, skill: "Decimal Multiply" },
+  ],
 };
 
 const STORAGE_KEY = "harry-math-practice-record-v1";
@@ -87,7 +119,7 @@ function isValidRecords(value) {
   return Boolean(
     value &&
       typeof value === "object" &&
-      SET_NUMBERS.every((setNumber) => Array.isArray(value[setNumber]?.questions)),
+      SET_NUMBERS.some((setNumber) => Array.isArray(value[setNumber]?.questions)),
   );
 }
 
@@ -179,6 +211,7 @@ function makeFraction(numerator, denominator, unknown = false) {
 
 function renderExpression(element, question) {
   element.replaceChildren();
+  element.classList.remove("fraction-expression", "prompt-expression");
 
   if (question.kind === "fraction") {
     element.classList.add("fraction-expression");
@@ -190,7 +223,12 @@ function renderExpression(element, question) {
     return;
   }
 
-  element.classList.remove("fraction-expression");
+  if (question.prompt) {
+    element.classList.add("prompt-expression");
+    element.textContent = question.prompt;
+    return;
+  }
+
   element.append(`${question.left} `);
 
   if (question.operator === "÷") {
@@ -206,6 +244,26 @@ function renderExpression(element, question) {
   const equals = document.createElement("span");
   equals.textContent = "=";
   element.append(` ${question.right} `, equals);
+}
+
+function isCorrectAnswer(typed, question) {
+  if (typeof question.answer === "number") {
+    return Number(typed) === question.answer;
+  }
+
+  const normalized = typed.trim().toLowerCase().replace(/\s+/g, " ");
+  const accepted = [question.answer, ...(question.accepted || [])].map((answer) =>
+    answer.toLowerCase(),
+  );
+  if (accepted.includes(normalized)) return true;
+
+  if (question.kind === "decimalFraction") {
+    const match = normalized.replace(/\s/g, "").match(/^(-?\d+)\/(\d+)$/);
+    if (!match || Number(match[2]) === 0) return false;
+    return Math.abs(Number(match[1]) / Number(match[2]) - question.decimal) < 1e-10;
+  }
+
+  return false;
 }
 
 function feedbackFor(question) {
@@ -301,8 +359,20 @@ function loadSet(setNumber) {
     displayNumber += 1;
     card.querySelector(".number").textContent = String(displayNumber);
     const input = card.querySelector("input");
-    input.step = Number.isInteger(question.answer) ? "1" : "any";
-    input.inputMode = Number.isInteger(question.answer) ? "numeric" : "decimal";
+    const label = card.querySelector("label");
+    const numericAnswer = typeof question.answer === "number";
+    input.type = numericAnswer ? "number" : "text";
+    input.step = numericAnswer && Number.isInteger(question.answer) ? "1" : "any";
+    input.inputMode = numericAnswer
+      ? Number.isInteger(question.answer) ? "numeric" : "decimal"
+      : "text";
+    label.textContent = question.kind === "decimalFraction"
+      ? "Type a fraction (example: 1/5)"
+      : question.kind === "placeValue"
+        ? "Type the place value"
+        : question.kind === "fraction"
+          ? "Missing numerator"
+          : "Your answer";
     card.querySelector(".skill").textContent = question.skill;
     renderExpression(card.querySelector(".expression"), question);
     renderQuestionState(card, index);
@@ -353,7 +423,7 @@ cards.forEach((card, index) => {
       return;
     }
 
-    const isRight = Number(typed) === activeQuestion.answer;
+    const isRight = isCorrectAnswer(typed, activeQuestion);
     if (question.firstTry === null) question.firstTry = isRight;
     question.attempts += 1;
     question.lastAnswer = typed;
