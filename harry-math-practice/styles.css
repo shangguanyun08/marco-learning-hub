@@ -115,6 +115,14 @@ button { color: inherit; }
 .answer-row button { min-width: 87px; min-height: 48px; padding: 9px 15px; border: 0; border-radius: 11px; background: #263d75; color: #fff; font-weight: 800; cursor: pointer; }
 .answer-row button:hover:not(:disabled) { background: #3656a1; }
 .answer-row button:disabled { background: var(--teal); cursor: default; }
+.choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.choice-option { min-height: 50px; padding: 10px 12px; border: 2px solid #cbd3e4; border-radius: 11px; background: #fff; color: var(--ink); font-size: 17px; font-weight: 800; cursor: pointer; }
+.choice-option:hover:not(:disabled) { border-color: var(--blue); background: #f4f6ff; }
+.choice-option:focus-visible { outline: 3px solid rgba(82,104,232,.28); outline-offset: 2px; }
+.choice-option.selected { border-color: var(--blue); background: #e8edff; color: #29489d; }
+.choice-option.incorrect { border-color: var(--coral); background: #fff0ec; color: #a54b3f; }
+.choice-option.correct { border-color: var(--teal); background: #e6f5ef; color: #1f6e65; }
+.choice-option:disabled { cursor: default; opacity: 1; }
 .feedback { min-height: 20px; margin: 11px 0 0; color: #7a8499; font-size: 12px; font-weight: 700; }
 .right .feedback { color: #217269; }
 .wrong .feedback { color: #ad574a; }
