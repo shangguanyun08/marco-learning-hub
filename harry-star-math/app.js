@@ -164,6 +164,36 @@
     if (name === "equivalent-fraction-similar") {
       return `<div class="question-visual big-equation"><span class="math-fraction"><span>7</span><span>4</span></span><span>=</span><span class="math-fraction"><span>?</span><span>20</span></span></div>`;
     }
+    if (name === "aug30-subtraction") {
+      return `<div class="question-visual"><div class="vertical-math"><span>696,410</span><span>− 18,564</span></div></div>`;
+    }
+    if (name === "aug30-subtraction-similar") {
+      return `<div class="question-visual"><div class="vertical-math"><span>584,300</span><span>− 27,458</span></div></div>`;
+    }
+    if (name === "aug30-animal-table") {
+      return `<div class="question-visual"><table class="input-output data-table"><thead><tr><th>Animal</th><th>Average weight (kg)</th></tr></thead><tbody><tr><td>Polar bear</td><td>410</td></tr><tr><td>Caribou</td><td>214</td></tr><tr><td>Moose</td><td>700</td></tr><tr><td>Beaver</td><td>23</td></tr><tr><td>Arctic wolf</td><td>40</td></tr></tbody></table></div>`;
+    }
+    if (name === "aug30-animal-table-similar") {
+      return `<div class="question-visual"><table class="input-output data-table"><thead><tr><th>Animal</th><th>Average weight (kg)</th></tr></thead><tbody><tr><td>Black bear</td><td>360</td></tr><tr><td>Elk</td><td>725</td></tr><tr><td>Deer</td><td>92</td></tr><tr><td>Fox</td><td>14</td></tr></tbody></table></div>`;
+    }
+    if (name === "aug30-pictograph") {
+      return `<div class="question-visual"><table class="pictograph" aria-label="Sports pictograph; one diamond equals two children"><caption>Sports Children Play</caption><tbody><tr><th>Baseball</th><td>♦ ♦ ♦ ♦</td></tr><tr><th>Basketball</th><td>♦</td></tr><tr><th>Softball</th><td>♦ ♦ ♦ ♦ ♦ ♦</td></tr></tbody><tfoot><tr><td colspan="2">♦ = 2 children</td></tr></tfoot></table></div>`;
+    }
+    if (name === "aug30-pictograph-similar") {
+      return `<div class="question-visual"><table class="pictograph" aria-label="Club pictograph; one diamond equals two children"><caption>Clubs Children Joined</caption><tbody><tr><th>Science</th><td>♦ ♦ ♦ ♦</td></tr><tr><th>Art</th><td>♦ ♦</td></tr><tr><th>Music</th><td>♦ ♦ ♦</td></tr></tbody><tfoot><tr><td colspan="2">♦ = 2 children</td></tr></tfoot></table></div>`;
+    }
+    if (name === "aug30-shaded-cylinder") {
+      return `<div class="question-visual cylinder-visual" aria-label="A cylinder shaded about five sixths"><div class="cylinder-fill fill-five-sixths"></div></div>`;
+    }
+    if (name === "aug30-shaded-cylinder-similar") {
+      return `<div class="question-visual cylinder-visual" aria-label="A cylinder shaded about three fourths"><div class="cylinder-fill fill-three-fourths"></div></div>`;
+    }
+    if (name === "aug30-prism") {
+      return `<div class="question-visual"><div class="prism-diagram" aria-label="Rectangular prism 2 cubes wide, 4 cubes high, and 4 cubes deep"><div class="prism-grid prism-2-by-4">${"<i></i>".repeat(8)}</div><span class="width-label">2 wide</span><span class="height-label">4 high</span><span class="depth-label">4 deep</span></div></div>`;
+    }
+    if (name === "aug30-prism-similar") {
+      return `<div class="question-visual"><div class="prism-diagram" aria-label="Rectangular prism 3 cubes wide, 3 cubes high, and 4 cubes deep"><div class="prism-grid prism-3-by-3">${"<i></i>".repeat(9)}</div><span class="width-label">3 wide</span><span class="height-label">3 high</span><span class="depth-label">4 deep</span></div></div>`;
+    }
     return `<div class="question-visual big-equation"><span class="math-fraction"><span>11</span><span>5</span></span><span>=</span><span class="math-fraction"><span>?</span><span>35</span></span></div>`;
   }
 
