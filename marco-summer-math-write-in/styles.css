@@ -24,15 +24,20 @@ h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; 
 .rail-heading { display: flex; align-items: flex-end; justify-content: space-between; padding: 20px 18px 14px; }
 .rail-heading strong { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; }
 .rail-heading span { color: var(--muted); font-size: 11px; font-weight: 700; }
-.day-list { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; max-height: none; overflow: visible; padding: 0 12px 14px; }
-.day-list button { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; width: 100%; margin: 3px 0; border: 0; border-radius: 12px; background: transparent; padding: 9px 10px; color: #496071; text-align: left; cursor: pointer; }
-.day-list button:hover { background: #f4f1eb; }
+.day-list { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; max-height: none; margin: 0 18px 20px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: var(--line); }
+.day-list button { display: grid; grid-template-areas: "label" "score" "progress"; grid-template-columns: minmax(0, 1fr); align-items: center; gap: 7px; min-height: 104px; width: 100%; border: 0; border-radius: 0; background: var(--paper); padding: 12px; color: #496071; text-align: left; cursor: pointer; }
+.day-list button:hover { background: #f7f5ef; }
 .day-list button.active { background: var(--blue-soft); color: var(--blue); }
 .day-list button.done:not(.active) { color: var(--green); }
-.day-list button.done > span { color: var(--green); }
-.day-list button > span { color: #94a0a8; font-family: Georgia, 'Times New Roman', serif; font-size: 12px; font-weight: 700; }
-.day-list b { font-size: 13px; }
-.day-list small { font-size: 10px; font-weight: 700; }
+.day-label { grid-area: label; display: flex; min-width: 0; align-items: center; gap: 6px; font-size: 13px; }
+.day-label b { white-space: nowrap; }
+.day-label i { display: grid; flex: 0 0 auto; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: var(--green); color: white; font-size: 12px; font-style: normal; font-weight: 900; }
+.day-score { grid-area: score; display: flex; align-items: baseline; color: #173957; font-family: Georgia, 'Times New Roman', serif; font-size: 20px; line-height: 1; }
+.day-score > span { align-self: center; margin-right: 5px; color: var(--muted); font-family: Arial, Helvetica, sans-serif; font-size: 8px; font-weight: 900; letter-spacing: .04em; text-transform: uppercase; }
+.day-score small { margin-left: 1px; color: var(--muted); font-family: Arial, Helvetica, sans-serif; font-size: 9px; font-weight: 800; }
+.day-progress { grid-area: progress; border-top: 1px solid rgba(111, 127, 141, .18); padding-top: 7px; color: var(--muted); font-size: 9px; font-weight: 700; }
+.day-list button.active .day-score, .day-list button.active .day-score small, .day-list button.active .day-score > span, .day-list button.active .day-progress { color: var(--blue); }
+.day-list button.done:not(.active) .day-score { color: var(--green); }
 .question-card { min-height: 650px; padding: clamp(24px, 4vw, 46px); }
 .question-meta { display: grid; grid-template-columns: auto minmax(100px, 1fr) auto; align-items: center; gap: 20px; padding-bottom: 24px; border-bottom: 1px solid var(--line); }
 .question-meta > div:first-child { display: flex; align-items: baseline; gap: 10px; }
@@ -121,6 +126,10 @@ math { font-size: 1.05em; }
 .loading { display: flex; min-height: 100vh; align-items: center; justify-content: center; gap: 12px; color: var(--muted); }
 .loading-mark { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #173957; color: white; font-family: Georgia, 'Times New Roman', serif; font-weight: 900; }
 
+@media (min-width: 761px) and (max-width: 1000px) {
+  .day-list { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 @media (max-width: 760px) {
   .site-shell { padding: 20px 14px 36px; }
   .topbar { align-items: flex-start; }
@@ -132,8 +141,8 @@ math { font-size: 1.05em; }
   .hero-strip strong, .hero-strip span { display: block; }
   .workspace { grid-template-columns: 1fr; }
   .day-rail { order: 0; }
-  .day-list { display: flex; gap: 8px; max-height: none; overflow-x: auto; overflow-y: hidden; padding-bottom: 14px; scroll-snap-type: x proximity; }
-  .day-list button { flex: 0 0 132px; scroll-snap-align: start; }
+  .day-list { display: flex; gap: 8px; max-height: none; margin: 0; overflow-x: auto; overflow-y: hidden; border: 0; border-radius: 0; background: transparent; padding: 0 14px 14px; scroll-snap-type: x proximity; }
+  .day-list button { flex: 0 0 154px; border: 1px solid var(--line); border-radius: 12px; scroll-snap-align: start; }
   .question-card { min-height: 0; padding: 24px 18px; }
   .question-meta { grid-template-columns: 1fr auto; }
   .progress-track { grid-column: 1 / -1; grid-row: 2; }

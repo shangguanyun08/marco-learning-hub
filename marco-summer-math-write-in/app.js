@@ -114,6 +114,7 @@
   function metrics(day) {
     const session = latestSession(day.day);
     const attempts = attemptsFor(session);
+    const firstTryCorrect = attempts.filter((attempt) => attempt.correct && attempt.attemptNumber === 1).length;
     const firstTryWrong = attempts.filter((attempt) => !attempt.correct && attempt.attemptNumber === 1).length;
     const secondTryWrong = attempts.filter((attempt) => !attempt.correct && attempt.attemptNumber === 2).length;
     return {
@@ -124,6 +125,8 @@
       answersRevealed: day.questions.filter((question) => isExhausted(session, question.id)).length,
       checked: new Set(attempts.map((attempt) => attempt.questionId)).size,
       wrongChecks: attempts.filter((attempt) => !attempt.correct).length,
+      firstTryCorrect,
+      firstTryScore: Math.round((firstTryCorrect / day.questionCount) * 100),
       firstTryWrong,
       secondTryWrong,
       completed: Boolean(session?.completedAt),
@@ -622,8 +625,11 @@
         <div class="rail-heading"><strong>Your sessions</strong><span>Choose one full day</span></div>
         <div class="day-list">${bank.days.map((day) => {
           const dayStats = metrics(day);
-          return `<button class="${day.day === activeDay ? "active" : ""} ${dayStats.completed ? "done" : ""}" data-action="day" data-day="${day.day}" type="button">
-            <span>${dayStats.completed ? "✓" : String(day.day).padStart(2, "0")}</span><b>Day ${day.day}</b><small>${dayStats.completedQuestions}/${day.questionCount}</small>
+          const completionLabel = dayStats.completed ? ", completed" : "";
+          return `<button class="${day.day === activeDay ? "active" : ""} ${dayStats.completed ? "done" : ""}" data-action="day" data-day="${day.day}" type="button" aria-label="Day ${day.day}, first-try score ${dayStats.firstTryScore} out of 100, ${dayStats.completedQuestions} of ${day.questionCount} questions finished${completionLabel}">
+            <span class="day-label"><b>Day ${day.day}</b>${dayStats.completed ? '<i aria-hidden="true">✓</i>' : ""}</span>
+            <strong class="day-score"><span>First try</span>${dayStats.firstTryScore}<small>/100</small></strong>
+            <small class="day-progress">${dayStats.completedQuestions}/${day.questionCount} questions finished</small>
           </button>`;
         }).join("")}</div>
       </section>`;
