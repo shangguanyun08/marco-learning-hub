@@ -211,7 +211,7 @@
         <span class="test-number">0${index + 1}</span>
         <p class="eyebrow">${test.extractedLabel}</p>
         <h2>${test.dateLabel}</h2>
-        <p>${test.questions.length} original missed questions, each paired with a similar practice question.</p>
+        <p>${test.questions.length} original missed or timed-out questions, each paired with a similar practice question.</p>
         <ul><li>Original + similar</li><li>Two tries each</li><li>Saved practice history</li></ul>
         <div class="test-status"><span>${status}</span><i><b style="width:${Math.round((counts.finished / target) * 100)}%"></b></i></div>
         <a class="primary-link" href="./tests/${test.id}/">Open ${test.shortDate} session <span>→</span></a>
@@ -251,7 +251,8 @@
       const heading = result.outcome === "revealed" ? "Answer shown after two tries" : result.outcome === "first_try" ? "Correct on the first try" : "Correct on the second try";
       feedback = `<div class="answer-panel ${result.outcome === "revealed" ? "revealed" : "solved"}"><strong>${heading}</strong><p><b>Answer:</b> ${item.choicesHtml[item.correctIndex]}</p><p>${item.explanation}</p></div>`;
     }
-    const label = type === "similar" ? "Similar practice" : `Original missed question #${question.number}`;
+    const timedOut = question.skill.startsWith("Timed out");
+    const label = type === "similar" ? "Similar practice" : timedOut ? `Timed-out original question #${question.number}` : `Original missed question #${question.number}`;
     return `<section class="question-panel ${type} ${finished ? "finished" : ""}" data-question-id="${itemId}" data-parent-id="${question.id}" data-question-type="${type}">
       <div class="panel-heading"><span class="pair-label">${label}</span><span class="tries-pill ${finished ? "done" : ""}">${finished ? "Finished" : `${triesLeft} ${triesLeft === 1 ? "try" : "tries"} left`}</span></div>
       <div class="prompt">${item.promptHtml}</div>${visual(item.visual)}

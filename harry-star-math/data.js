@@ -354,7 +354,7 @@ window.STAR_MATH_TESTS = [
       {
         id: "2026-08-30-q7",
         number: 7,
-        skill: "Subtract multi-digit whole numbers",
+        skill: "Timed out — subtract multi-digit whole numbers",
         promptHtml: "Subtract.",
         choicesHtml: ["678,846", "677,846", "677,856", "682,154"],
         correctIndex: 1,
@@ -437,15 +437,6 @@ window.STAR_MATH_TESTS = [
         visual: "aug30-shaded-cylinder",
       },
       {
-        id: "2026-08-30-q28",
-        number: 28,
-        skill: "Choose a division equation for equal groups",
-        promptHtml: "Grace is playing a game with her friends. Each player gets 5 pieces. There are 45 pieces in all. Which number sentence finds the number of people playing?",
-        choicesHtml: ["45 − 5 = □", "45 ÷ 5 = □", "45 × 5 = □", "45 + 5 = □"],
-        correctIndex: 1,
-        explanation: "The 45 pieces are split into equal groups of 5, so use 45 ÷ 5 = 9.",
-      },
-      {
         id: "2026-08-30-q29",
         number: 29,
         skill: "Multiply a decimal by a whole number",
@@ -462,29 +453,6 @@ window.STAR_MATH_TESTS = [
         choicesHtml: ["15", "61", "50", "60"],
         correctIndex: 3,
         explanation: "One foot equals 12 inches, so 5 × 12 = 60 inches.",
-      },
-      {
-        id: "2026-08-30-q32",
-        number: 32,
-        skill: "Use order of operations",
-        promptHtml: "What is the value of <strong>15 − 2 × 7</strong>?",
-        choicesHtml: ["6", "1", "20", "91"],
-        correctIndex: 1,
-        explanation: "Multiply first: 2 × 7 = 14. Then subtract: 15 − 14 = 1.",
-      },
-      {
-        id: "2026-08-30-q33",
-        number: 33,
-        skill: "Write a whole number in word form",
-        promptHtml: "<div class=\"star-equation\">517,645,388 = ?</div>",
-        choicesHtml: [
-          "five hundred seventeen thousand, six hundred forty-five thousand, three hundred eighty-eight",
-          "five hundred seventeen million, six hundred forty-three thousand five hundred, three hundred eighty-eight",
-          "five hundred seventeen million, six hundred forty-five thousand, three hundred eighty-eight",
-          "five hundred seventeen million, six hundred forty-five thousand, two hundred eight",
-        ],
-        correctIndex: 2,
-        explanation: "Read the number in three-digit periods: 517 million, 645 thousand, and 388.",
       },
       {
         id: "2026-08-30-q34",
@@ -709,11 +677,6 @@ window.STAR_MATH_SIMILAR = {
     choicesHtml: [fraction(1, 4), fraction(1, 2), fraction(3, 4), fraction(5, 6)], correctIndex: 2,
     explanation: "About one fourth is unshaded, so about three fourths of the cylinder is shaded.", visual: "aug30-shaded-cylinder-similar",
   },
-  "2026-08-30-q28": {
-    promptHtml: "A teacher shares 56 cards equally. Each student gets 7 cards. Which number sentence finds the number of students?",
-    choicesHtml: ["56 − 7 = □", "56 ÷ 7 = □", "56 × 7 = □", "56 + 7 = □"], correctIndex: 1,
-    explanation: "The 56 cards are split into equal groups of 7, so use 56 ÷ 7 = 8.",
-  },
   "2026-08-30-q29": {
     promptHtml: "Mateo buys 6 bottles. Each bottle contains 4.5 ounces of juice. How much juice did Mateo buy?",
     choicesHtml: ["10.5 oz", "24 oz", "27 oz", "45 oz"], correctIndex: 2,
@@ -723,21 +686,6 @@ window.STAR_MATH_SIMILAR = {
     promptHtml: "<div class=\"star-equation\">7 feet = ___ inches</div>",
     choicesHtml: ["72", "79", "84", "96"], correctIndex: 2,
     explanation: "One foot equals 12 inches, so 7 × 12 = 84 inches.",
-  },
-  "2026-08-30-q32": {
-    promptHtml: "What is the value of <strong>24 − 3 × 6</strong>?",
-    choicesHtml: ["6", "18", "21", "126"], correctIndex: 0,
-    explanation: "Multiply first: 3 × 6 = 18. Then subtract: 24 − 18 = 6.",
-  },
-  "2026-08-30-q33": {
-    promptHtml: "<div class=\"star-equation\">804,302,019 = ?</div>",
-    choicesHtml: [
-      "eight hundred four thousand, three hundred two thousand, nineteen",
-      "eight hundred four million, three hundred two thousand, nineteen",
-      "eight hundred forty million, three hundred two thousand, nineteen",
-      "eight hundred four million, thirty-two thousand, nineteen",
-    ], correctIndex: 1,
-    explanation: "Read the number in three-digit periods: 804 million, 302 thousand, and 19.",
   },
   "2026-08-30-q34": {
     promptHtml: "What is the volume of the rectangular prism? Each small cube is 1 cubic inch.",

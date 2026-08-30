@@ -18,4 +18,4 @@ The hub links to:
 - Harry’s 1,500-word Vocabulary Practice
 - Harry’s Calculation Retry Practice
 - Harry’s ThinkAcademy Lesson Sessions (dated two-try mistake archive)
-- Harry’s STAR Math Test Sessions (four dated tests, 47 original missed questions paired with 47 similar questions, two-try practice history)
+- Harry’s STAR Math Test Sessions (four dated tests, 44 original missed or timed-out questions paired with 44 similar questions, two-try practice history)
