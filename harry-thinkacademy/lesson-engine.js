@@ -17,7 +17,9 @@
   const save = () => localStorage.setItem(cfg.storageKey, JSON.stringify(state));
 
   function mathHtml(text) {
-    return esc(text).replaceAll("÷", '<span class="division-mark" aria-label="divided by">÷</span>');
+    return esc(text)
+      .replace(/(\d+)\/(\d+)/g, '<span class="frac" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>')
+      .replaceAll("÷", '<span class="division-mark" aria-label="divided by">÷</span>');
   }
 
   function fieldHtml(field) {
@@ -25,7 +27,7 @@
     if (type === "choice" || type === "multi") {
       const inputType = type === "multi" ? "checkbox" : "radio";
       const choices = field.options.map((option) => `<label><input type="${inputType}" name="${esc(field.id)}" value="${esc(option.key)}"><b>${esc(option.key)}.</b><span>${esc(option.text)}</span></label>`).join("");
-      return `<form class="answer-unit choice-form" data-field-id="${esc(field.id)}"><div class="choice-list">${choices}</div><button type="submit">Check</button><p class="feedback" aria-live="polite">Two tries available.</p><p class="answer-reveal" hidden></p></form>`;
+      return `<form class="answer-unit choice-form" data-field-id="${esc(field.id)}">${field.expression ? `<p class="calc-expression">${mathHtml(field.expression)}</p>` : ""}<div class="choice-list">${choices}</div><button type="submit">Check</button><p class="feedback" aria-live="polite">Two tries available.</p><p class="answer-reveal" hidden></p></form>`;
     }
     return `<form class="answer-unit" data-field-id="${esc(field.id)}">${field.expression ? `<p class="calc-expression">${mathHtml(field.expression)}</p>` : ""}<label class="answer-label" for="answer-${esc(field.id)}">${esc(field.label || "Answer")}</label><div class="answer-line"><input id="answer-${esc(field.id)}" type="text" inputmode="${type === "text" ? "text" : "numeric"}" autocomplete="off"><button type="submit">Check</button></div><p class="feedback" aria-live="polite">Two tries available.</p><p class="answer-reveal" hidden></p></form>`;
   }
@@ -34,6 +36,7 @@
     if (!figure) return "";
     if (figure.type === "image") return `<figure class="figure-wrap"><div><img src="${esc(figure.src)}" alt="${esc(figure.alt || "Question figure")}"><figcaption>${esc(figure.caption || "")}</figcaption></div></figure>`;
     if (figure.type === "solid" || figure.type === "cubeRow") return `<figure class="figure-wrap"><canvas class="solid-canvas" width="520" height="340" data-drawing='${esc(JSON.stringify(figure))}' aria-label="${esc(figure.alt || "Math figure")}"></canvas></figure>`;
+    if (figure.type === "coordinatePlane") return `<figure class="figure-wrap"><canvas class="coordinate-canvas" width="520" height="400" data-drawing='${esc(JSON.stringify(figure))}' aria-label="${esc(figure.alt || "Coordinate plane")}"></canvas><figcaption>${esc(figure.caption || "Each grid line marks 1 unit.")}</figcaption></figure>`;
     if (figure.type === "cellGrid") {
       const cells = Array.from({length:figure.rows * figure.cols}, (_,i) => `<span class="${figure.on.includes(i) ? "on" : ""}"></span>`).join("");
       return `<figure class="figure-wrap"><div class="cell-grid" style="grid-template-columns:repeat(${figure.cols},28px)">${cells}</div><figcaption>${esc(figure.caption || "Each shaded square has area 1.")}</figcaption></figure>`;
@@ -93,7 +96,7 @@
     if (item.status === "correct") {
       form.classList.add("is-correct"); feedback.textContent = item.firstTryCorrect ? "Correct on the first try! ★" : "Correct — you figured it out!"; setDisabled(form,true);
     } else if (item.status === "revealed") {
-      form.classList.add("is-revealed"); feedback.textContent = "Let’s learn from this one."; reveal.textContent = `Answer: ${answerText(field)}`; reveal.hidden = false; setDisabled(form,true);
+      form.classList.add("is-revealed"); feedback.textContent = "Let’s learn from this one."; reveal.innerHTML = `Answer: ${mathHtml(answerText(field))}`; reveal.hidden = false; setDisabled(form,true);
     } else {
       form.classList.add("is-wrong"); feedback.textContent = "Not yet. Calculate again — one try left."; setDisabled(form,false);
     }
@@ -154,6 +157,16 @@
     document.querySelectorAll("canvas[data-drawing]").forEach((canvas) => {
       const d = JSON.parse(canvas.dataset.drawing); const ctx = canvas.getContext("2d");
       ctx.clearRect(0,0,520,340); ctx.lineWidth=5; ctx.strokeStyle="#172f61"; ctx.fillStyle="#dce7ff"; ctx.lineJoin="round";
+      if (d.type === "coordinatePlane") {
+        ctx.clearRect(0,0,520,400); const maxX=d.maxX||10,maxY=d.maxY||10,s=Math.min(28,260/maxX,260/maxY),ox=78,oy=342;
+        ctx.lineWidth=1.5; ctx.strokeStyle="#a9d9ef"; ctx.font="600 16px Segoe UI"; ctx.textAlign="center"; ctx.textBaseline="middle";
+        for(let i=0;i<=maxX;i++){const x=ox+i*s;ctx.beginPath();ctx.moveTo(x,oy);ctx.lineTo(x,oy-maxY*s);ctx.stroke();ctx.fillStyle="#52637d";ctx.fillText(String(i),x,oy+20);}
+        for(let i=0;i<=maxY;i++){const y=oy-i*s;ctx.beginPath();ctx.moveTo(ox,y);ctx.lineTo(ox+maxX*s,y);ctx.stroke();ctx.fillStyle="#52637d";if(i>0)ctx.fillText(String(i),ox-22,y);}
+        ctx.lineWidth=4;ctx.strokeStyle="#172f61";ctx.beginPath();ctx.moveTo(ox,oy-maxY*s-18);ctx.lineTo(ox,oy+4);ctx.lineTo(ox+maxX*s+18,oy+4);ctx.stroke();
+        if(d.connect && (d.points||[]).length>1){ctx.beginPath();d.points.forEach((p,i)=>{const x=ox+p.x*s,y=oy-p.y*s;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});if(d.points.length>2)ctx.closePath();ctx.lineWidth=3;ctx.strokeStyle="#4255ff";ctx.stroke();}
+        (d.points||[]).forEach((p)=>{const x=ox+p.x*s,y=oy-p.y*s;ctx.beginPath();ctx.fillStyle=p.color||"#f05a28";ctx.arc(x,y,7,0,Math.PI*2);ctx.fill();ctx.font="italic 700 21px Georgia";ctx.fillStyle="#172f61";ctx.fillText(p.label,x+16,y-14);});
+        return;
+      }
       if (d.type === "cubeRow") {
         const size = Math.min(74,350/d.count), depth=30, start=(520-(d.count*size+depth))/2, y=135;
         for(let i=0;i<d.count;i++){const x=start+i*size;ctx.fillStyle="#eaf0ff";ctx.fillRect(x,y,size,size);ctx.strokeRect(x,y,size,size);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+depth,y-depth);ctx.lineTo(x+size+depth,y-depth);ctx.lineTo(x+size,y);ctx.moveTo(x+size,y);ctx.lineTo(x+size+depth,y-depth);ctx.lineTo(x+size+depth,y+size-depth);ctx.lineTo(x+size,y+size);ctx.stroke();}
