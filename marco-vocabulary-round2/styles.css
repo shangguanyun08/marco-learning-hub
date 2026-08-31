@@ -132,6 +132,11 @@ h1 em { color: #f3ca72; font-weight: 500; }
 .test-wrap { display: grid; place-items: center; min-height: 470px; padding: clamp(27px,6vw,62px); }
 .test-copy { width: min(100%, 820px); }
 .test-copy .mini-label { margin-bottom: 9px !important; }
+.test-list { display: grid; gap: 14px; padding: 18px; background: #f5f8f7; }
+.test-question { display: grid; grid-template-columns: 104px minmax(0,1fr); gap: 18px; padding: clamp(18px,3vw,30px); border: 1px solid #dbe5e2; border-radius: 16px; background: white; box-shadow: 0 7px 20px rgba(24,74,68,.06); }
+.question-number { color: var(--teal); font-size: .72rem; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; }
+.test-question .test-copy { width: 100%; }
+.test-question .sentence { margin: 16px 0; font-size: clamp(1.25rem,2.4vw,1.7rem); }
 .test-meaning { margin: 0; color: #586679; font-size: .94rem; line-height: 1.55; }
 .sentence { margin: 24px 0; color: var(--ink); font: 500 clamp(1.65rem,4.5vw,2.65rem)/1.3 Georgia,serif; letter-spacing: -.025em; }
 .blank { color: var(--teal); white-space: nowrap; }
@@ -191,6 +196,8 @@ h1 em { color: #f3ca72; font-weight: 500; }
   .word-card { grid-template-columns: 150px minmax(0,1fr); }
   .word-copy { padding: 13px; }
   .choices { grid-template-columns: 1fr; }
+  .test-list { padding: 10px; }
+  .test-question { grid-template-columns: 1fr; gap: 9px; padding: 16px; }
   .test-actions { padding: 14px; }
   .test-actions button { flex: 1; padding-inline: 10px; }
   .record-stats { grid-template-columns: repeat(2,minmax(0,1fr)); }

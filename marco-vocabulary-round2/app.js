@@ -3,6 +3,7 @@
 
   const WORDS = Array.isArray(window.MARCO_R2_WORDS) ? window.MARCO_R2_WORDS : [];
   const WORD_BY_ID = new Map(WORDS.map((item) => [item.id, item]));
+  const WORD_INDEX_BY_ID = new Map(WORDS.map((item, index) => [item.id, index]));
   const SESSION_SIZE = 50;
   const SESSION_COUNT = Math.ceil(WORDS.length / SESSION_SIZE);
   const STORAGE_KEY = "marco-round2-vocabulary-660-v1";
@@ -19,14 +20,14 @@
   const toast = document.querySelector("#toast");
 
   let onlineSync = null;
+  const artworkLoads = new Map();
   const state = {
     phase: "review",
     session: 1,
     round: 1,
     known: new Set(),
     questions: [],
-    questionIndex: 0,
-    answer: null,
+    answers: {},
     roundStartKnown: 0,
     progress: { version: 1, activeSession: 1, sessions: {}, activity: [] },
   };
@@ -89,8 +90,7 @@
     state.round = Math.max(1, Number(stored.round) || 1);
     state.phase = state.known.size === currentWords().length ? "complete" : "review";
     state.questions = [];
-    state.questionIndex = 0;
-    state.answer = null;
+    state.answers = {};
     state.roundStartKnown = state.known.size;
   }
 
@@ -131,22 +131,41 @@
   }
 
   function illustrationMarkup(item, extraClass = "") {
-    const globalIndex = WORDS.findIndex((word) => word.id === item.id);
-    const isPortrait = Math.floor(globalIndex / SESSION_SIZE) + 1 === SESSION_COUNT;
+    const globalIndex = WORD_INDEX_BY_ID.get(item.id);
+    const session = Math.floor(globalIndex / SESSION_SIZE) + 1;
+    const cell = globalIndex % SESSION_SIZE;
+    const row = Math.floor(cell / 5);
+    const column = cell % 5;
+    const isPortrait = session === SESSION_COUNT;
+    const cellWidth = 200;
+    const cellHeight = isPortrait ? 300 : 150;
+    const rows = isPortrait ? 2 : 10;
     const panelRatio = isPortrait ? "2 / 3" : "4 / 3";
-    const panelNumber = String(globalIndex + 1).padStart(3, "0");
-    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${panelRatio}" data-art><span class="art-fallback" aria-hidden="true">${item.icon}</span><img class="word-illustration" src="./illustrations/panels/panel-${panelNumber}.webp?v=1" alt="Illustration for ${escapeHtml(item.word)}" loading="lazy" decoding="async"></div>`;
+    const source = `./illustrations/atlas/session-${String(session).padStart(2, "0")}.webp?v=20260831-3`;
+    const viewBox = `${column * cellWidth} ${row * cellHeight} ${cellWidth} ${cellHeight}`;
+    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${panelRatio}" data-art data-art-source="${source}" role="img" aria-label="Illustration for ${escapeHtml(item.word)}"><span class="art-fallback" aria-hidden="true">${item.icon}</span><svg class="word-illustration" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><image href="${source}" width="${cellWidth * 5}" height="${cellHeight * rows}" preserveAspectRatio="none"></image></svg></div>`;
+  }
+
+  function loadArtwork(source) {
+    if (!artworkLoads.has(source)) {
+      artworkLoads.set(source, new Promise((resolve, reject) => {
+        const image = new Image();
+        image.addEventListener("load", resolve, { once: true });
+        image.addEventListener("error", reject, { once: true });
+        image.src = source;
+        if (image.complete && image.naturalWidth > 0) resolve();
+      }));
+    }
+    return artworkLoads.get(source);
   }
 
   function markLoadedImages() {
     document.querySelectorAll("[data-art]").forEach((art) => {
-      const image = art.querySelector(".word-illustration");
-      if (!image) return;
-      if (image.complete && image.naturalWidth > 0) {
-        art.classList.add("has-image");
-        return;
-      }
-      image.addEventListener("load", () => art.classList.add("has-image"), { once: true });
+      const source = art.dataset.artSource;
+      if (!source) return;
+      loadArtwork(source).then(() => {
+        if (art.isConnected) art.classList.add("has-image");
+      }).catch(() => {});
     });
   }
 
@@ -269,8 +288,7 @@
     }
     state.phase = "test";
     state.questions = shuffle(remaining).map(makeQuestion);
-    state.questionIndex = 0;
-    state.answer = null;
+    state.answers = {};
     state.roundStartKnown = state.known.size;
     persist();
     render();
@@ -288,13 +306,13 @@
     return `${sentence} <span class="blank">_____</span>`;
   }
 
-  function choose(optionId) {
-    if (state.answer !== null) return;
-    const question = state.questions[state.questionIndex];
+  function choose(questionIndex, optionId) {
+    if (Object.hasOwn(state.answers, questionIndex)) return;
+    const question = state.questions[questionIndex];
     const target = WORD_BY_ID.get(question.wordId);
     const selected = WORD_BY_ID.get(optionId);
     const correct = optionId === question.wordId;
-    state.answer = optionId;
+    state.answers[questionIndex] = optionId;
     state.progress.activity.push({
       id: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
       session: state.session,
@@ -310,36 +328,35 @@
     render();
   }
 
-  function nextQuestion() {
-    if (state.answer === null) return;
-    if (state.questionIndex < state.questions.length - 1) {
-      state.questionIndex += 1;
-      state.answer = null;
-    } else {
-      state.phase = state.known.size === currentWords().length ? "complete" : "summary";
-      persist();
-    }
+  function finishRound() {
+    if (Object.keys(state.answers).length !== state.questions.length) return;
+    state.phase = state.known.size === currentWords().length ? "complete" : "summary";
+    persist();
     render();
   }
 
   function renderTest() {
-    const question = state.questions[state.questionIndex];
-    const item = WORD_BY_ID.get(question.wordId);
-    const answered = state.answer !== null;
-    const correct = state.answer === question.wordId;
-    const choices = question.options.map((id, index) => {
-      const option = WORD_BY_ID.get(id);
-      const classes = ["choice"];
-      if (answered && id === question.wordId) classes.push("correct");
-      if (answered && id === state.answer && !correct) classes.push("wrong");
-      return `<button class="${classes.join(" ")}" data-option="${escapeHtml(id)}" type="button" ${answered ? "disabled" : ""}><small>${index + 1}</small>${escapeHtml(option.word)}</button>`;
+    const answeredCount = Object.keys(state.answers).length;
+    const questions = state.questions.map((question, questionIndex) => {
+      const item = WORD_BY_ID.get(question.wordId);
+      const answer = state.answers[questionIndex];
+      const answered = answer !== undefined;
+      const correct = answer === question.wordId;
+      const choices = question.options.map((id, optionIndex) => {
+        const option = WORD_BY_ID.get(id);
+        const classes = ["choice"];
+        if (answered && id === question.wordId) classes.push("correct");
+        if (answered && id === answer && !correct) classes.push("wrong");
+        return `<button class="${classes.join(" ")}" data-question-index="${questionIndex}" data-option="${escapeHtml(id)}" type="button" ${answered ? "disabled" : ""}><small>${optionIndex + 1}</small>${escapeHtml(option.word)}</button>`;
+      }).join("");
+      return `<section class="test-question" data-test-question="${questionIndex + 1}"><div class="question-number">Question ${questionIndex + 1}</div><div class="test-copy"><p class="mini-label">SIMPLE MEANING</p><p class="test-meaning">${escapeHtml(item.meaning)}</p><p class="sentence">${blankSentence(item)}</p><div class="choices">${choices}</div><div class="feedback ${answered ? (correct ? "good" : "try") : ""}" role="status">${answered ? (correct ? `✓ Correct — <strong>${escapeHtml(item.word)}</strong> is now known.` : `Not yet. The answer is <strong>${escapeHtml(item.word)}</strong>. It will return next round.`) : ""}</div></div></section>`;
     }).join("");
-    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · ROUND ${state.round}</p><h2>Choose the missing word.</h2></div><span class="review-count">${state.questionIndex + 1} of ${state.questions.length}</span></div>
-      <div class="test-wrap"><div class="test-copy"><p class="mini-label">SIMPLE MEANING</p><p class="test-meaning">${escapeHtml(item.meaning)}</p><p class="sentence">${blankSentence(item)}</p><div class="choices">${choices}</div><div class="feedback ${answered ? (correct ? "good" : "try") : ""}" role="status">${answered ? (correct ? `✓ Correct — <strong>${escapeHtml(item.word)}</strong> is now known.` : `Not yet. The answer is <strong>${escapeHtml(item.word)}</strong>. It will return next round.`) : ""}</div></div></div>
-      <div class="test-actions"><button class="secondary" id="back-review" type="button">Review all words</button><button class="primary" id="next-question" type="button" ${answered ? "" : "disabled"}>${state.questionIndex === state.questions.length - 1 ? "Finish round" : "Next question"}</button></div>`;
-    document.querySelectorAll("[data-option]").forEach((button) => button.addEventListener("click", () => choose(button.dataset.option)));
+    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · ROUND ${state.round}</p><h2>Answer all ${state.questions.length} questions on this page.</h2></div><span class="review-count">${answeredCount} of ${state.questions.length} answered</span></div>
+      <div class="test-list">${questions}</div>
+      <div class="test-actions"><button class="secondary" id="back-review" type="button">Review all words</button><button class="primary" id="finish-round" type="button" ${answeredCount === state.questions.length ? "" : "disabled"}>Finish round · ${answeredCount}/${state.questions.length}</button></div>`;
+    document.querySelectorAll("[data-option]").forEach((button) => button.addEventListener("click", () => choose(Number(button.dataset.questionIndex), button.dataset.option)));
     document.querySelector("#back-review").addEventListener("click", () => { state.phase = "review"; render(); });
-    document.querySelector("#next-question").addEventListener("click", nextQuestion);
+    document.querySelector("#finish-round").addEventListener("click", finishRound);
   }
 
   function renderSummary() {
@@ -381,9 +398,10 @@
     if (button) changeSession(Number(button.dataset.session));
   });
   document.addEventListener("keydown", (event) => {
-    if (state.phase !== "test" || state.answer !== null) return;
+    if (state.phase !== "test") return;
     const number = Number(event.key);
-    if (number >= 1 && number <= 4) choose(state.questions[state.questionIndex].options[number - 1]);
+    const nextIndex = state.questions.findIndex((_, index) => !Object.hasOwn(state.answers, index));
+    if (nextIndex >= 0 && number >= 1 && number <= 4) choose(nextIndex, state.questions[nextIndex].options[number - 1]);
   });
 
   function initialize() {
