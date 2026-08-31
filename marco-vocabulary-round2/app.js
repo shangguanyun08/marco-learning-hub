@@ -143,8 +143,9 @@
 
   function illustrationMarkup(item, extraClass = "") {
     const globalIndex = WORDS.findIndex((word) => word.id === item.id);
-    const panelRatio = Math.floor(globalIndex / SESSION_SIZE) + 1 === SESSION_COUNT ? "2 / 3" : "4 / 3";
-    return `<div class="word-art ${extraClass}" style="--panel-ratio:${panelRatio}" data-art><span class="art-fallback" aria-hidden="true">${item.icon}</span><span class="sprite" style="${spriteStyle(item)}" aria-hidden="true"></span><span class="icon-badge" aria-hidden="true">${item.icon}</span></div>`;
+    const isPortrait = Math.floor(globalIndex / SESSION_SIZE) + 1 === SESSION_COUNT;
+    const panelRatio = isPortrait ? "2 / 3" : "4 / 3";
+    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${panelRatio}" data-art role="img" aria-label="Illustration for ${escapeHtml(item.word)}"><span class="art-fallback" aria-hidden="true">${item.icon}</span><span class="sprite" style="${spriteStyle(item)}" aria-hidden="true"></span></div>`;
   }
 
   function markLoadedImages() {
