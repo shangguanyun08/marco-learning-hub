@@ -343,12 +343,11 @@
       return `<button class="${classes.join(" ")}" data-option="${escapeHtml(id)}" type="button" ${answered ? "disabled" : ""}><small>${index + 1}</small>${escapeHtml(option.word)}</button>`;
     }).join("");
     workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · ROUND ${state.round}</p><h2>Choose the missing word.</h2></div><span class="review-count">${state.questionIndex + 1} of ${state.questions.length}</span></div>
-      <div class="test-wrap"><div class="test-copy"><p class="mini-label">SIMPLE MEANING</p><p class="test-meaning">${escapeHtml(item.meaning)}</p><p class="sentence">${blankSentence(item)}</p><div class="choices">${choices}</div><div class="feedback ${answered ? (correct ? "good" : "try") : ""}" role="status">${answered ? (correct ? `✓ Correct — <strong>${escapeHtml(item.word)}</strong> is now known.` : `Not yet. The answer is <strong>${escapeHtml(item.word)}</strong>. It will return next round.`) : ""}</div></div>${illustrationMarkup(item, "test-art")}</div>
+      <div class="test-wrap"><div class="test-copy"><p class="mini-label">SIMPLE MEANING</p><p class="test-meaning">${escapeHtml(item.meaning)}</p><p class="sentence">${blankSentence(item)}</p><div class="choices">${choices}</div><div class="feedback ${answered ? (correct ? "good" : "try") : ""}" role="status">${answered ? (correct ? `✓ Correct — <strong>${escapeHtml(item.word)}</strong> is now known.` : `Not yet. The answer is <strong>${escapeHtml(item.word)}</strong>. It will return next round.`) : ""}</div></div></div>
       <div class="test-actions"><button class="secondary" id="back-review" type="button">Review all words</button><button class="primary" id="next-question" type="button" ${answered ? "" : "disabled"}>${state.questionIndex === state.questions.length - 1 ? "Finish round" : "Next question"}</button></div>`;
     document.querySelectorAll("[data-option]").forEach((button) => button.addEventListener("click", () => choose(button.dataset.option)));
     document.querySelector("#back-review").addEventListener("click", () => { state.phase = "review"; render(); });
     document.querySelector("#next-question").addEventListener("click", nextQuestion);
-    markLoadedImages();
   }
 
   function renderSummary() {
