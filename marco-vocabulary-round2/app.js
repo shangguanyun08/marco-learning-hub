@@ -130,32 +130,23 @@
     return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
   }
 
-  function spriteStyle(item) {
-    const globalIndex = WORDS.findIndex((word) => word.id === item.id);
-    const session = Math.floor(globalIndex / SESSION_SIZE) + 1;
-    const cell = globalIndex % SESSION_SIZE;
-    const column = cell % 5;
-    const row = Math.floor(cell / 5);
-    const rows = session === SESSION_COUNT ? 2 : 10;
-    const y = rows === 1 ? 0 : row * (100 / (rows - 1));
-    return `background-image:url('./illustrations/session-${session}.webp?v=1');background-size:500% ${rows * 100}%;background-position:${column * 25}% ${y}%;`;
-  }
-
   function illustrationMarkup(item, extraClass = "") {
     const globalIndex = WORDS.findIndex((word) => word.id === item.id);
     const isPortrait = Math.floor(globalIndex / SESSION_SIZE) + 1 === SESSION_COUNT;
     const panelRatio = isPortrait ? "2 / 3" : "4 / 3";
-    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${panelRatio}" data-art role="img" aria-label="Illustration for ${escapeHtml(item.word)}"><span class="art-fallback" aria-hidden="true">${item.icon}</span><span class="sprite" style="${spriteStyle(item)}" aria-hidden="true"></span></div>`;
+    const panelNumber = String(globalIndex + 1).padStart(3, "0");
+    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${panelRatio}" data-art><span class="art-fallback" aria-hidden="true">${item.icon}</span><img class="word-illustration" src="./illustrations/panels/panel-${panelNumber}.webp?v=1" alt="Illustration for ${escapeHtml(item.word)}" loading="lazy" decoding="async"></div>`;
   }
 
   function markLoadedImages() {
     document.querySelectorAll("[data-art]").forEach((art) => {
-      const sprite = art.querySelector(".sprite");
-      const url = getComputedStyle(sprite).backgroundImage.slice(5, -2);
-      if (!url) return;
-      const image = new Image();
-      image.addEventListener("load", () => art.classList.add("has-image"));
-      image.src = url;
+      const image = art.querySelector(".word-illustration");
+      if (!image) return;
+      if (image.complete && image.naturalWidth > 0) {
+        art.classList.add("has-image");
+        return;
+      }
+      image.addEventListener("load", () => art.classList.add("has-image"), { once: true });
     });
   }
 

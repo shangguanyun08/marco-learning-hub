@@ -113,7 +113,7 @@ h1 em { color: #f3ca72; font-weight: 500; }
 .word-card { display: grid; grid-template-columns: 205px minmax(0,1fr); min-width: 0; overflow: hidden; border: 1px solid #dbe5e2; border-radius: 17px; background: white; transition: border-color .15s, box-shadow .15s; }
 .word-card.is-known { border-color: #9fcfc2; box-shadow: inset 0 0 0 1px #c8e6de; }
 .word-art { position: relative; width: calc(100% - 20px); align-self: center; aspect-ratio: var(--panel-ratio, 4 / 3); margin: 10px; overflow: hidden; border: 1px solid #d4e3df; border-radius: 12px; background: linear-gradient(145deg,#e7f4ef,#fff2d7); box-shadow: 0 8px 20px rgba(24,74,68,.12); }
-.sprite { position: absolute; inset: 0; background-repeat: no-repeat; image-rendering: auto; }
+.word-illustration { position: absolute; inset: 0; width: 100%; height: 100%; display: block; object-fit: contain; }
 .art-fallback { position: absolute; inset: 0; display: grid; place-items: center; background: linear-gradient(145deg,#e8f5f1,#fff4dc); font-size: 3.3rem; }
 .word-art.has-image .art-fallback { opacity: 0; }
 .word-copy { min-width: 0; padding: 15px 16px 14px; }
