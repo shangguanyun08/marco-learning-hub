@@ -1,10 +1,10 @@
 # Marco's Round 2 Vocabulary Learner
 
-- Fixed snapshot: 660 words still unknown in Marco's live combined ISEE vocabulary course on August 31, 2026
-- 14 sessions: 13 sessions of 50 words and a final session of 10
+- Combined snapshot: the original 660 unknown words plus 214 nonduplicate words from Marco R2
+- 19 sessions: the original Sessions 1–14 stay unchanged; Sessions 15–18 contain 50 words each and Session 19 contains 14
 - all words, meanings, sentence examples, and illustrated clues shown together during review
 - Known/Unknown review controls followed by all-at-once four-choice sentence tests
 - incorrect words return in the next round
 - dated answer history, local saving, and shared online progress
 
-The generated illustration sheets are arranged as 5 × 10 contact sheets; the final 10-word sheet is 5 × 2. Because some generated rows are uneven, `scripts/extract_panels.py` measures the real separator bands, preserves every complete scene, and repacks the 660 panels into perfectly uniform atlases in `illustrations/atlas/`. The live learner uses exact SVG viewports for those fixed cells, so browser rounding cannot drift into an adjacent illustration.
+Generated illustration sheets are measured at their real separator bands, then every complete scene is contained inside a fixed atlas cell with a neutral safety edge. The browser reads each word's explicit session, position, atlas, and SVG viewport from the artwork manifest, so later additions cannot change old session boundaries or drift into a neighboring illustration.

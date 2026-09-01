@@ -3,9 +3,24 @@
 
   const WORDS = Array.isArray(window.MARCO_R2_WORDS) ? window.MARCO_R2_WORDS : [];
   const WORD_BY_ID = new Map(WORDS.map((item) => [item.id, item]));
-  const WORD_INDEX_BY_ID = new Map(WORDS.map((item, index) => [item.id, index]));
-  const SESSION_SIZE = 50;
-  const SESSION_COUNT = Math.ceil(WORDS.length / SESSION_SIZE);
+  const ART = window.MARCO_R2_ART && typeof window.MARCO_R2_ART === "object"
+    ? window.MARCO_R2_ART
+    : { atlases: [], images: [] };
+  const ART_BY_ID = new Map(ART.images.map((item) => [item.id, item]));
+  const ATLAS_BY_FILE = new Map(ART.atlases.map((item) => [item.file, item]));
+  const SESSION_NUMBERS = [...new Set(ART.images.map((item) => Number(item.session)))]
+    .filter(Number.isInteger)
+    .sort((left, right) => left - right);
+  const WORDS_BY_SESSION = new Map(SESSION_NUMBERS.map((number) => {
+    const words = ART.images
+      .filter((item) => Number(item.session) === number)
+      .sort((left, right) => Number(left.position) - Number(right.position))
+      .map((item) => WORD_BY_ID.get(item.id))
+      .filter(Boolean);
+    return [number, words];
+  }));
+  const SESSION_COUNT = SESSION_NUMBERS.length;
+  const MAX_SESSION_SIZE = 50;
   const STORAGE_KEY = "marco-round2-vocabulary-660-v1";
   const SYNC_APP_ID = "marco-round2-vocabulary-660";
 
@@ -52,8 +67,7 @@
   }
 
   function wordsForSession(number) {
-    const start = (number - 1) * SESSION_SIZE;
-    return WORDS.slice(start, start + SESSION_SIZE);
+    return WORDS_BY_SESSION.get(Number(number)) || [];
   }
 
   function currentWords() {
@@ -119,7 +133,7 @@
 
   function totalKnownCount() {
     let total = 0;
-    for (let number = 1; number <= SESSION_COUNT; number += 1) total += sessionKnownCount(number);
+    for (const number of SESSION_NUMBERS) total += sessionKnownCount(number);
     return total;
   }
 
@@ -131,19 +145,16 @@
   }
 
   function illustrationMarkup(item, extraClass = "") {
-    const globalIndex = WORD_INDEX_BY_ID.get(item.id);
-    const session = Math.floor(globalIndex / SESSION_SIZE) + 1;
-    const cell = globalIndex % SESSION_SIZE;
-    const row = Math.floor(cell / 5);
-    const column = cell % 5;
-    const isPortrait = session === SESSION_COUNT;
-    const cellWidth = 200;
-    const cellHeight = isPortrait ? 300 : 150;
-    const rows = isPortrait ? 2 : 10;
-    const panelRatio = isPortrait ? "2 / 3" : "4 / 3";
-    const source = `./illustrations/atlas/session-${String(session).padStart(2, "0")}.webp?v=20260831-3`;
-    const viewBox = `${column * cellWidth} ${row * cellHeight} ${cellWidth} ${cellHeight}`;
-    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${panelRatio}" data-art data-art-source="${source}" role="img" aria-label="Illustration for ${escapeHtml(item.word)}"><span class="art-fallback" aria-hidden="true">${item.icon}</span><svg class="word-illustration" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><image href="${source}" width="${cellWidth * 5}" height="${cellHeight * rows}" preserveAspectRatio="none"></image></svg></div>`;
+    const art = ART_BY_ID.get(item.id);
+    const atlas = art ? ATLAS_BY_FILE.get(art.atlas) : null;
+    if (!art || !atlas) {
+      return `<div class="word-art ${extraClass}" role="img" aria-label="Illustration unavailable for ${escapeHtml(item.word)}"><span class="art-fallback visible" aria-hidden="true">${item.icon}</span></div>`;
+    }
+    const [left, top, width, height] = art.viewport.map(Number);
+    const isPortrait = height > width;
+    const source = `./illustrations/${art.atlas}?v=20260901-1`;
+    const viewBox = `${left} ${top} ${width} ${height}`;
+    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${width} / ${height}" data-art data-art-source="${source}" role="img" aria-label="Illustration for ${escapeHtml(item.word)}"><span class="art-fallback" aria-hidden="true">${item.icon}</span><svg class="word-illustration" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><image href="${source}" width="${Number(atlas.width)}" height="${Number(atlas.height)}" preserveAspectRatio="none"></image></svg></div>`;
   }
 
   function loadArtwork(source) {
@@ -192,7 +203,7 @@
   }
 
   function updateChrome() {
-    const total = currentWords().length || SESSION_SIZE;
+    const total = currentWords().length || MAX_SESSION_SIZE;
     const known = state.known.size;
     progressLabel.textContent = `Session ${state.session} progress`;
     progressNumber.textContent = `${known} / ${total} known`;
@@ -214,8 +225,7 @@
       <div class="record-stat"><span>CORRECT</span><strong>${correct}</strong></div>
       <div class="record-stat"><span>LAST ANSWER</span><strong>${latest ? formatDate(latest.answeredAt) : "Not started"}</strong></div>
     </div>`;
-    const sessions = Array.from({ length: SESSION_COUNT }, (_, index) => {
-      const number = index + 1;
+    const sessions = SESSION_NUMBERS.map((number) => {
       const total = wordsForSession(number).length;
       const stored = state.progress.sessions[String(number)] || {};
       return `<div class="session-record"><b>SESSION ${number}</b><strong>${sessionKnownCount(number)} / ${total}</strong><small>${formatDate(stored.lastStudiedAt)}</small></div>`;
@@ -225,13 +235,16 @@
 
   function wordCard(item) {
     const known = state.known.has(item.id);
+    const sourceNote = item.sourceRecordId
+      ? `MARCO R2 · SOURCE #${item.sourceRecordId}`
+      : `SOURCE S${item.originSession} · R${item.originRound}`;
     return `<article class="word-card ${known ? "is-known" : ""}" data-card="${escapeHtml(item.id)}">
       ${illustrationMarkup(item)}
       <div class="word-copy">
         <div class="word-title"><h3>${escapeHtml(item.word)}</h3><button class="speak" data-speak="${escapeHtml(item.id)}" type="button" aria-label="Hear ${escapeHtml(item.word)} pronounced">🔊</button></div>
         <p class="meaning"><strong>${escapeHtml(item.partOfSpeech)}</strong> · ${escapeHtml(item.meaning)}</p>
         <p class="example">“${escapeHtml(item.example)}”</p>
-        <div class="word-meta"><small>SOURCE S${item.originSession} · R${item.originRound}</small><button class="known-toggle" data-known="${escapeHtml(item.id)}" aria-pressed="${known}" type="button">${known ? "✓ Known" : "Unknown · keep"}</button></div>
+        <div class="word-meta"><small>${escapeHtml(sourceNote)}</small><button class="known-toggle" data-known="${escapeHtml(item.id)}" aria-pressed="${known}" type="button">${known ? "✓ Known" : "Unknown · keep"}</button></div>
       </div>
     </article>`;
   }
@@ -370,7 +383,7 @@
   function renderComplete() {
     const allDone = totalKnownCount() === WORDS.length;
     const next = state.session < SESSION_COUNT ? `<button class="primary" id="next-session" type="button">Go to session ${state.session + 1}</button>` : "";
-    workspace.innerHTML = `<div class="center"><div><div class="seal">✓</div><h2>${allDone ? "All 660 words mastered!" : `Session ${state.session} mastered!`}</h2><p>Every word in this ${currentWords().length}-word session is now marked Known. Review it again anytime or continue forward.</p><div class="center-actions"><button class="secondary" id="review-complete" type="button">Review session</button>${next}</div></div></div>`;
+    workspace.innerHTML = `<div class="center"><div><div class="seal">✓</div><h2>${allDone ? `All ${WORDS.length} words mastered!` : `Session ${state.session} mastered!`}</h2><p>Every word in this ${currentWords().length}-word session is now marked Known. Review it again anytime or continue forward.</p><div class="center-actions"><button class="secondary" id="review-complete" type="button">Review session</button>${next}</div></div></div>`;
     document.querySelector("#review-complete").addEventListener("click", () => { state.phase = "review"; render(); });
     document.querySelector("#next-session")?.addEventListener("click", () => changeSession(state.session + 1));
   }
@@ -405,7 +418,43 @@
   });
 
   function initialize() {
-    if (WORDS.length !== 660 || SESSION_COUNT !== 14) throw new Error("The 660-word snapshot is incomplete.");
+    const expectedSizes = [
+      ...Array.from({ length: 13 }, () => 50),
+      10,
+      50, 50, 50, 50, 14,
+    ];
+    const uniqueWordIds = new Set(WORDS.map((item) => item.id));
+    const uniqueArtIds = new Set(ART.images.map((item) => item.id));
+    const completeCoverage = WORDS.every((item) => ART_BY_ID.has(item.id))
+      && ART.images.every((item) => WORD_BY_ID.has(item.id));
+    const validSessions = SESSION_NUMBERS.every((number, index) => {
+      const entries = ART.images
+        .filter((item) => Number(item.session) === number)
+        .sort((left, right) => Number(left.position) - Number(right.position));
+      return number === index + 1
+        && entries.length === expectedSizes[index]
+        && entries.every((item, position) => Number(item.position) === position + 1);
+    });
+    const validViewports = ART.images.every((item) => {
+      const atlas = ATLAS_BY_FILE.get(item.atlas);
+      const viewport = Array.isArray(item.viewport) ? item.viewport.map(Number) : [];
+      if (!atlas || viewport.length !== 4 || viewport.some((value) => !Number.isFinite(value))) return false;
+      const [left, top, width, height] = viewport;
+      return left >= 0 && top >= 0 && width > 0 && height > 0
+        && left + width <= Number(atlas.width)
+        && top + height <= Number(atlas.height);
+    });
+    if (
+      WORDS.length !== 874
+      || ART.images.length !== 874
+      || SESSION_COUNT !== 19
+      || uniqueWordIds.size !== WORDS.length
+      || uniqueArtIds.size !== ART.images.length
+      || expectedSizes.length !== SESSION_COUNT
+      || !completeCoverage
+      || !validSessions
+      || !validViewports
+    ) throw new Error("The 874-word illustrated snapshot is incomplete.");
     restoreProgress();
     render();
     if (window.MarcoOnlineSync) {
