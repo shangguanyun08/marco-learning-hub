@@ -8,13 +8,23 @@
     : { atlases: [], images: [] };
   const ART_BY_ID = new Map(ART.images.map((item) => [item.id, item]));
   const ATLAS_BY_FILE = new Map(ART.atlases.map((item) => [item.file, item]));
-  const SESSION_NUMBERS = [...new Set(ART.images.map((item) => Number(item.session)))]
+  const COMBINED_SESSION = 14;
+  const LEGACY_LAST_SESSION = 19;
+  const PROGRESS_LAYOUT_VERSION = 2;
+  const displaySession = (item) => {
+    const number = Number(item.session);
+    return number >= COMBINED_SESSION && number <= LEGACY_LAST_SESSION
+      ? COMBINED_SESSION
+      : number;
+  };
+  const SESSION_NUMBERS = [...new Set(ART.images.map(displaySession))]
     .filter(Number.isInteger)
     .sort((left, right) => left - right);
   const WORDS_BY_SESSION = new Map(SESSION_NUMBERS.map((number) => {
     const words = ART.images
-      .filter((item) => Number(item.session) === number)
-      .sort((left, right) => Number(left.position) - Number(right.position))
+      .filter((item) => displaySession(item) === number)
+      .sort((left, right) => Number(left.session) - Number(right.session)
+        || Number(left.position) - Number(right.position))
       .map((item) => WORD_BY_ID.get(item.id))
       .filter(Boolean);
     return [number, words];
@@ -44,7 +54,7 @@
     questions: [],
     answers: {},
     roundStartKnown: 0,
-    progress: { version: 1, activeSession: 1, sessions: {}, activity: [] },
+    progress: { version: 1, layoutVersion: PROGRESS_LAYOUT_VERSION, activeSession: 1, sessions: {}, activity: [] },
   };
 
   function escapeHtml(value) {
@@ -80,17 +90,60 @@
   }
 
   function defaultProgress() {
-    return { version: 1, activeSession: 1, sessions: {}, activity: [] };
+    return { version: 1, layoutVersion: PROGRESS_LAYOUT_VERSION, activeSession: 1, sessions: {}, activity: [] };
   }
 
   function validateProgress(value) {
     return Boolean(value && value.version === 1 && value.sessions && typeof value.sessions === "object" && Array.isArray(value.activity));
   }
 
+  function migrateProgressLayout(progress) {
+    const hasLegacySessions = Array.from(
+      { length: LEGACY_LAST_SESSION - COMBINED_SESSION },
+      (_, index) => String(COMBINED_SESSION + index + 1),
+    ).some((key) => Object.hasOwn(progress.sessions, key));
+    if (progress.layoutVersion === PROGRESS_LAYOUT_VERSION && !hasLegacySessions) return progress;
+
+    const entries = Array.from(
+      { length: LEGACY_LAST_SESSION - COMBINED_SESSION + 1 },
+      (_, index) => progress.sessions[String(COMBINED_SESSION + index)],
+    ).filter((entry) => entry && typeof entry === "object");
+    if (entries.length) {
+      const known = validKnown(COMBINED_SESSION, entries.flatMap((entry) => entry.known || []));
+      const validDates = (field) => entries.map((entry) => entry[field])
+        .filter((value) => value && !Number.isNaN(new Date(value).getTime()))
+        .sort((left, right) => new Date(left) - new Date(right));
+      const startedDates = validDates("startedAt");
+      const studiedDates = validDates("lastStudiedAt");
+      const completedDates = validDates("completedAt");
+      const complete = known.length === wordsForSession(COMBINED_SESSION).length;
+      progress.sessions[String(COMBINED_SESSION)] = {
+        known,
+        round: Math.max(1, ...entries.map((entry) => Number(entry.round) || 1)),
+        startedAt: startedDates[0] || null,
+        lastStudiedAt: studiedDates.at(-1) || null,
+        completedAt: complete ? (completedDates.at(-1) || studiedDates.at(-1) || null) : null,
+      };
+    }
+    for (let number = COMBINED_SESSION + 1; number <= LEGACY_LAST_SESSION; number += 1) {
+      delete progress.sessions[String(number)];
+    }
+    progress.activity = progress.activity.map((entry) => {
+      const number = Number(entry.session);
+      return number >= COMBINED_SESSION && number <= LEGACY_LAST_SESSION
+        ? { ...entry, session: COMBINED_SESSION }
+        : entry;
+    });
+    progress.activeSession = Math.min(COMBINED_SESSION, Math.max(1, Number(progress.activeSession) || 1));
+    progress.layoutVersion = PROGRESS_LAYOUT_VERSION;
+    return progress;
+  }
+
   function restoreProgress() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      state.progress = validateProgress(saved) ? saved : defaultProgress();
+      state.progress = validateProgress(saved) ? migrateProgressLayout(saved) : defaultProgress();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
     } catch (_) {
       state.progress = defaultProgress();
     }
@@ -114,6 +167,7 @@
     const prior = state.progress.sessions[key] || {};
     const complete = state.known.size === currentWords().length;
     state.progress.version = 1;
+    state.progress.layoutVersion = PROGRESS_LAYOUT_VERSION;
     state.progress.activeSession = state.session;
     state.progress.sessions[key] = {
       known: Array.from(state.known),
@@ -420,20 +474,15 @@
   function initialize() {
     const expectedSizes = [
       ...Array.from({ length: 13 }, () => 50),
-      10,
-      50, 50, 50, 50, 14,
+      224,
     ];
     const uniqueWordIds = new Set(WORDS.map((item) => item.id));
     const uniqueArtIds = new Set(ART.images.map((item) => item.id));
     const completeCoverage = WORDS.every((item) => ART_BY_ID.has(item.id))
       && ART.images.every((item) => WORD_BY_ID.has(item.id));
     const validSessions = SESSION_NUMBERS.every((number, index) => {
-      const entries = ART.images
-        .filter((item) => Number(item.session) === number)
-        .sort((left, right) => Number(left.position) - Number(right.position));
       return number === index + 1
-        && entries.length === expectedSizes[index]
-        && entries.every((item, position) => Number(item.position) === position + 1);
+        && wordsForSession(number).length === expectedSizes[index];
     });
     const validViewports = ART.images.every((item) => {
       const atlas = ATLAS_BY_FILE.get(item.atlas);
@@ -447,7 +496,7 @@
     if (
       WORDS.length !== 874
       || ART.images.length !== 874
-      || SESSION_COUNT !== 19
+      || SESSION_COUNT !== 14
       || uniqueWordIds.size !== WORDS.length
       || uniqueArtIds.size !== ART.images.length
       || expectedSizes.length !== SESSION_COUNT
@@ -464,9 +513,9 @@
         validate: validateProgress,
         score: (progress) => Object.values(progress.sessions || {}).reduce((sum, item) => sum + (Array.isArray(item.known) ? item.known.length : 0), 0),
         onRemote: (remote) => {
-          state.progress = remote;
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(remote));
-          loadSession(remote.activeSession || state.session);
+          state.progress = migrateProgressLayout(remote);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
+          loadSession(state.progress.activeSession || state.session);
           render();
         },
       });
