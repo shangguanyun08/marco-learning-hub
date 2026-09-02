@@ -16,14 +16,30 @@
           <span>H</span>
           <strong>Learning Hub</strong>
         </a>
+        <aside class="today-log" aria-labelledby="today-log-title">
+          <div class="today-log-heading">
+            <div>
+              <p id="today-log-title">Today’s work</p>
+              <time id="today-log-date">Loading…</time>
+            </div>
+            <span class="today-log-live"><i aria-hidden="true"></i> Live</span>
+          </div>
+          <div class="today-students">
+            <div class="today-student marco">
+              <span>Marco</span>
+              <p><strong id="marco-minutes">—</strong> <small>mins</small></p>
+            </div>
+            <div class="today-student harry">
+              <span>Harry</span>
+              <p><strong id="harry-minutes">—</strong> <small>mins</small></p>
+            </div>
+          </div>
+          <p class="today-log-note" id="today-log-note" aria-live="polite">Counting active practice time across today’s learning sites.</p>
+        </aside>
         <div class="hero-copy">
           <p class="eyebrow">All learning sites · one launchpad</p>
           <h1>Marco & Harry’s<br /><em>practice library</em></h1>
           <p>Choose a course, keep the momentum going, and come back here whenever it is time for the next session.</p>
-        </div>
-        <div class="hero-stat" aria-label="Seventeen learning websites">
-          <strong>17</strong>
-          <span>learning sites</span>
         </div>
       </header>
 
@@ -246,5 +262,6 @@
         <a href="https://github.com/shangguanyun08">View all repositories on GitHub <span>↗</span></a>
       </footer>
     </main>
+    <script src="./shared-activity-dashboard.js?v=1" defer></script>
   </body>
 </html>

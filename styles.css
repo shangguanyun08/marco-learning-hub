@@ -74,14 +74,27 @@ a { color: inherit; }
 .brand span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 11px; color: white; background: linear-gradient(135deg, var(--blue), #58b8ef); font-family: Manrope, sans-serif; font-weight: 800; box-shadow: 0 9px 22px rgba(82,104,232,.22); }
 .brand strong { font: 700 15px/1 Manrope, sans-serif; letter-spacing: .04em; }
 
-.hero-copy { position: relative; z-index: 1; max-width: 720px; margin-top: 76px; }
+.hero-copy { position: relative; z-index: 1; max-width: 720px; margin-top: 95px; }
 .eyebrow { margin: 0 0 15px; color: #3763d8; font: 700 12px/1 Manrope, sans-serif; letter-spacing: .17em; text-transform: uppercase; }
 .hero h1 { margin: 0; font: 800 clamp(42px, 7vw, 78px)/.98 Manrope, sans-serif; letter-spacing: -.055em; }
 .hero h1 em { color: transparent; font-style: normal; background: linear-gradient(90deg, #2677dc, #6579e8 52%, #9c68d7); background-clip: text; }
 .hero-copy > p:last-child { max-width: 620px; margin: 25px 0 0; color: var(--muted); font-size: 18px; line-height: 1.65; }
-.hero-stat { position: absolute; z-index: 1; right: 50px; top: 48px; display: flex; align-items: baseline; gap: 10px; padding: 14px 18px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.62); box-shadow: 0 12px 30px rgba(56,75,125,.08); }
-.hero-stat strong { font: 800 48px/1 Manrope, sans-serif; }
-.hero-stat span { width: 70px; color: var(--muted); font-size: 12px; line-height: 1.25; text-transform: uppercase; letter-spacing: .1em; }
+.today-log { position: absolute; z-index: 2; right: 30px; top: 24px; width: min(500px, calc(100% - 270px)); padding: 16px 18px 14px; border: 1px solid rgba(39,57,101,.14); border-radius: 20px; background: rgba(255,255,255,.76); box-shadow: 0 14px 34px rgba(56,75,125,.1); backdrop-filter: blur(12px); }
+.today-log-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.today-log-heading p { margin: 0; color: #30405e; font: 800 12px/1 Manrope, sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.today-log-heading time { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+.today-log-live { display: inline-flex; align-items: center; gap: 6px; color: #48705e; font-size: 11px; font-weight: 700; }
+.today-log-live i { width: 7px; height: 7px; border-radius: 50%; background: #3bb986; box-shadow: 0 0 0 4px rgba(59,185,134,.12); }
+.today-students { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.today-student { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; border: 1px solid rgba(82,104,232,.12); border-radius: 13px; background: rgba(240,244,255,.72); }
+.today-student.harry { border-color: rgba(216,123,40,.15); background: rgba(255,247,236,.76); }
+.today-student > span { display: inline-flex; align-items: center; gap: 7px; color: #40506d; font-size: 13px; font-weight: 700; }
+.today-student > span::before { width: 8px; height: 8px; content: ""; border-radius: 50%; background: var(--blue); }
+.today-student.harry > span::before { background: #e09547; }
+.today-student p { margin: 0; color: var(--muted); white-space: nowrap; }
+.today-student strong { color: var(--ink); font: 800 26px/1 Manrope, sans-serif; }
+.today-student small { font-size: 11px; }
+.today-log-note { margin: 9px 2px 0; overflow: hidden; color: #7b869b; font-size: 11px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 
 section { margin-top: 70px; }
 .section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 25px; }
@@ -141,13 +154,18 @@ footer a:hover { color: var(--cyan); }
 
 @media (max-width: 900px) {
   .marco-grid, .harry-grid { grid-template-columns: 1fr 1fr; }
-  .hero-stat { display: none; }
+  .today-log { width: min(430px, calc(100% - 245px)); }
 }
 
 @media (max-width: 650px) {
   .shell { width: min(100% - 24px, 1180px); padding-top: 12px; }
   .hero { min-height: 480px; padding: 24px; border-radius: 22px; }
-  .hero-copy { margin-top: 82px; }
+  .today-log { position: relative; right: auto; top: auto; width: 100%; margin-top: 22px; padding: 15px; }
+  .today-students { gap: 7px; }
+  .today-student { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .today-student strong { font-size: 25px; }
+  .today-log-note { white-space: normal; }
+  .hero-copy { margin-top: 54px; }
   .hero-copy > p:last-child { font-size: 16px; }
   section { margin-top: 52px; }
   .section-heading { align-items: flex-start; flex-direction: column; }
