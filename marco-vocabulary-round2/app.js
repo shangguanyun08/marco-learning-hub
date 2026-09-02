@@ -8,14 +8,28 @@
     : { atlases: [], images: [] };
   const ART_BY_ID = new Map(ART.images.map((item) => [item.id, item]));
   const ATLAS_BY_FILE = new Map(ART.atlases.map((item) => [item.file, item]));
-  const COMBINED_SESSION = 14;
+  const REPACKED_FIRST_SESSION = 14;
   const LEGACY_LAST_SESSION = 19;
-  const PROGRESS_LAYOUT_VERSION = 2;
+  const REPACKED_LAST_SESSION = 18;
+  const SESSION_SIZE = 50;
+  const PROGRESS_LAYOUT_VERSION = 3;
+  const DISPLAY_SESSION_BY_WORD_ID = new Map();
+  let repackedPosition = 0;
+  ART.images.slice()
+    .sort((left, right) => Number(left.session) - Number(right.session)
+      || Number(left.position) - Number(right.position))
+    .forEach((item) => {
+      const sourceSession = Number(item.session);
+      if (sourceSession >= REPACKED_FIRST_SESSION && sourceSession <= LEGACY_LAST_SESSION) {
+        DISPLAY_SESSION_BY_WORD_ID.set(item.id, REPACKED_FIRST_SESSION + Math.floor(repackedPosition / SESSION_SIZE));
+        repackedPosition += 1;
+      } else {
+        DISPLAY_SESSION_BY_WORD_ID.set(item.id, sourceSession);
+      }
+    });
   const displaySession = (item) => {
-    const number = Number(item.session);
-    return number >= COMBINED_SESSION && number <= LEGACY_LAST_SESSION
-      ? COMBINED_SESSION
-      : number;
+    const wordId = item?.wordId || item?.id;
+    return DISPLAY_SESSION_BY_WORD_ID.get(wordId) ?? Number(item?.session);
   };
   const SESSION_NUMBERS = [...new Set(ART.images.map(displaySession))]
     .filter(Number.isInteger)
@@ -123,50 +137,54 @@
   }
 
   function migrateProgressLayout(progress) {
-    const hasLegacySessions = Array.from(
-      { length: LEGACY_LAST_SESSION - COMBINED_SESSION },
-      (_, index) => String(COMBINED_SESSION + index + 1),
-    ).some((key) => Object.hasOwn(progress.sessions, key));
+    const hasLegacySessions = Object.hasOwn(progress.sessions, String(LEGACY_LAST_SESSION));
     if (progress.layoutVersion === PROGRESS_LAYOUT_VERSION && !hasLegacySessions) return progress;
 
     const entries = Array.from(
-      { length: LEGACY_LAST_SESSION - COMBINED_SESSION + 1 },
-      (_, index) => progress.sessions[String(COMBINED_SESSION + index)],
+      { length: LEGACY_LAST_SESSION - REPACKED_FIRST_SESSION + 1 },
+      (_, index) => progress.sessions[String(REPACKED_FIRST_SESSION + index)],
     ).filter((entry) => entry && typeof entry === "object");
-    if (entries.length) {
-      const reviewKnown = validKnown(COMBINED_SESSION, entries.flatMap((entry) => entry.reviewKnown || entry.known || []));
-      const matchingActivity = sessionActivity(progress, COMBINED_SESSION);
-      const explicitTested = validKnown(COMBINED_SESSION, entries.flatMap((entry) => entry.testedKnown || []));
+    const allReviewKnown = entries.flatMap((entry) => entry.reviewKnown || entry.known || []);
+    const allExplicitTested = entries.flatMap((entry) => entry.testedKnown || []);
+    const validDates = (field) => entries.map((entry) => entry[field])
+      .filter((value) => value && !Number.isNaN(new Date(value).getTime()))
+      .sort((left, right) => new Date(left) - new Date(right));
+    const startedDates = validDates("startedAt");
+    const studiedDates = validDates("lastStudiedAt");
+    const completedDates = validDates("completedAt");
+
+    for (let number = REPACKED_FIRST_SESSION; number <= LEGACY_LAST_SESSION; number += 1) {
+      delete progress.sessions[String(number)];
+    }
+    progress.activity = progress.activity.map((entry) => ({ ...entry, session: displaySession(entry) }));
+
+    for (let number = REPACKED_FIRST_SESSION; number <= REPACKED_LAST_SESSION; number += 1) {
+      const matchingActivity = sessionActivity(progress, number);
+      const reviewKnown = validKnown(number, allReviewKnown);
+      const explicitTested = validKnown(number, allExplicitTested);
       const testedKnown = matchingActivity.length
-        ? testedKnownFromActivity(progress, COMBINED_SESSION)
+        ? testedKnownFromActivity(progress, number)
         : explicitTested;
-      const validDates = (field) => entries.map((entry) => entry[field])
-        .filter((value) => value && !Number.isNaN(new Date(value).getTime()))
-        .sort((left, right) => new Date(left) - new Date(right));
-      const startedDates = validDates("startedAt");
-      const studiedDates = validDates("lastStudiedAt");
-      const completedDates = validDates("completedAt");
-      const complete = testedKnown.length === wordsForSession(COMBINED_SESSION).length;
-      progress.sessions[String(COMBINED_SESSION)] = {
+      const complete = testedKnown.length === wordsForSession(number).length;
+      progress.sessions[String(number)] = {
         known: testedKnown,
         testedKnown,
         reviewKnown,
-        round: Math.max(1, ...entries.map((entry) => Number(entry.round) || 1)),
+        round: Math.max(1, ...entries.map((entry) => Number(entry.round) || 1), ...matchingActivity.map((entry) => Number(entry.round) || 1)),
         startedAt: startedDates[0] || null,
         lastStudiedAt: studiedDates.at(-1) || null,
         completedAt: complete ? (completedDates.at(-1) || studiedDates.at(-1) || null) : null,
       };
     }
-    for (let number = COMBINED_SESSION + 1; number <= LEGACY_LAST_SESSION; number += 1) {
-      delete progress.sessions[String(number)];
+
+    const priorActive = Math.max(1, Number(progress.activeSession) || 1);
+    if (priorActive >= REPACKED_FIRST_SESSION) {
+      progress.activeSession = SESSION_NUMBERS.slice(REPACKED_FIRST_SESSION - 1)
+        .find((number) => storedTestedKnown(number, progress.sessions[String(number)], progress).length < wordsForSession(number).length)
+        || REPACKED_LAST_SESSION;
+    } else {
+      progress.activeSession = Math.min(SESSION_COUNT, priorActive);
     }
-    progress.activity = progress.activity.map((entry) => {
-      const number = Number(entry.session);
-      return number >= COMBINED_SESSION && number <= LEGACY_LAST_SESSION
-        ? { ...entry, session: COMBINED_SESSION }
-        : entry;
-    });
-    progress.activeSession = Math.min(COMBINED_SESSION, Math.max(1, Number(progress.activeSession) || 1));
     progress.layoutVersion = PROGRESS_LAYOUT_VERSION;
     return progress;
   }
@@ -578,8 +596,8 @@
 
   function initialize() {
     const expectedSizes = [
-      ...Array.from({ length: 13 }, () => 50),
-      224,
+      ...Array.from({ length: 17 }, () => 50),
+      24,
     ];
     const uniqueWordIds = new Set(WORDS.map((item) => item.id));
     const uniqueArtIds = new Set(ART.images.map((item) => item.id));
@@ -601,7 +619,7 @@
     if (
       WORDS.length !== 874
       || ART.images.length !== 874
-      || SESSION_COUNT !== 14
+      || SESSION_COUNT !== 18
       || uniqueWordIds.size !== WORDS.length
       || uniqueArtIds.size !== ART.images.length
       || expectedSizes.length !== SESSION_COUNT
