@@ -4,7 +4,8 @@
 - 14 sessions: Sessions 1–13 contain 50 words each; the former Sessions 14–19 are combined into one 224-word Session 14
 - all words, meanings, sentence examples, and illustrated clues shown together during review
 - Known/Unknown review controls followed by all-at-once four-choice sentence tests
-- incorrect words return in the next round
+- Round 1 tests every remaining unknown word; each later round tests only the previous round's misses
+- a top Progress tab records the wrong count for every session and round
 - dated answer history, local saving, and shared online progress
 
 Generated illustration sheets are measured at their real separator bands, then every complete scene is contained inside a fixed atlas cell with a neutral safety edge. The browser reads each word's explicit source session, position, atlas, and SVG viewport from the artwork manifest, then presents source Sessions 14–19 together as Session 14 without changing any illustration crop.

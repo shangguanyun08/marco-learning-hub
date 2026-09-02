@@ -41,6 +41,10 @@
   const progressLabel = document.querySelector("#progress-label");
   const progressNumber = document.querySelector("#progress-number");
   const startTest = document.querySelector("#start-test");
+  const learnPanel = document.querySelector("#learn-panel");
+  const progressPanel = document.querySelector("#progress-panel");
+  const viewTabs = document.querySelector(".view-tabs");
+  const progressTabTotal = document.querySelector("#progress-tab-total");
   const recordContent = document.querySelector("#record-content");
   const toast = document.querySelector("#toast");
 
@@ -248,8 +252,8 @@
 
   function renderSteps() {
     const steps = [{ label: "Review all", status: state.phase === "review" ? "active" : "done" }];
-    for (let number = 1; number <= state.round; number += 1) {
-      let status = number < state.round || state.phase === "complete" ? "done" : "";
+    for (let number = 1; number <= Math.max(3, state.round); number += 1) {
+      let status = number < state.round || (state.phase === "complete" && number === state.round) ? "done" : "";
       if ((state.phase === "test" || state.phase === "summary") && number === state.round) status = "active";
       steps.push({ label: `Round ${number}`, status });
     }
@@ -262,8 +266,9 @@
     progressLabel.textContent = `Session ${state.session} progress`;
     progressNumber.textContent = `${known} / ${total} known`;
     progressBar.style.width = `${(known / total) * 100}%`;
+    progressTabTotal.textContent = `${totalKnownCount()} / ${WORDS.length}`;
     startTest.hidden = state.phase !== "review" || known === total;
-    startTest.textContent = `Test ${total - known} unknown word${total - known === 1 ? "" : "s"}`;
+    startTest.textContent = `Start Round ${state.round} · ${total - known} word${total - known === 1 ? "" : "s"}`;
     renderSessionTabs();
     renderSteps();
   }
@@ -271,7 +276,6 @@
   function renderRecord() {
     const activity = state.progress.activity;
     const correct = activity.filter((entry) => entry.correct).length;
-    const missed = activity.length - correct;
     const latest = activity.at(-1);
     const stats = `<div class="record-stats">
       <div class="record-stat"><span>TOTAL KNOWN</span><strong>${totalKnownCount()} / ${WORDS.length}</strong></div>
@@ -282,9 +286,37 @@
     const sessions = SESSION_NUMBERS.map((number) => {
       const total = wordsForSession(number).length;
       const stored = state.progress.sessions[String(number)] || {};
-      return `<div class="session-record"><b>SESSION ${number}</b><strong>${sessionKnownCount(number)} / ${total}</strong><small>${formatDate(stored.lastStudiedAt)}</small></div>`;
+      const sessionActivity = activity.filter((entry) => Number(entry.session) === number);
+      const latestRound = Math.max(0, ...sessionActivity.map((entry) => Number(entry.round) || 0));
+      const roundCount = Math.max(3, latestRound);
+      const rounds = Array.from({ length: roundCount }, (_, index) => {
+        const round = index + 1;
+        const latestByWord = new Map();
+        sessionActivity.filter((entry) => Number(entry.round) === round)
+          .forEach((entry) => latestByWord.set(entry.wordId, entry));
+        const answers = Array.from(latestByWord.values());
+        const wrong = answers.filter((entry) => !entry.correct).length;
+        const value = answers.length ? `${wrong} wrong` : "Not taken";
+        const status = answers.length && wrong === 0 ? " perfect" : "";
+        return `<div class="round-record${status}"><span>Round ${round}</span><strong>${value}</strong><small>${answers.length ? `${answers.length} tested` : "Only prior misses"}</small></div>`;
+      }).join("");
+      return `<article class="session-progress"><div class="session-progress-head"><div><b>SESSION ${number}</b><strong>${sessionKnownCount(number)} / ${total} mastered</strong></div><small>${formatDate(stored.lastStudiedAt)}</small></div><div class="round-records">${rounds}</div></article>`;
     }).join("");
-    recordContent.innerHTML = `${stats}<div class="session-records">${sessions}</div>`;
+    recordContent.innerHTML = `${stats}<div class="session-progress-list">${sessions}</div>`;
+  }
+
+  function setView(view, updateHash = true) {
+    const showProgress = view === "progress";
+    learnPanel.hidden = showProgress;
+    progressPanel.hidden = !showProgress;
+    viewTabs.querySelectorAll("[data-view]").forEach((button) => {
+      const active = button.dataset.view === (showProgress ? "progress" : "learn");
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+      button.tabIndex = active ? 0 : -1;
+    });
+    if (showProgress) renderRecord();
+    if (updateHash) history.replaceState(null, "", showProgress ? "#progress" : location.pathname + location.search);
   }
 
   function wordCard(item) {
@@ -306,9 +338,9 @@
   function renderReview() {
     const items = currentWords();
     const unknown = items.length - state.known.size;
-    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · REVIEW</p><h2>See all ${items.length} words before testing.</h2><p>Every word starts Unknown. Tap the button only when Marco already knows it.</p></div><div class="review-actions"><span class="review-count">${unknown} unknown</span><button class="primary compact" id="review-test" type="button" ${unknown ? "" : "disabled"}>Start test</button></div></div>
+    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · REVIEW</p><h2>See all ${items.length} words before testing.</h2><p>Round 1 tests every word still Unknown. Later rounds test only the words missed in the previous round.</p></div><div class="review-actions"><span class="review-count">${unknown} unknown</span><button class="primary compact" id="review-test" type="button" ${unknown ? "" : "disabled"}>Start Round ${state.round}</button></div></div>
       <div class="review-grid">${items.map(wordCard).join("")}</div>
-      <div class="review-footer"><button class="primary" id="review-test-bottom" type="button" ${unknown ? "" : "disabled"}>Test ${unknown} unknown word${unknown === 1 ? "" : "s"}</button></div>`;
+      <div class="review-footer"><button class="primary" id="review-test-bottom" type="button" ${unknown ? "" : "disabled"}>Start Round ${state.round} · ${unknown} word${unknown === 1 ? "" : "s"}</button></div>`;
     document.querySelectorAll("[data-speak]").forEach((button) => button.addEventListener("click", () => speak(WORD_BY_ID.get(button.dataset.speak).word)));
     document.querySelectorAll("[data-known]").forEach((button) => button.addEventListener("click", () => toggleKnown(button.dataset.known)));
     document.querySelector("#review-test").addEventListener("click", beginRound);
@@ -460,6 +492,18 @@
   }
 
   startTest.addEventListener("click", beginRound);
+  viewTabs.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-view]");
+    if (button) setView(button.dataset.view);
+  });
+  viewTabs.addEventListener("keydown", (event) => {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const view = event.key === "ArrowRight" ? "progress" : "learn";
+    setView(view);
+    viewTabs.querySelector(`[data-view="${view}"]`).focus();
+  });
+  window.addEventListener("hashchange", () => setView(location.hash === "#progress" ? "progress" : "learn", false));
   sessionsEl.addEventListener("click", (event) => {
     const button = event.target.closest("[data-session]");
     if (button) changeSession(Number(button.dataset.session));
@@ -506,6 +550,7 @@
     ) throw new Error("The 874-word illustrated snapshot is incomplete.");
     restoreProgress();
     render();
+    setView(location.hash === "#progress" ? "progress" : "learn", false);
     if (window.MarcoOnlineSync) {
       onlineSync = window.MarcoOnlineSync.create({
         appId: SYNC_APP_ID,
