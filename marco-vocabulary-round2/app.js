@@ -55,9 +55,10 @@
     session: 1,
     round: 1,
     known: new Set(),
+    reviewKnown: new Set(),
     questions: [],
     answers: {},
-    roundStartKnown: 0,
+    summaryRound: null,
     progress: { version: 1, layoutVersion: PROGRESS_LAYOUT_VERSION, activeSession: 1, sessions: {}, activity: [] },
   };
 
@@ -93,6 +94,26 @@
     return (Array.isArray(values) ? values : []).filter((id) => valid.has(id));
   }
 
+  function sessionActivity(progress, number) {
+    return progress.activity.filter((entry) => displaySession(entry) === Number(number));
+  }
+
+  function testedKnownFromActivity(progress, number) {
+    const valid = new Set(wordsForSession(number).map((item) => item.id));
+    const known = new Set();
+    for (const entry of sessionActivity(progress, number)) {
+      if (!valid.has(entry.wordId)) continue;
+      if (entry.correct) known.add(entry.wordId);
+      else known.delete(entry.wordId);
+    }
+    return Array.from(known);
+  }
+
+  function storedTestedKnown(number, stored, progress = state.progress) {
+    if (Array.isArray(stored?.testedKnown)) return validKnown(number, stored.testedKnown);
+    return testedKnownFromActivity(progress, number);
+  }
+
   function defaultProgress() {
     return { version: 1, layoutVersion: PROGRESS_LAYOUT_VERSION, activeSession: 1, sessions: {}, activity: [] };
   }
@@ -113,16 +134,23 @@
       (_, index) => progress.sessions[String(COMBINED_SESSION + index)],
     ).filter((entry) => entry && typeof entry === "object");
     if (entries.length) {
-      const known = validKnown(COMBINED_SESSION, entries.flatMap((entry) => entry.known || []));
+      const reviewKnown = validKnown(COMBINED_SESSION, entries.flatMap((entry) => entry.reviewKnown || entry.known || []));
+      const matchingActivity = sessionActivity(progress, COMBINED_SESSION);
+      const explicitTested = validKnown(COMBINED_SESSION, entries.flatMap((entry) => entry.testedKnown || []));
+      const testedKnown = matchingActivity.length
+        ? testedKnownFromActivity(progress, COMBINED_SESSION)
+        : explicitTested;
       const validDates = (field) => entries.map((entry) => entry[field])
         .filter((value) => value && !Number.isNaN(new Date(value).getTime()))
         .sort((left, right) => new Date(left) - new Date(right));
       const startedDates = validDates("startedAt");
       const studiedDates = validDates("lastStudiedAt");
       const completedDates = validDates("completedAt");
-      const complete = known.length === wordsForSession(COMBINED_SESSION).length;
+      const complete = testedKnown.length === wordsForSession(COMBINED_SESSION).length;
       progress.sessions[String(COMBINED_SESSION)] = {
-        known,
+        known: testedKnown,
+        testedKnown,
+        reviewKnown,
         round: Math.max(1, ...entries.map((entry) => Number(entry.round) || 1)),
         startedAt: startedDates[0] || null,
         lastStudiedAt: studiedDates.at(-1) || null,
@@ -157,12 +185,19 @@
   function loadSession(number) {
     state.session = Math.min(SESSION_COUNT, Math.max(1, Number(number) || 1));
     const stored = state.progress.sessions[String(state.session)] || {};
-    state.known = new Set(validKnown(state.session, stored.known));
+    state.known = new Set(storedTestedKnown(state.session, stored));
+    state.reviewKnown = new Set(validKnown(state.session, stored.reviewKnown || stored.known));
     state.round = Math.max(1, Number(stored.round) || 1);
+    const roundOneAnswers = new Set(sessionActivity(state.progress, state.session)
+      .filter((entry) => Number(entry.round) === 1)
+      .map((entry) => entry.wordId)).size;
+    if (state.round === 1 && roundOneAnswers === currentWords().length && state.known.size < currentWords().length) {
+      state.round = 2;
+    }
     state.phase = state.known.size === currentWords().length ? "complete" : "review";
     state.questions = [];
     state.answers = {};
-    state.roundStartKnown = state.known.size;
+    state.summaryRound = null;
   }
 
   function persist(pushOnline = true) {
@@ -175,6 +210,8 @@
     state.progress.activeSession = state.session;
     state.progress.sessions[key] = {
       known: Array.from(state.known),
+      testedKnown: Array.from(state.known),
+      reviewKnown: Array.from(state.reviewKnown),
       round: state.round,
       startedAt: prior.startedAt || now,
       lastStudiedAt: now,
@@ -186,7 +223,8 @@
 
   function sessionKnownCount(number) {
     if (number === state.session) return state.known.size;
-    return validKnown(number, state.progress.sessions[String(number)]?.known).length;
+    const stored = state.progress.sessions[String(number)] || {};
+    return storedTestedKnown(number, stored).length;
   }
 
   function totalKnownCount() {
@@ -252,9 +290,10 @@
 
   function renderSteps() {
     const steps = [{ label: "Review all", status: state.phase === "review" ? "active" : "done" }];
-    for (let number = 1; number <= Math.max(3, state.round); number += 1) {
+    for (let number = 1; number <= Math.max(3, state.round, state.summaryRound || 1); number += 1) {
       let status = number < state.round || (state.phase === "complete" && number === state.round) ? "done" : "";
-      if ((state.phase === "test" || state.phase === "summary") && number === state.round) status = "active";
+      if (state.phase === "test" && number === state.round) status = "active";
+      if (state.phase === "summary" && number === state.summaryRound) status = "done";
       steps.push({ label: `Round ${number}`, status });
     }
     roundsEl.innerHTML = steps.map((step) => `<span class="step ${step.status}">${step.label}</span>`).join("");
@@ -267,8 +306,9 @@
     progressNumber.textContent = `${known} / ${total} known`;
     progressBar.style.width = `${(known / total) * 100}%`;
     progressTabTotal.textContent = `${totalKnownCount()} / ${WORDS.length}`;
-    startTest.hidden = state.phase !== "review" || known === total;
-    startTest.textContent = `Start Round ${state.round} · ${total - known} word${total - known === 1 ? "" : "s"}`;
+    const testCount = state.round === 1 ? total : total - known;
+    startTest.hidden = state.phase !== "review" || testCount === 0;
+    startTest.textContent = `Start Round ${state.round} · ${testCount} word${testCount === 1 ? "" : "s"}`;
     renderSessionTabs();
     renderSteps();
   }
@@ -320,7 +360,7 @@
   }
 
   function wordCard(item) {
-    const known = state.known.has(item.id);
+    const known = state.reviewKnown.has(item.id);
     const sourceNote = item.sourceRecordId
       ? `MARCO R2 · SOURCE #${item.sourceRecordId}`
       : `SOURCE S${item.originSession} · R${item.originRound}`;
@@ -337,10 +377,14 @@
 
   function renderReview() {
     const items = currentWords();
-    const unknown = items.length - state.known.size;
-    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · REVIEW</p><h2>See all ${items.length} words before testing.</h2><p>Round 1 tests every word still Unknown. Later rounds test only the words missed in the previous round.</p></div><div class="review-actions"><span class="review-count">${unknown} unknown</span><button class="primary compact" id="review-test" type="button" ${unknown ? "" : "disabled"}>Start Round ${state.round}</button></div></div>
+    const reviewUnknown = items.length - state.reviewKnown.size;
+    const testCount = state.round === 1 ? items.length : items.length - state.known.size;
+    const roundNote = state.round === 1
+      ? `Round 1 tests all ${items.length} words, including words marked Known during review.`
+      : `Round ${state.round} tests only the ${testCount} word${testCount === 1 ? "" : "s"} missed in Round ${state.round - 1}.`;
+    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · REVIEW</p><h2>See all ${items.length} words before testing.</h2><p>${roundNote}</p></div><div class="review-actions"><span class="review-count">${reviewUnknown} marked unknown</span><button class="primary compact" id="review-test" type="button" ${testCount ? "" : "disabled"}>Start Round ${state.round}</button></div></div>
       <div class="review-grid">${items.map(wordCard).join("")}</div>
-      <div class="review-footer"><button class="primary" id="review-test-bottom" type="button" ${unknown ? "" : "disabled"}>Start Round ${state.round} · ${unknown} word${unknown === 1 ? "" : "s"}</button></div>`;
+      <div class="review-footer"><button class="primary" id="review-test-bottom" type="button" ${testCount ? "" : "disabled"}>Start Round ${state.round} · ${testCount} word${testCount === 1 ? "" : "s"}</button></div>`;
     document.querySelectorAll("[data-speak]").forEach((button) => button.addEventListener("click", () => speak(WORD_BY_ID.get(button.dataset.speak).word)));
     document.querySelectorAll("[data-known]").forEach((button) => button.addEventListener("click", () => toggleKnown(button.dataset.known)));
     document.querySelector("#review-test").addEventListener("click", beginRound);
@@ -349,8 +393,8 @@
   }
 
   function toggleKnown(wordId) {
-    if (state.known.has(wordId)) state.known.delete(wordId);
-    else state.known.add(wordId);
+    if (state.reviewKnown.has(wordId)) state.reviewKnown.delete(wordId);
+    else state.reviewKnown.add(wordId);
     persist();
     render();
   }
@@ -379,16 +423,19 @@
   }
 
   function beginRound() {
-    const remaining = currentWords().filter((item) => !state.known.has(item.id)).map((item) => item.id);
+    const remaining = (state.round === 1
+      ? currentWords()
+      : currentWords().filter((item) => !state.known.has(item.id)))
+      .map((item) => item.id);
     if (!remaining.length) {
       state.phase = "complete";
       persist();
       return render();
     }
     state.phase = "test";
+    state.summaryRound = null;
     state.questions = shuffle(remaining).map(makeQuestion);
     state.answers = {};
-    state.roundStartKnown = state.known.size;
     persist();
     render();
     window.scrollTo({ top: workspace.offsetTop - 80, behavior: "smooth" });
@@ -422,14 +469,26 @@
       correct,
       answeredAt: new Date().toISOString(),
     });
-    if (correct) state.known.add(target.id);
+    if (correct) {
+      state.known.add(target.id);
+      state.reviewKnown.add(target.id);
+    } else {
+      state.known.delete(target.id);
+      state.reviewKnown.delete(target.id);
+    }
     persist();
     render();
   }
 
   function finishRound() {
     if (Object.keys(state.answers).length !== state.questions.length) return;
-    state.phase = state.known.size === currentWords().length ? "complete" : "summary";
+    if (state.known.size === currentWords().length) {
+      state.phase = "complete";
+    } else {
+      state.summaryRound = state.round;
+      state.round += 1;
+      state.phase = "summary";
+    }
     persist();
     render();
   }
@@ -459,17 +518,19 @@
   }
 
   function renderSummary() {
-    const learned = state.known.size - state.roundStartKnown;
+    const completedRound = state.summaryRound || Math.max(1, state.round - 1);
+    const correct = state.questions.filter((question, index) => state.answers[index] === question.wordId).length;
+    const missed = state.questions.length - correct;
     const remaining = currentWords().length - state.known.size;
-    workspace.innerHTML = `<div class="center"><div><div class="seal">${state.round}</div><h2>Round ${state.round} complete.</h2><div class="score-row"><span>${learned} learned this round</span><span>${state.known.size} of ${currentWords().length} known</span></div><p>${remaining} word${remaining === 1 ? "" : "s"} will return in the next round.</p><div class="center-actions"><button class="secondary" id="summary-review" type="button">Review all words</button><button class="primary" id="next-round" type="button">Start round ${state.round + 1}</button></div></div></div>`;
-    document.querySelector("#summary-review").addEventListener("click", () => { state.phase = "review"; render(); });
-    document.querySelector("#next-round").addEventListener("click", () => { state.round += 1; beginRound(); });
+    workspace.innerHTML = `<div class="center"><div><div class="seal">${completedRound}</div><h2>Round ${completedRound} complete.</h2><div class="score-row"><span>${correct} correct</span><span>${missed} wrong</span><span>${state.known.size} of ${currentWords().length} mastered</span></div><p>${remaining} word${remaining === 1 ? "" : "s"} will return in Round ${state.round}.</p><div class="center-actions"><button class="secondary" id="summary-review" type="button">Review all words</button><button class="primary" id="next-round" type="button">Start Round ${state.round}</button></div></div></div>`;
+    document.querySelector("#summary-review").addEventListener("click", () => { state.phase = "review"; state.summaryRound = null; persist(); render(); });
+    document.querySelector("#next-round").addEventListener("click", beginRound);
   }
 
   function renderComplete() {
     const allDone = totalKnownCount() === WORDS.length;
     const next = state.session < SESSION_COUNT ? `<button class="primary" id="next-session" type="button">Go to session ${state.session + 1}</button>` : "";
-    workspace.innerHTML = `<div class="center"><div><div class="seal">✓</div><h2>${allDone ? `All ${WORDS.length} words mastered!` : `Session ${state.session} mastered!`}</h2><p>Every word in this ${currentWords().length}-word session is now marked Known. Review it again anytime or continue forward.</p><div class="center-actions"><button class="secondary" id="review-complete" type="button">Review session</button>${next}</div></div></div>`;
+    workspace.innerHTML = `<div class="center"><div><div class="seal">✓</div><h2>${allDone ? `All ${WORDS.length} words mastered!` : `Session ${state.session} mastered!`}</h2><p>Marco answered every word in this ${currentWords().length}-word session correctly. Review it again anytime or continue forward.</p><div class="center-actions"><button class="secondary" id="review-complete" type="button">Review session</button>${next}</div></div></div>`;
     document.querySelector("#review-complete").addEventListener("click", () => { state.phase = "review"; render(); });
     document.querySelector("#next-session")?.addEventListener("click", () => changeSession(state.session + 1));
   }
@@ -556,7 +617,13 @@
         appId: SYNC_APP_ID,
         studentName: "Marco",
         validate: validateProgress,
-        score: (progress) => Object.values(progress.sessions || {}).reduce((sum, item) => sum + (Array.isArray(item.known) ? item.known.length : 0), 0),
+        score: (progress) => SESSION_NUMBERS.reduce((sum, number) => {
+          const stored = progress.sessions?.[String(number)] || {};
+          const known = Array.isArray(stored.testedKnown)
+            ? validKnown(number, stored.testedKnown)
+            : testedKnownFromActivity(progress, number);
+          return sum + known.length;
+        }, 0),
         onRemote: (remote) => {
           state.progress = migrateProgressLayout(remote);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));

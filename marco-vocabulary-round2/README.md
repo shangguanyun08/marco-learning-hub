@@ -4,7 +4,7 @@
 - 14 sessions: Sessions 1–13 contain 50 words each; the former Sessions 14–19 are combined into one 224-word Session 14
 - all words, meanings, sentence examples, and illustrated clues shown together during review
 - Known/Unknown review controls followed by all-at-once four-choice sentence tests
-- Round 1 tests every remaining unknown word; each later round tests only the previous round's misses
+- Round 1 tests every word in the session regardless of the review Known/Unknown choice; each later round tests only the previous round's misses
 - a top Progress tab records the wrong count for every session and round
 - dated answer history, local saving, and shared online progress
 
