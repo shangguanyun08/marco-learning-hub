@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#0a092d" />
     <title>Marco & Harry Learning Hub</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=7" />
+    <link rel="stylesheet" href="./styles.css?v=8" />
   </head>
   <body>
     <main class="shell">
@@ -19,7 +19,7 @@
         <aside class="today-log" aria-labelledby="today-log-title">
           <div class="today-log-heading">
             <div>
-              <p id="today-log-title">Today’s work</p>
+              <p id="today-log-title">Daily work</p>
               <time id="today-log-date">Loading…</time>
             </div>
             <span class="today-log-live"><i aria-hidden="true"></i> Live</span>
@@ -33,6 +33,14 @@
               <span>Harry</span>
               <p><strong id="harry-minutes">—</strong> <small>mins</small></p>
             </div>
+          </div>
+          <div class="activity-history-heading" aria-hidden="true">
+            <span>All days</span>
+            <span>Marco</span>
+            <span>Harry</span>
+          </div>
+          <div id="activity-history" class="activity-history" role="table" aria-label="Daily study minutes">
+            <p class="activity-history-empty">Loading daily history…</p>
           </div>
           <p class="today-log-note" id="today-log-note" aria-live="polite">Counting active practice time across today’s learning sites.</p>
         </aside>
@@ -262,6 +270,6 @@
         <a href="https://github.com/shangguanyun08">View all repositories on GitHub <span>↗</span></a>
       </footer>
     </main>
-    <script src="./shared-activity-dashboard.js?v=1" defer></script>
+    <script src="./shared-activity-dashboard.js?v=2" defer></script>
   </body>
 </html>
