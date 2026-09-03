@@ -7,10 +7,9 @@
   let bank = null;
   let state = freshState();
   let selectedDay = 1;
-  let position = 0;
   let view = "practice";
-  let feedback = null;
-  let selectedIndex = null;
+  let feedbackByQuestion = {};
+  let selectedAnswers = {};
   let sync = null;
 
   function freshState() {
@@ -100,13 +99,6 @@
     };
   }
 
-  function nextOpen(day) {
-    const session = latestSession(day.day);
-    if (session?.completedAt) return day.questionCount;
-    const index = day.questions.findIndex((question) => !resolved(questionAttempts(session, question.id)));
-    return index < 0 ? day.questionCount : index;
-  }
-
   function newId() {
     return crypto.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
   }
@@ -129,27 +121,26 @@
     const day = bank.days.find((item) => item.day === dayNumber);
     if (!day) return;
     selectedDay = dayNumber;
-    position = nextOpen(day);
-    feedback = null;
-    selectedIndex = null;
+    feedbackByQuestion = {};
+    selectedAnswers = {};
     view = "practice";
     render();
   }
 
-  function selectAnswer(index) {
+  function selectAnswer(questionId, index) {
     const day = bank.days.find((item) => item.day === selectedDay);
-    const question = day?.questions[position];
+    const question = day?.questions.find((item) => String(item.id) === String(questionId));
     const session = latestSession(selectedDay);
     const previous = questionAttempts(session, question?.id);
     if (!question || resolved(previous) || previous.some((attempt) => attempt.selectedIndex === index)) return;
-    selectedIndex = index;
-    feedback = null;
+    selectedAnswers[question.id] = index;
+    feedbackByQuestion[question.id] = null;
     render();
   }
 
-  function answer(index) {
+  function answer(questionId, index) {
     const day = bank.days.find((item) => item.day === selectedDay);
-    const question = day?.questions[position];
+    const question = day?.questions.find((item) => String(item.id) === String(questionId));
     if (!day || !question) return;
     const session = ensureSession(day.day);
     const previous = questionAttempts(session, question.id);
@@ -170,8 +161,10 @@
     };
     state.attempts.push(attempt);
     const isResolved = correct || attemptNumber === 2;
-    if (isResolved && question.position === day.questionCount) session.completedAt = new Date().toISOString();
-    feedback = {
+    if (!session.completedAt && day.questions.every((item) => resolved(questionAttempts(session, item.id)))) {
+      session.completedAt = new Date().toISOString();
+    }
+    feedbackByQuestion[question.id] = {
       correct,
       attemptNumber,
       selectedIndex: index,
@@ -180,7 +173,7 @@
         ? { correctHtml: question.correctHtml, explanation: question.explanation }
         : null,
     };
-    selectedIndex = null;
+    delete selectedAnswers[question.id];
     saveState();
     render();
   }
@@ -195,19 +188,9 @@
       startedAt: new Date().toISOString(),
       completedAt: null,
     });
-    position = 0;
-    feedback = null;
-    selectedIndex = null;
+    feedbackByQuestion = {};
+    selectedAnswers = {};
     saveState();
-    render();
-  }
-
-  function advance() {
-    const day = bank.days.find((item) => item.day === selectedDay);
-    if (!day || !feedback?.resolved) return;
-    feedback = null;
-    selectedIndex = null;
-    position = Math.min(position + 1, day.questionCount);
     render();
   }
 
@@ -292,33 +275,40 @@
     const session = dayMetrics.session;
     const saved = questionAttempts(session, question.id);
     const currentResolved = resolved(saved);
+    const selectedAnswer = selectedAnswers[question.id];
+    const secondWrong = saved.find((attempt) => attempt.attemptNumber === 2 && !attempt.correct);
+    const currentFeedback = feedbackByQuestion[question.id] || (secondWrong ? {
+      correct: false,
+      resolved: true,
+      reveal: { correctHtml: question.correctHtml, explanation: question.explanation },
+    } : null);
     const options = question.options.map((option, index) => {
       const attempt = saved.find((item) => item.selectedIndex === index);
       const className = [
         attempt ? (attempt.correct ? "right" : "wrong") : "",
-        selectedIndex === index && !attempt ? "selected" : "",
+        selectedAnswer === index && !attempt ? "selected" : "",
       ].filter(Boolean).join(" ");
       const disabled = currentResolved || Boolean(attempt && !attempt.correct);
-      return `<button class="${className}" ${disabled ? "disabled" : ""} data-action="select-answer" data-index="${index}" type="button" aria-pressed="${selectedIndex === index}">
+      return `<button class="${className}" ${disabled ? "disabled" : ""} data-action="select-answer" data-question-id="${esc(question.id)}" data-index="${index}" type="button" aria-pressed="${selectedAnswer === index}">
         <span class="option-letter">${esc(option.label)}</span><span class="option-content">${option.html}</span>
       </button>`;
     }).join("");
 
-    const feedbackHtml = !feedback ? "" : `
-      <div class="feedback ${feedback.correct ? "right" : "wrong"}" role="status">
-        <div class="feedback-icon">${feedback.correct ? "✓" : feedback.resolved ? "2" : "1"}</div>
+    const feedbackHtml = !currentFeedback ? "" : `
+      <div class="feedback ${currentFeedback.correct ? "right" : "wrong"}" role="status">
+        <div class="feedback-icon">${currentFeedback.correct ? "✓" : currentFeedback.resolved ? "2" : "1"}</div>
         <div>
-          <strong>${feedback.correct ? "Right — nice work!" : feedback.resolved ? "Let’s learn this one." : "Not quite. Try once more."}</strong>
-          ${!feedback.correct && !feedback.resolved ? "<span>Your first try is saved. Check the signs, units, and what the question is asking.</span>" : ""}
-          ${feedback.reveal ? `<div class="reveal"><p><b>Correct answer:</b> <span>${feedback.reveal.correctHtml}</span></p><p><b>Quick explanation:</b> ${esc(feedback.reveal.explanation)}</p></div>` : ""}
-          ${feedback.correct ? "<span>Answer saved online. Move on when you’re ready.</span>" : ""}
+          <strong>${currentFeedback.correct ? "Right — nice work!" : currentFeedback.resolved ? "Let’s learn this one." : "Not quite. Try once more."}</strong>
+          ${!currentFeedback.correct && !currentFeedback.resolved ? "<span>Your first try is saved. Check the signs, units, and what the question is asking.</span>" : ""}
+          ${currentFeedback.reveal ? `<div class="reveal"><p><b>Correct answer:</b> <span>${currentFeedback.reveal.correctHtml}</span></p><p><b>Quick explanation:</b> ${esc(currentFeedback.reveal.explanation)}</p></div>` : ""}
+          ${currentFeedback.correct ? "<span>Answer saved online.</span>" : ""}
         </div>
       </div>`;
 
     return `
-      <section class="question-card">
+      <section class="question-card" id="question-${esc(question.id)}">
         <div class="question-meta">
-          <div><span>Day ${day.day}</span><strong>Question ${position + 1} of ${day.questionCount}</strong></div>
+          <div><span>Day ${day.day}</span><strong>Question ${question.position} of ${day.questionCount}</strong></div>
           <div class="progress-track"><span style="width:${(dayMetrics.resolved / day.questionCount) * 100}%"></span></div>
           <small>Original question #${esc(question.sourceNumber)}</small>
         </div>
@@ -327,12 +317,24 @@
         <div class="options">${options}</div>
         ${feedbackHtml}
         <footer class="question-footer">
-          <span>${dayMetrics.resolved} of ${day.questionCount} finished · Select a choice, then check it</span>
-          ${feedback?.resolved
-            ? `<button class="primary-action" data-action="advance" type="button">${position === day.questionCount - 1 ? "Finish Day" : "Next Question"} →</button>`
-            : `<button class="primary-action" data-action="check-answer" type="button" ${selectedIndex === null ? "disabled" : ""}>Check answer</button>`}
+          <span>${dayMetrics.resolved} of ${day.questionCount} questions finished</span>
+          ${currentResolved
+            ? `<span class="answered-mark">✓ Answer saved</span>`
+            : `<button class="primary-action" data-action="check-answer" data-question-id="${esc(question.id)}" type="button" ${selectedAnswer === undefined ? "disabled" : ""}>Check answer</button>`}
         </footer>
       </section>`;
+  }
+
+  function allQuestionsHtml(day, dayMetrics) {
+    return `
+      <main class="question-list">
+        <section class="session-overview">
+          <div><p class="eyebrow">Day ${day.day}</p><h2>All ${day.questionCount} questions</h2><p>Answer in any order. Each question allows two tries.</p></div>
+          <div class="session-progress"><strong>${dayMetrics.resolved}<small>/${day.questionCount}</small></strong><span>finished</span><div class="progress-track"><span style="width:${(dayMetrics.resolved / day.questionCount) * 100}%"></span></div></div>
+        </section>
+        ${dayMetrics.completed ? completeHtml(day, dayMetrics) : ""}
+        ${day.questions.map((question) => questionHtml(day, dayMetrics, question)).join("")}
+      </main>`;
   }
 
   function progressHtml(stats) {
@@ -423,20 +425,22 @@
     const stats = summary();
     const day = bank.days.find((item) => item.day === selectedDay) || bank.days[0];
     const dayMetrics = metrics(day);
-    const question = day.questions[position];
     app.className = "site-shell";
-    app.innerHTML = `${headerHtml(stats)}${view === "progress" ? progressHtml(stats) : `<section class="workspace">${railHtml(day)}${position >= day.questionCount ? completeHtml(day, dayMetrics) : questionHtml(day, dayMetrics, question)}</section>`}`;
+    app.innerHTML = `${headerHtml(stats)}${view === "progress" ? progressHtml(stats) : `<section class="workspace">${railHtml(day)}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
   }
 
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button) return;
     const action = button.dataset.action;
-    if (action === "view") { view = button.dataset.view || "practice"; feedback = null; selectedIndex = null; render(); }
+    if (action === "view") { view = button.dataset.view || "practice"; feedbackByQuestion = {}; selectedAnswers = {}; render(); }
     if (action === "day") chooseDay(Number(button.dataset.day));
-    if (action === "select-answer") selectAnswer(Number(button.dataset.index));
-    if (action === "check-answer" && selectedIndex !== null) answer(selectedIndex);
-    if (action === "advance") advance();
+    if (action === "select-answer") selectAnswer(button.dataset.questionId, Number(button.dataset.index));
+    if (action === "check-answer") {
+      const questionId = button.dataset.questionId;
+      const selectedAnswer = selectedAnswers[questionId];
+      if (selectedAnswer !== undefined) answer(questionId, selectedAnswer);
+    }
     if (action === "restart") startAgain();
   });
 
@@ -450,7 +454,6 @@
       state = loadLocal();
       const firstIncomplete = bank.days.find((day) => !latestSession(day.day)?.completedAt) || bank.days[0];
       selectedDay = firstIncomplete.day;
-      position = nextOpen(firstIncomplete);
       render();
       sync = window.MarcoOnlineSync.create({
         appId: APP_ID,
@@ -462,10 +465,8 @@
         onRemote(remoteState) {
           state = remoteState;
           try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
-          const activeDay = bank.days.find((day) => day.day === selectedDay);
-          if (activeDay) position = nextOpen(activeDay);
-          feedback = null;
-          selectedIndex = null;
+          feedbackByQuestion = {};
+          selectedAnswers = {};
           render();
         },
       });
