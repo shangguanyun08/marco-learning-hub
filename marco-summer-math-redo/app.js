@@ -63,16 +63,40 @@
     return attempts.some((attempt) => attempt.correct) || attempts.length >= 2;
   }
 
+  function firstTryScore(day, session) {
+    if (!session?.completedAt) return null;
+    const firstWrong = attemptsFor(session)
+      .filter((attempt) => attempt.attemptNumber === 1 && !attempt.correct)
+      .length;
+    return Math.round(((day.questionCount - firstWrong) / day.questionCount) * 100);
+  }
+
+  function formatFinishedAt(value) {
+    if (!value) return "Not finished";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Finished";
+    return date.toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  }
+
   function metrics(day) {
     const session = latestSession(day.day);
     const attempts = attemptsFor(session);
+    const completed = Boolean(session?.completedAt);
     return {
       session,
       attempts,
       resolved: day.questions.filter((question) => resolved(questionAttempts(session, question.id))).length,
       firstWrong: attempts.filter((attempt) => attempt.attemptNumber === 1 && !attempt.correct).length,
       secondWrong: attempts.filter((attempt) => attempt.attemptNumber === 2 && !attempt.correct).length,
-      completed: Boolean(session?.completedAt),
+      completed,
+      firstTryScore: completed ? firstTryScore(day, session) : null,
+      finishedAt: session?.completedAt || null,
     };
   }
 
@@ -237,7 +261,7 @@
           ${bank.days.map((item) => {
             const itemMetrics = metrics(item);
             return `<button class="${item.day === day.day ? "active" : ""} ${itemMetrics.completed ? "done" : ""}" data-action="day" data-day="${item.day}" type="button">
-              <span>${itemMetrics.completed ? "✓" : String(item.day).padStart(2, "0")}</span><b>Day ${item.day}</b><small>${itemMetrics.resolved}/${item.questionCount}</small>
+              <span>${itemMetrics.completed ? "✓" : String(item.day).padStart(2, "0")}</span><b>Day ${item.day}</b><small>${itemMetrics.completed ? `${itemMetrics.firstTryScore}/100` : `${itemMetrics.resolved}/${item.questionCount}`}</small>
             </button>`;
           }).join("")}
         </div>
@@ -251,9 +275,10 @@
         <h2>Day ${day.day} is finished.</h2>
         <p>Marco completed all ${day.questionCount} questions in this session. Every first and second try is saved in the online progress record.</p>
         <div class="complete-stats">
+          <div><strong>${dayMetrics.firstTryScore}/100</strong><span>first-try score</span></div>
           <div><strong>${dayMetrics.firstWrong}</strong><span>first-try misses</span></div>
           <div><strong>${dayMetrics.secondWrong}</strong><span>second-try misses</span></div>
-          <div><strong>${dayMetrics.session?.runNumber || 1}</strong><span>session round</span></div>
+          <div><strong class="finished-time">${esc(formatFinishedAt(dayMetrics.finishedAt))}</strong><span>finished</span></div>
         </div>
         <div class="complete-actions">
           ${day.day < 14 ? `<button class="primary-action" data-action="day" data-day="${day.day + 1}" type="button">Go to Day ${day.day + 1}</button>` : ""}
@@ -314,6 +339,19 @@
     const questionMap = new Map(bank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
     const recordedAttempts = state.attempts.filter((attempt) => questionMap.has(attempt.questionId));
     const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
+    const completedSessions = state.sessions
+      .filter((session) => session.completedAt)
+      .map((session) => {
+        const day = bank.days.find((item) => item.day === session.day);
+        return day ? {
+          day,
+          session,
+          score: firstTryScore(day, session),
+          finishedAt: session.completedAt,
+        } : null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.finishedAt) - new Date(a.finishedAt));
     const historyRows = [...new Set(wrongAttempts.map((attempt) => attempt.questionId))]
       .map((questionId) => {
         const question = questionMap.get(questionId);
@@ -343,11 +381,24 @@
         </div>
         <div class="day-summary-grid">
           ${stats.rows.map((row) => `<button data-action="day" data-day="${row.day.day}" type="button">
-            <span>Day ${row.day.day}</span><strong>${row.resolved}/${row.day.questionCount}</strong>
+            <span>Day ${row.day.day}</span><strong>${row.completed ? `${row.firstTryScore}/100` : `${row.resolved}/${row.day.questionCount}`}</strong>
             <div class="mini-track"><i style="width:${(row.resolved / row.day.questionCount) * 100}%"></i></div>
-            <small>${row.completed ? "Complete" : row.session ? "In progress" : "Not started"} · all-time 1st miss ${row.historyFirstWrong} · 2nd miss ${row.historySecondWrong}</small>
+            <small>${row.completed ? `Finished ${esc(formatFinishedAt(row.finishedAt))}` : row.session ? "In progress" : "Not started"} · all-time 1st miss ${row.historyFirstWrong} · 2nd miss ${row.historySecondWrong}</small>
           </button>`).join("")}
         </div>
+        <section class="miss-record">
+          <div class="record-heading"><h3>Completed sessions</h3><span>${completedSessions.length} finished</span></div>
+          ${completedSessions.length === 0 ? '<div class="empty-record">Finished scores and times will appear here.</div>' : `
+            <div class="record-table" role="table" aria-label="Completed session history">
+              <div class="record-row record-header session-row" role="row"><span>Day</span><span>Round</span><span>Score</span><span>Finished</span></div>
+              ${completedSessions.map((item) => `<div class="record-row session-row" role="row">
+                <span><b>Day ${item.day.day}</b></span>
+                <span>${item.session.runNumber || 1}</span>
+                <span><i class="score-mark">${item.score}/100</i></span>
+                <span><small>${esc(formatFinishedAt(item.finishedAt))}</small></span>
+              </div>`).join("")}
+            </div>`}
+        </section>
         <section class="miss-record">
           <div class="record-heading"><h3>Wrong-answer history</h3><span>${stats.wrongChecks} wrong checks recorded</span></div>
           ${historyRows.length === 0 ? '<div class="empty-record">No wrong attempts yet. The record will update after Marco starts.</div>' : `
