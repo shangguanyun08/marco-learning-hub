@@ -5,11 +5,13 @@
   const TIME_ZONE = "America/Los_Angeles";
   const marcoMinutes = document.getElementById("marco-minutes");
   const harryMinutes = document.getElementById("harry-minutes");
+  const marcoSessions = document.getElementById("marco-sessions");
+  const harrySessions = document.getElementById("harry-sessions");
   const dateNode = document.getElementById("today-log-date");
   const noteNode = document.getElementById("today-log-note");
   const historyNode = document.getElementById("activity-history");
 
-  if (!marcoMinutes || !harryMinutes || !dateNode || !noteNode || !historyNode) return;
+  if (!marcoMinutes || !harryMinutes || !marcoSessions || !harrySessions || !dateNode || !noteNode || !historyNode) return;
 
   function dateKey() {
     return new Intl.DateTimeFormat("en-CA", {
@@ -61,17 +63,22 @@
       date.setAttribute("role", "cell");
       date.textContent = historyDateLabel(day.date, isToday);
 
-      const minutes = ["Marco", "Harry"].map((student) => {
+      const stats = ["Marco", "Harry"].map((student) => {
         const cell = document.createElement("span");
-        cell.className = "activity-history-minutes";
+        cell.className = "activity-history-stats";
         cell.setAttribute("role", "cell");
-        const value = Math.max(0, Number(day.students?.[student]?.minutes) || 0);
+        const minutes = Math.max(0, Number(day.students?.[student]?.minutes) || 0);
+        const sessions = Math.max(0, Number(day.students?.[student]?.sessions) || 0);
+        const minutesLine = document.createElement("span");
         const strong = document.createElement("strong");
-        strong.textContent = String(value);
-        cell.append(strong, document.createTextNode(" min"));
+        strong.textContent = String(minutes);
+        minutesLine.append(strong, document.createTextNode(" min"));
+        const sessionsLine = document.createElement("span");
+        sessionsLine.textContent = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
+        cell.append(minutesLine, sessionsLine);
         return cell;
       });
-      row.append(date, ...minutes);
+      row.append(date, ...stats);
       historyNode.append(row);
     });
   }
@@ -87,8 +94,12 @@
       const today = history.find((day) => day.date === dateKey());
       const marco = Math.max(0, Number(today?.students?.Marco?.minutes) || 0);
       const harry = Math.max(0, Number(today?.students?.Harry?.minutes) || 0);
+      const marcoFinished = Math.max(0, Number(today?.students?.Marco?.sessions) || 0);
+      const harryFinished = Math.max(0, Number(today?.students?.Harry?.sessions) || 0);
       marcoMinutes.textContent = String(marco);
       harryMinutes.textContent = String(harry);
+      marcoSessions.textContent = String(marcoFinished);
+      harrySessions.textContent = String(harryFinished);
       renderHistory(history);
       noteNode.textContent = marco + harry > 0
         ? "Updates automatically while Marco or Harry is actively practicing."
@@ -96,6 +107,8 @@
     } catch (error) {
       marcoMinutes.textContent = "—";
       harryMinutes.textContent = "—";
+      marcoSessions.textContent = "—";
+      harrySessions.textContent = "—";
       historyNode.innerHTML = '<p class="activity-history-empty">Daily history will retry automatically.</p>';
       noteNode.textContent = "Today’s work log will retry automatically.";
     }
