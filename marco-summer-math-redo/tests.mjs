@@ -41,6 +41,12 @@ async function boot(initial = completedOriginalDays(), remote = initial) {
   return { api: context.redo, app, pushed, remote: next => options.onRemote(clone(next)), storage };
 }
 
+function finishPractice(api, question) {
+  for (const practice of (question.practiceQuestions || []).slice(0,3)) {
+    api.answer(practice.id, practice.correctIndexes[0]);
+  }
+}
+
 test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', async () => {
   const { api, app, pushed } = await boot();
   const groups = api.bank.days.filter(day => !day.original && !day.review);
@@ -82,7 +88,10 @@ test('opening on a new device selects the next unfinished session after online s
   const initial = completedOriginalDays();
   const first = await boot(initial);
   const group = first.api.bank.days.find(day => day.day === 29);
-  for (const question of group.questions) first.api.answer(question.id, question.correctIndexes[0]);
+  for (const question of group.questions) {
+    first.api.answer(question.id, question.correctIndexes[0]);
+    finishPractice(first.api, question);
+  }
   const { api } = await boot(fresh(), clone(first.api.state));
   assert.equal(api.selectedDay, 30);
 });
@@ -163,7 +172,10 @@ test('final session contains only 4 questions and completion handles no remainin
   const { api, app } = await boot();
   for (const day of api.bank.days.filter(day => !day.original)) {
     api.chooseDay(day.day);
-    for (const question of day.questions) api.answer(question.id, question.correctIndexes[0]);
+    for (const question of day.questions) {
+      api.answer(question.id, question.correctIndexes[0]);
+      finishPractice(api, question);
+    }
   }
   assert.equal(api.summary().resolvedQuestions, 228);
   assert.match(app.innerHTML, /All sessions are finished/);
@@ -264,9 +276,7 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
     day.questions.forEach((q, index) => {
       if (index < misses) api.answer(q.id, q.options.findIndex((_, choice) => !q.correctIndexes.includes(choice)));
       api.answer(q.id, q.correctIndexes[0]);
-      if (day.mastery && api.masteryProgress(day, q).nominal?.correct === false) {
-        for (const practice of q.practiceQuestions.slice(0,3)) api.answer(practice.id, practice.correctIndexes[0]);
-      }
+      finishPractice(api, q);
     });
     if (day.mastery) api.nextMainQuestion();
   };
@@ -324,11 +334,11 @@ test('expanding a finished ten-question review keeps its score and carries its a
   const { api } = await boot(initial);
   const review = api.bank.days.find(day => day.day === 29);
   assert.deepEqual(clone(api.state), before);
-  assert.equal(api.metrics(review).resolved, 9, 'An earlier first-try miss now requires extra practice');
+  assert.equal(api.metrics(review).resolved, 0, 'All earlier main answers now need a streak of three');
   assert.equal(api.metrics(review).completed, false);
   assert.match(api.progressHtml(api.summary()), /90\/100/);
   for (const q of review.questions.slice(10)) api.answer(q.id, q.correctIndexes[0]);
-  for (const q of review.questions[0].practiceQuestions.slice(0,3)) api.answer(q.id, q.correctIndexes[0]);
+  for (const q of review.questions) finishPractice(api, q);
   assert.equal(api.metrics(review).firstTryScore, 94);
   assert.equal(api.metrics(review).session.questionIds.length, 16);
   assert.equal(api.metrics(review).session.inheritedAttemptIds.length, 11);
@@ -374,8 +384,22 @@ test('Review 1 shows one active question and advances only after mastery or the 
   assert.equal(api.currentReviewQuestion(day).id, second.id);
   assert.doesNotMatch(app.innerHTML, /class="practice-item"/);
   check(api, second, true);
-  assert.equal(api.masteryProgress(day, second).mastered, true);
+  assert.equal(api.masteryProgress(day, second).mastered, false);
+  assert.equal(api.masteryProgress(day, second).streak, 1);
   assert.equal(api.masteryProgress(day, second).practice.length, 0);
+  assert.match(app.innerHTML, /Practice question 1 of 10/);
+  assert.match(app.innerHTML, /<b>1\/3<\/b> correct in a row/);
+  assert.doesNotMatch(app.innerHTML, /data-action="next-main"/);
+  api.nextMainQuestion();
+  assert.equal(api.currentReviewQuestion(day).id, second.id);
+  check(api, second.practiceQuestions[0], true);
+  assert.equal(api.masteryProgress(day, second).streak, 2);
+  assert.equal(api.masteryProgress(day, second).mastered, false);
+  api.nextPracticeQuestion(second.id);
+  check(api, second.practiceQuestions[1], true);
+  assert.equal(api.masteryProgress(day, second).mastered, true);
+  assert.equal(api.masteryProgress(day, second).practice.length, 2);
+  assert.doesNotMatch(app.innerHTML, /Practice question 3 of 10/);
   assert.match(app.innerHTML, /2 of 16 mastered/);
 });
 
@@ -385,7 +409,7 @@ test('practice counts distinct questions, resets the streak on a miss, and survi
   const day = api.bank.days.find(d => d.day === 29), parent = day.questions[0];
   const [p1,p2,p3,p4,p5,p6,p7] = parent.practiceQuestions;
   check(api,p1,true);
-  assert.equal(api.state.attempts.length, completedOriginalDays().attempts.length, 'Practice is locked before a main miss');
+  assert.equal(api.state.attempts.length, completedOriginalDays().attempts.length, 'Practice is locked before the main answer');
   check(api,parent,false);
   const before = clone(api.state);
   check(api,parent,true);
@@ -422,6 +446,32 @@ test('practice counts distinct questions, resets the streak on a miss, and survi
   assert.match(otherDevice.api.progressHtml(summary),/Extra practice misses: 1/);
 });
 
+test('a correct main answer contributes once across reloads, and a later miss resets the whole streak', async () => {
+  const first = await boot();
+  const day = first.api.bank.days.find(d => d.day === 29), parent = day.questions[0];
+  check(first.api, parent, true);
+  check(first.api, parent, true);
+  assert.equal(first.api.masteryProgress(day,parent).streak,1);
+  assert.equal(first.api.metrics(day).mastered,0);
+  check(first.api,parent.practiceQuestions[0],true);
+  const restored = await boot(clone(first.api.state));
+  assert.equal(restored.api.masteryProgress(day,parent).streak,2);
+  assert.match(restored.app.innerHTML,/Practice question 2 of 10/);
+  check(restored.api,parent.practiceQuestions[1],false);
+  assert.equal(restored.api.masteryProgress(day,parent).streak,0);
+  check(restored.api,parent.practiceQuestions[2],true);
+  check(restored.api,parent.practiceQuestions[3],true);
+  assert.equal(restored.api.masteryProgress(day,parent).mastered,false);
+  const otherDevice = await boot(fresh(),clone(restored.api.state));
+  assert.equal(otherDevice.api.masteryProgress(day,parent).streak,2);
+  check(otherDevice.api,parent.practiceQuestions[4],true);
+  assert.equal(otherDevice.api.masteryProgress(day,parent).mastered,true);
+  assert.equal(otherDevice.api.masteryProgress(day,parent).practice.length,5);
+  assert.equal(otherDevice.api.metrics(day).firstWrong,0);
+  assert.match(otherDevice.api.progressHtml(otherDevice.api.summary()),/5\/10 extra questions · 3\/3 correct in a row/);
+  assert.doesNotMatch(otherDevice.app.innerHTML,/No extra practice needed|extra practice if missed/);
+});
+
 test('ten-question limit ends as unmastered, while a third consecutive correct on question ten wins', async () => {
   for (const win of [false,true]) {
     const {api,app} = await boot();
@@ -442,12 +492,13 @@ test('ten-question limit ends as unmastered, while a third consecutive correct o
   }
 });
 
-test('every possible ten-answer sequence has the expected stop, streak and mastery result', async () => {
+test('every possible sequence including the main answer has the expected stop, streak and mastery result', async () => {
   const {api} = await boot();
   const day = api.bank.days.find(d => d.day === 29), parent = day.questions[0];
-  for (let mask=0; mask < 1024; mask++) {
-    const attempts=[{questionId:parent.id,attemptNumber:1,correct:false}];
-    let expectedStreak=0, used=0, mastered=false;
+  for (let mask=0; mask < 2048; mask++) {
+    const mainCorrect=Boolean(mask & (1<<10));
+    const attempts=[{questionId:parent.id,attemptNumber:1,correct:mainCorrect}];
+    let expectedStreak=mainCorrect ? 1 : 0, used=0, mastered=false;
     for (let i=0; i<10; i++) {
       const correct=Boolean(mask & (1<<i));
       attempts.push({questionId:parent.practiceQuestions[i].id,correct});
@@ -470,6 +521,7 @@ test('all sixteen mastery outcomes finish a round, preserve the 16-question scor
   const day=api.bank.days.find(d=>d.day===29);
   for (const [i,q] of day.questions.entries()) {
     check(api,q,i>0);
+    if (i>0) finishPractice(api,q);
     api.nextMainQuestion();
   }
   assert.equal(api.metrics(day).completed,false);
