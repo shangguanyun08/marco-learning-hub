@@ -8,6 +8,7 @@ const source = await readFile(new URL('./app.js', import.meta.url), 'utf8');
 const originalBank = JSON.parse(await readFile(new URL('./question-bank.json', import.meta.url), 'utf8'));
 const plan = JSON.parse(await readFile(new URL('./session-plan.json', import.meta.url), 'utf8'));
 const reviews = JSON.parse(await readFile(new URL('./review-bank.json', import.meta.url), 'utf8'));
+const practiceBank = JSON.parse(await readFile(new URL('./review1-practice-bank.json', import.meta.url), 'utf8'));
 const clone = value => JSON.parse(JSON.stringify(value));
 const fresh = () => ({ schemaVersion: 1, learner: 'Marco', sessions: [], attempts: [], updatedAt: null });
 
@@ -31,9 +32,9 @@ async function boot(initial = completedOriginalDays(), remote = initial) {
     crypto: { randomUUID },
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     window: { MarcoOnlineSync: { create(value) { options = value; return { start() { if (remote) value.onRemote(clone(remote)); }, push(state) { pushed.push(clone(state)); } }; } } },
-    fetch: async url => ({ ok: true, json: async () => clone(url.startsWith('question-bank') ? originalBank : url.startsWith('review-bank') ? reviews : plan) }),
+    fetch: async url => ({ ok: true, json: async () => clone(url.startsWith('question-bank') ? originalBank : url.startsWith('review-bank') ? reviews : url.startsWith('review1-practice-bank') ? practiceBank : plan) }),
   });
-  const instrumented = source.replace('  Promise.all(', `  globalThis.redo = { metrics, savedAttempts, chooseDay, selectAnswer, answer, startAgain, summary, progressHtml, nextPracticeDay, get state() { return state; }, get bank() { return bank; }, get selectedDay() { return selectedDay; } };\n  Promise.all(`);
+  const instrumented = source.replace('  Promise.all(', `  globalThis.redo = { metrics, savedAttempts, chooseDay, selectAnswer, answer, startAgain, summary, progressHtml, nextPracticeDay, masteryProgress, nextPracticeQuestion, nextMainQuestion, currentReviewQuestion, get state() { return state; }, get bank() { return bank; }, get selectedDay() { return selectedDay; } };\n  Promise.all(`);
   vm.runInContext(instrumented, context);
   await new Promise(resolve => setImmediate(resolve));
   assert.doesNotMatch(app.innerHTML, /could not be loaded/);
@@ -52,13 +53,15 @@ test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', asy
   assert.ok(ids.every(id => !completedIds.has(id)));
   assert.equal(new Set([...ids, ...completedIds]).size, 196);
   assert.equal(api.selectedDay, 29);
-  assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 16);
+  assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 1);
+  assert.match(app.innerHTML, /0 of 16 mastered/);
   assert.match(app.innerHTML, /<strong>All sessions<\/strong>/);
   assert.match(app.innerHTML, /5 of 21 finished/);
   const rail = app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
   assert.equal((rail.match(/data-action="day"/g) || []).length, 21);
   assert.equal((app.innerHTML.match(/class="session-score">First try: 100\/100/g) || []).length, 5);
-  assert.doesNotMatch(app.innerHTML, /<details|completed-work/);
+  assert.doesNotMatch(app.innerHTML, /completed-work/);
+  assert.match(app.innerHTML, /<details class="session-picker">/);
   assert.doesNotMatch(app.innerHTML, /hero-strip|sessions finished|missed first try|missed second try/);
   assert.equal(pushed.length, 0, 'Rendering must not modify saved progress');
 });
@@ -261,12 +264,16 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
     day.questions.forEach((q, index) => {
       if (index < misses) api.answer(q.id, q.options.findIndex((_, choice) => !q.correctIndexes.includes(choice)));
       api.answer(q.id, q.correctIndexes[0]);
+      if (day.mastery && api.masteryProgress(day, q).nominal?.correct === false) {
+        for (const practice of q.practiceQuestions.slice(0,3)) api.answer(practice.id, practice.correctIndexes[0]);
+      }
     });
+    if (day.mastery) api.nextMainQuestion();
   };
   const firstQuestion = review.questions[0];
   assert.doesNotMatch(app.innerHTML, /Quick explanation:/);
   api.answer(firstQuestion.id, 0);
-  assert.doesNotMatch(app.innerHTML, /Quick explanation:/);
+  assert.match(app.innerHTML, /Extra practice · Question 1/);
   api.answer(firstQuestion.id, firstQuestion.correctIndexes[0]);
   assert.match(app.innerHTML, /Quick explanation:/);
   finish(review, 2);
@@ -299,7 +306,7 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   assert.equal(reloaded.api.selectedDay, 15);
   reloaded.api.chooseDay(29);
   assert.match(reloaded.app.innerHTML, /Goal met!/);
-  assert.match(reloaded.app.innerHTML, /Quick explanation:/);
+  assert.match(reloaded.app.innerHTML, /16 of 16 mastered/);
 });
 
 test('expanding a finished ten-question review keeps its score and carries its answers into the added questions', async () => {
@@ -317,10 +324,11 @@ test('expanding a finished ten-question review keeps its score and carries its a
   const { api } = await boot(initial);
   const review = api.bank.days.find(day => day.day === 29);
   assert.deepEqual(clone(api.state), before);
-  assert.equal(api.metrics(review).resolved, 10);
+  assert.equal(api.metrics(review).resolved, 9, 'An earlier first-try miss now requires extra practice');
   assert.equal(api.metrics(review).completed, false);
   assert.match(api.progressHtml(api.summary()), /90\/100/);
   for (const q of review.questions.slice(10)) api.answer(q.id, q.correctIndexes[0]);
+  for (const q of review.questions[0].practiceQuestions.slice(0,3)) api.answer(q.id, q.correctIndexes[0]);
   assert.equal(api.metrics(review).firstTryScore, 94);
   assert.equal(api.metrics(review).session.questionIds.length, 16);
   assert.equal(api.metrics(review).session.inheritedAttemptIds.length, 11);
@@ -331,4 +339,221 @@ test('expanding a finished ten-question review keeps its score and carries its a
   assert.match(history, /94\/100/);
   const restored = await boot(clone(api.state));
   assert.equal(restored.api.metrics(review).firstTryScore, 94);
+});
+
+const wrongIndex = q => q.options.findIndex((_, i) => !q.correctIndexes.includes(i));
+const check = (api, q, correct) => api.answer(q.id, correct ? q.correctIndexes[0] : wrongIndex(q));
+
+test('Review 1 shows one active question and advances only after mastery or the practice limit', async () => {
+  const { api, app } = await boot();
+  const day = api.bank.days.find(d => d.day === 29), [first, second] = day.questions;
+  assert.match(app.innerHTML, /Question 1 of 16/);
+  assert.doesNotMatch(app.innerHTML, /id="question-review1-q02"|class="practice-item"/);
+  api.nextMainQuestion();
+  assert.equal(api.currentReviewQuestion(day).id, first.id);
+  check(api, first, false);
+  assert.match(app.innerHTML, /Practice question 1 of 10/);
+  assert.equal((app.innerHTML.match(/class="practice-item"/g) || []).length, 1);
+  assert.doesNotMatch(app.innerHTML, /Practice question 2 of 10/);
+  api.nextMainQuestion();
+  assert.equal(api.currentReviewQuestion(day).id, first.id);
+  for (const q of first.practiceQuestions.slice(0,3)) {
+    api.selectAnswer(q.id, q.correctIndexes[0]);
+    check(api, q, true);
+    if (q.practiceNumber < 3) {
+      assert.match(app.innerHTML, /Next practice question/);
+      assert.match(app.innerHTML, new RegExp(`Practice question ${q.practiceNumber} of 10`));
+      api.nextPracticeQuestion(first.id);
+      assert.match(app.innerHTML, new RegExp(`Practice question ${q.practiceNumber+1} of 10`));
+    }
+  }
+  assert.match(app.innerHTML, /1 of 16 mastered/);
+  assert.match(app.innerHTML, /Next main question/);
+  assert.doesNotMatch(app.innerHTML, /Practice question 4 of 10/);
+  api.nextMainQuestion();
+  assert.equal(api.currentReviewQuestion(day).id, second.id);
+  assert.doesNotMatch(app.innerHTML, /class="practice-item"/);
+  check(api, second, true);
+  assert.equal(api.masteryProgress(day, second).mastered, true);
+  assert.equal(api.masteryProgress(day, second).practice.length, 0);
+  assert.match(app.innerHTML, /2 of 16 mastered/);
+});
+
+test('practice counts distinct questions, resets the streak on a miss, and survives reload and remote sync', async () => {
+  let session = await boot();
+  let { api } = session;
+  const day = api.bank.days.find(d => d.day === 29), parent = day.questions[0];
+  const [p1,p2,p3,p4,p5,p6,p7] = parent.practiceQuestions;
+  check(api,p1,true);
+  assert.equal(api.state.attempts.length, completedOriginalDays().attempts.length, 'Practice is locked before a main miss');
+  check(api,parent,false);
+  const before = clone(api.state);
+  check(api,parent,true);
+  check(api,p2,true);
+  assert.deepEqual(clone(api.state), before, 'Main answers are final and future practice cannot be skipped to');
+  check(api,p1,true);
+  check(api,p1,true);
+  check(api,p1,false);
+  assert.equal(api.masteryProgress(day,parent).streak,1);
+  check(api,p2,true);
+  check(api,p3,false);
+  assert.equal(api.masteryProgress(day,parent).streak,0);
+  assert.equal(api.masteryProgress(day,parent).practice.length,3);
+  check(api,p4,true);
+  const saved = JSON.parse(session.storage.get('marco-summer-isee-math-redo-v1:state'));
+  session = await boot(saved);
+  api = session.api;
+  assert.equal(api.masteryProgress(day,parent).streak,1);
+  assert.match(session.app.innerHTML,/Practice question 5 of 10/);
+  check(api,p5,true);
+  const remoteState = clone(api.state);
+  const otherDevice = await boot(fresh());
+  otherDevice.remote(remoteState);
+  assert.equal(otherDevice.api.masteryProgress(day,parent).streak,2);
+  check(otherDevice.api,p6,true);
+  assert.equal(otherDevice.api.masteryProgress(day,parent).mastered,true);
+  assert.equal(otherDevice.api.masteryProgress(day,parent).practice.length,6);
+  const finished = clone(otherDevice.api.state);
+  check(otherDevice.api,p7,true);
+  assert.deepEqual(clone(otherDevice.api.state),finished);
+  const summary = otherDevice.api.summary();
+  assert.equal(summary.firstMisses,1, 'Extra practice misses must not lower the main score');
+  assert.equal(summary.wrongChecks,2);
+  assert.match(otherDevice.api.progressHtml(summary),/Extra practice misses: 1/);
+});
+
+test('ten-question limit ends as unmastered, while a third consecutive correct on question ten wins', async () => {
+  for (const win of [false,true]) {
+    const {api,app} = await boot();
+    const day = api.bank.days.find(d => d.day === 29), parent = day.questions[0];
+    check(api,parent,false);
+    parent.practiceQuestions.forEach((q,i) => check(api,q,win ? i >= 7 : i % 3 !== 0));
+    const progress = api.masteryProgress(day,parent);
+    assert.equal(progress.practice.length,10);
+    assert.equal(progress.mastered,win);
+    assert.equal(progress.unmastered,!win);
+    assert.equal(progress.done,true);
+    assert.match(app.innerHTML,win ? /Mastered!/ : /Unmastered\./);
+    assert.doesNotMatch(app.innerHTML,/Next practice question|Practice question 11/);
+    api.nextMainQuestion();
+    assert.equal(api.currentReviewQuestion(day).id,day.questions[1].id);
+    const restored = await boot(clone(api.state));
+    assert.equal(restored.api.masteryProgress(day,parent).unmastered,!win);
+  }
+});
+
+test('every possible ten-answer sequence has the expected stop, streak and mastery result', async () => {
+  const {api} = await boot();
+  const day = api.bank.days.find(d => d.day === 29), parent = day.questions[0];
+  for (let mask=0; mask < 1024; mask++) {
+    const attempts=[{questionId:parent.id,attemptNumber:1,correct:false}];
+    let expectedStreak=0, used=0, mastered=false;
+    for (let i=0; i<10; i++) {
+      const correct=Boolean(mask & (1<<i));
+      attempts.push({questionId:parent.practiceQuestions[i].id,correct});
+      if (!mastered) {
+        used++;
+        expectedStreak=correct ? expectedStreak+1 : 0;
+        mastered=expectedStreak===3;
+      }
+    }
+    const actual=api.masteryProgress(day,parent,attempts);
+    assert.equal(actual.mastered,mastered,`sequence ${mask}`);
+    assert.equal(actual.unmastered,!mastered,`sequence ${mask}`);
+    assert.equal(actual.practice.length,used,`sequence ${mask}`);
+    assert.equal(actual.streak,expectedStreak,`sequence ${mask}`);
+  }
+});
+
+test('all sixteen mastery outcomes finish a round, preserve the 16-question score and reset on a new round', async () => {
+  const {api,app} = await boot();
+  const day=api.bank.days.find(d=>d.day===29);
+  for (const [i,q] of day.questions.entries()) {
+    check(api,q,i>0);
+    api.nextMainQuestion();
+  }
+  assert.equal(api.metrics(day).completed,false);
+  assert.equal(api.metrics(day).firstTryScore,94);
+  assert.equal(api.metrics(day).mastered,15);
+  for (const q of day.questions[0].practiceQuestions) check(api,q,false);
+  api.nextMainQuestion();
+  assert.equal(api.metrics(day).completed,true);
+  assert.equal(api.metrics(day).firstTryScore,94);
+  assert.equal(api.metrics(day).unmastered,1);
+  assert.ok(api.metrics(day).session.completedAt);
+  assert.match(app.innerHTML,/15 mastered · 1 unmastered/);
+  assert.match(api.progressHtml(api.summary()),/94\/100/);
+  const attempts=clone(api.state.attempts);
+  api.startAgain();
+  assert.equal(api.metrics(day).mastered,0);
+  assert.equal(api.metrics(day).unmastered,0);
+  assert.deepEqual(clone(api.state.attempts),attempts);
+  assert.equal(api.currentReviewQuestion(day).position,1);
+  check(api,day.questions[0],false);
+  assert.equal(api.masteryProgress(day,day.questions[0]).practice.length,0);
+});
+
+test('Review 2 retains all sixteen cards and its original two-try behavior', async () => {
+  const {api,app}=await boot();
+  api.chooseDay(30);
+  const day=api.bank.days.find(d=>d.day===30),q=day.questions[0];
+  assert.equal((app.innerHTML.match(/class="question-card" id=/g)||[]).length,16);
+  check(api,q,false);
+  assert.match(app.innerHTML,/Not quite. Try once more./);
+  check(api,q,true);
+  assert.equal(api.metrics(day).resolved,1);
+  assert.doesNotMatch(app.innerHTML,/class="extra-practice"/);
+});
+
+test('exactly 160 unique practice questions have independently verified answers and distinct choices', () => {
+  const all=Object.values(practiceBank.groups).flat();
+  assert.equal(all.length,160);
+  assert.equal(new Set(all.map(q=>q.id)).size,160);
+  const rational = text => { const [a,b]=text.split('/').map(Number); return b ? a/b : a; };
+  const close=(a,b)=>Math.abs(a-b)<1e-8;
+  for (const parent of reviews.sessions[0].questions) {
+    const group=practiceBank.groups[parent.id];
+    assert.equal(group.length,10);
+    assert.equal(new Set(group.map(q=>q.questionText)).size,10);
+    for (const [index,q] of group.entries()) {
+      assert.equal(q.parentQuestionId,parent.id);
+      assert.equal(q.skill,parent.skill);
+      assert.equal(q.practiceNumber,index+1);
+      assert.equal(q.correctIndexes.length,1);
+      assert.equal(q.correctAnswer,q.options[q.correctIndexes[0]].text);
+      assert.equal(q.correctHtml,q.options[q.correctIndexes[0]].html);
+      assert.ok(q.explanation.length>45);
+      assert.equal(new Set(q.options.map(o=>o.text)).size,4);
+      assert.notEqual(q.questionText,parent.questionText);
+      const n=(q.questionText.match(/\d+(?:\.\d+)?/g)||[]).map(Number);
+      let expected, value=o=>parseFloat(o.text), matches;
+      switch(parent.position) {
+        case 1: expected=['minutes','milliseconds','hours','years','seconds','days','minutes','hours','years','seconds'][index]; value=o=>o.text; break;
+        case 2: {
+          const prime=x=>x>1 && !Array.from({length:Math.max(0,Math.floor(Math.sqrt(x))-1)},(_,i)=>i+2).some(d=>x%d===0);
+          matches=q.options.map((o,i)=>{
+            const factors=o.text.split(' × ').map(piece=>piece.split('^').map(Number));
+            return factors.every(([base])=>prime(base)) && factors.reduce((v,[base,power=1])=>v*base**power,1)===n[0] ? i : -1;
+          }).filter(i=>i>=0);
+          break;
+        }
+        case 3: expected=n[0]/n[1]; break;
+        case 4: expected=n[0]/n[1]-n[2]/n[3]+n[4]/n[5]; value=o=>rational(o.text); break;
+        case 5: { const gcd=(a,b)=>b?gcd(b,a%b):a; matches=q.options.map((o,i)=>gcd(gcd(n[0],n[1]),Number(o.text))===n[2]?i:-1).filter(i=>i>=0); break; }
+        case 6: expected=180-n[0]; break;
+        case 7: expected=['90°, 90°, 90°, 90°','90°, 90°, 90°, 90°','90°, 90°, 90°, 90°','90°, 90°, 90°, 90°','90°, 90°, 90°, 90°','One interior angle is 90°.','It is a rectangle.','All four interior angles are right angles.','A rectangle.','Both pairs of opposite sides are parallel.'][index]; value=o=>o.text; break;
+        case 8: expected=n[0]*(1-n[1]/n[2])*(1-n[3]/n[4]); break;
+        case 9: expected=(2*n[0]*n[1]+2*n[2]*n[3])*9/n[4]; break;
+        case 10: expected=(n[0]/n[1])**3; value=o=>{const [a,b]=o.text.split(':').map(Number);return a/b;};break;
+        case 11: expected=n[0]/(n[1]+n[2]/n[3]); break;
+        case 12: expected=n[0]*n[1]/n[2]*(1-n[3]/n[4]); break;
+        case 13: expected=(1-n[0]/n[1])*(1-n[2]/n[3]); value=o=>rational(o.text);break;
+        case 14: expected=`b² − ${n[0]**2/2}a²`; value=o=>o.text;break;
+        case 15: expected=n[0]/Math.cbrt(n[1]);break;
+        case 16: expected=n[0]*n[1]*n[2]*n[3];break;
+      }
+      matches ||= q.options.map((o,i)=>(typeof expected==='number'?close(value(o),expected):value(o)===expected)?i:-1).filter(i=>i>=0);
+      assert.deepEqual(matches,q.correctIndexes,q.id);
+    }
+  }
 });
