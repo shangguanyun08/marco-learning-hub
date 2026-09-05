@@ -5,13 +5,26 @@
   const TIME_ZONE = "America/Los_Angeles";
   const marcoMinutes = document.getElementById("marco-minutes");
   const harryMinutes = document.getElementById("harry-minutes");
-  const marcoSessions = document.getElementById("marco-sessions");
-  const harrySessions = document.getElementById("harry-sessions");
+  const sessionNodes = {
+    Marco: {
+      words: document.getElementById("marco-word-sessions"),
+      math: document.getElementById("marco-math-sessions"),
+    },
+    Harry: {
+      words: document.getElementById("harry-word-sessions"),
+      math: document.getElementById("harry-math-sessions"),
+    },
+  };
   const dateNode = document.getElementById("today-log-date");
   const noteNode = document.getElementById("today-log-note");
   const historyNode = document.getElementById("activity-history");
 
-  if (!marcoMinutes || !harryMinutes || !marcoSessions || !harrySessions || !dateNode || !noteNode || !historyNode) return;
+  if (!marcoMinutes || !harryMinutes || !Object.values(sessionNodes).every((nodes) => nodes.words && nodes.math) || !dateNode || !noteNode || !historyNode) return;
+
+  function sessionCount(stats, field) {
+    if (!stats) return 0;
+    return Number.isInteger(stats[field]) && stats[field] >= 0 ? stats[field] : "—";
+  }
 
   function dateKey() {
     return new Intl.DateTimeFormat("en-CA", {
@@ -68,14 +81,18 @@
         cell.className = "activity-history-stats";
         cell.setAttribute("role", "cell");
         const minutes = Math.max(0, Number(day.students?.[student]?.minutes) || 0);
-        const sessions = Math.max(0, Number(day.students?.[student]?.sessions) || 0);
+        const studentStats = day.students?.[student];
         const minutesLine = document.createElement("span");
         const strong = document.createElement("strong");
         strong.textContent = String(minutes);
         minutesLine.append(strong, document.createTextNode(" min"));
-        const sessionsLine = document.createElement("span");
-        sessionsLine.textContent = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
-        cell.append(minutesLine, sessionsLine);
+        const wordsLine = document.createElement("span");
+        const mathLine = document.createElement("span");
+        const words = sessionCount(studentStats, "wordSessions");
+        const math = sessionCount(studentStats, "mathSessions");
+        wordsLine.textContent = `${words} word ${words === 1 ? "session" : "sessions"}`;
+        mathLine.textContent = `${math} math ${math === 1 ? "session" : "sessions"}`;
+        cell.append(minutesLine, wordsLine, mathLine);
         return cell;
       });
       row.append(date, ...stats);
@@ -94,21 +111,24 @@
       const today = history.find((day) => day.date === dateKey());
       const marco = Math.max(0, Number(today?.students?.Marco?.minutes) || 0);
       const harry = Math.max(0, Number(today?.students?.Harry?.minutes) || 0);
-      const marcoFinished = Math.max(0, Number(today?.students?.Marco?.sessions) || 0);
-      const harryFinished = Math.max(0, Number(today?.students?.Harry?.sessions) || 0);
       marcoMinutes.textContent = String(marco);
       harryMinutes.textContent = String(harry);
-      marcoSessions.textContent = String(marcoFinished);
-      harrySessions.textContent = String(harryFinished);
+      for (const student of ["Marco", "Harry"]) {
+        const stats = today?.students?.[student];
+        sessionNodes[student].words.textContent = String(sessionCount(stats, "wordSessions"));
+        sessionNodes[student].math.textContent = String(sessionCount(stats, "mathSessions"));
+      }
       renderHistory(history);
       noteNode.textContent = marco + harry > 0
-        ? "Updates automatically while Marco or Harry is actively practicing."
-        : "No active practice recorded yet today.";
+        ? "Finished sessions by subject · Updates automatically · Pacific time."
+        : "Finished sessions by subject · No active minutes yet today · Pacific time.";
     } catch (error) {
       marcoMinutes.textContent = "—";
       harryMinutes.textContent = "—";
-      marcoSessions.textContent = "—";
-      harrySessions.textContent = "—";
+      for (const nodes of Object.values(sessionNodes)) {
+        nodes.words.textContent = "—";
+        nodes.math.textContent = "—";
+      }
       historyNode.innerHTML = '<p class="activity-history-empty">Daily history will retry automatically.</p>';
       noteNode.textContent = "Today’s work log will retry automatically.";
     }
