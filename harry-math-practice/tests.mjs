@@ -315,7 +315,7 @@ test("other days retain their question counts and recalculate-and-retry behavior
   for (const [set, count] of [[4,14],[5,14],[7,10],[8,10]]) {
     app.w.document.querySelector(`[data-set="${set}"]`).click();
     assert.equal(app.w.document.querySelectorAll(".question-card:not([hidden])").length, count);
-    assert.equal(app.w.document.querySelectorAll(".mastery-badge, .mastery-practice").length, 0);
+    assert.equal(app.w.document.querySelectorAll(".mastery-badge, .mastery-practice, .answer-track").length, 0);
     submitMain(app, 0, -1);
     assert.equal(card(app, 0).querySelector("input").disabled, false);
     submitMain(app, 0, app.api.questionSets[set][0].answer);
@@ -324,4 +324,64 @@ test("other days retain their question counts and recalculate-and-retry behavior
     assert.equal(app.api.records[set].questions[0].attempts, 2);
   }
   app.close();
+});
+
+test("answer lights retain every right and wrong answer while showing only the current consecutive streak", () => {
+  const app = boot();
+  const lamps = () => card(app, 0).querySelectorAll(".answer-lights .light-step");
+  const total = () => app.w.document.querySelectorAll("#day3-total-track .light-step");
+  assert.equal(lamps().length, 11, "Main answer plus 10 follow-ups");
+  assert.equal(total().length, 10);
+  assert.equal(lamps()[0].getAttribute("aria-current"), "step");
+  assert.equal(lamps()[0].getAttribute("aria-label"), "Main answer: up next");
+  submitMain(app, 0, 981);
+  assert.ok(lamps()[0].classList.contains("correct"));
+  assert.ok(lamps()[0].classList.contains("in-streak"));
+  assert.equal(card(app, 0).querySelectorAll(".streak-light").length, 3);
+  assert.equal(card(app, 0).querySelectorAll(".streak-light.lit").length, 1);
+  assert.ok(total()[0].classList.contains("practicing"), "One right answer is not yet mastered");
+  submitExtra(app, 0, true);
+  submitExtra(app, 0, false);
+  assert.ok(lamps()[0].classList.contains("correct"));
+  assert.ok(lamps()[1].classList.contains("correct"));
+  assert.ok(lamps()[2].classList.contains("incorrect"));
+  assert.equal(lamps()[2].getAttribute("aria-label"), "Follow-up 2: incorrect");
+  assert.equal(card(app, 0).querySelectorAll(".in-streak").length, 0, "A wrong answer resets the highlighted streak, preserving history");
+  assert.equal(card(app, 0).querySelectorAll(".streak-light.lit").length, 0);
+  assert.match(card(app, 0).querySelector(".visual-streak").textContent, /0\/3/);
+  const other = boot({}, true);
+  other.remote(saved(app));
+  assert.deepEqual([...card(other, 0).querySelectorAll(".answer-lights .light-step")].map(node => node.className), [...lamps()].map(node => node.className), "Online restoration preserves the complete visual history");
+  for (let i = 0; i < 3; i++) submitExtra(app, 0, true);
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .correct").length, 5);
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .incorrect").length, 1);
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .in-streak").length, 3);
+  assert.equal(card(app, 0).querySelectorAll(".streak-light.lit").length, 3);
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .unused").length, 5);
+  assert.ok(total()[0].classList.contains("correct"));
+  assert.equal(total()[0].getAttribute("aria-label"), "Question 1: mastered");
+  nextMain(app);
+  assert.equal(total()[1].getAttribute("aria-current"), "step");
+  assert.equal(card(app, 2).querySelectorAll(".answer-lights .correct").length, 0);
+  app.w.document.querySelector("#day3-previous").click();
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .correct").length, 5);
+  const restored = boot(saved(app));
+  restored.w.document.querySelector("#day3-previous").click();
+  assert.equal(card(restored, 0).querySelectorAll(".answer-lights .incorrect").length, 1);
+  app.close(); other.close(); restored.close();
+});
+
+test("the full 11-answer track remains red when attempts run out, and total mastery is red only at the limit", () => {
+  const app = boot();
+  submitMain(app, 0, -1);
+  for (let i = 0; i < 9; i++) submitExtra(app, 0, false);
+  assert.ok(app.w.document.querySelector("#day3-total-track .light-step").classList.contains("practicing"));
+  submitExtra(app, 0, false);
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .incorrect").length, 11);
+  assert.equal(card(app, 0).querySelectorAll(".answer-lights .up-next").length, 0);
+  assert.ok(app.w.document.querySelector("#day3-total-track .light-step").classList.contains("incorrect"));
+  assert.equal(app.w.document.querySelector("#day3-total-track .light-step").getAttribute("aria-label"), "Question 1: unmastered");
+  const restored = boot(saved(app));
+  assert.ok(restored.w.document.querySelector("#day3-total-track .light-step").classList.contains("incorrect"));
+  app.close(); restored.close();
 });

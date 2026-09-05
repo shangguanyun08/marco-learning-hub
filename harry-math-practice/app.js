@@ -106,6 +106,80 @@ function day3Indexes() {
   return questionSets[DAY3_SET].map((question, index) => question.removed ? -1 : index).filter(index => index !== -1);
 }
 
+function lightStep(status, label, description) {
+  const step = document.createElement("li");
+  step.className = `light-step ${status}`;
+  step.setAttribute("aria-label", description);
+  step.title = description;
+  const lamp = document.createElement("span");
+  lamp.className = "track-lamp";
+  lamp.setAttribute("aria-hidden", "true");
+  lamp.textContent = { correct: "✓", incorrect: "×", practicing: "◔", pending: "·" }[status];
+  const caption = document.createElement("span");
+  caption.className = "light-caption";
+  caption.textContent = label;
+  step.append(lamp, caption);
+  return step;
+}
+
+function renderAnswerTrack(record) {
+  const state = mastery.progress(record);
+  const results = record.firstTry === null ? []
+    : [record.firstTry, ...(record.review?.attempts || []).map(attempt => attempt.correct)];
+  const track = document.createElement("section");
+  track.className = "answer-track";
+  track.setAttribute("aria-label", "Answer history for this main question");
+  const heading = document.createElement("div");
+  heading.className = "answer-track-heading";
+  const title = document.createElement("strong");
+  title.textContent = "Your answer track";
+  const streak = document.createElement("span");
+  streak.className = "visual-streak";
+  streak.textContent = `${state.streak}/3 in a row`;
+  for (let index = 0; index < mastery.TARGET; index++) {
+    const light = document.createElement("span");
+    light.className = `streak-light${index < state.streak ? " lit" : ""}`;
+    light.setAttribute("aria-hidden", "true");
+    light.textContent = index < state.streak ? "✓" : "·";
+    streak.append(light);
+  }
+  heading.append(title, streak);
+  const list = document.createElement("ol");
+  list.className = "answer-lights";
+  list.setAttribute("aria-label", "Main answer, then up to 10 follow-ups");
+  for (let position = 0; position <= mastery.LIMIT; position++) {
+    const label = position === 0 ? "Main" : String(position);
+    const name = position === 0 ? "Main answer" : `Follow-up ${position}`;
+    const answered = position < results.length;
+    const status = answered ? results[position] ? "correct" : "incorrect" : "pending";
+    const next = !state.finished && position === results.length;
+    const description = `${name}: ${answered ? results[position] ? "correct" : "incorrect" : state.finished ? "not needed" : next ? "up next" : "not answered"}`;
+    const step = lightStep(status, label, description);
+    step.classList.toggle("in-streak", answered && results[position] && position >= results.length - state.streak);
+    step.classList.toggle("unused", !answered && state.finished);
+    if (next) { step.classList.add("up-next"); step.setAttribute("aria-current", "step"); }
+    list.append(step);
+  }
+  const legend = document.createElement("p");
+  legend.className = "light-legend";
+  legend.textContent = "✓ Green = right · × Red = wrong · Empty = not answered";
+  track.append(heading, list, legend);
+  return track;
+}
+
+function renderDay3TotalTrack() {
+  const track = document.querySelector("#day3-total-track");
+  track.replaceChildren();
+  day3Indexes().forEach((index, position) => {
+    const state = mastery.progress(records[DAY3_SET].questions[index]);
+    const status = { mastered: "correct", unmastered: "incorrect", practicing: "practicing", unanswered: "pending" }[state.status];
+    const description = { mastered: "mastered", unmastered: "unmastered", practicing: `in practice, ${state.streak} of 3 right in a row`, unanswered: "not started" }[state.status];
+    const step = lightStep(status, `Q${position + 1}`, `Question ${position + 1}: ${description}`);
+    if (index === activeDay3Index) { step.classList.add("current-question"); step.setAttribute("aria-current", "step"); }
+    track.append(step);
+  });
+}
+
 function updateDay3Progress() {
   if (activeSet !== DAY3_SET) return;
   const indexes = day3Indexes();
@@ -119,6 +193,7 @@ function updateDay3Progress() {
   document.querySelector("#day3-progress-detail").textContent = `${stats.unmastered} unmastered · ${stats.finished} of ${indexes.length} finished · First-try score: ${scoreOutOf100(stats, indexes.length)}/100`;
   document.querySelector("#day3-previous").disabled = position === 0;
   document.querySelector("#day3-next").disabled = position === indexes.length - 1 || !mastery.progress(records[DAY3_SET].questions[activeDay3Index]).finished;
+  renderDay3TotalTrack();
 }
 
 function moveDay3Question(direction) {
@@ -423,7 +498,9 @@ function renderQuestionState(card, index) {
   renderChoiceOptions(card, index, activeQuestion, question, locked);
   card.querySelector(".mastery-badge")?.remove();
   card.querySelector(".mastery-practice")?.remove();
+  card.querySelector(".answer-track")?.remove();
   if (isDay3) {
+    card.querySelector(".card-top").after(renderAnswerTrack(question));
     card.classList.toggle("retry", state.status === "practicing");
     card.classList.toggle("wrong", state.status === "unmastered");
     const badge = document.createElement("span");
@@ -610,6 +687,7 @@ function loadSet(setNumber) {
   cards.forEach((card, index) => {
     card.querySelector(".mastery-practice")?.remove();
     card.querySelector(".mastery-badge")?.remove();
+    card.querySelector(".answer-track")?.remove();
     const question = questions[index];
     card.hidden = !question || question.removed || (isDay3 && index !== activeDay3Index);
     if (!question || question.removed) return;

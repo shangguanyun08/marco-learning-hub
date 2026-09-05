@@ -167,6 +167,22 @@ button { color: inherit; }
 .question-navigation button { min-height: 48px; padding: 12px 16px; border: 1px solid #cbd3e4; border-radius: 11px; font-size: 16px; font-weight: 700; background: #263d75; color: #fff; cursor: pointer; }
 .question-navigation button:disabled { background: #edf0f6; color: #606a7e; cursor: default; }
 .question-navigation button:focus-visible { outline: 3px solid #5268e8; outline-offset: 3px; }
+.answer-track { margin-top: 20px; padding: 16px 0; border-top: 1px solid #ccd5e4; border-bottom: 1px solid #ccd5e4; }
+.answer-track-heading { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 16px; }
+.visual-streak { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; padding: 5px 9px; border-radius: 8px; background: #e3f4ea; color: #155d44; font-size: 16px; font-weight: 800; }
+.streak-light { display: inline-grid; place-items: center; width: 24px; height: 24px; border: 1px solid #acb8ca; border-radius: 50%; background: #edf1f7; color: #58657b; font: 800 16px/1 Arial, sans-serif; }
+.streak-light.lit { background: #148247; border-color: #08723e; color: #fff; }
+.answer-lights, .total-question-lights { display: grid; grid-template-columns: repeat(auto-fit, minmax(42px, 1fr)); gap: 12px 8px; padding: 0; margin: 16px 0 0; list-style: none; }
+.light-step { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 0; text-align: center; }
+.track-lamp { display: grid; place-items: center; width: 34px; height: 34px; border: 2px solid #acb8ca; border-radius: 50%; background: #edf1f7; color: #58657b; font: 800 22px/1 Arial, sans-serif; }
+.light-caption { color: #46516b; font-size: 14px; font-weight: 700; }
+.light-step.correct .track-lamp { border-color: #08723e; background: #148247; color: #fff; box-shadow: 0 0 0 3px #d0efdd; }
+.light-step.incorrect .track-lamp { border-color: #a62939; background: #c63849; color: #fff; box-shadow: 0 0 0 3px #f9dce0; }
+.light-step.practicing .track-lamp { border-color: #315ecb; background: #e3ebff; color: #294ca8; }
+.light-step.in-streak .track-lamp { outline: 2px solid #08723e; outline-offset: 4px; }
+.light-step.up-next .track-lamp, .light-step.current-question .track-lamp { outline: 2px solid #315ecb; outline-offset: 4px; }
+.light-step.unused .track-lamp { border-style: dashed; background: transparent; }
+.light-legend { margin: 14px 0 0; color: #46516b; font-size: 14px; line-height: 1.5; }
 .right .feedback { color: #217269; }
 .retry .feedback { color: #9a4c00; }
 .wrong .feedback { color: #a82020; }
