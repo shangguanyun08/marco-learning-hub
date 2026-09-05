@@ -83,7 +83,8 @@ button { color: inherit; }
 .question-card { padding: 22px; border: 1px solid var(--line); border-radius: 18px; background: rgba(255,255,255,.94); box-shadow: 0 14px 36px rgba(60,76,120,.1); transition: transform .2s ease, border-color .2s ease; }
 .question-card:focus-within { transform: translateY(-2px); border-color: rgba(82,104,232,.5); }
 .question-card.right { border-color: rgba(33,133,124,.5); background: #f1fbf7; }
-.question-card.wrong { border-color: rgba(228,111,83,.5); background: #fff7f4; }
+.question-card.retry { border-color: #ea8c16; background: #fff3e0; }
+.question-card.wrong { border-color: #d64545; background: #ffe6e6; }
 .card-top { display: flex; align-items: center; justify-content: space-between; }
 .number { display: grid; width: 31px; height: 31px; place-items: center; border-radius: 50%; color: #315ecb; background: #e8edff; font-size: 12px; font-weight: 800; }
 .skill { color: #7a8499; font: 800 10px/1 Manrope, sans-serif; letter-spacing: .12em; text-transform: uppercase; }
@@ -126,12 +127,14 @@ button { color: inherit; }
 .choice-option:hover:not(:disabled) { border-color: var(--blue); background: #f4f6ff; }
 .choice-option:focus-visible { outline: 3px solid rgba(82,104,232,.28); outline-offset: 2px; }
 .choice-option.selected { border-color: var(--blue); background: #e8edff; color: #29489d; }
-.choice-option.incorrect { border-color: var(--coral); background: #fff0ec; color: #a54b3f; }
+.choice-option.retry, .choice-option.retry:hover:not(:disabled) { border-color: #ea8c16; background: #fff3e0; color: #9a4c00; }
+.choice-option.incorrect, .choice-option.incorrect:hover:not(:disabled) { border-color: #d64545; background: #ffe6e6; color: #a82020; }
 .choice-option.correct { border-color: var(--teal); background: #e6f5ef; color: #1f6e65; }
 .choice-option:disabled { cursor: default; opacity: 1; }
 .feedback { min-height: 20px; margin: 11px 0 0; color: #7a8499; font-size: 12px; font-weight: 700; }
 .right .feedback { color: #217269; }
-.wrong .feedback { color: #ad574a; }
+.retry .feedback { color: #9a4c00; }
+.wrong .feedback { color: #a82020; }
 
 .complete-card { display: flex; align-items: center; gap: 15px; margin-top: 18px; padding: 22px; border: 1px solid rgba(216,123,40,.42); border-radius: 18px; background: #fff5da; box-shadow: 0 14px 36px rgba(117,83,33,.1); }
 .complete-card > span { display: grid; width: 48px; height: 48px; place-items: center; border-radius: 50%; background: #ffd183; font-size: 22px; }

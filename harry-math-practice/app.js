@@ -304,8 +304,11 @@ function feedbackFor(question) {
   if (question.solved) {
     return "✓ Solved — first try recorded as incorrect.";
   }
+  if (question.firstTry === false && question.attempts >= 2) {
+    return `Still incorrect after ${question.attempts} tries. Recalculate and try again.`;
+  }
   if (question.firstTry === false) {
-    return "First try recorded as incorrect. Recalculate and try again.";
+    return "First try incorrect. Recalculate and try again.";
   }
   return "Enter your answer when you are ready.";
 }
@@ -341,12 +344,11 @@ function renderChoiceOptions(card, index, question, record) {
     if (record.solved && isCorrectAnswer(value, question)) {
       option.classList.add("correct");
     } else if (selected && record.firstTry === false) {
-      option.classList.add("incorrect");
+      option.classList.add(record.attempts >= 2 ? "incorrect" : "retry");
     }
 
     option.addEventListener("click", () => {
       input.value = value;
-      card.classList.remove("wrong");
       form.requestSubmit();
     });
     grid.append(option);
@@ -363,7 +365,9 @@ function renderQuestionState(card, index) {
   const activeQuestion = activeQuestions()[index];
 
   card.classList.toggle("right", question.solved);
-  card.classList.toggle("wrong", question.firstTry === false && !question.solved);
+  const needsRetry = question.firstTry === false && !question.solved;
+  card.classList.toggle("retry", needsRetry && question.attempts < 2);
+  card.classList.toggle("wrong", needsRetry && question.attempts >= 2);
   input.value = question.lastAnswer;
   input.disabled = question.solved;
   button.disabled = question.solved;
@@ -501,10 +505,9 @@ cards.forEach((card, index) => {
   input.addEventListener("input", () => {
     const question = activeRecord().questions[index];
     if (!question || activeQuestions()[index]?.removed) return;
-    if (card.classList.contains("wrong")) card.classList.remove("wrong");
     feedback.textContent =
       question.firstTry === false
-        ? "First try is saved as incorrect. Recalculate, then check again."
+        ? feedbackFor(question)
         : "Check your answer when you are ready.";
   });
 
@@ -512,10 +515,9 @@ cards.forEach((card, index) => {
     event.preventDefault();
     const question = activeRecord().questions[index];
     const activeQuestion = activeQuestions()[index];
-    if (!question || !activeQuestion || activeQuestion.removed) return;
+    if (!question || !activeQuestion || activeQuestion.removed || question.solved) return;
     const typed = input.value.trim();
     if (!typed) {
-      card.classList.add("wrong");
       feedback.textContent = "Enter an answer before checking.";
       input.focus();
       return;
