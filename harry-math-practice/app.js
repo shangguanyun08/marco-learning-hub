@@ -143,7 +143,7 @@ function normalizeQuestionRecord(value, setNumber, questionIndex) {
     solved: value?.solved === true,
     lastAnswer: typeof value?.lastAnswer === "string" ? value.lastAnswer : "",
     ...(setNumber === DAY3_SET ? {
-      review: mastery.normalizeReview(value?.review, day3Banks[questionIndex], isCorrectAnswer),
+      review: mastery.normalizeReview(value?.review, day3Banks[questionIndex], isCorrectAnswer, value?.firstTry),
     } : {}),
   };
 }
@@ -431,11 +431,11 @@ function renderQuestionState(card, index) {
     badge.textContent = { unanswered: "Not answered", practicing: "In practice", mastered: "Mastered", unmastered: "Unmastered" }[state.status];
     card.querySelector(".card-top").append(badge);
     feedback.textContent = question.firstTry === true
-      ? "✓ Mastered — right on the first try."
+      ? "✓ Main question correct — 1 right in a row. Continue the practice to reach 3."
       : question.firstTry === false
         ? `Main question incorrect. Correct answer: ${activeQuestion.answer}. First-try score is saved.`
-        : "Answer the main question. Extra practice opens only if you miss it.";
-    if (question.firstTry === false) renderMasteryPractice(card, index);
+        : "Start your streak here. Get 3 answers right in a row, including this question.";
+    if (question.firstTry !== null) renderMasteryPractice(card, index);
   }
 }
 
@@ -454,7 +454,9 @@ function renderMasteryPractice(card, index) {
     result.textContent = previous.correct ? "✓ Correct!"
       : `Not quite. Correct answer: ${day3Banks[index][state.used - 1].answer}. Your streak starts again at 0.`;
   } else {
-    result.textContent = `Main question incorrect. Correct answer: ${activeQuestions()[index].answer}. Get 3 right in a row to master this question.`;
+    result.textContent = record.firstTry === true
+      ? "✓ Main question correct! That counts as 1. Get the next 2 right to master this question."
+      : `Main question incorrect. Correct answer: ${activeQuestions()[index].answer}. Get 3 right in a row to master this question.`;
   }
   if (state.finished) {
     result.textContent += state.status === "mastered"
@@ -687,7 +689,7 @@ cards.forEach((card, index) => {
 
     saveRecords();
     renderQuestionState(card, index);
-    if (activeSet === DAY3_SET && !isRight) {
+    if (activeSet === DAY3_SET) {
       focusPractice(card);
     } else if (!isRight && !activeQuestion.choices) {
       input.focus();

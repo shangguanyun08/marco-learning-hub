@@ -84,18 +84,17 @@
 
   function progress(record) {
     const attempts = record.review?.attempts || [];
-    let streak = 0;
+    let streak = record.firstTry === true ? 1 : 0;
     for (const attempt of attempts) streak = attempt.correct ? streak + 1 : 0;
-    const status = record.firstTry === true ? "mastered"
-      : record.firstTry !== false ? "unanswered"
+    const status = record.firstTry === null || record.firstTry === undefined ? "unanswered"
       : streak >= TARGET ? "mastered"
       : attempts.length >= LIMIT ? "unmastered" : "practicing";
     return { status, streak, used: attempts.length, finished: status === "mastered" || status === "unmastered" };
   }
 
-  function normalizeReview(value, bank, check) {
+  function normalizeReview(value, bank, check, firstTry = false) {
     const attempts = [];
-    let streak = 0;
+    let streak = firstTry === true ? 1 : 0;
     for (const item of Array.isArray(value?.attempts) ? value.attempts.slice(0, LIMIT) : []) {
       if (typeof item?.answer !== "string" || !item.answer.trim()) break;
       const correct = check(item.answer, bank[attempts.length]);

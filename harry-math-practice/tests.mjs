@@ -86,17 +86,47 @@ test("Day 3 shows one of 10 main questions, with 100 distinct, correct, skill-ma
   app.close();
 });
 
-test("blank input does not count, correct main answers are mastered without follow-ups", () => {
+test("blank input does not count; a correct main answer starts a streak of 1 and needs 2 more", () => {
   const app = boot();
   submitMain(app, 0, "");
   assert.equal(record(app).firstTry, null);
   assert.equal(record(app).attempts, 0);
   submitMain(app, 0, 981);
-  assert.equal(progress(app).status, "mastered");
-  assert.equal(card(app, 0).querySelector(".mastery-practice"), null);
-  assert.match(card(app, 0).textContent, /Mastered/);
+  assert.equal(progress(app).status, "practicing");
+  assert.equal(progress(app).streak, 1);
+  assert.ok(card(app, 0).querySelector(".mastery-practice"));
+  assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, "0 of 10 mastered");
   submitMain(app, 0, 0);
   assert.equal(record(app).attempts, 1);
+  assert.equal(record(app).firstTry, true);
+  submitExtra(app, 0, true);
+  assert.equal(progress(app).streak, 2);
+  assert.equal(progress(app).status, "practicing");
+  submitExtra(app, 0, true);
+  assert.equal(progress(app).streak, 3);
+  assert.equal(progress(app).used, 2);
+  assert.equal(progress(app).status, "mastered");
+  assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, "1 of 10 mastered");
+  assert.equal(app.api.recordStats(6).right, 1);
+  const restored = boot(saved(app));
+  assert.equal(progress(restored).status, "mastered");
+  assert.equal(progress(restored).used, 2);
+  restored.close();
+  app.close();
+});
+
+test("a wrong follow-up after a correct main answer resets the whole streak", () => {
+  const app = boot();
+  submitMain(app, 0, 981);
+  submitExtra(app, 0, true);
+  assert.equal(progress(app).streak, 2);
+  submitExtra(app, 0, false);
+  assert.equal(progress(app).streak, 0);
+  for (let i = 0; i < 2; i++) submitExtra(app, 0, true);
+  assert.equal(progress(app).status, "practicing");
+  submitExtra(app, 0, true);
+  assert.equal(progress(app).status, "mastered");
+  assert.equal(progress(app).used, 5);
   assert.equal(record(app).firstTry, true);
   app.close();
 });
@@ -167,6 +197,8 @@ test("all 10 main questions can recover one at a time with independent streaks a
 test("a reload resumes the next unfinished main question and preserves the mastered total", () => {
   const app = boot();
   submitMain(app, 0, 981);
+  submitExtra(app, 0, true);
+  submitExtra(app, 0, true);
   const restored = boot(saved(app));
   assert.equal(card(restored, 2).hidden, false);
   assert.equal(restored.w.document.querySelector("#day3-position").textContent, "Question 2 of 10");
@@ -193,7 +225,12 @@ test("10 extras without a streak is terminal Unmastered and the day can finish h
   assert.equal(card(app, 0).querySelector(".mastery-practice form"), null);
   assert.equal(app.w.HarryDay3Mastery.submit(record(app), "0", app.api.day3Banks[0], app.api.isCorrectAnswer), false);
   assert.equal(app.w.HarryDay3Mastery.next(record(app)), false);
-  for (const i of indexes(app).slice(1)) { nextMain(app); submitMain(app, i, app.api.questionSets[6][i].answer); }
+  for (const i of indexes(app).slice(1)) {
+    nextMain(app);
+    submitMain(app, i, app.api.questionSets[6][i].answer);
+    submitExtra(app, i, true);
+    submitExtra(app, i, true);
+  }
   assert.equal(app.api.recordStats(6).finished, 10);
   assert.equal(app.api.recordStats(6).solved, 9);
   assert.equal(app.api.recordStats(6).unmastered, 1);
@@ -252,7 +289,8 @@ test("legacy Day 3 answers retain their slots and first tries; corrected mistake
   assert.equal(record(app).attempts, 2);
   assert.equal(record(app).firstTry, false);
   assert.equal(progress(app).status, "practicing");
-  assert.equal(progress(app, 1).status, "mastered");
+  assert.equal(progress(app, 1).status, "practicing");
+  assert.equal(progress(app, 1).streak, 1);
   assert.equal(record(app, 13).lastAnswer, "13");
   assert.equal(app.api.records[6].questions.length, 14);
   assert.equal(app.api.records[6].completedAt, null);
@@ -266,6 +304,7 @@ test("stored follow-up correctness and streaks are recalculated from answers, ca
   const normalize = value => app.w.HarryDay3Mastery.normalizeReview(value, bank, app.api.isCorrectAnswer);
   assert.equal(normalize({ attempts: Array(20).fill({ answer: "-1", correct: true }) }).attempts.length, 10);
   assert.equal(normalize({ attempts: bank.map(q => ({ answer: String(q.answer), correct: false })) }).attempts.length, 3);
+  assert.equal(app.w.HarryDay3Mastery.normalizeReview({ attempts: bank.map(q => ({ answer: String(q.answer), correct: false })) }, bank, app.api.isCorrectAnswer, true).attempts.length, 2);
   assert.equal(normalize({ attempts: [null] }).attempts.length, 0);
   assert.equal(normalize({ attempts: [{ answer: "", correct: true }] }).attempts.length, 0);
   app.close();
