@@ -424,19 +424,6 @@
           <div><p class="eyebrow">Online record</p><h2>Marco's Progress</h2><p>Every answer is saved when he presses “Check answer.” The two miss columns show exactly where review is still needed.</p></div>
           <button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button>
         </div>
-        <div class="history-summary" aria-label="Wrong-answer totals">
-          <div><strong>${stats.wrongQuestions}</strong><span>questions missed</span></div>
-          <div><strong>${stats.wrongChecks}</strong><span>total wrong checks</span></div>
-          <div><strong>${stats.firstMisses}</strong><span>wrong on first try</span></div>
-          <div><strong>${stats.secondMisses}</strong><span>wrong on second try</span></div>
-        </div>
-        <div class="day-summary-grid">
-          ${stats.rows.map((row) => `<button data-action="day" data-day="${row.day.day}" type="button">
-            <span>${esc(row.day.label)}</span><strong>${row.completed ? `${row.firstTryScore}/100` : `${row.resolved}/${row.day.questionCount}`}</strong>
-            <div class="mini-track"><i style="width:${(row.resolved / row.day.questionCount) * 100}%"></i></div>
-            <small>${row.completed ? `Finished ${esc(formatFinishedAt(row.finishedAt))}` : row.session ? "In progress" : "Not started"} · all-time 1st miss ${row.historyFirstWrong} · 2nd miss ${row.historySecondWrong}</small>
-          </button>`).join("")}
-        </div>
         <section class="miss-record">
           <div class="record-heading"><h3>Completed sessions</h3><span>${completedSessions.length} finished</span></div>
           ${completedSessions.length === 0 ? '<div class="empty-record">Finished scores and times will appear here.</div>' : `
@@ -450,6 +437,19 @@
               </div>`).join("")}
             </div>`}
         </section>
+        <div class="history-summary" aria-label="Wrong-answer totals">
+          <div><strong>${stats.wrongQuestions}</strong><span>questions missed</span></div>
+          <div><strong>${stats.wrongChecks}</strong><span>total wrong checks</span></div>
+          <div><strong>${stats.firstMisses}</strong><span>wrong on first try</span></div>
+          <div><strong>${stats.secondMisses}</strong><span>wrong on second try</span></div>
+        </div>
+        <div class="day-summary-grid">
+          ${stats.rows.map((row) => `<button data-action="day" data-day="${row.day.day}" type="button">
+            <span>${esc(row.day.label)}</span><strong>${row.completed ? `${row.firstTryScore}/100` : `${row.resolved}/${row.day.questionCount}`}</strong>
+            <div class="mini-track"><i style="width:${(row.resolved / row.day.questionCount) * 100}%"></i></div>
+            <small>${row.completed ? `Finished ${esc(formatFinishedAt(row.finishedAt))}` : row.session ? "In progress" : "Not started"} · all-time 1st miss ${row.historyFirstWrong} · 2nd miss ${row.historySecondWrong}</small>
+          </button>`).join("")}
+        </div>
         <section class="miss-record">
           <div class="record-heading"><h3>Wrong-answer history</h3><span>${stats.wrongChecks} wrong checks recorded</span></div>
           ${historyRows.length === 0 ? '<div class="empty-record">No wrong attempts yet. The record will update after Marco starts.</div>' : `
