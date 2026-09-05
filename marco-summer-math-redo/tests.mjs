@@ -52,8 +52,12 @@ test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', asy
   assert.equal(new Set([...ids, ...completedIds]).size, 196);
   assert.equal(api.selectedDay, 15);
   assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 10);
-  assert.match(app.innerHTML, /<strong>To do<\/strong>/);
-  assert.match(app.innerHTML, /Completed work <span>5 sessions/);
+  assert.match(app.innerHTML, /<strong>All sessions<\/strong>/);
+  assert.match(app.innerHTML, /5 of 19 finished/);
+  const rail = app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
+  assert.equal((rail.match(/data-action="day"/g) || []).length, 19);
+  assert.equal((app.innerHTML.match(/class="session-score">First try: 100\/100/g) || []).length, 5);
+  assert.doesNotMatch(app.innerHTML, /<details|completed-work/);
   assert.doesNotMatch(app.innerHTML, /hero-strip|sessions finished|missed first try|missed second try/);
   assert.equal(pushed.length, 0, 'Rendering must not modify saved progress');
 });
@@ -102,7 +106,11 @@ test('selection does not save; checking supports two tries, reload and out-of-or
   reloaded.api.answer(question.id, question.correctIndexes[0]);
   assert.deepEqual(clone(reloaded.api.state), finalState, 'Completed answers cannot start a new run');
   assert.match(reloaded.app.innerHTML, /Continue to Session 2/);
-  assert.match(reloaded.app.innerHTML, /Completed work <span>6 sessions/);
+  assert.match(reloaded.app.innerHTML, /6 of 19 finished/);
+  assert.match(reloaded.app.innerHTML, /class="active done" data-action="day" data-day="15"/);
+  assert.match(reloaded.app.innerHTML, /class="session-score">First try: 90\/100/);
+  const rail = reloaded.app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
+  assert.equal((rail.match(/data-action="day"/g) || []).length, 19);
 });
 
 test('legacy first tries carry into regrouped sessions once, without copying history', async () => {

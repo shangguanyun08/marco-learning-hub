@@ -7,7 +7,6 @@
   let bank = null;
   let sourceBank = null;
   let hasChosenDay = false;
-  let completedWorkOpen = false;
   let state = freshState();
   let selectedDay = 1;
   let view = "practice";
@@ -280,7 +279,6 @@
 
   function railHtml(day) {
     const rows = bank.days.map((item) => ({ day: item, ...metrics(item) }));
-    const pending = rows.filter((row) => !row.completed && (!row.day.original || row.attempts.length));
     const done = rows.filter((row) => row.completed);
     const next = nextPracticeDay();
     function sessionButton(row) {
@@ -288,14 +286,15 @@
       const status = row.completed ? 'Finished' : row.attempts.length ? 'In progress' : item.day === next.day ? 'Up next' : 'Not started';
       return `<button class="${item.day === day.day ? 'active' : ''} ${row.completed ? 'done' : ''}" data-action="day" data-day="${item.day}" type="button" aria-current="${item.day === day.day ? 'true' : 'false'}">
         <b>${esc(item.label)}</b><span class="session-status">${row.completed ? '✓ ' : ''}${status}</span>
-        <small>${row.completed ? row.firstTryScore + '/100 · ' + item.questionCount + ' questions' : row.attempts.length ? row.resolved + '/' + item.questionCount + ' finished' : item.questionCount + ' questions'}</small>
+        ${row.completed ? '<span class="session-score">First try: ' + row.firstTryScore + '/100</span>' : ''}
+        <small>${!row.completed && row.attempts.length ? row.resolved + '/' + item.questionCount + ' finished' : item.questionCount + ' questions'}</small>
       </button>`;
     }
     return `
       <aside class="day-rail" aria-label="Practice sessions">
-        <div class="rail-heading"><strong>To do</strong><span>10 questions per session · Final session has 4</span></div>
-        ${pending.length ? '<div class="day-list">' + pending.map(sessionButton).join('') + '</div>' : '<p class="all-done">All sessions are finished. Well done, Marco!</p>'}
-        ${done.length ? '<details class="completed-work" ' + (completedWorkOpen || metrics(day).completed ? 'open' : '') + '><summary>Completed work <span>' + done.length + ' sessions</span></summary><div class="day-list">' + done.map(sessionButton).join('') + '</div></details>' : ''}
+        <div class="rail-heading"><strong>All sessions</strong><span>${done.length} of ${rows.length} finished</span></div>
+        <div class="day-list">${rows.map(sessionButton).join('')}</div>
+        ${done.length === rows.length ? '<p class="all-done">All sessions are finished. Well done, Marco!</p>' : ''}
       </aside>`;
   }
 
@@ -477,10 +476,6 @@
     app.className = "site-shell";
     app.innerHTML = `${headerHtml()}${view === "progress" ? progressHtml(stats) : `<section class="workspace">${railHtml(day)}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
   }
-
-  app.addEventListener("toggle", (event) => {
-    if (event.target.matches?.('.completed-work')) completedWorkOpen = event.target.open;
-  }, true);
 
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");

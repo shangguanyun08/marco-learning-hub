@@ -166,7 +166,7 @@ math { font-size: 1.05em; }
   .session-row { grid-template-columns: .75fr .75fr .9fr 1.6fr; min-width: 560px; }
 }
 
-/* Separate unfinished practice from the completed original days. */
+/* Keep every session visible, including finished original days. */
 .sync-pill { white-space: nowrap; flex-shrink: 0; }
 .sync-pill > span:last-child { width: auto; height: auto; background: transparent; box-shadow: none; }
 .rail-heading { align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 20px 20px 14px; }
@@ -178,10 +178,12 @@ math { font-size: 1.05em; }
 .day-list b { font-size: 16px; }
 .day-list button > .session-status { color: #596d7d; font-family: inherit; font-size: 12px; font-weight: 700; }
 .day-list button.active > .session-status { color: var(--blue); }
+.day-list button.done { border-color: #85bda5; background: var(--mint); color: var(--green); }
+.day-list button.done:hover { background: #d2f0e2; }
+.day-list button.done.active { border-color: var(--blue); background: var(--mint); }
+.day-list button.done > .session-status { color: var(--green); }
+.day-list button > .session-score { color: var(--green); font-family: inherit; font-size: 14px; font-weight: 700; }
 .day-list small { color: #596d7d; font-size: 12px; font-weight: 400; }
-.completed-work { border-top: 1px solid var(--line); background: #fafbf9; }
-.completed-work summary { padding: 16px 20px; color: var(--green); font-size: 16px; font-weight: 700; cursor: pointer; }
-.completed-work summary span { margin-left: 8px; color: #596d7d; font-size: 14px; font-weight: 400; }
 .all-done { margin: 0; padding: 0 20px 20px; font-size: 16px; }
 button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
 @media (max-width: 760px) {
