@@ -79,6 +79,11 @@ const questionSets = {
 const STORAGE_KEY = "harry-math-practice-record-v1";
 const APP_ID = "harry-math-practice-v1";
 const SET_NUMBERS = Object.keys(questionSets).map(Number);
+// Display days from 1 while retaining the original set IDs used by saved work.
+function dayLabel(setNumber) {
+  return `Day ${SET_NUMBERS.indexOf(setNumber) + 1}`;
+}
+
 const cards = [...document.querySelectorAll("[data-question]")];
 const questionGrid = document.querySelector(".question-grid");
 const firstTryScore = document.querySelector("#first-try-score");
@@ -379,7 +384,7 @@ function renderRecordSummary() {
     if (setNumber === activeSet) item.classList.add("active");
 
     const label = document.createElement("strong");
-    label.textContent = `Set ${setNumber}`;
+    label.textContent = dayLabel(setNumber);
     const score = document.createElement("span");
     score.textContent = completedAt
       ? `Score: ${scoreValue}/100`
@@ -403,8 +408,8 @@ function renderSetButtons() {
     button.classList.toggle("active", selected);
     button.classList.toggle("completed", isComplete);
     button.setAttribute("aria-pressed", String(selected));
-    button.setAttribute("aria-label", `Set ${setNumber}, ${questionCount(setNumber)} questions${isComplete ? ", completed" : ""}`);
-    button.textContent = `Set ${setNumber}`;
+    button.setAttribute("aria-label", `${dayLabel(setNumber)}, ${questionCount(setNumber)} questions${isComplete ? ", completed" : ""}`);
+    button.textContent = dayLabel(setNumber);
     if (isComplete) {
       const status = document.createElement("span");
       status.className = "set-status";
@@ -429,7 +434,7 @@ function updateProgress() {
     saveRecords();
   }
   complete.hidden = !isComplete;
-  completeTitle.textContent = `Set ${activeSet} complete!`;
+  completeTitle.textContent = `${dayLabel(activeSet)} complete!`;
   const completedAt = formatCompletedAt(activeRecord().completedAt);
   finalScore.textContent = `Final score: ${scoreValue}/100 · ${stats.right} right and ${stats.wrong} wrong${completedAt ? ` · ${completedAt}` : ""}.`;
   renderSetButtons();
@@ -441,7 +446,7 @@ function loadSet(setNumber) {
   const questions = activeQuestions();
   questionGrid.setAttribute(
     "aria-label",
-    `${questionCount(setNumber)} math questions in Set ${setNumber}`,
+    `${questionCount(setNumber)} math questions in ${dayLabel(setNumber)}`,
   );
 
   let displayNumber = 0;
