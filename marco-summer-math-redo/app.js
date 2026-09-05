@@ -5,6 +5,9 @@
   const STORAGE_KEY = `${APP_ID}:state`;
   const app = document.querySelector("#app");
   let bank = null;
+  let sourceBank = null;
+  let hasChosenDay = false;
+  let completedWorkOpen = false;
   let state = freshState();
   let selectedDay = 1;
   let view = "practice";
@@ -51,7 +54,9 @@
   }
 
   function attemptsFor(session) {
-    return session ? state.attempts.filter((attempt) => attempt.sessionId === session.id) : [];
+    if (!session) return [];
+    const inherited = new Set(session.inheritedAttemptIds || []);
+    return state.attempts.filter((attempt) => attempt.sessionId === session.id || inherited.has(attempt.id));
   }
 
   function questionAttempts(session, questionId) {
@@ -60,6 +65,43 @@
 
   function resolved(attempts) {
     return attempts.some((attempt) => attempt.correct) || attempts.length >= 2;
+  }
+
+  // The fixed plan keeps session membership stable across answers, devices and reloads.
+  // Original question IDs and saved sessions remain unchanged.
+  function organizeBank(questionBank, plan) {
+    sourceBank = questionBank;
+    const questions = new Map(questionBank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
+    const plannedIds = new Set(plan.sessions.flatMap((session) => session.questionIds));
+    const previousDays = questionBank.days
+      .filter((day) => day.questions.some((question) => !plannedIds.has(question.id)))
+      .map((day) => ({ ...day, label: 'Day ' + day.day, original: true }));
+    const practiceDays = plan.sessions.map((session) => {
+      const items = session.questionIds.map((id) => {
+        const question = questions.get(id);
+        if (!question) throw new Error('A practice question could not be found. Please refresh.');
+        return question;
+      });
+      return { day: session.day, label: session.label, questions: items, questionCount: items.length };
+    });
+    bank = { ...questionBank, days: [...previousDays, ...practiceDays] };
+  }
+
+  function carriedAttempts(day) {
+    if (day.original) return [];
+    return day.questions.flatMap((question) => questionAttempts(latestSession(question.day), question.id));
+  }
+
+  function savedAttempts(day, questionId) {
+    const session = latestSession(day.day);
+    const attempts = session ? attemptsFor(session) : carriedAttempts(day);
+    return questionId ? attempts.filter((attempt) => attempt.questionId === questionId) : attempts;
+  }
+
+  function nextPracticeDay() {
+    return bank.days.find((day) => !day.original && !metrics(day).completed)
+      || bank.days.find((day) => !metrics(day).completed && metrics(day).attempts.length)
+      || bank.days.find((day) => !day.original) || bank.days[0];
   }
 
   function firstTryScore(day, session) {
@@ -85,17 +127,19 @@
 
   function metrics(day) {
     const session = latestSession(day.day);
-    const attempts = attemptsFor(session);
-    const completed = Boolean(session?.completedAt);
+    const attempts = savedAttempts(day);
+    const count = day.questions.filter((question) => resolved(attempts.filter((attempt) => attempt.questionId === question.id))).length;
+    const completed = count === day.questionCount;
+    const firstWrong = attempts.filter((attempt) => attempt.attemptNumber === 1 && !attempt.correct).length;
     return {
       session,
       attempts,
-      resolved: day.questions.filter((question) => resolved(questionAttempts(session, question.id))).length,
+      resolved: count,
       firstWrong: attempts.filter((attempt) => attempt.attemptNumber === 1 && !attempt.correct).length,
       secondWrong: attempts.filter((attempt) => attempt.attemptNumber === 2 && !attempt.correct).length,
       completed,
-      firstTryScore: completed ? firstTryScore(day, session) : null,
-      finishedAt: session?.completedAt || null,
+      firstTryScore: completed ? Math.round(((day.questionCount - firstWrong) / day.questionCount) * 100) : null,
+      finishedAt: completed ? session?.completedAt || attempts.map((attempt) => attempt.createdAt).sort().at(-1) : null,
     };
   }
 
@@ -110,6 +154,7 @@
       id: newId(),
       day: dayNumber,
       runNumber: (existing?.runNumber || 0) + 1,
+      inheritedAttemptIds: existing ? [] : carriedAttempts(bank.days.find((day) => day.day === dayNumber)).map((attempt) => attempt.id),
       startedAt: new Date().toISOString(),
       completedAt: null,
     };
@@ -121,6 +166,7 @@
     const day = bank.days.find((item) => item.day === dayNumber);
     if (!day) return;
     selectedDay = dayNumber;
+    hasChosenDay = true;
     feedbackByQuestion = {};
     selectedAnswers = {};
     view = "practice";
@@ -130,8 +176,7 @@
   function selectAnswer(questionId, index) {
     const day = bank.days.find((item) => item.day === selectedDay);
     const question = day?.questions.find((item) => String(item.id) === String(questionId));
-    const session = latestSession(selectedDay);
-    const previous = questionAttempts(session, question?.id);
+    const previous = day ? savedAttempts(day, question?.id) : [];
     if (!question || resolved(previous) || previous.some((attempt) => attempt.selectedIndex === index)) return;
     selectedAnswers[question.id] = index;
     feedbackByQuestion[question.id] = null;
@@ -141,10 +186,11 @@
   function answer(questionId, index) {
     const day = bank.days.find((item) => item.day === selectedDay);
     const question = day?.questions.find((item) => String(item.id) === String(questionId));
-    if (!day || !question) return;
-    const session = ensureSession(day.day);
-    const previous = questionAttempts(session, question.id);
+    if (!day || !question || !Number.isInteger(index) || !question.options[index]) return;
+    const previous = savedAttempts(day, question.id);
     if (resolved(previous) || previous.some((attempt) => attempt.selectedIndex === index)) return;
+    const session = ensureSession(day.day);
+    hasChosenDay = true;
 
     const attemptNumber = previous.length + 1;
     const correct = question.correctIndexes.includes(index);
@@ -179,8 +225,9 @@
   }
 
   function startAgain() {
+    const day = bank.days.find((item) => item.day === selectedDay);
+    if (!day || !metrics(day).completed) return;
     const previous = latestSession(selectedDay);
-    if (previous && !previous.completedAt) return;
     state.sessions.push({
       id: newId(),
       day: selectedDay,
@@ -197,7 +244,8 @@
   function summary() {
     const wrongAttempts = state.attempts.filter((attempt) => !attempt.correct);
     const rows = bank.days.map((day) => {
-      const dayWrongAttempts = wrongAttempts.filter((attempt) => attempt.day === day.day);
+      const questionIds = new Set(day.questions.map((question) => question.id));
+      const dayWrongAttempts = wrongAttempts.filter((attempt) => questionIds.has(attempt.questionId));
       return {
         day,
         ...metrics(day),
@@ -216,7 +264,7 @@
     };
   }
 
-  function headerHtml(stats) {
+  function headerHtml() {
     return `
       <header class="topbar">
         <div><p class="eyebrow">Summer ISEE · Math mistake practice</p><h1>Marco's Math Redo</h1></div>
@@ -227,35 +275,37 @@
           </nav>
           <div class="sync-pill" data-online-sync="${APP_ID}" role="status"><span></span> Connecting online…</div>
         </div>
-      </header>
-      <section class="hero-strip" aria-label="Practice summary">
-        <div><strong>${stats.completedDays}<small>/14</small></strong><span>sessions finished</span></div>
-        <div><strong>${stats.resolvedQuestions}<small>/${bank.totalQuestions}</small></strong><span>questions completed</span></div>
-        <div><strong>${stats.firstMisses}</strong><span>missed first try</span></div>
-        <div><strong>${stats.secondMisses}</strong><span>missed second try</span></div>
-      </section>`;
+      </header>`;
   }
 
   function railHtml(day) {
+    const rows = bank.days.map((item) => ({ day: item, ...metrics(item) }));
+    const pending = rows.filter((row) => !row.completed && (!row.day.original || row.attempts.length));
+    const done = rows.filter((row) => row.completed);
+    const next = nextPracticeDay();
+    function sessionButton(row) {
+      const item = row.day;
+      const status = row.completed ? 'Finished' : row.attempts.length ? 'In progress' : item.day === next.day ? 'Up next' : 'Not started';
+      return `<button class="${item.day === day.day ? 'active' : ''} ${row.completed ? 'done' : ''}" data-action="day" data-day="${item.day}" type="button" aria-current="${item.day === day.day ? 'true' : 'false'}">
+        <b>${esc(item.label)}</b><span class="session-status">${row.completed ? '✓ ' : ''}${status}</span>
+        <small>${row.completed ? row.firstTryScore + '/100 · ' + item.questionCount + ' questions' : row.attempts.length ? row.resolved + '/' + item.questionCount + ' finished' : item.questionCount + ' questions'}</small>
+      </button>`;
+    }
     return `
-      <aside class="day-rail">
-        <div class="rail-heading"><strong>Your sessions</strong><span>One day at a time</span></div>
-        <div class="day-list">
-          ${bank.days.map((item) => {
-            const itemMetrics = metrics(item);
-            return `<button class="${item.day === day.day ? "active" : ""} ${itemMetrics.completed ? "done" : ""}" data-action="day" data-day="${item.day}" type="button">
-              <span>${itemMetrics.completed ? "✓" : String(item.day).padStart(2, "0")}</span><b>Day ${item.day}</b><small>${itemMetrics.completed ? `${itemMetrics.firstTryScore}/100` : `${itemMetrics.resolved}/${item.questionCount}`}</small>
-            </button>`;
-          }).join("")}
-        </div>
+      <aside class="day-rail" aria-label="Practice sessions">
+        <div class="rail-heading"><strong>To do</strong><span>10 questions per session · Final session has 4</span></div>
+        ${pending.length ? '<div class="day-list">' + pending.map(sessionButton).join('') + '</div>' : '<p class="all-done">All sessions are finished. Well done, Marco!</p>'}
+        ${done.length ? '<details class="completed-work" ' + (completedWorkOpen || metrics(day).completed ? 'open' : '') + '><summary>Completed work <span>' + done.length + ' sessions</span></summary><div class="day-list">' + done.map(sessionButton).join('') + '</div></details>' : ''}
       </aside>`;
   }
 
   function completeHtml(day, dayMetrics) {
+    const next = nextPracticeDay();
+    const hasNext = !metrics(next).completed && next.day !== day.day;
     return `
       <section class="question-card complete-card">
         <div class="complete-badge">✓</div><p class="eyebrow">Session complete</p>
-        <h2>Day ${day.day} is finished.</h2>
+        <h2>${esc(day.label)} is finished.</h2>
         <p>Marco completed all ${day.questionCount} questions in this session. Every first and second try is saved in the online progress record.</p>
         <div class="complete-stats">
           <div><strong>${dayMetrics.firstTryScore}/100</strong><span>first-try score</span></div>
@@ -264,16 +314,15 @@
           <div><strong class="finished-time">${esc(formatFinishedAt(dayMetrics.finishedAt))}</strong><span>finished</span></div>
         </div>
         <div class="complete-actions">
-          ${day.day < 14 ? `<button class="primary-action" data-action="day" data-day="${day.day + 1}" type="button">Go to Day ${day.day + 1}</button>` : ""}
-          <button class="secondary-action" data-action="restart" type="button">Practice Day ${day.day} again</button>
+          ${hasNext ? `<button class="primary-action" data-action="day" data-day="${next.day}" type="button">Continue to ${esc(next.label)}</button>` : ""}
+          <button class="secondary-action" data-action="restart" type="button">Practice ${esc(day.label)} again</button>
           <button class="text-action" data-action="view" data-view="progress" type="button">See progress record</button>
         </div>
       </section>`;
   }
 
   function questionHtml(day, dayMetrics, question) {
-    const session = dayMetrics.session;
-    const saved = questionAttempts(session, question.id);
+    const saved = savedAttempts(day, question.id);
     const currentResolved = resolved(saved);
     const selectedAnswer = selectedAnswers[question.id];
     const secondWrong = saved.find((attempt) => attempt.attemptNumber === 2 && !attempt.correct);
@@ -308,9 +357,9 @@
     return `
       <section class="question-card" id="question-${esc(question.id)}">
         <div class="question-meta">
-          <div><span>Day ${day.day}</span><strong>Question ${question.position} of ${day.questionCount}</strong></div>
+          <div><span>${esc(day.label)}</span><strong>Question ${day.questions.indexOf(question) + 1} of ${day.questionCount}</strong></div>
           <div class="progress-track"><span style="width:${(dayMetrics.resolved / day.questionCount) * 100}%"></span></div>
-          <small>Original question #${esc(question.sourceNumber)}</small>
+          <small>Original Day ${question.day} · Question #${esc(question.sourceNumber)}</small>
         </div>
         <div class="try-row"><span>Two tries to learn it</span><div aria-label="${saved.length} of 2 tries used"><i class="${saved.length >= 1 ? "used" : ""}"></i><i class="${saved.length >= 2 ? "used" : ""}"></i></div></div>
         <div class="problem">${question.questionHtml}</div>
@@ -329,7 +378,7 @@
     return `
       <main class="question-list">
         <section class="session-overview">
-          <div><p class="eyebrow">Day ${day.day}</p><h2>All ${day.questionCount} questions</h2><p>Answer in any order. Each question allows two tries.</p></div>
+          <div><p class="eyebrow">${esc(day.label)}</p><h2>All ${day.questionCount} questions</h2><p>Answer in any order. Each question allows two tries.</p></div>
           <div class="session-progress"><strong>${dayMetrics.resolved}<small>/${day.questionCount}</small></strong><span>finished</span><div class="progress-track"><span style="width:${(dayMetrics.resolved / day.questionCount) * 100}%"></span></div></div>
         </section>
         ${dayMetrics.completed ? completeHtml(day, dayMetrics) : ""}
@@ -338,13 +387,13 @@
   }
 
   function progressHtml(stats) {
-    const questionMap = new Map(bank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
+    const questionMap = new Map(sourceBank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
     const recordedAttempts = state.attempts.filter((attempt) => questionMap.has(attempt.questionId));
     const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
     const completedSessions = state.sessions
       .filter((session) => session.completedAt)
       .map((session) => {
-        const day = bank.days.find((item) => item.day === session.day);
+        const day = bank.days.find((item) => item.day === session.day) || sourceBank.days.find((item) => item.day === session.day);
         return day ? {
           day,
           session,
@@ -383,7 +432,7 @@
         </div>
         <div class="day-summary-grid">
           ${stats.rows.map((row) => `<button data-action="day" data-day="${row.day.day}" type="button">
-            <span>Day ${row.day.day}</span><strong>${row.completed ? `${row.firstTryScore}/100` : `${row.resolved}/${row.day.questionCount}`}</strong>
+            <span>${esc(row.day.label)}</span><strong>${row.completed ? `${row.firstTryScore}/100` : `${row.resolved}/${row.day.questionCount}`}</strong>
             <div class="mini-track"><i style="width:${(row.resolved / row.day.questionCount) * 100}%"></i></div>
             <small>${row.completed ? `Finished ${esc(formatFinishedAt(row.finishedAt))}` : row.session ? "In progress" : "Not started"} · all-time 1st miss ${row.historyFirstWrong} · 2nd miss ${row.historySecondWrong}</small>
           </button>`).join("")}
@@ -392,9 +441,9 @@
           <div class="record-heading"><h3>Completed sessions</h3><span>${completedSessions.length} finished</span></div>
           ${completedSessions.length === 0 ? '<div class="empty-record">Finished scores and times will appear here.</div>' : `
             <div class="record-table" role="table" aria-label="Completed session history">
-              <div class="record-row record-header session-row" role="row"><span>Day</span><span>Round</span><span>Score</span><span>Finished</span></div>
+              <div class="record-row record-header session-row" role="row"><span>Session</span><span>Round</span><span>Score</span><span>Finished</span></div>
               ${completedSessions.map((item) => `<div class="record-row session-row" role="row">
-                <span><b>Day ${item.day.day}</b></span>
+                <span><b>${esc(item.day.label || "Day " + item.day.day)}</b></span>
                 <span>${item.session.runNumber || 1}</span>
                 <span><i class="score-mark">${item.score}/100</i></span>
                 <span><small>${esc(formatFinishedAt(item.finishedAt))}</small></span>
@@ -426,8 +475,12 @@
     const day = bank.days.find((item) => item.day === selectedDay) || bank.days[0];
     const dayMetrics = metrics(day);
     app.className = "site-shell";
-    app.innerHTML = `${headerHtml(stats)}${view === "progress" ? progressHtml(stats) : `<section class="workspace">${railHtml(day)}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
+    app.innerHTML = `${headerHtml()}${view === "progress" ? progressHtml(stats) : `<section class="workspace">${railHtml(day)}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
   }
+
+  app.addEventListener("toggle", (event) => {
+    if (event.target.matches?.('.completed-work')) completedWorkOpen = event.target.open;
+  }, true);
 
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
@@ -444,16 +497,15 @@
     if (action === "restart") startAgain();
   });
 
-  fetch("question-bank.json", { cache: "no-store" })
-    .then((response) => {
-      if (!response.ok) throw new Error("The question bank could not be loaded.");
-      return response.json();
-    })
-    .then((questionBank) => {
-      bank = questionBank;
+  Promise.all(['question-bank.json', 'session-plan.json?v=1'].map(async (url) => {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error('The practice sessions could not be loaded. Please refresh.');
+    return response.json();
+  }))
+    .then(([questionBank, plan]) => {
+      organizeBank(questionBank, plan);
       state = loadLocal();
-      const firstIncomplete = bank.days.find((day) => !latestSession(day.day)?.completedAt) || bank.days[0];
-      selectedDay = firstIncomplete.day;
+      selectedDay = nextPracticeDay().day;
       render();
       sync = window.MarcoOnlineSync.create({
         appId: APP_ID,
@@ -464,6 +516,7 @@
         },
         onRemote(remoteState) {
           state = remoteState;
+          if (!hasChosenDay) selectedDay = nextPracticeDay().day;
           try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch {}
           feedbackByQuestion = {};
           selectedAnswers = {};

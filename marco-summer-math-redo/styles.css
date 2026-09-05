@@ -7,17 +7,11 @@ button { font: inherit; }
 .eyebrow { margin: 0 0 5px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
 h1 { margin: 0; color: #173957; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(32px, 4vw, 52px); line-height: 1; }
 .sync-pill { display: flex; align-items: center; gap: 9px; border: 1px solid #c8ded5; border-radius: 999px; background: #f6fffb; padding: 10px 14px; color: var(--green); font-size: 13px; font-weight: 800; }
-.sync-pill span { width: 9px; height: 9px; border-radius: 50%; background: #25a879; box-shadow: 0 0 0 4px #d9f5e9; }
+.sync-pill > span:first-child { flex: 0 0 8px; width: 9px; height: 9px; border-radius: 50%; background: #25a879; box-shadow: 0 0 0 4px #d9f5e9; }
 .top-actions { display: flex; align-items: center; gap: 12px; }
 .top-actions nav { display: flex; gap: 4px; border: 1px solid #d9d5cd; border-radius: 999px; background: #fffdf8; padding: 4px; }
 .top-actions nav button { border: 0; border-radius: 999px; background: transparent; padding: 8px 13px; color: #657581; font-size: 12px; font-weight: 800; cursor: pointer; }
 .top-actions nav button.active { background: #173957; color: white; }
-.hero-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: hidden; border: 1px solid #d9d3c8; border-radius: 18px; background: #163957; color: white; box-shadow: 0 15px 35px rgba(43, 55, 64, .08); }
-.hero-strip div { display: flex; align-items: baseline; gap: 10px; padding: 20px 24px; border-right: 1px solid rgba(255,255,255,.17); }
-.hero-strip div:last-child { border-right: 0; }
-.hero-strip strong { font-family: Georgia, 'Times New Roman', serif; font-size: 31px; }
-.hero-strip strong small { margin-left: 2px; color: #9fb2c1; font-family: Arial, Helvetica, sans-serif; font-size: 14px; }
-.hero-strip span { color: #cfdae3; font-size: 13px; font-weight: 700; }
 .workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; margin-top: 22px; }
 .question-list { display: grid; gap: 18px; }
 .session-overview { display: flex; align-items: center; justify-content: space-between; gap: 28px; border: 1px solid #ddd8ce; border-radius: 20px; background: var(--paper); padding: 24px 28px; box-shadow: 0 14px 35px rgba(43, 55, 64, .07); }
@@ -150,9 +144,6 @@ math { font-size: 1.05em; }
   .top-actions { align-items: flex-end; flex-direction: column-reverse; }
   .top-actions nav button { padding: 7px 10px; }
   .sync-pill { padding: 8px 10px; font-size: 11px; }
-  .hero-strip { grid-template-columns: repeat(2, 1fr); }
-  .hero-strip div { display: block; padding: 14px; border-bottom: 1px solid rgba(255,255,255,.17); }
-  .hero-strip strong, .hero-strip span { display: block; }
   .workspace { grid-template-columns: 1fr; }
   .session-overview { align-items: flex-start; flex-direction: column; padding: 22px 18px; }
   .session-progress { width: 100%; min-width: 0; }
@@ -173,4 +164,31 @@ math { font-size: 1.05em; }
   .record-table { overflow-x: auto; }
   .record-row { grid-template-columns: 1.2fr .65fr .75fr .75fr 1fr; min-width: 670px; padding: 12px 14px; }
   .session-row { grid-template-columns: .75fr .75fr .9fr 1.6fr; min-width: 560px; }
+}
+
+/* Separate unfinished practice from the completed original days. */
+.sync-pill { white-space: nowrap; flex-shrink: 0; }
+.sync-pill > span:last-child { width: auto; height: auto; background: transparent; box-shadow: none; }
+.rail-heading { align-items: baseline; gap: 12px; flex-wrap: wrap; padding: 20px 20px 14px; }
+.rail-heading strong { font-size: 24px; }
+.rail-heading span { font-size: 14px; font-weight: 400; }
+.day-list { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; padding: 0 20px 20px; }
+.day-list button { grid-template-columns: 1fr; gap: 6px; align-content: start; margin: 0; border: 1px solid var(--line); padding: 12px; background: white; }
+.day-list button.active { border-color: var(--blue); box-shadow: inset 0 0 0 1px var(--blue); }
+.day-list b { font-size: 16px; }
+.day-list button > .session-status { color: #596d7d; font-family: inherit; font-size: 12px; font-weight: 700; }
+.day-list button.active > .session-status { color: var(--blue); }
+.day-list small { color: #596d7d; font-size: 12px; font-weight: 400; }
+.completed-work { border-top: 1px solid var(--line); background: #fafbf9; }
+.completed-work summary { padding: 16px 20px; color: var(--green); font-size: 16px; font-weight: 700; cursor: pointer; }
+.completed-work summary span { margin-left: 8px; color: #596d7d; font-size: 14px; font-weight: 400; }
+.all-done { margin: 0; padding: 0 20px 20px; font-size: 16px; }
+button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+@media (max-width: 760px) {
+  .topbar { flex-wrap: wrap; }
+  .top-actions { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+  .day-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; padding: 0 16px 16px; }
+  .day-list button { min-width: 0; }
+  .question-meta > div:first-child { flex-wrap: wrap; }
+  .rail-heading { padding: 18px 16px 14px; }
 }
