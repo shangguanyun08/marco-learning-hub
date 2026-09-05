@@ -183,9 +183,18 @@ math { font-size: 1.05em; }
 .day-list button.done.active { border-color: var(--blue); background: var(--mint); }
 .day-list button.done > .session-status { color: var(--green); }
 .day-list button > .session-score { color: var(--green); font-family: inherit; font-size: 14px; font-weight: 700; }
+.day-list button > .review-target { color: #31578a; font-family: inherit; font-size: 14px; font-weight: 700; }
+.day-list button.done > .review-target { color: var(--green); }
 .day-list small { color: #596d7d; font-size: 12px; font-weight: 400; }
 .all-done { margin: 0; padding: 0 20px 20px; font-size: 16px; }
 button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); outline-offset: 3px; }
+.session-overview .review-goal { margin: 12px 0 0; border-radius: 10px; padding: 10px 12px; background: var(--blue-soft); color: #173957; font-size: 16px; line-height: 1.5; }
+.complete-card > .review-result { margin-top: 14px; border-radius: 10px; padding: 12px 16px; font-size: 16px; }
+.complete-card > .review-result.met { background: var(--mint); color: #0f6c4d; }
+.complete-card > .review-result.retry { background: #fff0dd; color: #8a4b13; }
+.review-diagram { display: block; width: 340px; max-width: 100%; height: auto; margin: 18px auto 0; }
+.review-diagram text { fill: #173957; font-family: Arial, Helvetica, sans-serif; font-size: 18px; }
+.problem math, .option-content math { font-size: 1em; }
 @media (max-width: 760px) {
   .topbar { flex-wrap: wrap; }
   .top-actions { width: 100%; flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; }

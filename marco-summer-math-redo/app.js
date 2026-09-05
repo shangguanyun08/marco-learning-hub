@@ -68,7 +68,7 @@
 
   // The fixed plan keeps session membership stable across answers, devices and reloads.
   // Original question IDs and saved sessions remain unchanged.
-  function organizeBank(questionBank, plan) {
+  function organizeBank(questionBank, plan, reviewBank) {
     sourceBank = questionBank;
     const questions = new Map(questionBank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
     const plannedIds = new Set(plan.sessions.flatMap((session) => session.questionIds));
@@ -83,11 +83,18 @@
       });
       return { day: session.day, label: session.label, questions: items, questionCount: items.length };
     });
-    bank = { ...questionBank, days: [...previousDays, ...practiceDays] };
+    const reviewDays = reviewBank.sessions.map((session) => ({
+      ...session,
+      review: true,
+      targetScore: reviewBank.targetScore,
+      questionCount: session.questions.length,
+    }));
+    const days = [...previousDays, ...reviewDays, ...practiceDays];
+    bank = { ...questionBank, totalQuestions: days.reduce((total, day) => total + day.questionCount, 0), days };
   }
 
   function carriedAttempts(day) {
-    if (day.original) return [];
+    if (day.original || day.review) return [];
     return day.questions.flatMap((question) => questionAttempts(latestSession(question.day), question.id));
   }
 
@@ -98,7 +105,8 @@
   }
 
   function nextPracticeDay() {
-    return bank.days.find((day) => !day.original && !metrics(day).completed)
+    return bank.days.find((day) => day.review && (!metrics(day).completed || metrics(day).firstTryScore < day.targetScore))
+      || bank.days.find((day) => !day.original && !metrics(day).completed)
       || bank.days.find((day) => !metrics(day).completed && metrics(day).attempts.length)
       || bank.days.find((day) => !day.original) || bank.days[0];
   }
@@ -287,6 +295,7 @@
       return `<button class="${item.day === day.day ? 'active' : ''} ${row.completed ? 'done' : ''}" data-action="day" data-day="${item.day}" type="button" aria-current="${item.day === day.day ? 'true' : 'false'}">
         <b>${esc(item.label)}</b><span class="session-status">${row.completed ? '✓ ' : ''}${status}</span>
         ${row.completed ? '<span class="session-score">First try: ' + row.firstTryScore + '/100</span>' : ''}
+        ${item.review ? '<span class="review-target">' + (row.completed && row.firstTryScore >= item.targetScore ? '✓ Goal met' : 'Goal: ' + item.targetScore + '/100') + '</span>' : ''}
         <small>${!row.completed && row.attempts.length ? row.resolved + '/' + item.questionCount + ' finished' : item.questionCount + ' questions'}</small>
       </button>`;
     }
@@ -300,12 +309,14 @@
 
   function completeHtml(day, dayMetrics) {
     const next = nextPracticeDay();
-    const hasNext = !metrics(next).completed && next.day !== day.day;
+    const hasNext = next.day !== day.day && (!metrics(next).completed || (next.review && metrics(next).firstTryScore < next.targetScore));
+    const retryForGoal = day.review && dayMetrics.firstTryScore < day.targetScore;
     return `
       <section class="question-card complete-card">
         <div class="complete-badge">✓</div><p class="eyebrow">Session complete</p>
         <h2>${esc(day.label)} is finished.</h2>
         <p>Marco completed all ${day.questionCount} questions in this session. Every first and second try is saved in the online progress record.</p>
+        ${day.review ? `<p class="review-result ${retryForGoal ? 'retry' : 'met'}">${retryForGoal ? `Target: ${day.targetScore}/100. Read the explanations below, then try this review again. Earlier attempts stay saved.` : `Goal met! You scored at least ${day.targetScore}/100 on your first tries.`}</p>` : ''}
         <div class="complete-stats">
           <div><strong>${dayMetrics.firstTryScore}/100</strong><span>first-try score</span></div>
           <div><strong>${dayMetrics.firstWrong}</strong><span>first-try misses</span></div>
@@ -313,8 +324,9 @@
           <div><strong class="finished-time">${esc(formatFinishedAt(dayMetrics.finishedAt))}</strong><span>finished</span></div>
         </div>
         <div class="complete-actions">
-          ${hasNext ? `<button class="primary-action" data-action="day" data-day="${next.day}" type="button">Continue to ${esc(next.label)}</button>` : ""}
-          <button class="secondary-action" data-action="restart" type="button">Practice ${esc(day.label)} again</button>
+          ${retryForGoal ? `<button class="primary-action" data-action="restart" type="button">Try ${esc(day.label)} again · aim for ${day.targetScore}/100</button>` : ''}
+          ${hasNext ? `<button class="${retryForGoal ? 'secondary-action' : 'primary-action'}" data-action="day" data-day="${next.day}" type="button">Continue to ${esc(next.label)}</button>` : ""}
+          ${retryForGoal ? '' : `<button class="secondary-action" data-action="restart" type="button">Practice ${esc(day.label)} again</button>`}
           <button class="text-action" data-action="view" data-view="progress" type="button">See progress record</button>
         </div>
       </section>`;
@@ -329,7 +341,10 @@
       correct: false,
       resolved: true,
       reveal: { correctHtml: question.correctHtml, explanation: question.explanation },
-    } : null);
+    } : day.review && currentResolved ? { correct: saved.some((attempt) => attempt.correct), resolved: true } : null);
+    if (day.review && currentFeedback?.resolved) {
+      currentFeedback.reveal = { correctHtml: question.correctHtml, explanation: question.explanation };
+    }
     const options = question.options.map((option, index) => {
       const attempt = saved.find((item) => item.selectedIndex === index);
       const className = [
@@ -358,7 +373,7 @@
         <div class="question-meta">
           <div><span>${esc(day.label)}</span><strong>Question ${day.questions.indexOf(question) + 1} of ${day.questionCount}</strong></div>
           <div class="progress-track"><span style="width:${(dayMetrics.resolved / day.questionCount) * 100}%"></span></div>
-          <small>Original Day ${question.day} · Question #${esc(question.sourceNumber)}</small>
+          <small>${question.sourceDay ? `Similar to Day ${question.sourceDay}` : `Original Day ${question.day}`} · Question #${esc(question.sourceNumber)}</small>
         </div>
         <div class="try-row"><span>Two tries to learn it</span><div aria-label="${saved.length} of 2 tries used"><i class="${saved.length >= 1 ? "used" : ""}"></i><i class="${saved.length >= 2 ? "used" : ""}"></i></div></div>
         <div class="problem">${question.questionHtml}</div>
@@ -377,7 +392,7 @@
     return `
       <main class="question-list">
         <section class="session-overview">
-          <div><p class="eyebrow">${esc(day.label)}</p><h2>All ${day.questionCount} questions</h2><p>Answer in any order. Each question allows two tries.</p></div>
+          <div><p class="eyebrow">${esc(day.label)}</p><h2>All ${day.questionCount} questions</h2><p>Answer in any order. Each question allows two tries.</p>${day.review ? `<p class="review-goal">Goal: <strong>${day.targetScore}/100</strong> · Get at least ${Math.ceil(day.targetScore * day.questionCount / 100)} of ${day.questionCount} right on the first try.</p>` : ''}</div>
           <div class="session-progress"><strong>${dayMetrics.resolved}<small>/${day.questionCount}</small></strong><span>finished</span><div class="progress-track"><span style="width:${(dayMetrics.resolved / day.questionCount) * 100}%"></span></div></div>
         </section>
         ${dayMetrics.completed ? completeHtml(day, dayMetrics) : ""}
@@ -386,7 +401,7 @@
   }
 
   function progressHtml(stats) {
-    const questionMap = new Map(sourceBank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
+    const questionMap = new Map([...sourceBank.days, ...bank.days.filter((day) => day.review)].flatMap((day) => day.questions).map((question) => [question.id, question]));
     const recordedAttempts = state.attempts.filter((attempt) => questionMap.has(attempt.questionId));
     const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
     const completedSessions = state.sessions
@@ -456,7 +471,7 @@
               <div class="record-row record-header" role="row"><span>Question</span><span>Wrong times</span><span>First-try</span><span>Second-try</span><span>Last checked</span></div>
               ${historyRows.map((row) => {
                 return `<div class="record-row" role="row">
-                  <span><b>Day ${row.question.day} · Q${row.question.position}</b><small>Original #${esc(row.question.sourceNumber || "—")}</small></span>
+                  <span><b>${row.question.sourceDay ? esc(bank.days.find((day) => day.day === row.question.day)?.label || 'Review') : `Day ${row.question.day}`} · Q${row.question.position}</b><small>${row.question.sourceDay ? `Similar to Day ${row.question.sourceDay} · ` : ''}Original #${esc(row.question.sourceNumber || "—")}</small></span>
                   <span><i class="wrong-count">${row.wrong.length}×</i></span>
                   <span><i class="${row.firstWrong ? "miss-mark" : "clear-mark"}">${row.firstWrong || "—"}</i></span>
                   <span><i class="${row.secondWrong ? "miss-mark strong" : "clear-mark"}">${row.secondWrong || "—"}</i></span>
@@ -492,13 +507,13 @@
     if (action === "restart") startAgain();
   });
 
-  Promise.all(['question-bank.json', 'session-plan.json?v=1'].map(async (url) => {
+  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=1'].map(async (url) => {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error('The practice sessions could not be loaded. Please refresh.');
     return response.json();
   }))
-    .then(([questionBank, plan]) => {
-      organizeBank(questionBank, plan);
+    .then(([questionBank, plan, reviewBank]) => {
+      organizeBank(questionBank, plan, reviewBank);
       state = loadLocal();
       selectedDay = nextPracticeDay().day;
       render();
