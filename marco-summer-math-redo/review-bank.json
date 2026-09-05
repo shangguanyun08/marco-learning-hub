@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "targetScore": 90,
   "sourceDays": [
     1,
@@ -420,6 +420,240 @@
           "correctAnswer": "8:27",
           "correctHtml": "8:27",
           "explanation": "Cube each side length: 2³ = 8 cm³ and 3³ = 27 cm³. The volume ratio is 8:27. A side-length ratio of 2:3 is not the volume ratio."
+        },
+        {
+          "id": "review1-q11",
+          "day": 29,
+          "position": 11,
+          "sourceQuestionId": "d02-q17",
+          "sourceDay": 2,
+          "sourceNumber": "2",
+          "skill": "Dividing by a mixed number",
+          "questionText": "A building is 24.5 meters tall, and a tree is 3 1/2 meters tall. The building is how many times as tall as the tree?",
+          "questionHtml": "A building is 24.5 meters tall, and a tree is 3 <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>2</mn></mfrac></math> meters tall. The building is how many times as tall as the tree?",
+          "options": [
+            {
+              "label": "A",
+              "text": "6",
+              "html": "6"
+            },
+            {
+              "label": "B",
+              "text": "7",
+              "html": "7"
+            },
+            {
+              "label": "C",
+              "text": "7.5",
+              "html": "7.5"
+            },
+            {
+              "label": "D",
+              "text": "8",
+              "html": "8"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "7",
+          "correctHtml": "7",
+          "explanation": "Convert 3 1/2 to 3.5. Then 24.5 ÷ 3.5 = 245 ÷ 35 = 7. The building is 7 times as tall as the tree. Check: 3.5 × 7 = 24.5."
+        },
+        {
+          "id": "review1-q12",
+          "day": 29,
+          "position": 12,
+          "sourceQuestionId": "d02-q19",
+          "sourceDay": 2,
+          "sourceNumber": "4",
+          "skill": "Fractions of a group",
+          "questionText": "Of 360 trees on a farm, 5/6 are orange trees. Of the orange trees, 1/5 did not bloom this year. How many orange trees bloomed?",
+          "questionHtml": "Of 360 trees on a farm, <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>5</mn><mn>6</mn></mfrac></math> are orange trees. Of the orange trees, <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>5</mn></mfrac></math> did not bloom this year. How many orange trees bloomed?",
+          "options": [
+            {
+              "label": "A",
+              "text": "60",
+              "html": "60"
+            },
+            {
+              "label": "B",
+              "text": "72",
+              "html": "72"
+            },
+            {
+              "label": "C",
+              "text": "240",
+              "html": "240"
+            },
+            {
+              "label": "D",
+              "text": "300",
+              "html": "300"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "240",
+          "correctHtml": "240",
+          "explanation": "First find the orange trees: 360 × 5/6 = 300. Then 300 ÷ 5 = 60 did not bloom. The number that bloomed is 300 − 60 = 240. The second fraction applies only to the orange trees."
+        },
+        {
+          "id": "review1-q13",
+          "day": 29,
+          "position": 13,
+          "sourceQuestionId": "d02-q21",
+          "sourceDay": 2,
+          "sourceNumber": "6",
+          "skill": "Fractions of remaining money",
+          "questionText": "Nora spends 1/4 of her money on a notebook. She then spends 2/5 of her remaining money on pens. What fraction of her original money is left?",
+          "questionHtml": "Nora spends <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>4</mn></mfrac></math> of her money on a notebook. She then spends <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>2</mn><mn>5</mn></mfrac></math> of her remaining money on pens. What fraction of her original money is left?",
+          "options": [
+            {
+              "label": "A",
+              "text": "7/20",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>7</mn><mn>20</mn></mfrac></math>"
+            },
+            {
+              "label": "B",
+              "text": "9/20",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>9</mn><mn>20</mn></mfrac></math>"
+            },
+            {
+              "label": "C",
+              "text": "3/10",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>3</mn><mn>10</mn></mfrac></math>"
+            },
+            {
+              "label": "D",
+              "text": "3/4",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>3</mn><mn>4</mn></mfrac></math>"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "9/20",
+          "correctHtml": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>9</mn><mn>20</mn></mfrac></math>",
+          "explanation": "Nora has 3/4 left after buying the notebook. She then keeps 3/5 of that remainder, so 3/4 × 3/5 = 9/20 of her original money is left. Do not subtract 2/5 from the original whole."
+        },
+        {
+          "id": "review1-q14",
+          "day": 29,
+          "position": 14,
+          "sourceQuestionId": "d09-q04",
+          "sourceDay": 9,
+          "sourceNumber": "6",
+          "skill": "Area after removing a triangle",
+          "questionText": "A square has side length b. An isosceles right triangle with legs of length 6a is cut from one corner, as shown. Which expression gives the area of the shaded region that remains?",
+          "questionHtml": "A square has side length b. An isosceles right triangle with legs of length 6a is cut from one corner, as shown. Which expression gives the area of the shaded region that remains?<svg class=\"review-diagram\" viewBox=\"0 0 320 230\" role=\"img\" aria-label=\"A square with side b. A right triangle with equal legs 6a is removed from the top left corner. The remaining region is shaded.\"><polygon points=\"150,40 230,40 230,200 70,200 70,120\" fill=\"#e3f7ef\"/><rect x=\"70\" y=\"40\" width=\"160\" height=\"160\" fill=\"none\" stroke=\"#173957\" stroke-width=\"2\"/><path d=\"M150 40 L70 120\" fill=\"none\" stroke=\"#173957\" stroke-width=\"2\" stroke-dasharray=\"6 4\"/><text x=\"240\" y=\"125\">b</text><text x=\"102\" y=\"29\">6a</text><text x=\"35\" y=\"85\">6a</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "b² − 6a²",
+              "html": "b<sup>2</sup> − 6a<sup>2</sup>"
+            },
+            {
+              "label": "B",
+              "text": "b² − 12a²",
+              "html": "b<sup>2</sup> − 12a<sup>2</sup>"
+            },
+            {
+              "label": "C",
+              "text": "b² − 18a²",
+              "html": "b<sup>2</sup> − 18a<sup>2</sup>"
+            },
+            {
+              "label": "D",
+              "text": "b² − 36a²",
+              "html": "b<sup>2</sup> − 36a<sup>2</sup>"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "b² − 18a²",
+          "correctHtml": "b<sup>2</sup> − 18a<sup>2</sup>",
+          "explanation": "The square has area b². The removed right triangle has area 1/2 × 6a × 6a = 18a². The remaining area is b² − 18a². Multiplying the legs without dividing by 2 would remove twice the triangle’s area."
+        },
+        {
+          "id": "review1-q15",
+          "day": 29,
+          "position": 15,
+          "sourceQuestionId": "d09-q11",
+          "sourceDay": 9,
+          "sourceNumber": "12",
+          "skill": "Packing smaller cubes",
+          "questionText": "A large cube has side length 18 feet. It is completely filled, with no gaps, by 27 identical smaller cubes arranged in rows and layers. What is the side length of each smaller cube?",
+          "questionHtml": "A large cube has side length 18 feet. It is completely filled, with no gaps, by 27 identical smaller cubes arranged in rows and layers. What is the side length of each smaller cube?",
+          "options": [
+            {
+              "label": "A",
+              "text": "3 feet",
+              "html": "3 feet"
+            },
+            {
+              "label": "B",
+              "text": "6 feet",
+              "html": "6 feet"
+            },
+            {
+              "label": "C",
+              "text": "9 feet",
+              "html": "9 feet"
+            },
+            {
+              "label": "D",
+              "text": "12 feet",
+              "html": "12 feet"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "6 feet",
+          "correctHtml": "6 feet",
+          "explanation": "27 = 3 × 3 × 3, so there are 3 small cubes along each edge. Divide the large edge by 3: 18 ÷ 3 = 6 feet. Check with volumes: 27 × 6³ = 5,832 cubic feet, the same as 18³."
+        },
+        {
+          "id": "review1-q16",
+          "day": 29,
+          "position": 16,
+          "sourceQuestionId": "d09-q12",
+          "sourceDay": 9,
+          "sourceNumber": "13",
+          "skill": "Volume from small cubes",
+          "questionText": "A rectangular prism is built from small cubes. It is 6 cubes long, 2 cubes wide, and 3 cubes high. Each small cube has volume 2 cm³. What is the total volume of the prism?",
+          "questionHtml": "A rectangular prism is built from small cubes. It is 6 cubes long, 2 cubes wide, and 3 cubes high. Each small cube has volume 2 cm³. What is the total volume of the prism?",
+          "options": [
+            {
+              "label": "A",
+              "text": "36 cm³",
+              "html": "36 cm³"
+            },
+            {
+              "label": "B",
+              "text": "48 cm³",
+              "html": "48 cm³"
+            },
+            {
+              "label": "C",
+              "text": "72 cm³",
+              "html": "72 cm³"
+            },
+            {
+              "label": "D",
+              "text": "144 cm³",
+              "html": "144 cm³"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "72 cm³",
+          "correctHtml": "72 cm³",
+          "explanation": "The prism contains 6 × 2 × 3 = 36 small cubes. Each cube has volume 2 cm³, so the total is 36 × 2 = 72 cm³. Counting cubes is the first step; multiplying by each cube’s volume is the second."
         }
       ]
     },
@@ -816,6 +1050,240 @@
           "correctAnswer": "27:64",
           "correctHtml": "27:64",
           "explanation": "The volumes are 3³ = 27 cubic inches and 4³ = 64 cubic inches. Write smaller to larger in the requested order: 27:64."
+        },
+        {
+          "id": "review2-q11",
+          "day": 30,
+          "position": 11,
+          "sourceQuestionId": "d07-q01",
+          "sourceDay": 7,
+          "sourceNumber": "2",
+          "skill": "Choosing units",
+          "questionText": "A bus travels 240 miles between two cities. Which unit is most reasonable for measuring the time the trip takes?",
+          "questionHtml": "A bus travels 240 miles between two cities. Which unit is most reasonable for measuring the time the trip takes?",
+          "options": [
+            {
+              "label": "A",
+              "text": "miles",
+              "html": "miles"
+            },
+            {
+              "label": "B",
+              "text": "hours",
+              "html": "hours"
+            },
+            {
+              "label": "C",
+              "text": "pounds",
+              "html": "pounds"
+            },
+            {
+              "label": "D",
+              "text": "milliseconds",
+              "html": "milliseconds"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "hours",
+          "correctHtml": "hours",
+          "explanation": "Use hours to measure the time taken by a long bus trip. Miles measure the distance traveled, not the time. Pounds measure weight, and milliseconds are far too short for this trip."
+        },
+        {
+          "id": "review2-q12",
+          "day": 30,
+          "position": 12,
+          "sourceQuestionId": "d02-q08",
+          "sourceDay": 2,
+          "sourceNumber": "8",
+          "skill": "Decimal division",
+          "questionText": "What is the value of 0.96 ÷ 0.08?",
+          "questionHtml": "What is the value of 0.96 ÷ 0.08?",
+          "options": [
+            {
+              "label": "A",
+              "text": "0.12",
+              "html": "0.12"
+            },
+            {
+              "label": "B",
+              "text": "1.2",
+              "html": "1.2"
+            },
+            {
+              "label": "C",
+              "text": "12",
+              "html": "12"
+            },
+            {
+              "label": "D",
+              "text": "120",
+              "html": "120"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "12",
+          "correctHtml": "12",
+          "explanation": "Multiply both numbers by 100: 0.96 ÷ 0.08 = 96 ÷ 8 = 12. Multiplying both by the same number leaves the quotient unchanged. Check: 12 × 0.08 = 0.96."
+        },
+        {
+          "id": "review2-q13",
+          "day": 30,
+          "position": 13,
+          "sourceQuestionId": "d02-q04",
+          "sourceDay": 2,
+          "sourceNumber": "10",
+          "skill": "Adding and subtracting fractions",
+          "questionText": "What is the value of 7/8 − 1/6 + 5/12?",
+          "questionHtml": "What is the value of <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>7</mn><mn>8</mn></mfrac></math> − <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>6</mn></mfrac></math> + <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>5</mn><mn>12</mn></mfrac></math>?",
+          "options": [
+            {
+              "label": "A",
+              "text": "19/24",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>19</mn><mn>24</mn></mfrac></math>"
+            },
+            {
+              "label": "B",
+              "text": "1 1/8",
+              "html": "1 <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>8</mn></mfrac></math>"
+            },
+            {
+              "label": "C",
+              "text": "1 7/24",
+              "html": "1 <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>7</mn><mn>24</mn></mfrac></math>"
+            },
+            {
+              "label": "D",
+              "text": "1 11/24",
+              "html": "1 <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>11</mn><mn>24</mn></mfrac></math>"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "1 1/8",
+          "correctHtml": "1 <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mn>1</mn><mn>8</mn></mfrac></math>",
+          "explanation": "Use denominator 24: 7/8 = 21/24, 1/6 = 4/24, and 5/12 = 10/24. Then 21/24 − 4/24 + 10/24 = 27/24 = 1 1/8."
+        },
+        {
+          "id": "review2-q14",
+          "day": 30,
+          "position": 14,
+          "sourceQuestionId": "d02-q13",
+          "sourceDay": 2,
+          "sourceNumber": "6",
+          "skill": "Greatest common factor",
+          "questionText": "Ben has 24 red counters, 36 blue counters, and some yellow counters. He uses all the counters to make identical groups, each with the same number of each color. The greatest possible number of groups is 12. Which could be the number of yellow counters?",
+          "questionHtml": "Ben has 24 red counters, 36 blue counters, and some yellow counters. He uses all the counters to make identical groups, each with the same number of each color. The greatest possible number of groups is 12. Which could be the number of yellow counters?",
+          "options": [
+            {
+              "label": "A",
+              "text": "18",
+              "html": "18"
+            },
+            {
+              "label": "B",
+              "text": "30",
+              "html": "30"
+            },
+            {
+              "label": "C",
+              "text": "48",
+              "html": "48"
+            },
+            {
+              "label": "D",
+              "text": "50",
+              "html": "50"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "48",
+          "correctHtml": "48",
+          "explanation": "The greatest common factor of 24 and 36 is 12. The yellow count must also be divisible by 12; only 48 works. Twelve groups then have 2 red, 3 blue, and 4 yellow counters each."
+        },
+        {
+          "id": "review2-q15",
+          "day": 30,
+          "position": 15,
+          "sourceQuestionId": "d07-q03",
+          "sourceDay": 7,
+          "sourceNumber": "3",
+          "skill": "Parallelogram angles",
+          "questionText": "One interior angle of a parallelogram is 118°. What is the measure of the adjacent interior angle x?",
+          "questionHtml": "One interior angle of a parallelogram is 118°. What is the measure of the adjacent interior angle x?<svg class=\"review-diagram\" viewBox=\"0 0 340 175\" role=\"img\" aria-label=\"A parallelogram with adjacent interior angles 118 degrees and x degrees\"><polygon points=\"40,145 93,45 300,45 247,145\" fill=\"#eaf1ff\" stroke=\"#173957\" stroke-width=\"2\"/><text x=\"107\" y=\"75\">118°</text><text x=\"261\" y=\"75\">x°</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "59°",
+              "html": "59°"
+            },
+            {
+              "label": "B",
+              "text": "62°",
+              "html": "62°"
+            },
+            {
+              "label": "C",
+              "text": "118°",
+              "html": "118°"
+            },
+            {
+              "label": "D",
+              "text": "124°",
+              "html": "124°"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "62°",
+          "correctHtml": "62°",
+          "explanation": "Adjacent interior angles in a parallelogram add to 180°. Therefore x = 180° − 118° = 62°. Equal opposite angles are a different relationship from adjacent angles."
+        },
+        {
+          "id": "review2-q16",
+          "day": 30,
+          "position": 16,
+          "sourceQuestionId": "d07-q08",
+          "sourceDay": 7,
+          "sourceNumber": "10",
+          "skill": "Properties of rectangles",
+          "questionText": "Which set of interior angle measures guarantees that a quadrilateral is a rectangle?",
+          "questionHtml": "Which set of interior angle measures guarantees that a quadrilateral is a rectangle?",
+          "options": [
+            {
+              "label": "A",
+              "text": "60°, 120°, 60°, 120°",
+              "html": "60°, 120°, 60°, 120°"
+            },
+            {
+              "label": "B",
+              "text": "80°, 100°, 80°, 100°",
+              "html": "80°, 100°, 80°, 100°"
+            },
+            {
+              "label": "C",
+              "text": "90°, 90°, 90°, 90°",
+              "html": "90°, 90°, 90°, 90°"
+            },
+            {
+              "label": "D",
+              "text": "70°, 110°, 70°, 110°",
+              "html": "70°, 110°, 70°, 110°"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "90°, 90°, 90°, 90°",
+          "correctHtml": "90°, 90°, 90°, 90°",
+          "explanation": "A rectangle must have four right angles, so all four interior angles must be 90°. The other sets each add to 360°, but none has four right angles. A total of 360° alone does not prove a rectangle."
         }
       ]
     }

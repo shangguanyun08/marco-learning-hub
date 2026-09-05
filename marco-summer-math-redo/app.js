@@ -113,10 +113,13 @@
 
   function firstTryScore(day, session) {
     if (!session?.completedAt) return null;
-    const firstWrong = attemptsFor(session)
+    const attempts = attemptsFor(session);
+    // Completed rounds keep the size they had when finished, even after a review grows.
+    const count = session.questionIds?.length || new Set(attempts.map((attempt) => attempt.questionId)).size || day.questionCount;
+    const firstWrong = attempts
       .filter((attempt) => attempt.attemptNumber === 1 && !attempt.correct)
       .length;
-    return Math.round(((day.questionCount - firstWrong) / day.questionCount) * 100);
+    return Math.round(((count - firstWrong) / count) * 100);
   }
 
   function formatFinishedAt(value) {
@@ -157,11 +160,16 @@
   function ensureSession(dayNumber) {
     const existing = latestSession(dayNumber);
     if (existing && !existing.completedAt) return existing;
+    const day = bank.days.find((item) => item.day === dayNumber);
+    const extendingReview = day.review && existing?.completedAt && !metrics(day).completed;
     const session = {
       id: newId(),
       day: dayNumber,
       runNumber: (existing?.runNumber || 0) + 1,
-      inheritedAttemptIds: existing ? [] : carriedAttempts(bank.days.find((day) => day.day === dayNumber)).map((attempt) => attempt.id),
+      questionIds: day.questions.map((question) => question.id),
+      inheritedAttemptIds: extendingReview
+        ? attemptsFor(existing).map((attempt) => attempt.id)
+        : existing ? [] : carriedAttempts(day).map((attempt) => attempt.id),
       startedAt: new Date().toISOString(),
       completedAt: null,
     };
@@ -239,6 +247,7 @@
       id: newId(),
       day: selectedDay,
       runNumber: (previous?.runNumber || 0) + 1,
+      questionIds: day.questions.map((question) => question.id),
       startedAt: new Date().toISOString(),
       completedAt: null,
     });
@@ -507,7 +516,7 @@
     if (action === "restart") startAgain();
   });
 
-  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=1'].map(async (url) => {
+  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=2'].map(async (url) => {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error('The practice sessions could not be loaded. Please refresh.');
     return response.json();

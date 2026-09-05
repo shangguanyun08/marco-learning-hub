@@ -52,7 +52,7 @@ test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', asy
   assert.ok(ids.every(id => !completedIds.has(id)));
   assert.equal(new Set([...ids, ...completedIds]).size, 196);
   assert.equal(api.selectedDay, 29);
-  assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 10);
+  assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 16);
   assert.match(app.innerHTML, /<strong>All sessions<\/strong>/);
   assert.match(app.innerHTML, /5 of 21 finished/);
   const rail = app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
@@ -162,7 +162,7 @@ test('final session contains only 4 questions and completion handles no remainin
     api.chooseDay(day.day);
     for (const question of day.questions) api.answer(question.id, question.correctIndexes[0]);
   }
-  assert.equal(api.summary().resolvedQuestions, 216);
+  assert.equal(api.summary().resolvedQuestions, 228);
   assert.match(app.innerHTML, /All sessions are finished/);
   assert.match(app.innerHTML, /All 4 questions/);
   assert.doesNotMatch(app.innerHTML, /Continue to Session/);
@@ -182,26 +182,32 @@ test('regrouped membership is unchanged by new answers and original reruns keep 
   assert.deepEqual(clone(reload.api.bank.days.map(day => day.questions.map(q => q.id))), membership);
 });
 
-test('two ten-question reviews cover every selected first miss and precede Session 1', async () => {
+test('both sixteen-question reviews each cover every miss and precede Session 1', async () => {
   const initial = completedOriginalDays();
   const { api, app, pushed } = await boot(initial);
   const reviewDays = api.bank.days.filter(day => day.review);
-  assert.deepEqual(clone(reviewDays.map(day => [day.day, day.label, day.questionCount, day.targetScore])), [[29, 'Review 1', 10, 90], [30, 'Review 2', 10, 90]]);
+  assert.deepEqual(clone(reviewDays.map(day => [day.day, day.label, day.questionCount, day.targetScore])), [[29, 'Review 1', 16, 90], [30, 'Review 2', 16, 90]]);
   const sourceIds = [
     'd01-q05', 'd02-q04', 'd02-q08', 'd02-q13', 'd02-q17', 'd02-q18', 'd02-q19', 'd02-q21',
     'd07-q01', 'd07-q03', 'd07-q08', 'd08-q04', 'd09-q04', 'd09-q11', 'd09-q12', 'd09-q13',
   ];
   const questions = reviewDays.flatMap(day => day.questions);
   assert.deepEqual([...new Set(questions.map(q => q.sourceQuestionId))].sort(), sourceIds);
+  for (const day of reviewDays) assert.deepEqual(clone(day.questions.map(q => q.sourceQuestionId).sort()), sourceIds);
+  for (const id of sourceIds) {
+    const pair = questions.filter(q => q.sourceQuestionId === id);
+    assert.equal(pair.length, 2);
+    assert.notEqual(pair[0].questionText, pair[1].questionText);
+  }
   const originalIds = new Set(originalBank.days.flatMap(day => day.questions.map(q => q.id)));
-  assert.equal(new Set(questions.map(q => q.id)).size, 20);
-  assert.equal(api.bank.totalQuestions, 216);
+  assert.equal(new Set(questions.map(q => q.id)).size, 32);
+  assert.equal(api.bank.totalQuestions, 228);
   assert.ok(questions.every(q => !originalIds.has(q.id)));
   assert.deepEqual(clone(api.state), initial, 'Opening reviews must leave all completed work untouched');
   assert.equal(pushed.length, 0);
   assert.ok(app.innerHTML.indexOf('<b>Review 1</b>') < app.innerHTML.indexOf('<b>Review 2</b>'));
   assert.ok(app.innerHTML.indexOf('<b>Review 2</b>') < app.innerHTML.indexOf('<b>Session 1</b>'));
-  assert.match(app.innerHTML, /Get at least 9 of 10 right on the first try/);
+  assert.match(app.innerHTML, /Get at least 15 of 16 right on the first try/);
   assert.ok(reviewDays.every(day => api.metrics(day).resolved === 0), 'Reviews must not inherit original answers');
   for (const q of questions) {
     assert.equal(q.options.length, 4);
@@ -218,18 +224,22 @@ test('two ten-question reviews cover every selected first miss and precede Sessi
 
 test('review answer keys agree with independently calculated results', () => {
   const answers = reviews.sessions.map(session => session.questions.map(q => q.correctAnswer));
-  const mixedText = value => `${Math.floor(value)} ${Math.round((value % 1) * 4)}/4`;
+  const mixedText = (value, denominator = 4) => `${Math.floor(value)} ${Math.round((value % 1) * denominator)}/${denominator}`;
   const first = [
     'hours', '2^6', String(0.84 / 0.06), mixedText(3/4 - 1/6 + 2/3), '24',
     `${180 - 112}°`, 'All four interior angles have equal measures.',
     String(24 / 3 * 2 / 4 * 3),
     `${(2 * 2 * 4 + 2 * 4 * 4) * 3 ** 2 / 6} square feet`, `${2 ** 3}:${3 ** 3}`,
+    String(24.5 / (3 + 1/2)), String(360 / 6 * 5 / 5 * 4), '9/20',
+    `b² − ${6 * 6 / 2}a²`, `${18 / Math.cbrt(27)} feet`, `${6 * 2 * 3 * 2} cm³`,
   ];
   const second = [
     '5^3', '7 1/2', String(240 * 3/4 * (1 - 1/6)), '2/5',
     `b² − ${4 * 4 / 2}a²`, `${12 / Math.cbrt(216)} cm`, `${5 * 3 * 2 * 1.5} cm³`,
     String(36 / 4 * 3 / 3 * 2),
     `${(2 * 2 * 3 + 2 * 5 * 3) * 3 ** 2 / 6} square feet`, `${3 ** 3}:${4 ** 3}`,
+    'hours', String(0.96 / 0.08), mixedText(7/8 - 1/6 + 5/12, 8), '48', `${180 - 118}°`,
+    Array(4).fill(`${360 / 4}°`).join(', '),
   ];
   assert.deepEqual(answers, [first, second]);
   assert.equal(2 ** 6, 64);
@@ -238,6 +248,8 @@ test('review answer keys agree with independently calculated results', () => {
   assert.ok(Math.abs((1 - 2/5) * (1 - 1/3) - 2/5) < 1e-10);
   const gcd = (a,b) => b ? gcd(b, a % b) : a;
   assert.deepEqual([15,16,24,35].filter(n => gcd(gcd(18,30),n) === 6), [24]);
+  assert.deepEqual([18,30,48,50].filter(n => gcd(gcd(24,36),n) === 12), [48]);
+  assert.ok(Math.abs((1 - 1/4) * (1 - 2/5) - 9/20) < 1e-10);
 });
 
 test('reviews use a 90-point target, preserve earlier rounds and appear in progress history', async () => {
@@ -258,7 +270,7 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   api.answer(firstQuestion.id, firstQuestion.correctIndexes[0]);
   assert.match(app.innerHTML, /Quick explanation:/);
   finish(review, 2);
-  assert.equal(api.metrics(review).firstTryScore, 80);
+  assert.equal(api.metrics(review).firstTryScore, 88);
   assert.match(app.innerHTML, /Try Review 1 again · aim for 90\/100/);
   assert.equal(api.nextPracticeDay().day, 29);
   const belowGoal = await boot(clone(api.state));
@@ -269,7 +281,7 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   assert.equal(api.metrics(review).resolved, 0);
   assert.deepEqual(clone(api.state.attempts), firstRound.attempts);
   finish(review, 1);
-  assert.equal(api.metrics(review).firstTryScore, 90);
+  assert.equal(api.metrics(review).firstTryScore, 94);
   assert.match(app.innerHTML, /Goal met!/);
   assert.equal(api.nextPracticeDay().day, 30);
   const next = api.bank.days.find(day => day.day === 30);
@@ -280,12 +292,43 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   assert.deepEqual(clone(api.state.sessions.slice(0, initial.sessions.length)), initial.sessions);
   const progress = api.progressHtml(api.summary());
   assert.match(progress, /Review 1 · Q1/);
-  assert.match(progress, /80\/100/);
-  assert.match(progress, /90\/100/);
+  assert.match(progress, /88\/100/);
+  assert.match(progress, /94\/100/);
   assert.match(progress, /100\/100/);
   const reloaded = await boot(clone(api.state));
   assert.equal(reloaded.api.selectedDay, 15);
   reloaded.api.chooseDay(29);
   assert.match(reloaded.app.innerHTML, /Goal met!/);
   assert.match(reloaded.app.innerHTML, /Quick explanation:/);
+});
+
+test('expanding a finished ten-question review keeps its score and carries its answers into the added questions', async () => {
+  const initial = completedOriginalDays();
+  const oldRound = { id: 'completed-short-review', day: 29, runNumber: 1, startedAt: '2026-09-05T10:00:00Z', completedAt: '2026-09-05T10:30:00Z' };
+  initial.sessions.push(oldRound);
+  reviews.sessions[0].questions.slice(0, 10).forEach((q, index) => {
+    const base = { sessionId: oldRound.id, day: 29, questionId: q.id, questionPosition: q.position, createdAt: oldRound.completedAt };
+    if (index === 0) {
+      initial.attempts.push({ ...base, id: 'old-review-miss', attemptNumber: 1, selectedIndex: 0, correct: false });
+    }
+    initial.attempts.push({ ...base, id: `old-review-right-${index}`, attemptNumber: index === 0 ? 2 : 1, selectedIndex: q.correctIndexes[0], correct: true });
+  });
+  const before = clone(initial);
+  const { api } = await boot(initial);
+  const review = api.bank.days.find(day => day.day === 29);
+  assert.deepEqual(clone(api.state), before);
+  assert.equal(api.metrics(review).resolved, 10);
+  assert.equal(api.metrics(review).completed, false);
+  assert.match(api.progressHtml(api.summary()), /90\/100/);
+  for (const q of review.questions.slice(10)) api.answer(q.id, q.correctIndexes[0]);
+  assert.equal(api.metrics(review).firstTryScore, 94);
+  assert.equal(api.metrics(review).session.questionIds.length, 16);
+  assert.equal(api.metrics(review).session.inheritedAttemptIds.length, 11);
+  assert.deepEqual(clone(api.state.sessions.slice(0, before.sessions.length)), before.sessions);
+  assert.deepEqual(clone(api.state.attempts.slice(0, before.attempts.length)), before.attempts);
+  const history = api.progressHtml(api.summary());
+  assert.match(history, /90\/100/);
+  assert.match(history, /94\/100/);
+  const restored = await boot(clone(api.state));
+  assert.equal(restored.api.metrics(review).firstTryScore, 94);
 });
