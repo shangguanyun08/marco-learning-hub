@@ -123,6 +123,50 @@ button { color: inherit; }
 .choice-option.correct { border-color: var(--teal); background: #e6f5ef; color: #1f6e65; }
 .choice-option:disabled { cursor: default; opacity: 1; }
 .feedback { min-height: 20px; margin: 11px 0 0; color: #7a8499; font-size: 12px; font-weight: 700; }
+.mastery-guide { margin-bottom: 18px; padding: 20px 22px; border: 1px solid #becceb; border-radius: 18px; background: #f0f5ff; line-height: 1.6; }
+.mastery-guide strong { font-size: 18px; }
+.mastery-guide p { margin: 8px 0 0; font-size: 16px; }
+.card-top { flex-wrap: wrap; gap: 10px; }
+.mastery-badge { padding: 5px 9px; border-radius: 8px; background: #edf0f6; color: #46516b; font-size: 14px; font-weight: 800; }
+.mastery-badge.mastered { color: #155d44; background: #dff5e9; }
+.mastery-badge.practicing { color: #854500; background: #ffe4b3; }
+.mastery-badge.unmastered { color: #9a2222; background: #ffd4d4; }
+.mastery-practice { margin-top: 18px; padding-top: 18px; border-top: 2px solid #d3c09f; }
+.mastery-practice h3 { margin: 0; font-size: 17px; line-height: 1.4; }
+.streak-count { margin: 10px 0; color: #17213b; font-size: 16px; font-weight: 800; }
+.practice-result, .practice-error, .practice-number { font-size: 14px; line-height: 1.5; }
+.practice-error { margin-bottom: 0; color: #9a2222; }
+.practice-number { margin: 18px 0 0; font-weight: 800; }
+.mastery-practice .expression { margin-top: 12px; }
+.mastery-practice label { font-size: 14px; letter-spacing: 0; text-transform: none; }
+.mastery-practice .prompt-expression { min-height: 0; }
+.next-practice { min-height: 48px; padding: 12px 16px; border: 0; border-radius: 11px; background: #263d75; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer; }
+.next-practice:hover { background: #3656a1; }
+.next-practice:focus-visible, .mastery-practice:focus-visible { outline: 3px solid #5268e8; outline-offset: 3px; }
+.set-button.has-unmastered { border-color: #bb5050; color: #8a2020; background: #fff0f0; }
+.set-button.has-unmastered.active { box-shadow: 0 0 0 3px #fff, 0 0 0 5px #3656a1; }
+.score-card .solved-summary { font-size: 14px !important; line-height: 1.5; }
+.day3-mode .practice-hero, .day3-mode .practice-guide { display: none; }
+.day3-mode .set-picker { margin-top: 20px; }
+.day3-mode .question-grid { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
+.day3-mode .question-card > form:has(input:disabled) { display: none; }
+.day3-mode .question-card:has(.mastery-practice) > .expression,
+.day3-mode .question-card:has(.mastery-practice) > .feedback { display: none; }
+.day3-mode .question-card > .feedback { font-size: 14px; line-height: 1.5; }
+.mastery-guide, .mastery-progress, .question-navigation { max-width: 760px; margin-inline: auto; }
+.mastery-guide p { font-size: 14px; }
+.mastery-progress { padding: 20px 0; }
+.mastery-progress-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 18px; }
+#day3-mastered-count { color: #155d44; font-weight: 800; }
+.mastery-progress progress { display: block; width: 100%; height: 12px; margin-top: 14px; border: 0; border-radius: 10px; overflow: hidden; background: #dbe3f3; accent-color: #21857c; }
+.mastery-progress progress::-webkit-progress-bar { background: #dbe3f3; }
+.mastery-progress progress::-webkit-progress-value { background: #21857c; }
+.mastery-progress progress::-moz-progress-bar { background: #21857c; }
+.mastery-progress p { margin: 10px 0 0; font-size: 14px; color: #46516b; }
+.question-navigation { display: flex; justify-content: space-between; gap: 12px; margin-top: 18px; }
+.question-navigation button { min-height: 48px; padding: 12px 16px; border: 1px solid #cbd3e4; border-radius: 11px; font-size: 16px; font-weight: 700; background: #263d75; color: #fff; cursor: pointer; }
+.question-navigation button:disabled { background: #edf0f6; color: #606a7e; cursor: default; }
+.question-navigation button:focus-visible { outline: 3px solid #5268e8; outline-offset: 3px; }
 .right .feedback { color: #217269; }
 .retry .feedback { color: #9a4c00; }
 .wrong .feedback { color: #a82020; }

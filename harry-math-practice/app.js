@@ -76,6 +76,10 @@ const questionSets = {
   ],
 };
 
+const DAY3_SET = 6;
+const mastery = globalThis.HarryDay3Mastery;
+const day3Banks = mastery.createBanks(questionSets[DAY3_SET]);
+
 const STORAGE_KEY = "harry-math-practice-record-v1";
 const APP_ID = "harry-math-practice-v1";
 const SET_NUMBERS = Object.keys(questionSets).map(Number);
@@ -95,17 +99,52 @@ const completeTitle = document.querySelector("#complete-title");
 const finalScore = document.querySelector("#final-score");
 const setButtons = [...document.querySelectorAll(".set-button")];
 let activeSet = SET_NUMBERS[0];
+let activeDay3Index = null;
+let receivedRemote = false;
+
+function day3Indexes() {
+  return questionSets[DAY3_SET].map((question, index) => question.removed ? -1 : index).filter(index => index !== -1);
+}
+
+function updateDay3Progress() {
+  if (activeSet !== DAY3_SET) return;
+  const indexes = day3Indexes();
+  const position = indexes.indexOf(activeDay3Index);
+  const stats = recordStats(DAY3_SET);
+  document.querySelector("#day3-position").textContent = `Question ${position + 1} of ${indexes.length}`;
+  document.querySelector("#day3-mastered-count").textContent = `${stats.solved} of ${indexes.length} mastered`;
+  const bar = document.querySelector("#day3-mastered-progress");
+  bar.max = indexes.length;
+  bar.value = stats.solved;
+  document.querySelector("#day3-progress-detail").textContent = `${stats.unmastered} unmastered · ${stats.finished} of ${indexes.length} finished · First-try score: ${scoreOutOf100(stats, indexes.length)}/100`;
+  document.querySelector("#day3-previous").disabled = position === 0;
+  document.querySelector("#day3-next").disabled = position === indexes.length - 1 || !mastery.progress(records[DAY3_SET].questions[activeDay3Index]).finished;
+}
+
+function moveDay3Question(direction) {
+  const indexes = day3Indexes();
+  const position = indexes.indexOf(activeDay3Index);
+  if (activeSet !== DAY3_SET || (direction > 0 && !mastery.progress(records[DAY3_SET].questions[activeDay3Index]).finished)) return;
+  const target = indexes[position + direction];
+  if (target === undefined) return;
+  activeDay3Index = target;
+  loadSet(DAY3_SET);
+  document.querySelector("#day3-progress").scrollIntoView?.({ block: "start", behavior: "instant" });
+}
 
 function emptyQuestionRecord() {
   return { firstTry: null, attempts: 0, solved: false, lastAnswer: "" };
 }
 
-function normalizeQuestionRecord(value) {
+function normalizeQuestionRecord(value, setNumber, questionIndex) {
   return {
     firstTry: typeof value?.firstTry === "boolean" ? value.firstTry : null,
     attempts: Number.isInteger(value?.attempts) && value.attempts > 0 ? value.attempts : 0,
     solved: value?.solved === true,
     lastAnswer: typeof value?.lastAnswer === "string" ? value.lastAnswer : "",
+    ...(setNumber === DAY3_SET ? {
+      review: mastery.normalizeReview(value?.review, day3Banks[questionIndex], isCorrectAnswer),
+    } : {}),
   };
 }
 
@@ -122,7 +161,7 @@ function normalizeRecords(saved = {}) {
             { length: questionSets[setNumber].length },
             (_, questionIndex) =>
               savedQuestions[questionIndex]
-                ? normalizeQuestionRecord(savedQuestions[questionIndex])
+                ? normalizeQuestionRecord(savedQuestions[questionIndex], setNumber, questionIndex)
                 : emptyQuestionRecord(),
           ),
           completedAt:
@@ -159,7 +198,8 @@ function syncScore(value) {
       total +
       normalized[setNumber].questions.reduce(
         (setTotal, question) =>
-          setTotal + (question.solved ? 1000 : 0) + (question.firstTry !== null ? 1 : 0),
+          setTotal + (question.solved ? 1000 : 0) + (question.firstTry !== null ? 1 : 0)
+            + (question.review?.attempts.length || 0),
         0,
       ),
     0,
@@ -203,7 +243,12 @@ function recordStats(setNumber) {
     answered: questions.filter((question) => question.firstTry !== null).length,
     right: questions.filter((question) => question.firstTry === true).length,
     wrong: questions.filter((question) => question.firstTry === false).length,
-    solved: questions.filter((question) => question.solved).length,
+    solved: questions.filter((question) => setNumber === DAY3_SET
+      ? mastery.progress(question).status === "mastered" : question.solved).length,
+    unmastered: setNumber === DAY3_SET
+      ? questions.filter((question) => mastery.progress(question).status === "unmastered").length : 0,
+    finished: questions.filter((question) => setNumber === DAY3_SET
+      ? mastery.progress(question).finished : question.solved).length,
   };
 }
 
@@ -312,7 +357,7 @@ function feedbackFor(question) {
   return "Enter your answer when you are ready.";
 }
 
-function renderChoiceOptions(card, index, question, record) {
+function renderChoiceOptions(card, index, question, record, locked = record.solved) {
   const form = card.querySelector("form");
   const input = card.querySelector("input");
   const answerRow = card.querySelector(".answer-row");
@@ -335,7 +380,7 @@ function renderChoiceOptions(card, index, question, record) {
     option.className = "choice-option";
     option.textContent = value;
     option.dataset.value = value;
-    option.disabled = record.solved;
+    option.disabled = locked;
 
     const selected = record.lastAnswer === value;
     option.classList.toggle("selected", selected);
@@ -362,17 +407,133 @@ function renderQuestionState(card, index) {
   const button = card.querySelector("button[type='submit']");
   const feedback = card.querySelector(".feedback");
   const activeQuestion = activeQuestions()[index];
+  const isDay3 = activeSet === DAY3_SET;
+  const state = isDay3 ? mastery.progress(question) : null;
+  const locked = isDay3 ? question.firstTry !== null : question.solved;
 
-  card.classList.toggle("right", question.solved);
+  card.classList.toggle("right", isDay3 ? state.status === "mastered" : question.solved);
   const needsRetry = question.firstTry === false && !question.solved;
   card.classList.toggle("retry", needsRetry && question.attempts < 2);
   card.classList.toggle("wrong", needsRetry && question.attempts >= 2);
   input.value = question.lastAnswer;
-  input.disabled = question.solved;
-  button.disabled = question.solved;
-  button.textContent = question.solved ? "Solved" : "Check";
+  input.disabled = locked;
+  button.disabled = locked;
+  button.textContent = locked ? (isDay3 ? "Recorded" : "Solved") : "Check";
   feedback.textContent = feedbackFor(question);
-  renderChoiceOptions(card, index, activeQuestion, question);
+  renderChoiceOptions(card, index, activeQuestion, question, locked);
+  card.querySelector(".mastery-badge")?.remove();
+  card.querySelector(".mastery-practice")?.remove();
+  if (isDay3) {
+    card.classList.toggle("retry", state.status === "practicing");
+    card.classList.toggle("wrong", state.status === "unmastered");
+    const badge = document.createElement("span");
+    badge.className = `mastery-badge ${state.status}`;
+    badge.textContent = { unanswered: "Not answered", practicing: "In practice", mastered: "Mastered", unmastered: "Unmastered" }[state.status];
+    card.querySelector(".card-top").append(badge);
+    feedback.textContent = question.firstTry === true
+      ? "✓ Mastered — right on the first try."
+      : question.firstTry === false
+        ? `Main question incorrect. Correct answer: ${activeQuestion.answer}. First-try score is saved.`
+        : "Answer the main question. Extra practice opens only if you miss it.";
+    if (question.firstTry === false) renderMasteryPractice(card, index);
+  }
+}
+
+function renderMasteryPractice(card, index) {
+  const record = activeRecord().questions[index];
+  const state = mastery.progress(record);
+  const panel = document.createElement("section");
+  panel.className = "mastery-practice";
+  panel.setAttribute("aria-labelledby", `practice-title-${index}`);
+  panel.innerHTML = `<h3 id="practice-title-${index}">Extra practice · Question ${day3Indexes().indexOf(index) + 1}</h3>
+    <p class="streak-count" role="status"></p><p class="practice-result" aria-live="polite"></p>`;
+  panel.querySelector(".streak-count").textContent = `${state.streak}/3 right in a row · ${state.used}/10 used`;
+  const result = panel.querySelector(".practice-result");
+  const previous = record.review?.attempts.at(-1);
+  if (previous) {
+    result.textContent = previous.correct ? "✓ Correct!"
+      : `Not quite. Correct answer: ${day3Banks[index][state.used - 1].answer}. Your streak starts again at 0.`;
+  } else {
+    result.textContent = `Main question incorrect. Correct answer: ${activeQuestions()[index].answer}. Get 3 right in a row to master this question.`;
+  }
+  if (state.finished) {
+    result.textContent += state.status === "mastered"
+      ? " Mastered — you got 3 right in a row!"
+      : " Unmastered — 10 extra questions finished without 3 right in a row.";
+    card.append(panel);
+    return;
+  }
+  if (record.review?.ready === false) {
+    const next = document.createElement("button");
+    next.type = "button";
+    next.className = "next-practice";
+    next.textContent = `Next practice question (${state.used + 1}/10)`;
+    next.addEventListener("click", () => {
+      if (!mastery.next(record)) return;
+      saveRecords();
+      renderQuestionState(card, index);
+      focusPractice(card);
+    });
+    panel.append(next);
+    card.append(panel);
+    return;
+  }
+  const question = day3Banks[index][state.used];
+  const content = document.createElement("div");
+  content.innerHTML = `<p class="practice-number">Practice ${state.used + 1} of 10</p><p class="expression"></p>
+    <form><label id="practice-label-${index}" for="practice-answer-${index}">Your answer</label>
+    <div class="answer-row"><input id="practice-answer-${index}" autocomplete="off" aria-describedby="practice-error-${index}" /><button type="submit">Check</button></div></form>
+    <p class="practice-error" id="practice-error-${index}" aria-live="polite"></p>`;
+  renderExpression(content.querySelector(".expression"), question);
+  const form = content.querySelector("form");
+  const input = content.querySelector("input");
+  const label = content.querySelector("label");
+  const numeric = typeof question.answer === "number";
+  input.type = numeric ? "number" : "text";
+  input.step = numeric && Number.isInteger(question.answer) ? "1" : "any";
+  input.inputMode = numeric ? Number.isInteger(question.answer) ? "numeric" : "decimal" : "text";
+  label.textContent = question.choices ? "Choose one answer" : question.kind === "fraction" ? "Missing numerator" : "Your answer";
+  if (question.choices) {
+    content.querySelector(".answer-row").hidden = true;
+    input.hidden = true;
+    label.htmlFor = "";
+    const choices = document.createElement("div");
+    choices.className = "choice-grid";
+    choices.setAttribute("role", "group");
+    choices.setAttribute("aria-labelledby", label.id);
+    question.choices.forEach(value => {
+      const choice = document.createElement("button");
+      choice.type = "button";
+      choice.className = "choice-option";
+      choice.textContent = String(value);
+      choice.addEventListener("click", () => { input.value = String(value); form.requestSubmit(); });
+      choices.append(choice);
+    });
+    form.append(choices);
+  }
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    const typed = input.value.trim();
+    if (!typed) {
+      content.querySelector(".practice-error").textContent = "Enter an answer before checking.";
+      input.focus();
+      return;
+    }
+    if (!mastery.submit(record, typed, day3Banks[index], isCorrectAnswer)) return;
+    saveRecords();
+    renderQuestionState(card, index);
+    updateProgress();
+    focusPractice(card);
+  });
+  panel.append(content);
+  card.append(panel);
+}
+
+function focusPractice(card) {
+  const panel = card.querySelector(".mastery-practice");
+  const control = panel?.querySelector(".next-practice, .choice-option:not(:disabled), input:not([hidden]):not(:disabled)");
+  if (control) control.focus();
+  else if (panel) { panel.tabIndex = -1; panel.focus(); }
 }
 
 function renderSetButtons() {
@@ -381,17 +542,18 @@ function renderSetButtons() {
     const selected = setNumber === activeSet;
     const stats = recordStats(setNumber);
     const count = questionCount(setNumber);
-    const isComplete = stats.solved === count;
+    const isComplete = stats.finished === count;
     const scoreValue = scoreOutOf100(stats, count);
     button.classList.toggle("active", selected);
     button.classList.toggle("completed", isComplete);
+    button.classList.toggle("has-unmastered", isComplete && stats.unmastered > 0);
     button.setAttribute("aria-pressed", String(selected));
     button.setAttribute("aria-label", `${dayLabel(setNumber)}, ${count} questions${isComplete ? `, completed, first-try score ${scoreValue} out of 100` : ""}`);
     button.textContent = dayLabel(setNumber);
     if (isComplete) {
       const status = document.createElement("span");
       status.className = "set-status";
-      status.textContent = "✓ Done";
+      status.textContent = stats.unmastered ? `${stats.unmastered} unmastered` : "✓ Done";
       const score = document.createElement("span");
       score.className = "set-score";
       const scoreNumber = document.createElement("strong");
@@ -408,23 +570,34 @@ function updateProgress() {
   const scoreValue = scoreOutOf100(stats, activeQuestionCount);
   firstTryScore.textContent = String(scoreValue);
   attemptSummary.textContent = `${stats.right} right · ${stats.wrong} wrong`;
-  solvedSummary.textContent = `${stats.solved}/${activeQuestionCount} solved · ${stats.answered}/${activeQuestionCount} first tries recorded`;
+  solvedSummary.textContent = activeSet === DAY3_SET
+    ? `${stats.solved}/${activeQuestionCount} mastered · ${stats.unmastered} unmastered · ${stats.answered}/${activeQuestionCount} main questions answered`
+    : `${stats.solved}/${activeQuestionCount} solved · ${stats.answered}/${activeQuestionCount} first tries recorded`;
   fill.style.width = `${(stats.answered / activeQuestionCount) * 100}%`;
 
-  const isComplete = stats.solved === activeQuestionCount;
+  const isComplete = stats.finished === activeQuestionCount;
+  if (!isComplete && activeSet === DAY3_SET) activeRecord().completedAt = null;
   if (isComplete && !activeRecord().completedAt) {
     activeRecord().completedAt = new Date().toISOString();
     saveRecords();
   }
   complete.hidden = !isComplete;
-  completeTitle.textContent = `${dayLabel(activeSet)} complete!`;
+  completeTitle.textContent = activeSet === DAY3_SET && stats.unmastered
+    ? `Day 3 finished · ${stats.unmastered} unmastered` : `${dayLabel(activeSet)} complete!`;
   const completedAt = formatCompletedAt(activeRecord().completedAt);
-  finalScore.textContent = `Final score: ${scoreValue}/100 · ${stats.right} right and ${stats.wrong} wrong${completedAt ? ` · ${completedAt}` : ""}.`;
+  finalScore.textContent = `First-try score: ${scoreValue}/100 · ${stats.right} right and ${stats.wrong} wrong${activeSet === DAY3_SET ? ` · ${stats.solved} mastered · ${stats.unmastered} unmastered` : ""}${completedAt ? ` · ${completedAt}` : ""}.`;
   renderSetButtons();
+  updateDay3Progress();
 }
 
 function loadSet(setNumber) {
   activeSet = setNumber;
+  const isDay3 = setNumber === DAY3_SET;
+  document.body.classList.toggle("day3-mode", isDay3);
+  for (const id of ["day3-guide", "day3-progress", "day3-question-nav"]) document.querySelector(`#${id}`).hidden = !isDay3;
+  if (isDay3 && !day3Indexes().includes(activeDay3Index)) {
+    activeDay3Index = day3Indexes().find(index => !mastery.progress(records[DAY3_SET].questions[index]).finished) ?? day3Indexes()[0];
+  }
   const questions = activeQuestions();
   questionGrid.setAttribute(
     "aria-label",
@@ -433,10 +606,13 @@ function loadSet(setNumber) {
 
   let displayNumber = 0;
   cards.forEach((card, index) => {
+    card.querySelector(".mastery-practice")?.remove();
+    card.querySelector(".mastery-badge")?.remove();
     const question = questions[index];
-    card.hidden = !question || question.removed;
+    card.hidden = !question || question.removed || (isDay3 && index !== activeDay3Index);
     if (!question || question.removed) return;
     displayNumber += 1;
+    if (card.hidden) return;
     card.querySelector(".number").textContent = String(displayNumber);
     const input = card.querySelector("input");
     const label = card.querySelector("label");
@@ -464,13 +640,14 @@ function loadSet(setNumber) {
 
   updateProgress();
   const firstOpenCard = cards.find(
-    (_, index) =>
+    (card, index) =>
+      !card.hidden &&
       !activeQuestions()[index]?.removed &&
       activeRecord().questions[index] &&
-      !activeRecord().questions[index].solved,
+      !(activeSet === DAY3_SET ? mastery.progress(activeRecord().questions[index]).finished : activeRecord().questions[index].solved),
   );
   firstOpenCard
-    ?.querySelector(".choice-option:not(:disabled), input:not([hidden])")
+    ?.querySelector(".next-practice, .choice-option:not(:disabled), input:not([hidden]):not(:disabled)")
     ?.focus();
 }
 
@@ -493,7 +670,8 @@ cards.forEach((card, index) => {
     event.preventDefault();
     const question = activeRecord().questions[index];
     const activeQuestion = activeQuestions()[index];
-    if (!question || !activeQuestion || activeQuestion.removed || question.solved) return;
+    if (card.hidden || !question || !activeQuestion || activeQuestion.removed ||
+      (activeSet === DAY3_SET ? question.firstTry !== null : question.solved)) return;
     const typed = input.value.trim();
     if (!typed) {
       feedback.textContent = "Enter an answer before checking.";
@@ -509,7 +687,9 @@ cards.forEach((card, index) => {
 
     saveRecords();
     renderQuestionState(card, index);
-    if (!isRight && !activeQuestion.choices) {
+    if (activeSet === DAY3_SET && !isRight) {
+      focusPractice(card);
+    } else if (!isRight && !activeQuestion.choices) {
       input.focus();
       input.select();
     }
@@ -520,6 +700,8 @@ cards.forEach((card, index) => {
 setButtons.forEach((button) => {
   button.addEventListener("click", () => loadSet(Number(button.dataset.set)));
 });
+document.querySelector("#day3-previous").addEventListener("click", () => moveDay3Question(-1));
+document.querySelector("#day3-next").addEventListener("click", () => moveDay3Question(1));
 
 loadSet(SET_NUMBERS[0]);
 
@@ -532,6 +714,8 @@ if (window.MarcoOnlineSync && !isLocalPreview) {
     score: syncScore,
     onRemote(remote) {
       records = normalizeRecords(remote);
+      if (!receivedRemote || activeSet !== DAY3_SET) activeDay3Index = null;
+      receivedRemote = true;
       // Keep the synced snapshot intact: adding empty sets is not an offline edit.
       storeRecords(remote);
       loadSet(activeSet);

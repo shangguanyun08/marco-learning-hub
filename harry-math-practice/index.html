@@ -3,13 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Online-synced math practice Days 1–5 for Harry, with focused 10-question Days 3–5, first-try scoring out of 100, and dated completion records." />
+    <meta name="description" content="Online-synced math practice for Harry. Day 3 shows 10 main questions one at a time, with up to 10 extra questions per mistake to reach 3 correct in a row." />
     <meta name="theme-color" content="#172f61" />
     <title>Harry’s Math Practice · Days 1–5</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=10" />
+    <link rel="stylesheet" href="./styles.css?v=11" />
     <script src="../shared-online-sync.js?v=1" defer></script>
-    <script src="./app.js?v=15" defer></script>
+    <script src="./day3-mastery.js?v=1" defer></script>
+    <script src="./app.js?v=16" defer></script>
   </head>
   <body>
     <main class="practice-shell">
@@ -22,7 +23,7 @@
         <div class="hero-copy">
           <p class="eyebrow">CALCULATE · CHECK · TRY AGAIN</p>
           <h1>Choose a problem.<br /><em>Make it yours.</em></h1>
-          <p>Do the questions in any order. Check each answer when you are ready. If it is not right yet, recalculate and try again.</p>
+          <p>Do the questions in any order. Check each answer when you are ready, then follow the practice on your card.</p>
         </div>
         <div class="score-card" aria-live="polite">
           <strong><span id="first-try-score">0</span><small>/100</small></strong>
@@ -44,7 +45,7 @@
         <div>
           <p>PRACTICE SESSION</p>
           <h2 id="set-picker-title">Choose a day</h2>
-          <small class="set-picker-note">Days 3–5: 10 questions each</small>
+          <small class="set-picker-note">Day 3: 10 main questions, one at a time · Days 4–5: 10 each</small>
         </div>
         <div class="set-buttons">
           <button class="set-button active" type="button" data-set="4" aria-pressed="true">Day 1</button>
@@ -53,6 +54,17 @@
           <button class="set-button" type="button" data-set="7" aria-pressed="false">Day 4</button>
           <button class="set-button" type="button" data-set="8" aria-pressed="false">Day 5</button>
         </div>
+      </section>
+
+      <aside id="day3-guide" class="mastery-guide" hidden>
+        <strong>Day 3 · Get 3 right in a row</strong>
+        <p>A correct main answer is mastered. Miss one? Get 3 extra questions right in a row, within 10 tries. A wrong answer resets the streak. After 10 without a streak of 3, it is unmastered. Your progress is saved.</p>
+      </aside>
+
+      <section id="day3-progress" class="mastery-progress" aria-label="Day 3 progress" hidden>
+        <div class="mastery-progress-top"><strong id="day3-position"></strong><span id="day3-mastered-count" role="status"></span></div>
+        <progress id="day3-mastered-progress" value="0" max="10" aria-label="Main questions mastered"></progress>
+        <p id="day3-progress-detail" aria-live="polite"></p>
       </section>
 
       <section class="question-grid" aria-label="14 math questions in Day 1">
@@ -168,6 +180,11 @@
           <p class="feedback" id="feedback-16" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
       </section>
+
+      <nav id="day3-question-nav" class="question-navigation" aria-label="Day 3 question navigation" hidden>
+        <button id="day3-previous" type="button">← Previous question</button>
+        <button id="day3-next" type="button">Next question →</button>
+      </nav>
 
       <section class="complete-card" id="complete-card" role="status" hidden>
         <span aria-hidden="true">★</span>
