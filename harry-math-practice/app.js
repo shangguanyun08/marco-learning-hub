@@ -93,7 +93,6 @@ const fill = document.querySelector("#score-fill");
 const complete = document.querySelector("#complete-card");
 const completeTitle = document.querySelector("#complete-title");
 const finalScore = document.querySelector("#final-score");
-const recordGrid = document.querySelector("#record-grid");
 const setButtons = [...document.querySelectorAll(".set-button")];
 let activeSet = SET_NUMBERS[0];
 
@@ -376,49 +375,29 @@ function renderQuestionState(card, index) {
   renderChoiceOptions(card, index, activeQuestion, question);
 }
 
-function renderRecordSummary() {
-  recordGrid.replaceChildren();
-  for (const setNumber of SET_NUMBERS) {
-    const stats = recordStats(setNumber);
-    const setQuestionCount = questionCount(setNumber);
-    const completedAt = formatCompletedAt(records[setNumber].completedAt);
-    const scoreValue = scoreOutOf100(stats, setQuestionCount);
-    const item = document.createElement("div");
-    item.className = "record-item";
-    if (setNumber === activeSet) item.classList.add("active");
-
-    const label = document.createElement("strong");
-    label.textContent = dayLabel(setNumber);
-    const score = document.createElement("span");
-    score.textContent = completedAt
-      ? `Score: ${scoreValue}/100`
-      : stats.answered
-        ? `In progress · ${stats.answered}/${setQuestionCount} scored`
-        : "Not started";
-    const detail = document.createElement("small");
-    detail.textContent = completedAt
-      ? `Completed ${completedAt}`
-      : `${stats.right} right · ${stats.wrong} wrong · ${stats.solved} solved`;
-    item.append(label, score, detail);
-    recordGrid.append(item);
-  }
-}
-
 function renderSetButtons() {
   setButtons.forEach((button) => {
     const setNumber = Number(button.dataset.set);
     const selected = setNumber === activeSet;
-    const isComplete = recordStats(setNumber).solved === questionCount(setNumber);
+    const stats = recordStats(setNumber);
+    const count = questionCount(setNumber);
+    const isComplete = stats.solved === count;
+    const scoreValue = scoreOutOf100(stats, count);
     button.classList.toggle("active", selected);
     button.classList.toggle("completed", isComplete);
     button.setAttribute("aria-pressed", String(selected));
-    button.setAttribute("aria-label", `${dayLabel(setNumber)}, ${questionCount(setNumber)} questions${isComplete ? ", completed" : ""}`);
+    button.setAttribute("aria-label", `${dayLabel(setNumber)}, ${count} questions${isComplete ? `, completed, first-try score ${scoreValue} out of 100` : ""}`);
     button.textContent = dayLabel(setNumber);
     if (isComplete) {
       const status = document.createElement("span");
       status.className = "set-status";
       status.textContent = "✓ Done";
-      button.append(status);
+      const score = document.createElement("span");
+      score.className = "set-score";
+      const scoreNumber = document.createElement("strong");
+      scoreNumber.textContent = `${scoreValue}/100`;
+      score.append("First try", scoreNumber);
+      button.append(status, score);
     }
   });
 }
@@ -442,7 +421,6 @@ function updateProgress() {
   const completedAt = formatCompletedAt(activeRecord().completedAt);
   finalScore.textContent = `Final score: ${scoreValue}/100 · ${stats.right} right and ${stats.wrong} wrong${completedAt ? ` · ${completedAt}` : ""}.`;
   renderSetButtons();
-  renderRecordSummary();
 }
 
 function loadSet(setNumber) {
