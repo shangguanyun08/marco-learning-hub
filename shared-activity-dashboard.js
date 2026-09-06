@@ -9,17 +9,25 @@
     Marco: {
       words: document.getElementById("marco-word-sessions"),
       math: document.getElementById("marco-math-sessions"),
+      mastered: document.getElementById("marco-math-mastered"),
     },
     Harry: {
       words: document.getElementById("harry-word-sessions"),
       math: document.getElementById("harry-math-sessions"),
+      mastered: document.getElementById("harry-math-mastered"),
     },
   };
   const dateNode = document.getElementById("today-log-date");
   const noteNode = document.getElementById("today-log-note");
   const historyNode = document.getElementById("activity-history");
 
-  if (!marcoMinutes || !harryMinutes || !Object.values(sessionNodes).every((nodes) => nodes.words && nodes.math) || !dateNode || !noteNode || !historyNode) return;
+  if (!marcoMinutes || !harryMinutes || !Object.values(sessionNodes).every((nodes) => nodes.words && nodes.math && nodes.mastered) || !dateNode || !noteNode || !historyNode) return;
+
+  let refreshing = false;
+
+  function masteryCount(mastery, student, date) {
+    return mastery[student] ? mastery[student].counts[date] || 0 : "—";
+  }
 
   function sessionCount(stats, field) {
     if (!stats) return 0;
@@ -55,7 +63,7 @@
     }).format(new Date(`${date}T12:00:00Z`));
   }
 
-  function renderHistory(history) {
+  function renderHistory(history, mastery) {
     historyNode.replaceChildren();
     if (!history.length) {
       const empty = document.createElement("p");
@@ -92,7 +100,10 @@
         const math = sessionCount(studentStats, "mathSessions");
         wordsLine.textContent = `${words} word ${words === 1 ? "session" : "sessions"}`;
         mathLine.textContent = `${math} math ${math === 1 ? "session" : "sessions"}`;
-        cell.append(minutesLine, wordsLine, mathLine);
+        const masteredLine = document.createElement("span");
+        const mastered = masteryCount(mastery, student, day.date);
+        masteredLine.textContent = `${mastered} math ${mastered === 1 ? "question" : "questions"} mastered`;
+        cell.append(minutesLine, wordsLine, mathLine, masteredLine);
         return cell;
       });
       row.append(date, ...stats);
@@ -101,13 +112,30 @@
   }
 
   async function refresh() {
+    if (refreshing) return;
+    refreshing = true;
     dateNode.textContent = dateLabel();
     dateNode.dateTime = dateKey();
     try {
-      const response = await fetch(`${API_URL}?all=1`, { cache: "no-store" });
+      const [activityResult, marcoMastery, harryMastery] = await Promise.allSettled([
+        fetch(`${API_URL}?all=1`, { cache: "no-store" }),
+        window.DailyMathMastery.load("Marco"),
+        window.DailyMathMastery.load("Harry"),
+      ]);
+      if (activityResult.status === "rejected") throw activityResult.reason;
+      const response = activityResult.value;
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Daily work is unavailable.");
-      const history = Array.isArray(data.history) ? data.history : [];
+      const mastery = {
+        Marco: marcoMastery.status === "fulfilled" ? marcoMastery.value : null,
+        Harry: harryMastery.status === "fulfilled" ? harryMastery.value : null,
+      };
+      const days = new Map((Array.isArray(data.history) ? data.history : []).map(day => [day.date, day]));
+      // Include mastery earned without a recorded active minute or finished session.
+      for (const date of [dateKey(), ...Object.values(mastery).flatMap(item => Object.keys(item?.counts || {}))]) {
+        if (!days.has(date)) days.set(date, { date, students: {} });
+      }
+      const history = [...days.values()].sort((a, b) => b.date.localeCompare(a.date));
       const today = history.find((day) => day.date === dateKey());
       const marco = Math.max(0, Number(today?.students?.Marco?.minutes) || 0);
       const harry = Math.max(0, Number(today?.students?.Harry?.minutes) || 0);
@@ -117,20 +145,24 @@
         const stats = today?.students?.[student];
         sessionNodes[student].words.textContent = String(sessionCount(stats, "wordSessions"));
         sessionNodes[student].math.textContent = String(sessionCount(stats, "mathSessions"));
+        sessionNodes[student].mastered.textContent = String(masteryCount(mastery, student, dateKey()));
       }
-      renderHistory(history);
-      noteNode.textContent = marco + harry > 0
-        ? "Finished sessions by subject · Updates automatically · Pacific time."
-        : "Finished sessions by subject · No active minutes yet today · Pacific time.";
+      renderHistory(history, mastery);
+      noteNode.textContent = "Math mastery: 3 correct in a row · Each main question counted once · Pacific time.";
+      if (Object.values(mastery).some(item => !item)) noteNode.textContent += " Math counts will retry automatically.";
+      if (Object.values(mastery).some(item => item?.undated)) noteNode.textContent += " Earlier mastery without a saved date is excluded.";
     } catch (error) {
       marcoMinutes.textContent = "—";
       harryMinutes.textContent = "—";
       for (const nodes of Object.values(sessionNodes)) {
         nodes.words.textContent = "—";
         nodes.math.textContent = "—";
+        nodes.mastered.textContent = "—";
       }
       historyNode.innerHTML = '<p class="activity-history-empty">Daily history will retry automatically.</p>';
       noteNode.textContent = "Today’s work log will retry automatically.";
+    } finally {
+      refreshing = false;
     }
   }
 

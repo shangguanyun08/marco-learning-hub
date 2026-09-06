@@ -255,6 +255,7 @@ function normalizeQuestionRecord(value, setNumber, questionIndex) {
     lastAnswer: typeof value?.lastAnswer === "string" ? value.lastAnswer : "",
     ...(setNumber === DAY3_SET ? {
       review: mastery.normalizeReview(value?.review, day3Banks[questionIndex], isCorrectAnswer, value?.firstTry),
+      ...(typeof value?.masteredAt === "string" && Number.isFinite(Date.parse(value.masteredAt)) ? { masteredAt: value.masteredAt } : {}),
     } : {}),
   };
 }

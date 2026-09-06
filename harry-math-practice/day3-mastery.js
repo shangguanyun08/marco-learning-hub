@@ -99,7 +99,9 @@
     for (const item of Array.isArray(value?.attempts) ? value.attempts.slice(0, LIMIT) : []) {
       if (typeof item?.answer !== "string" || !item.answer.trim()) break;
       const correct = check(item.answer, bank[attempts.length]);
-      attempts.push({ answer: item.answer, correct });
+      attempts.push({ answer: item.answer, correct,
+        ...(typeof item.createdAt === "string" && Number.isFinite(Date.parse(item.createdAt)) ? { createdAt: item.createdAt } : {}),
+      });
       streak = correct ? streak + 1 : 0;
       if (streak === TARGET) break;
     }
@@ -110,9 +112,13 @@
     const state = progress(record);
     if (state.status !== "practicing" || !String(answer).trim() || record.review?.ready === false) return false;
     record.review ||= { attempts: [], ready: true };
-    record.review.attempts.push({ answer, correct: check(answer, bank[state.used]) });
+    const createdAt = new Date().toISOString();
+    record.review.attempts.push({ answer, correct: check(answer, bank[state.used]), createdAt });
     record.review.ready = false;
-    if (progress(record).status === "mastered") record.solved = true;
+    if (progress(record).status === "mastered") {
+      record.solved = true;
+      record.masteredAt = createdAt;
+    }
     return true;
   }
 

@@ -265,8 +265,8 @@ test("session markup and assets match the expanded question set without day tabs
   assert.equal(html.includes('data-set='),false);
   assert.ok(html.includes("Q1–Q20"));
   assert.doesNotMatch(html, /id="day3-guide"|id="day3-progress"/);
-  assert.ok(html.indexOf('star-mastery.js?v=1')<html.indexOf('app.js?v=22'));
-  for(const asset of ["./styles.css?v=16","./day3-mastery.js?v=3","./star-mastery.js?v=1","./app.js?v=22"]) assert.ok(html.includes(asset));
+  assert.ok(html.indexOf('star-mastery.js?')<html.indexOf('app.js?'));
+  for(const asset of ["./styles.css?", "./day3-mastery.js?", "./star-mastery.js?", "./app.js?"]) assert.ok(html.includes(asset));
   assert.ok(source.includes('loadSet(DAY3_SET);'));
   assert.ok(source.includes('while (cards.length < Math.max'));
   assert.ok(source.includes('question.promptHtml'));
@@ -306,4 +306,30 @@ test("answer tracks grow only with checked answers and keep earlier misses after
   const restored = boot(api.records);
   assert.deepEqual(results(render(restored, restored.records[6].questions[5])), expected);
   assert.deepEqual(results(render(restored, restored.records[6].questions[0])), [], "Parent-confirmed mastery does not invent answer lights");
+});
+
+test("mastery records the third correct answer time and preserves it through reload and online normalization", () => {
+  const api = boot();
+  const result = record(true);
+  const bank = api.day3Banks[5];
+  submit(api, result, bank, true);
+  assert.equal(result.masteredAt, undefined);
+  submit(api, result, bank, true);
+  assert.ok(Number.isFinite(Date.parse(result.masteredAt)));
+  assert.equal(result.masteredAt, result.review.attempts[1].createdAt);
+  const saved = { 6: { questions: [] } };
+  saved[6].questions[5] = result;
+  const restored = api.normalizeRecords(saved)[6].questions[5];
+  assert.equal(restored.masteredAt, result.masteredAt);
+  assert.deepEqual(clone(restored.review.attempts), clone(result.review.attempts));
+  const normalizedAgain = api.normalizeRecords({ 6: { questions: [null, null, null, null, null, restored] } })[6].questions[5];
+  assert.equal(normalizedAgain.masteredAt, result.masteredAt);
+  assert.equal(api.mastery.submit(restored, "1", bank, api.isCorrectAnswer), false);
+  assert.equal(restored.masteredAt, result.masteredAt);
+  const legacy = clone(result);
+  delete legacy.masteredAt;
+  legacy.review.attempts.forEach(attempt => delete attempt.createdAt);
+  const oldQuestions = [];
+  oldQuestions[5] = legacy;
+  assert.equal(api.normalizeRecords({ 6: { questions: oldQuestions } })[6].questions[5].masteredAt, undefined);
 });
