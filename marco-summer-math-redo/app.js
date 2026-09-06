@@ -487,12 +487,12 @@
   }
 
   function totalMasteryTrackHtml(day, current) {
-    return `<nav class="review-total-track" aria-label="Choose a main question"><div class="total-track-heading"><strong>Choose any main question</strong><span>✓ Correct · × Incorrect · — Not answered</span></div><ol class="review-track">${day.questions.map((question) => {
+    return `<nav class="review-total-track" aria-label="Choose a main question"><div class="total-track-heading"><strong>Choose any main question</strong><span class="mastery-legend"><span class="mastered">✓ Mastered</span> · <span class="unmastered">× Unmastered</span> · — Unfinished</span></div><ol class="review-track">${day.questions.map((question) => {
       const progress = masteryProgress(day, question);
-      const statusClass = progress.nominal ? (progress.nominal.correct ? 'correct' : 'incorrect') : 'pending';
-      const result = progress.nominal ? (progress.nominal.correct ? 'Correct' : 'Incorrect') : 'Not answered';
+      const statusClass = progress.mastered ? 'mastered' : progress.unmastered ? 'unmastered' : 'pending';
+      const result = progress.status;
       const active = question.id === current?.id;
-      return `<li><button class="review-track-step ${statusClass}${active ? ' current' : ''}" data-action="choose-main" data-question-id="${esc(question.id)}" type="button" ${active ? 'aria-current="step"' : ''} aria-label="Question ${question.position}: ${result}, ${esc(question.skill)}${active ? ', current question' : ''}" title="Question ${question.position}: ${result} · ${esc(question.skill)}"><span>${question.position}</span><b aria-hidden="true">${progress.nominal ? (progress.nominal.correct ? '✓' : '×') : '—'}</b></button></li>`;
+      return `<li><button class="review-track-step ${statusClass}${active ? ' current' : ''}" data-action="choose-main" data-question-id="${esc(question.id)}" type="button" ${active ? 'aria-current="step"' : ''} aria-label="Question ${question.position}: ${result}, ${esc(question.skill)}${active ? ', current question' : ''}" title="Question ${question.position}: ${result} · ${esc(question.skill)}"><span>${question.position}</span><b aria-hidden="true">${progress.mastered ? '✓' : progress.unmastered ? '×' : '—'}</b></button></li>`;
     }).join('')}</ol></nav>`;
   }
 

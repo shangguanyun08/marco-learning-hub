@@ -382,7 +382,7 @@ test('Review 1 allows direct question selection but shows Next main only after m
   check(api, first, false);
   assert.equal((track().match(/class="answer-step /g) || []).length, 1);
   assert.match(track(), /answer-step incorrect/);
-  assert.match(app.innerHTML, new RegExp(`review-track-step incorrect current" data-action="choose-main" data-question-id="${first.id}"`));
+  assert.match(app.innerHTML, new RegExp(`review-track-step pending current" data-action="choose-main" data-question-id="${first.id}"`), 'A missed main answer remains unfinished while practicing');
   api.nextMainQuestion();
   assert.equal(api.currentReviewQuestion(day).id, first.id, 'Next main cannot advance before mastery');
   assert.doesNotMatch(app.innerHTML, /data-action="next-main"/);
@@ -391,7 +391,7 @@ test('Review 1 allows direct question selection but shows Next main only after m
   check(api, second, true);
   assert.match(track(), /answer-step correct/);
   assert.equal((track().match(/class="answer-step /g) || []).length, 1);
-  assert.match(app.innerHTML, new RegExp(`review-track-step correct current" data-action="choose-main" data-question-id="${second.id}"`));
+  assert.match(app.innerHTML, new RegExp(`review-track-step pending current" data-action="choose-main" data-question-id="${second.id}"`), 'A correct main answer alone does not mark the skill mastered');
   selectMain(first);
   api.selectAnswer(first.practiceQuestions[0].id, first.practiceQuestions[0].correctIndexes[0]);
   selectMain(second);
@@ -407,13 +407,15 @@ test('Review 1 allows direct question selection but shows Next main only after m
   assert.equal((track().match(/class="answer-step /g) || []).length, 4);
   assert.equal((track().match(/answer-step correct/g) || []).length, 3);
   assert.equal((track().match(/answer-step incorrect/g) || []).length, 1);
-  assert.match(app.innerHTML, new RegExp(`review-track-step incorrect current" data-action="choose-main" data-question-id="${first.id}"`), 'Main result stays red after extra practice mastery');
+  assert.match(app.innerHTML, new RegExp(`review-track-step mastered current" data-action="choose-main" data-question-id="${first.id}"`), 'Mastery makes the picker green even after a missed main answer');
+  assert.match(app.innerHTML, /aria-label="Question 1: Mastered,/);
   assert.equal(api.metrics(day).firstWrong, 1);
   const restored = await boot(clone(api.state));
   restored.app.click({ target: { closest: () => ({ dataset: { action: 'choose-main', questionId: first.id } }) } });
   assert.equal(restored.api.masteryProgress(day, first).mastered, true);
   assert.equal((restored.app.innerHTML.match(/class="answer-step /g) || []).length, 4);
   assert.equal(restored.api.metrics(day).firstWrong, 1);
+  assert.match(restored.app.innerHTML, new RegExp(`review-track-step mastered current" data-action="choose-main" data-question-id="${first.id}"`));
   assert.doesNotMatch(restored.app.innerHTML, /answer-step unanswered|Practice question \d+ of/);
   assert.match(restored.app.innerHTML, /data-action="next-main"[^>]*>Next main question/);
   const beforeNavigation = clone(restored.api.state);
@@ -498,7 +500,7 @@ test('ten-question limit ends as unmastered, while a third consecutive correct o
   for (const win of [false,true]) {
     const {api,app} = await boot();
     const day = api.bank.days.find(d => d.day === 29), parent = day.questions[0];
-    check(api,parent,false);
+    check(api,parent,true);
     parent.practiceQuestions.forEach((q,i) => check(api,q,win ? i >= 7 : i % 3 !== 0));
     const progress = api.masteryProgress(day,parent);
     assert.equal(progress.practice.length,10);
@@ -508,10 +510,14 @@ test('ten-question limit ends as unmastered, while a third consecutive correct o
     assert.match(app.innerHTML,win ? /Mastered!/ : /Keep practicing this skill/);
     assert.doesNotMatch(app.innerHTML,/Next practice question|Practice question 11/);
     assert.equal(app.innerHTML.includes('>Next main question</button>'), win);
+    const pickerStatus = win ? 'mastered' : 'unmastered';
+    assert.match(app.innerHTML, new RegExp(`review-track-step ${pickerStatus} current" data-action="choose-main" data-question-id="${parent.id}"`), 'Picker shows mastery outcome even when the main answer was correct');
+    assert.equal(api.metrics(day).firstWrong, 0, 'Mastery colors must not change the first-try record');
     api.nextMainQuestion();
     assert.equal(api.currentReviewQuestion(day).id,win ? day.questions[1].id : parent.id);
     const restored = await boot(clone(api.state));
     assert.equal(restored.api.masteryProgress(day,parent).unmastered,!win);
+    assert.match(restored.app.innerHTML, new RegExp(`review-track-step ${pickerStatus}(?: current)?" data-action="choose-main" data-question-id="${parent.id}"`));
   }
 });
 

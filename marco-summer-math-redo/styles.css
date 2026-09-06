@@ -251,8 +251,10 @@ button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); ou
 .review-track-step:hover { box-shadow: 0 0 0 2px #b5cbef; }
 .review-track-step:focus-visible { outline: 3px solid #173957; outline-offset: 3px; }
 .review-track-step b { font-size: 17px; line-height: 1; }
-.review-track-step.correct { border-color: #087443; background: #11864f; color: #fff; }
-.review-track-step.incorrect { border-color: #b52932; background: #cb3540; color: #fff; }
+.review-track-step.mastered { border-color: #087443; background: #11864f; color: #fff; }
+.review-track-step.unmastered { border-color: #b52932; background: #cb3540; color: #fff; }
+.mastery-legend .mastered { color: #087443; }
+.mastery-legend .unmastered { color: #b52932; }
 .review-track-step.current { outline: 2px solid #2468e5; outline-offset: 2px; }
 @media (max-width: 760px) {
   .review-one-at-a-time .session-overview > div:first-child { flex-basis: auto; }
