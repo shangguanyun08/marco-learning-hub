@@ -472,31 +472,29 @@
   }
 
   function answerTrackHtml(day, question, progress, compact = false) {
-    const answers = [progress.nominal, ...progress.practice];
-    const checkedCount = progress.nominal ? progress.practice.length + 1 : 0;
-    const lights = Array.from({ length: day.mastery.maxQuestions + 1 }, (_, index) => {
-      const answer = answers[index];
-      const result = answer ? (answer.correct ? 'correct' : 'incorrect') : 'unanswered';
-      const next = !progress.done && index === checkedCount;
+    const answers = progress.nominal ? [progress.nominal, ...progress.practice] : [];
+    const lights = answers.map((answer, index) => {
+      const result = answer.correct ? 'correct' : 'incorrect';
       const label = index === 0 ? 'Main question' : `Extra question ${index}`;
-      const status = answer ? (answer.correct ? 'Correct' : 'Incorrect') : progress.done ? 'Not needed' : next ? 'Up next' : 'Not answered';
-      return `<li class="answer-step ${result}${next ? ' next' : ''}" aria-label="${label}: ${status}" title="${label}: ${status}"><span class="answer-light" aria-hidden="true">${answer ? (answer.correct ? '✓' : '×') : '·'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></li>`;
+      const status = answer.correct ? 'Correct' : 'Incorrect';
+      return `<li class="answer-step ${result}" aria-label="${label}: ${status}" title="${label}: ${status}"><span class="answer-light" aria-hidden="true">${answer.correct ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></li>`;
     }).join('');
     const streakLights = Array.from({ length: day.mastery.requiredStreak }, (_, index) => `<span class="streak-light ${index < progress.streak ? 'lit' : ''}" aria-hidden="true">${index < progress.streak ? '✓' : '·'}</span>`).join('');
     return `<div class="answer-track-panel${compact ? ' compact' : ''}" aria-label="Answer track for Question ${question.position}">
       ${compact ? '' : `<div class="answer-track-heading"><strong>Your answer track</strong><div class="streak-meter" aria-label="${progress.streak} of ${day.mastery.requiredStreak} correct in a row"><span>In a row</span>${streakLights}<b>${progress.streak}/${day.mastery.requiredStreak}</b></div></div>`}
-      <ol class="answer-track" aria-label="Main answer followed by up to ${day.mastery.maxQuestions} extra answers">${lights}</ol>
-      ${compact ? '' : '<div class="track-legend"><span><i class="legend-light correct" aria-hidden="true">✓</i>Correct</span><span><i class="legend-light incorrect" aria-hidden="true">×</i>Incorrect</span><span><i class="legend-light unanswered" aria-hidden="true">·</i>Not answered</span></div><p class="answer-track-hint">Every answer stays on this track. Three greens in a row = mastered.</p>'}
+      ${answers.length ? `<ol class="answer-track" aria-label="Checked answers">${lights}</ol>` : '<p class="answer-track-hint">Your results appear here as you answer.</p>'}
+      ${compact ? '' : '<div class="track-legend"><span><i class="legend-light correct" aria-hidden="true">✓</i>Correct</span><span><i class="legend-light incorrect" aria-hidden="true">×</i>Incorrect</span></div><p class="answer-track-hint">Three greens in a row = mastered.</p>'}
     </div>`;
   }
 
   function totalMasteryTrackHtml(day, current) {
-    return `<div class="review-total-track"><div class="total-track-heading"><strong>All ${day.questionCount} main questions</strong><span>✓ Mastered · × Unmastered · — Not finished</span></div><ol class="review-track" aria-label="Mastery track for all ${day.questionCount} main questions">${day.questions.map((question) => {
+    return `<nav class="review-total-track" aria-label="Choose a main question"><div class="total-track-heading"><strong>Choose any main question</strong><span>✓ Correct · × Incorrect · — Not answered</span></div><ol class="review-track">${day.questions.map((question) => {
       const progress = masteryProgress(day, question);
-      const statusClass = progress.mastered ? 'mastered' : progress.unmastered ? 'unmastered' : 'pending';
+      const statusClass = progress.nominal ? (progress.nominal.correct ? 'correct' : 'incorrect') : 'pending';
+      const result = progress.nominal ? (progress.nominal.correct ? 'Correct' : 'Incorrect') : 'Not answered';
       const active = question.id === current?.id;
-      return `<li class="review-track-step ${statusClass}${active ? ' current' : ''}" ${active ? 'aria-current="step"' : ''} aria-label="Question ${question.position}: ${progress.status}${active ? ', current question' : ''}" title="Question ${question.position}: ${progress.status}"><span>${question.position}</span><b aria-hidden="true">${progress.mastered ? '✓' : progress.unmastered ? '×' : '—'}</b></li>`;
-    }).join('')}</ol></div>`;
+      return `<li><button class="review-track-step ${statusClass}${active ? ' current' : ''}" data-action="choose-main" data-question-id="${esc(question.id)}" type="button" ${active ? 'aria-current="step"' : ''} aria-label="Question ${question.position}: ${result}, ${esc(question.skill)}${active ? ', current question' : ''}" title="Question ${question.position}: ${result} · ${esc(question.skill)}"><span>${question.position}</span><b aria-hidden="true">${progress.nominal ? (progress.nominal.correct ? '✓' : '×') : '—'}</b></button></li>`;
+    }).join('')}</ol></nav>`;
   }
 
   function masteryQuestionHtml(day, dayMetrics, question) {
@@ -510,19 +508,19 @@
       const saved = current ? savedAttempts(day, current.id).slice(0, 1) : [];
       extra = `<section class="extra-practice" aria-label="Extra practice for Question ${question.position}">
         <div class="practice-heading"><div><p class="eyebrow">Extra practice · Question ${question.position}</p><h3>${esc(question.skill)}</h3></div><span class="mastery-badge ${statusClass}">${progress.status}</span></div>
-        <div class="practice-counters" aria-live="polite"><span><b>${progress.practice.length}/${day.mastery.maxQuestions}</b> extra questions answered</span><span><b>${progress.streak}/${day.mastery.requiredStreak}</b> correct in a row</span></div>
-        <p class="practice-rule">Get ${day.mastery.requiredStreak} correct in a row, starting with the main question. A correct main answer counts as 1. A wrong answer resets the streak. Stop after ${day.mastery.maxQuestions} extra questions.</p>
-        ${current ? `<div class="practice-item" id="question-${esc(current.id)}"><p class="practice-number">Practice question ${current.practiceNumber} of ${day.mastery.maxQuestions}</p>${masteryAnswerHtml(current, saved)}</div>` : ''}
+        <div class="practice-counters" aria-live="polite"><span><b>${progress.streak}/${day.mastery.requiredStreak}</b> correct in a row</span></div>
+        <p class="practice-rule">Get ${day.mastery.requiredStreak} correct in a row. The main answer counts. A wrong answer resets the streak.</p>
+        ${current ? `<div class="practice-item" id="question-${esc(current.id)}"><p class="practice-number">Practice question ${current.practiceNumber}</p>${masteryAnswerHtml(current, saved)}</div>` : ''}
         ${showLast && !progress.done ? `<div class="mastery-check"><button class="primary-action" data-action="next-practice" data-question-id="${esc(question.id)}" type="button">Next practice question</button></div>` : ''}
-        ${progress.done ? `<p class="mastery-result ${statusClass}" role="status">${progress.mastered ? 'Mastered! You answered 3 questions correctly in a row.' : 'Unmastered. You reached 10 extra questions without 3 correct in a row. Review this skill again later.'}</p>` : ''}
+        ${progress.done ? `<p class="mastery-result ${statusClass}" role="status">${progress.mastered ? 'Mastered! You answered 3 questions correctly in a row.' : 'Keep practicing this skill in a later review.'}</p>` : ''}
       </section>`;
     }
     return `<section class="question-card" id="question-${esc(question.id)}">
-      <div class="question-meta"><div><span>${esc(day.label)}</span><strong>Question ${question.position} of ${day.questionCount}</strong></div><span class="mastery-badge ${statusClass}">${progress.status}</span><small>${esc(question.skill)}</small></div>
+      <div class="question-meta"><div><span>${esc(day.label)}</span><strong>Question ${question.position}</strong></div><span class="mastery-badge ${statusClass}">${progress.status}</span><small>${esc(question.skill)}</small></div>
       ${answerTrackHtml(day, question, progress)}
       ${progress.nominal ? `<details class="missed-main"><summary>Main question: ${progress.nominal.correct ? 'correct' : 'incorrect'} · Review answer and explanation</summary><div class="problem">${question.questionHtml}</div><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></details>` : masteryAnswerHtml(question, savedAttempts(day, question.id))}
       ${extra}
-      <footer class="question-footer"><span>${dayMetrics.resolved} of ${day.questionCount} main questions finished · ${dayMetrics.mastered} mastered</span>${progress.done ? `<button class="primary-action" data-action="next-main" type="button">${dayMetrics.completed ? 'See Review 1 results' : 'Next main question'}</button>` : '<span>3 correct in a row · the main question counts</span>'}</footer>
+      <footer class="question-footer"><span>You can switch questions at any time.</span><button class="primary-action" data-action="next-main" type="button">${dayMetrics.completed ? 'See Review 1 results' : 'Next main question'}</button></footer>
     </section>`;
   }
 
@@ -531,16 +529,24 @@
       || day.questions.find((question) => !masteryProgress(day, question).done) || null;
   }
 
+  function chooseMainQuestion(questionId) {
+    const day = bank.days.find((item) => item.day === selectedDay);
+    const question = day?.questions.find((item) => String(item.id) === String(questionId));
+    if (!day?.mastery || !question) return;
+    hasChosenDay = true;
+    reviewQuestionId = question.id;
+    render();
+  }
+
   function nextMainQuestion() {
     const day = bank.days.find((item) => item.day === selectedDay);
     if (!day?.mastery) return;
     const current = currentReviewQuestion(day);
-    if (!current || !masteryProgress(day, current).done) return;
+    if (!current) return;
     const after = day.questions.slice(day.questions.indexOf(current) + 1);
-    const next = [...after, ...day.questions].find((question) => !masteryProgress(day, question).done);
+    const next = [...after, ...day.questions].find((question) => question.id !== current.id && !masteryProgress(day, question).done);
     reviewQuestionId = next?.id || null;
-    feedbackByQuestion = {};
-    selectedAnswers = {};
+    hasChosenDay = true;
     render();
   }
 
@@ -548,11 +554,10 @@
     const question = currentReviewQuestion(day);
     return `<main class="question-list review-one-at-a-time">
       <section class="session-overview">
-        <div><p class="eyebrow">${esc(day.label)} · ${day.questionCount} main questions</p><h2>One question at a time</h2><p>For every main question, get 3 correct in a row to master it. The main question is the first answer in the streak. A wrong answer resets the streak. Up to 10 extra questions are available.</p>
-          <p class="review-goal">Goal: <strong>${day.targetScore}/100</strong> · Get at least ${Math.ceil(day.targetScore * day.questionCount / 100)} of ${day.questionCount} right on the first try. Extra practice does not change your first-try score.</p>
-          <p class="mastery-overview">${row.resolved} of ${day.questionCount} main questions finished · ${row.unmastered} unmastered${row.firstTryScore !== null ? ` · First try: ${row.firstTryScore}/100` : ''}</p>
+        <div><p class="eyebrow">${esc(day.label)}</p><h2>Choose a question</h2><p>Tap any main question below to open it. Get 3 correct in a row to master each skill.</p>
+          <p class="review-goal">Goal: <strong>${day.targetScore}/100</strong> on your main answers. Extra practice does not change your first-try score.</p>
+          ${row.firstTryScore !== null ? `<p class="mastery-overview">First try: ${row.firstTryScore}/100</p>` : ''}
         </div>
-        <div class="session-progress" aria-label="${row.mastered} of ${day.questionCount} mastered"><strong>${row.mastered}<small>/${day.questionCount}</small></strong><span>mastered</span><div class="progress-track" role="progressbar" aria-label="Questions mastered" aria-valuemin="0" aria-valuemax="${day.questionCount}" aria-valuenow="${row.mastered}"><span style="width:${row.mastered / day.questionCount * 100}%"></span></div></div>
         ${totalMasteryTrackHtml(day, question)}
       </section>
       ${question ? masteryQuestionHtml(day, row, question) : completeHtml(day, row)}
@@ -694,6 +699,7 @@
     }
     if (action === "restart") startAgain();
     if (action === "next-practice") nextPracticeQuestion(button.dataset.questionId);
+    if (action === "choose-main") chooseMainQuestion(button.dataset.questionId);
     if (action === "next-main") nextMainQuestion();
   });
 

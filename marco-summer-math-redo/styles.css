@@ -247,10 +247,12 @@ button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); ou
 .review-total-track { flex: 1 0 100%; min-width: 0; padding-top: 16px; border-top: 1px solid #d5dfe8; }
 .total-track-heading > span { color: #415c73; font-size: 14px; }
 .review-track { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
-.review-track-step { display: grid; gap: 4px; justify-items: center; border: 1px solid #a5b3c0; border-radius: 9px; padding: 8px 2px; background: #f0f3f6; color: #536475; font-size: 14px; font-weight: 700; }
+.review-track-step { display: grid; width: 100%; min-height: 48px; gap: 4px; justify-items: center; border: 1px solid #a5b3c0; border-radius: 9px; padding: 8px 2px; background: #f0f3f6; color: #536475; font-size: 14px; font-weight: 700; cursor: pointer; }
+.review-track-step:hover { box-shadow: 0 0 0 2px #b5cbef; }
+.review-track-step:focus-visible { outline: 3px solid #173957; outline-offset: 3px; }
 .review-track-step b { font-size: 17px; line-height: 1; }
-.review-track-step.mastered { border-color: #087443; background: #11864f; color: #fff; }
-.review-track-step.unmastered { border-color: #b52932; background: #cb3540; color: #fff; }
+.review-track-step.correct { border-color: #087443; background: #11864f; color: #fff; }
+.review-track-step.incorrect { border-color: #b52932; background: #cb3540; color: #fff; }
 .review-track-step.current { outline: 2px solid #2468e5; outline-offset: 2px; }
 @media (max-width: 760px) {
   .review-one-at-a-time .session-overview > div:first-child { flex-basis: auto; }

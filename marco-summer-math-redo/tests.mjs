@@ -24,7 +24,7 @@ function completedOriginalDays() {
 
 async function boot(initial = completedOriginalDays(), remote = initial) {
   const storage = new Map([['marco-summer-isee-math-redo-v1:state', JSON.stringify(initial)]]);
-  const app = { innerHTML: '', addEventListener() {} };
+  const app = { innerHTML: '', addEventListener(type, listener) { this[type] = listener; } };
   const pushed = [];
   let options;
   const context = vm.createContext({
@@ -60,7 +60,7 @@ test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', asy
   assert.equal(new Set([...ids, ...completedIds]).size, 196);
   assert.equal(api.selectedDay, 29);
   assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 1);
-  assert.match(app.innerHTML, /0 of 16 mastered/);
+  assert.match(app.innerHTML, /Choose any main question/);
   assert.match(app.innerHTML, /<strong>All sessions<\/strong>/);
   assert.match(app.innerHTML, /5 of 21 finished/);
   const rail = app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
@@ -222,7 +222,7 @@ test('both sixteen-question reviews each cover every miss and precede Session 1'
   assert.equal(pushed.length, 0);
   assert.ok(app.innerHTML.indexOf('<b>Review 1</b>') < app.innerHTML.indexOf('<b>Review 2</b>'));
   assert.ok(app.innerHTML.indexOf('<b>Review 2</b>') < app.innerHTML.indexOf('<b>Session 1</b>'));
-  assert.match(app.innerHTML, /Get at least 15 of 16 right on the first try/);
+  assert.match(app.innerHTML, /90\/100<\/strong> on your main answers/);
   assert.ok(reviewDays.every(day => api.metrics(day).resolved === 0), 'Reviews must not inherit original answers');
   for (const q of questions) {
     assert.equal(q.options.length, 4);
@@ -316,7 +316,7 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   assert.equal(reloaded.api.selectedDay, 15);
   reloaded.api.chooseDay(29);
   assert.match(reloaded.app.innerHTML, /Goal met!/);
-  assert.match(reloaded.app.innerHTML, /16 of 16 mastered/);
+  assert.equal(reloaded.api.metrics(review).mastered, 16);
 });
 
 test('expanding a finished ten-question review keeps its score and carries its answers into the added questions', async () => {
@@ -354,53 +354,62 @@ test('expanding a finished ten-question review keeps its score and carries its a
 const wrongIndex = q => q.options.findIndex((_, i) => !q.correctIndexes.includes(i));
 const check = (api, q, correct) => api.answer(q.id, correct ? q.correctIndexes[0] : wrongIndex(q));
 
-test('Review 1 shows one active question and advances only after mastery or the practice limit', async () => {
-  const { api, app } = await boot();
-  const day = api.bank.days.find(d => d.day === 29), [first, second] = day.questions;
-  assert.match(app.innerHTML, /Question 1 of 16/);
-  assert.doesNotMatch(app.innerHTML, /id="question-review1-q02"|class="practice-item"/);
+test('Review 1 allows main-question selection at any time and grows green/red answer tracks', async () => {
+  const { api, app, pushed, remote } = await boot();
+  const day = api.bank.days.find(d => d.day === 29), [first, second, third] = day.questions;
+  const selectMain = question => app.click({ target: { closest: () => ({ dataset: { action: 'choose-main', questionId: question.id } }) } });
+  const track = () => app.innerHTML.match(/<div class="answer-track-panel"[\s\S]*?<\/ol>/)?.[0] || '';
+  assert.match(app.innerHTML, /Question 1<\/strong>/);
+  assert.equal((app.innerHTML.match(/data-action="choose-main"/g) || []).length, day.questions.length);
+  assert.doesNotMatch(app.innerHTML, /class="answer-step |Practice question \d+ of|All 16 main questions|Up to 10/);
+  api.selectAnswer(first.id, first.correctIndexes[0]);
+  selectMain(third);
+  assert.equal(api.currentReviewQuestion(day).id, third.id);
+  assert.match(app.innerHTML, new RegExp(`id="question-${third.id}"`));
+  assert.doesNotMatch(app.innerHTML, new RegExp(`id="question-${first.id}"`));
+  assert.equal(pushed.length, 0, 'Browsing and draft selections must not save checked answers');
+  remote(clone(api.state));
+  assert.equal(api.currentReviewQuestion(day).id, third.id, 'Sync must not change the selected main question');
+  // Select again after the existing sync handler clears unsaved selections.
+  selectMain(first);
+  api.selectAnswer(first.id, first.correctIndexes[0]);
+  selectMain(third);
+  selectMain(first);
+  assert.match(app.innerHTML, /class="selected"/);
   api.nextMainQuestion();
-  assert.equal(api.currentReviewQuestion(day).id, first.id);
+  assert.equal(api.currentReviewQuestion(day).id, second.id, 'Next main works before answering');
+  selectMain(first);
   check(api, first, false);
-  assert.match(app.innerHTML, /Practice question 1 of 10/);
-  assert.equal((app.innerHTML.match(/class="practice-item"/g) || []).length, 1);
-  assert.doesNotMatch(app.innerHTML, /Practice question 2 of 10/);
+  assert.equal((track().match(/class="answer-step /g) || []).length, 1);
+  assert.match(track(), /answer-step incorrect/);
+  assert.match(app.innerHTML, new RegExp(`review-track-step incorrect current" data-action="choose-main" data-question-id="${first.id}"`));
   api.nextMainQuestion();
-  assert.equal(api.currentReviewQuestion(day).id, first.id);
-  for (const q of first.practiceQuestions.slice(0,3)) {
-    api.selectAnswer(q.id, q.correctIndexes[0]);
-    check(api, q, true);
-    if (q.practiceNumber < 3) {
-      assert.match(app.innerHTML, /Next practice question/);
-      assert.match(app.innerHTML, new RegExp(`Practice question ${q.practiceNumber} of 10`));
-      api.nextPracticeQuestion(first.id);
-      assert.match(app.innerHTML, new RegExp(`Practice question ${q.practiceNumber+1} of 10`));
-    }
-  }
-  assert.match(app.innerHTML, /1 of 16 mastered/);
-  assert.match(app.innerHTML, /Next main question/);
-  assert.doesNotMatch(app.innerHTML, /Practice question 4 of 10/);
-  api.nextMainQuestion();
-  assert.equal(api.currentReviewQuestion(day).id, second.id);
-  assert.doesNotMatch(app.innerHTML, /class="practice-item"/);
+  assert.equal(api.currentReviewQuestion(day).id, second.id, 'Extra practice does not lock main navigation');
   check(api, second, true);
-  assert.equal(api.masteryProgress(day, second).mastered, false);
-  assert.equal(api.masteryProgress(day, second).streak, 1);
-  assert.equal(api.masteryProgress(day, second).practice.length, 0);
-  assert.match(app.innerHTML, /Practice question 1 of 10/);
-  assert.match(app.innerHTML, /<b>1\/3<\/b> correct in a row/);
-  assert.doesNotMatch(app.innerHTML, /data-action="next-main"/);
-  api.nextMainQuestion();
-  assert.equal(api.currentReviewQuestion(day).id, second.id);
-  check(api, second.practiceQuestions[0], true);
-  assert.equal(api.masteryProgress(day, second).streak, 2);
-  assert.equal(api.masteryProgress(day, second).mastered, false);
-  api.nextPracticeQuestion(second.id);
-  check(api, second.practiceQuestions[1], true);
-  assert.equal(api.masteryProgress(day, second).mastered, true);
-  assert.equal(api.masteryProgress(day, second).practice.length, 2);
-  assert.doesNotMatch(app.innerHTML, /Practice question 3 of 10/);
-  assert.match(app.innerHTML, /2 of 16 mastered/);
+  assert.match(track(), /answer-step correct/);
+  assert.equal((track().match(/class="answer-step /g) || []).length, 1);
+  assert.match(app.innerHTML, new RegExp(`review-track-step correct current" data-action="choose-main" data-question-id="${second.id}"`));
+  selectMain(first);
+  api.selectAnswer(first.practiceQuestions[0].id, first.practiceQuestions[0].correctIndexes[0]);
+  selectMain(second);
+  selectMain(first);
+  assert.match(app.innerHTML, /class="selected"/);
+  for (const q of first.practiceQuestions.slice(0, 3)) {
+    check(api, q, true);
+    if (q.practiceNumber < 3) api.nextPracticeQuestion(first.id);
+  }
+  assert.equal(api.masteryProgress(day, first).mastered, true);
+  assert.equal((track().match(/class="answer-step /g) || []).length, 4);
+  assert.equal((track().match(/answer-step correct/g) || []).length, 3);
+  assert.equal((track().match(/answer-step incorrect/g) || []).length, 1);
+  assert.match(app.innerHTML, new RegExp(`review-track-step incorrect current" data-action="choose-main" data-question-id="${first.id}"`), 'Main result stays red after extra practice mastery');
+  assert.equal(api.metrics(day).firstWrong, 1);
+  const restored = await boot(clone(api.state));
+  restored.app.click({ target: { closest: () => ({ dataset: { action: 'choose-main', questionId: first.id } }) } });
+  assert.equal(restored.api.masteryProgress(day, first).mastered, true);
+  assert.equal((restored.app.innerHTML.match(/class="answer-step /g) || []).length, 4);
+  assert.equal(restored.api.metrics(day).firstWrong, 1);
+  assert.doesNotMatch(restored.app.innerHTML, /answer-step unanswered|Practice question \d+ of/);
 });
 
 test('practice counts distinct questions, resets the streak on a miss, and survives reload and remote sync', async () => {
@@ -428,7 +437,7 @@ test('practice counts distinct questions, resets the streak on a miss, and survi
   session = await boot(saved);
   api = session.api;
   assert.equal(api.masteryProgress(day,parent).streak,1);
-  assert.match(session.app.innerHTML,/Practice question 5 of 10/);
+  assert.match(session.app.innerHTML,/Practice question 5/);
   check(api,p5,true);
   const remoteState = clone(api.state);
   const otherDevice = await boot(fresh());
@@ -456,7 +465,7 @@ test('a correct main answer contributes once across reloads, and a later miss re
   check(first.api,parent.practiceQuestions[0],true);
   const restored = await boot(clone(first.api.state));
   assert.equal(restored.api.masteryProgress(day,parent).streak,2);
-  assert.match(restored.app.innerHTML,/Practice question 2 of 10/);
+  assert.match(restored.app.innerHTML,/Practice question 2/);
   check(restored.api,parent.practiceQuestions[1],false);
   assert.equal(restored.api.masteryProgress(day,parent).streak,0);
   check(restored.api,parent.practiceQuestions[2],true);
@@ -483,7 +492,7 @@ test('ten-question limit ends as unmastered, while a third consecutive correct o
     assert.equal(progress.mastered,win);
     assert.equal(progress.unmastered,!win);
     assert.equal(progress.done,true);
-    assert.match(app.innerHTML,win ? /Mastered!/ : /Unmastered\./);
+    assert.match(app.innerHTML,win ? /Mastered!/ : /Keep practicing this skill/);
     assert.doesNotMatch(app.innerHTML,/Next practice question|Practice question 11/);
     api.nextMainQuestion();
     assert.equal(api.currentReviewQuestion(day).id,day.questions[1].id);
