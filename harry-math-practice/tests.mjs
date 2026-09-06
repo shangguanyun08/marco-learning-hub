@@ -44,15 +44,16 @@ function submitExtra(app, index, correct) {
   else { panel.querySelector("input").value = String(value); panel.querySelector("form").requestSubmit(); }
 }
 
-test("Day 3 shows one of 10 main questions, with 100 distinct, correct, skill-matched follow-ups", () => {
+test("Day 3 has 6 distinct skills, with 60 correct, skill-matched follow-ups", () => {
   const app = boot();
   const { api, w } = app;
   assert.equal(w.document.querySelectorAll(".question-card:not([hidden])").length, 1);
-  assert.equal(indexes(app).length, 10);
-  assert.equal(indexes(app).flatMap(i => api.day3Banks[i]).length, 100);
-  assert.equal(w.document.querySelector("#day3-mastered-count").textContent, "0 of 10 mastered");
-  assert.equal(w.document.querySelector("#day3-position").textContent, "Question 1 of 10");
-  assert.equal(w.document.querySelector("#day3-next").disabled, true);
+  assert.equal(indexes(app).length, 6);
+  assert.equal(new Set(indexes(app).map(i => api.questionSets[6][i].skill)).size, 6);
+  assert.equal(indexes(app).flatMap(i => api.day3Banks[i]).length, 60);
+  assert.equal(w.document.querySelector("#day3-mastered-count").textContent, "0 of 6 mastered");
+  assert.equal(w.document.querySelector("#day3-position").textContent, "Question 1 of 6");
+  assert.equal(w.document.querySelector("#day3-next").disabled, false);
   assert.equal(w.document.querySelectorAll(".mastery-practice").length, 0);
   api.day3Banks.forEach((bank, index) => {
     assert.equal(bank.length, 10);
@@ -95,7 +96,7 @@ test("blank input does not count; a correct main answer starts a streak of 1 and
   assert.equal(progress(app).status, "practicing");
   assert.equal(progress(app).streak, 1);
   assert.ok(card(app, 0).querySelector(".mastery-practice"));
-  assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, "0 of 10 mastered");
+  assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, "0 of 6 mastered");
   submitMain(app, 0, 0);
   assert.equal(record(app).attempts, 1);
   assert.equal(record(app).firstTry, true);
@@ -106,7 +107,7 @@ test("blank input does not count; a correct main answer starts a streak of 1 and
   assert.equal(progress(app).streak, 3);
   assert.equal(progress(app).used, 2);
   assert.equal(progress(app).status, "mastered");
-  assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, "1 of 10 mastered");
+  assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, "1 of 6 mastered");
   assert.equal(app.api.recordStats(6).right, 1);
   const restored = boot(saved(app));
   assert.equal(progress(restored).status, "mastered");
@@ -166,7 +167,7 @@ test("every wrong extra resets the consecutive streak; separated correct answers
   app.close();
 });
 
-test("all 10 main questions can recover one at a time with independent streaks and a live mastered count", () => {
+test("all 6 main questions can recover in any order with independent streaks and a live mastered count", () => {
   const app = boot();
   for (const [position, i] of indexes(app).entries()) {
     const q = app.api.questionSets[6][i];
@@ -181,14 +182,18 @@ test("all 10 main questions can recover one at a time with independent streaks a
     submitMain(app, i, q.choices?.find(value => !app.api.isCorrectAnswer(String(value), q)) ?? -999);
     assert.equal(progress(app, i).streak, 0);
     nextMain(app);
-    assert.equal(card(app, i).hidden, false, "Finish the current follow-ups before moving on");
+    if (position < indexes(app).length - 1) {
+      assert.equal(card(app, i).hidden, true, "Unfinished practice does not block moving on");
+      app.w.document.querySelector("#day3-previous").click();
+    }
+    assert.equal(card(app, i).hidden, false);
     for (let round = 0; round < 3; round++) submitExtra(app, i, true);
-    assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, `${position + 1} of 10 mastered`);
+    assert.equal(app.w.document.querySelector("#day3-mastered-count").textContent, `${position + 1} of 6 mastered`);
     assert.equal(app.w.document.querySelector("#day3-mastered-progress").value, position + 1);
     nextMain(app);
   }
-  assert.equal(app.api.recordStats(6).wrong, 10);
-  assert.equal(app.api.recordStats(6).solved, 10);
+  assert.equal(app.api.recordStats(6).wrong, 6);
+  assert.equal(app.api.recordStats(6).solved, 6);
   assert.equal(app.api.recordStats(6).right, 0);
   assert.equal(app.w.document.querySelector("#complete-card").hidden, false);
   app.close();
@@ -200,9 +205,9 @@ test("a reload resumes the next unfinished main question and preserves the maste
   submitExtra(app, 0, true);
   submitExtra(app, 0, true);
   const restored = boot(saved(app));
-  assert.equal(card(restored, 2).hidden, false);
-  assert.equal(restored.w.document.querySelector("#day3-position").textContent, "Question 2 of 10");
-  assert.equal(restored.w.document.querySelector("#day3-mastered-count").textContent, "1 of 10 mastered");
+  assert.equal(card(restored, 3).hidden, false);
+  assert.equal(restored.w.document.querySelector("#day3-position").textContent, "Question 2 of 6");
+  assert.equal(restored.w.document.querySelector("#day3-mastered-count").textContent, "1 of 6 mastered");
   assert.equal(restored.w.document.querySelectorAll(".question-card:not([hidden])").length, 1);
   app.close(); restored.close();
 });
@@ -231,10 +236,10 @@ test("10 extras without a streak is terminal Unmastered and the day can finish h
     submitExtra(app, i, true);
     submitExtra(app, i, true);
   }
-  assert.equal(app.api.recordStats(6).finished, 10);
-  assert.equal(app.api.recordStats(6).solved, 9);
+  assert.equal(app.api.recordStats(6).finished, 6);
+  assert.equal(app.api.recordStats(6).solved, 5);
   assert.equal(app.api.recordStats(6).unmastered, 1);
-  assert.equal(app.w.document.querySelector("#first-try-score").textContent, "90");
+  assert.equal(app.w.document.querySelector("#first-try-score").textContent, "83");
   assert.match(app.w.document.querySelector("#complete-title").textContent, /1 unmastered/);
   assert.ok(saved(app)[6].completedAt);
   const restored = boot(saved(app));
@@ -331,7 +336,7 @@ test("answer lights retain every right and wrong answer while showing only the c
   const lamps = () => card(app, 0).querySelectorAll(".answer-lights .light-step");
   const total = () => app.w.document.querySelectorAll("#day3-total-track .light-step");
   assert.equal(lamps().length, 11, "Main answer plus 10 follow-ups");
-  assert.equal(total().length, 10);
+  assert.equal(total().length, 6);
   assert.equal(lamps()[0].getAttribute("aria-current"), "step");
   assert.equal(lamps()[0].getAttribute("aria-label"), "Main answer: up next");
   submitMain(app, 0, 981);
@@ -362,7 +367,7 @@ test("answer lights retain every right and wrong answer while showing only the c
   assert.equal(total()[0].getAttribute("aria-label"), "Question 1: mastered");
   nextMain(app);
   assert.equal(total()[1].getAttribute("aria-current"), "step");
-  assert.equal(card(app, 2).querySelectorAll(".answer-lights .correct").length, 0);
+  assert.equal(card(app, 3).querySelectorAll(".answer-lights .correct").length, 0);
   app.w.document.querySelector("#day3-previous").click();
   assert.equal(card(app, 0).querySelectorAll(".answer-lights .correct").length, 5);
   const restored = boot(saved(app));
@@ -383,5 +388,41 @@ test("the full 11-answer track remains red when attempts run out, and total mast
   assert.equal(app.w.document.querySelector("#day3-total-track .light-step").getAttribute("aria-label"), "Question 1: unmastered");
   const restored = boot(saved(app));
   assert.ok(restored.w.document.querySelector("#day3-total-track .light-step").classList.contains("incorrect"));
+  app.close(); restored.close();
+});
+
+
+test("question buttons allow answering the last question first and preserve independent work and drafts", () => {
+  const app = boot();
+  const jump = position => app.w.document.querySelectorAll(".question-jump")[position].click();
+  assert.equal(app.w.document.querySelectorAll(".question-jump").length, 6);
+  assert.equal(app.w.document.querySelector("#day3-previous").disabled, true);
+  card(app, 0).querySelector("input").value = "98";
+  jump(5);
+  const last = indexes(app)[5];
+  assert.equal(card(app, last).hidden, false);
+  assert.equal(app.w.document.querySelector("#day3-next").disabled, true);
+  assert.equal(app.w.document.querySelector('.question-jump[aria-current]').dataset.questionIndex, String(last));
+  submitMain(app, last, app.api.questionSets[6][last].answer);
+  submitExtra(app, last, true);
+  const before = saved(app);
+  jump(0);
+  assert.equal(card(app, 0).querySelector("input").value, "98");
+  assert.equal(record(app, 0).firstTry, null);
+  assert.deepEqual(saved(app), before, "Browsing questions must not record attempts");
+  submitMain(app, 0, 981);
+  const draft = card(app, 0).querySelector(".mastery-practice input");
+  draft.value = "123";
+  jump(5);
+  assert.equal(progress(app, last).streak, 2);
+  submitExtra(app, last, true);
+  assert.equal(progress(app, last).status, "mastered");
+  jump(0);
+  assert.equal(card(app, 0).querySelector(".mastery-practice input").value, "123");
+  assert.equal(progress(app, 0).used, 0);
+  assert.equal(progress(app, 0).streak, 1);
+  const restored = boot(saved(app));
+  assert.equal(progress(restored, last).status, "mastered");
+  assert.equal(record(restored, 0).firstTry, true);
   app.close(); restored.close();
 });

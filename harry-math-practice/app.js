@@ -37,18 +37,18 @@ const questionSets = {
     { left: 327, operator: "×", right: 3, answer: 981, skill: "Multiply" },
     // Keep retired questions in their original slots so saved answers stay aligned.
     { left: 414, operator: "×", right: 4, answer: 1656, skill: "Multiply", removed: true },
-    { left: 236, operator: "×", right: 3, answer: 708, skill: "Multiply" },
+    { left: 236, operator: "×", right: 3, answer: 708, skill: "Multiply", removed: true },
     { left: 845, operator: "÷", right: 5, answer: 169, skill: "Divide" },
-    { left: 936, operator: "÷", right: 2, answer: 468, skill: "Divide" },
+    { left: 936, operator: "÷", right: 2, answer: 468, skill: "Divide", removed: true },
     { left: 367, operator: "+", right: 428, answer: 795, skill: "Add" },
     { left: 830, operator: "−", right: 356, answer: 474, skill: "Subtract" },
-    { left: 704, operator: "−", right: 289, answer: 415, skill: "Subtract" },
+    { left: 704, operator: "−", right: 289, answer: 415, skill: "Subtract", removed: true },
     { prompt: "Which fraction is equal to 0.4?", decimal: 0.4, answer: "2/5", choices: ["1/4", "2/5", "4/5", "4/100"], skill: "Decimal to Fraction", kind: "decimalFraction" },
     { prompt: "Which fraction is equal to 0.75?", decimal: 0.75, answer: "3/4", choices: ["1/4", "1/2", "3/4", "4/5"], skill: "Decimal to Fraction", kind: "decimalFraction", removed: true },
     { prompt: "In what place is the digit 6 in 524.68?", answer: "tenths", choices: ["ones", "tenths", "hundredths", "thousandths"], accepted: ["tenth", "tenths place", "tenth place"], skill: "Decimal Place Value", kind: "placeValue", removed: true },
     { prompt: "In what place is the digit 2 in 381.024?", answer: "hundredths", choices: ["tenths", "hundredths", "thousandths", "ones"], accepted: ["hundredth", "hundredths place", "hundredth place"], skill: "Decimal Place Value", kind: "placeValue", removed: true },
     { left: 0.53, operator: "×", right: 0.2, answer: 0.106, choices: [0.73, 0.0106, 0.106, 1.06], skill: "Decimal Multiply" },
-    { left: 0.42, operator: "×", right: 0.3, answer: 0.126, choices: [0.126, 0.72, 1.26, 0.0126], skill: "Decimal Multiply" },
+    { left: 0.42, operator: "×", right: 0.3, answer: 0.126, choices: [0.126, 0.72, 1.26, 0.0126], skill: "Decimal Multiply", removed: true },
   ],
   7: [
     { left: 326, operator: "×", right: 3, answer: 978, skill: "Multiply" },
@@ -100,6 +100,7 @@ const finalScore = document.querySelector("#final-score");
 const setButtons = [...document.querySelectorAll(".set-button")];
 let activeSet = SET_NUMBERS[0];
 let activeDay3Index = null;
+const day3Drafts = new Map();
 let receivedRemote = false;
 
 function day3Indexes() {
@@ -175,6 +176,20 @@ function renderDay3TotalTrack() {
     const status = { mastered: "correct", unmastered: "incorrect", practicing: "practicing", unanswered: "pending" }[state.status];
     const description = { mastered: "mastered", unmastered: "unmastered", practicing: `in practice, ${state.streak} of 3 right in a row`, unanswered: "not started" }[state.status];
     const step = lightStep(status, `Q${position + 1}`, `Question ${position + 1}: ${description}`);
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "question-jump";
+    button.dataset.questionIndex = String(index);
+    button.setAttribute("aria-label", `Question ${position + 1}: ${questionSets[DAY3_SET][index].skill}, ${description}`);
+    button.setAttribute("aria-controls", `answer-${index + 1}`);
+    button.append(...step.childNodes);
+    const skill = document.createElement("span");
+    skill.className = "question-jump-skill";
+    skill.textContent = questionSets[DAY3_SET][index].skill;
+    button.append(skill);
+    button.addEventListener("click", () => openDay3Question(index));
+    if (index === activeDay3Index) button.setAttribute("aria-current", "step");
+    step.append(button);
     if (index === activeDay3Index) { step.classList.add("current-question"); step.setAttribute("aria-current", "step"); }
     track.append(step);
   });
@@ -192,19 +207,35 @@ function updateDay3Progress() {
   bar.value = stats.solved;
   document.querySelector("#day3-progress-detail").textContent = `${stats.unmastered} unmastered · ${stats.finished} of ${indexes.length} finished · First-try score: ${scoreOutOf100(stats, indexes.length)}/100`;
   document.querySelector("#day3-previous").disabled = position === 0;
-  document.querySelector("#day3-next").disabled = position === indexes.length - 1 || !mastery.progress(records[DAY3_SET].questions[activeDay3Index]).finished;
+  document.querySelector("#day3-next").disabled = position === indexes.length - 1;
   renderDay3TotalTrack();
 }
 
 function moveDay3Question(direction) {
+  if (activeSet !== DAY3_SET) return;
   const indexes = day3Indexes();
   const position = indexes.indexOf(activeDay3Index);
-  if (activeSet !== DAY3_SET || (direction > 0 && !mastery.progress(records[DAY3_SET].questions[activeDay3Index]).finished)) return;
   const target = indexes[position + direction];
-  if (target === undefined) return;
+  openDay3Question(target);
+}
+
+function openDay3Question(target) {
+  if (activeSet !== DAY3_SET || !day3Indexes().includes(target)) return;
+  captureDay3Draft();
   activeDay3Index = target;
-  loadSet(DAY3_SET);
+  loadSet(DAY3_SET, false);
   document.querySelector("#day3-progress").scrollIntoView?.({ block: "start", behavior: "instant" });
+}
+
+function captureDay3Draft() {
+  if (activeSet !== DAY3_SET || activeDay3Index === null) return;
+  const card = cards[activeDay3Index];
+  const record = records[DAY3_SET].questions[activeDay3Index];
+  if (record.firstTry === null) {
+    day3Drafts.set(`${activeDay3Index}:main`, card.querySelector("input").value);
+  }
+  const input = card.querySelector(".mastery-practice input");
+  if (input) day3Drafts.set(`${activeDay3Index}:${mastery.progress(record).used}`, input.value);
 }
 
 function emptyQuestionRecord() {
@@ -490,7 +521,8 @@ function renderQuestionState(card, index) {
   const needsRetry = question.firstTry === false && !question.solved;
   card.classList.toggle("retry", needsRetry && question.attempts < 2);
   card.classList.toggle("wrong", needsRetry && question.attempts >= 2);
-  input.value = question.lastAnswer;
+  input.value = isDay3 && question.firstTry === null
+    ? day3Drafts.get(`${index}:main`) ?? question.lastAnswer : question.lastAnswer;
   input.disabled = locked;
   button.disabled = locked;
   button.textContent = locked ? (isDay3 ? "Recorded" : "Solved") : "Check";
@@ -571,6 +603,7 @@ function renderMasteryPractice(card, index) {
   input.type = numeric ? "number" : "text";
   input.step = numeric && Number.isInteger(question.answer) ? "1" : "any";
   input.inputMode = numeric ? Number.isInteger(question.answer) ? "numeric" : "decimal" : "text";
+  input.value = day3Drafts.get(`${index}:${state.used}`) ?? "";
   label.textContent = question.choices ? "Choose one answer" : question.kind === "fraction" ? "Missing numerator" : "Your answer";
   if (question.choices) {
     content.querySelector(".answer-row").hidden = true;
@@ -669,7 +702,8 @@ function updateProgress() {
   updateDay3Progress();
 }
 
-function loadSet(setNumber) {
+function loadSet(setNumber, captureDraft = true) {
+  if (captureDraft) captureDay3Draft();
   activeSet = setNumber;
   const isDay3 = setNumber === DAY3_SET;
   document.body.classList.toggle("day3-mode", isDay3);
