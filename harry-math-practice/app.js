@@ -455,6 +455,23 @@ function isCorrectAnswer(typed, question) {
   return false;
 }
 
+function renderCorrectAnswer(question, label = "Correct answer") {
+  const correction = document.createElement("div");
+  correction.className = "correct-answer";
+  correction.setAttribute("role", "status");
+  const heading = document.createElement("span");
+  heading.textContent = label;
+  const answer = document.createElement("strong");
+  answer.textContent = String(question.answer);
+  correction.append(heading, answer);
+  if (question.explanation) {
+    const explanation = document.createElement("p");
+    explanation.textContent = question.explanation;
+    correction.append(explanation);
+  }
+  return correction;
+}
+
 function feedbackFor(question) {
   if (question.solved && question.firstTry === true) {
     return "✓ Solved — right on the first try.";
@@ -500,10 +517,10 @@ function renderChoiceOptions(card, index, question, record, locked = record.solv
     const selected = record.lastAnswer === value;
     option.classList.toggle("selected", selected);
     option.setAttribute("aria-pressed", String(selected));
-    if (record.solved && isCorrectAnswer(value, question)) {
+    if (record.firstTry !== null && isCorrectAnswer(value, question)) {
       option.classList.add("correct");
     } else if (selected && record.firstTry === false) {
-      option.classList.add(record.attempts >= 2 ? "incorrect" : "retry");
+      option.classList.add("incorrect");
     }
 
     option.addEventListener("click", () => {
@@ -536,6 +553,12 @@ function renderQuestionState(card, index) {
   button.disabled = locked;
   button.textContent = locked ? (isDay3 ? "Recorded" : "Solved") : "Check";
   feedback.textContent = feedbackFor(question);
+  card.querySelector(".main-correct-answer")?.remove();
+  if (question.firstTry === false && (isDay3 || !question.solved) && !state?.credited) {
+    const correction = renderCorrectAnswer(activeQuestion);
+    correction.classList.add("main-correct-answer");
+    feedback.after(correction);
+  }
   renderChoiceOptions(card, index, activeQuestion, question, locked);
   card.querySelector(".mastery-badge")?.remove();
   card.querySelector(".mastery-practice")?.remove();
@@ -555,7 +578,7 @@ function renderQuestionState(card, index) {
     feedback.textContent = question.firstTry === true
       ? "✓ Main question correct — 1 right in a row. Continue the practice to reach 3."
       : question.firstTry === false
-        ? `Main question incorrect. Correct answer: ${activeQuestion.answer}. ${activeQuestion.explanation || ""} First-try score is saved.`
+        ? "Main question incorrect. First-try score is saved."
         : "Start your streak here. Get 3 answers right in a row, including this question.";
     if (question.firstTry !== null) renderMasteryPractice(card, index);
   }
@@ -574,11 +597,14 @@ function renderMasteryPractice(card, index) {
   const previous = record.review?.attempts.at(-1);
   if (previous) {
     result.textContent = previous.correct ? "✓ Correct!"
-      : `Not quite. Correct answer: ${day3Banks[index][state.used - 1].answer}. ${day3Banks[index][state.used - 1].explanation || ""} Your streak starts again at 0.`;
+      : "Not quite. Your streak starts again at 0.";
+    if (!previous.correct) {
+      result.after(renderCorrectAnswer(day3Banks[index][state.used - 1], `Practice ${state.used} · Correct answer`));
+    }
   } else {
     result.textContent = record.firstTry === true
       ? "✓ Main question correct! That counts as 1. Get the next 2 right to master this question."
-      : `Main question incorrect. Correct answer: ${activeQuestions()[index].answer}. ${activeQuestions()[index].explanation || ""} Get 3 right in a row to master this question.`;
+      : "Main question incorrect. Get 3 right in a row to master this question.";
   }
   if (state.finished) {
     result.textContent += state.status === "mastered"

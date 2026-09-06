@@ -123,6 +123,10 @@ button { color: inherit; }
 .choice-option.correct { border-color: var(--teal); background: #e6f5ef; color: #1f6e65; }
 .choice-option:disabled { cursor: default; opacity: 1; }
 .feedback { min-height: 20px; margin: 11px 0 0; color: #7a8499; font-size: 12px; font-weight: 700; }
+.correct-answer { margin-top: 16px; padding: 16px; border: 2px solid #148247; border-radius: 12px; background: #e6f5ef; color: #145c37; overflow-wrap: anywhere; }
+.correct-answer > span { display: block; font-size: 16px; font-weight: 700; }
+.correct-answer > strong { display: block; margin-top: 4px; font-size: 24px; line-height: 1.4; }
+.correct-answer > p { margin: 8px 0 0; font-size: 16px; line-height: 1.5; }
 .mastery-guide { margin-bottom: 18px; padding: 20px 22px; border: 1px solid #becceb; border-radius: 18px; background: #f0f5ff; line-height: 1.6; }
 .mastery-guide strong { font-size: 18px; }
 .mastery-guide p { margin: 8px 0 0; font-size: 16px; }
