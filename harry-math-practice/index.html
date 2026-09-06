@@ -3,16 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Day 3 math practice for Harry: 6 main questions, one per skill. Pick any question and master it with 3 correct answers in a row, plus up to 10 follow-ups." />
+    <meta name="description" content="Math practice for Harry: 6 main questions, one per skill. Pick any question and master it with 3 correct answers in a row, plus up to 10 follow-ups." />
     <meta name="theme-color" content="#172f61" />
-    <title>Harry’s Math Practice · Days 1–5</title>
+    <title>Harry’s Math Practice · Q1–Q6</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=13" />
+    <link rel="stylesheet" href="./styles.css?v=14" />
     <script src="../shared-online-sync.js?v=1" defer></script>
     <script src="./day3-mastery.js?v=2" defer></script>
-    <script src="./app.js?v=19" defer></script>
+    <script src="./app.js?v=20" defer></script>
   </head>
-  <body>
+  <body class="day3-mode">
     <main class="practice-shell">
       <nav class="practice-nav" aria-label="Learning Hub navigation">
         <a href="../">← Back to Learning Hub</a>
@@ -41,36 +41,28 @@
         <span><b>4</b> Correct every problem</span>
       </section>
 
-      <section class="set-picker" aria-labelledby="set-picker-title">
+      <section class="set-picker question-session" aria-labelledby="set-picker-title">
         <div>
           <p>PRACTICE SESSION</p>
-          <h2 id="set-picker-title">Choose a day</h2>
-          <small class="set-picker-note">Day 3: 6 main questions, any order · Days 4–5: 10 each</small>
+          <h2 id="set-picker-title">Choose a question</h2>
+          <small class="set-picker-note">Start anywhere. Your progress is saved.</small>
         </div>
-        <div class="set-buttons">
-          <button class="set-button active" type="button" data-set="4" aria-pressed="true">Day 1</button>
-          <button class="set-button" type="button" data-set="5" aria-pressed="false">Day 2</button>
-          <button class="set-button" type="button" data-set="6" aria-pressed="false">Day 3</button>
-          <button class="set-button" type="button" data-set="7" aria-pressed="false">Day 4</button>
-          <button class="set-button" type="button" data-set="8" aria-pressed="false">Day 5</button>
-        </div>
+        <ol id="day3-total-track" class="total-question-lights" aria-label="Choose any of the 6 main questions"></ol>
       </section>
 
       <aside id="day3-guide" class="mastery-guide" hidden>
-        <strong>Day 3 · Get 3 right in a row</strong>
+        <strong>Get 3 right in a row</strong>
         <p>Every question needs 3 correct answers in a row. Your main answer starts the streak; then try similar questions one at a time. A wrong answer resets the streak. You have up to 10 follow-ups for each main question. After 10 without a streak of 3, it is unmastered. Your progress is saved.</p>
       </aside>
 
-      <section id="day3-progress" class="mastery-progress" aria-label="Day 3 progress" hidden>
+      <section id="day3-progress" class="mastery-progress" aria-label="Session progress" hidden>
         <div class="mastery-progress-top"><strong id="day3-position"></strong><span id="day3-mastered-count" role="status"></span></div>
         <progress id="day3-mastered-progress" value="0" max="6" aria-label="Main questions mastered"></progress>
-        <p>Tap any question to open it. Start wherever you like, and come back anytime.</p>
-        <ol id="day3-total-track" class="total-question-lights" aria-label="Choose any of the 6 main questions"></ol>
         <p class="light-legend">✓ Mastered · × Unmastered · ◔ In practice · Empty = not started</p>
         <p id="day3-progress-detail" aria-live="polite"></p>
       </section>
 
-      <section class="question-grid" aria-label="14 math questions in Day 1">
+      <section class="question-grid" aria-label="6 math questions">
         <article class="question-card" data-question="1">
           <div class="card-top"><span class="number">1</span><span class="skill">Multiply</span></div>
           <p class="expression">263 × 3 <span>=</span></p>
@@ -184,14 +176,14 @@
         </article>
       </section>
 
-      <nav id="day3-question-nav" class="question-navigation" aria-label="Day 3 question navigation" hidden>
+      <nav id="day3-question-nav" class="question-navigation" aria-label="Question navigation" hidden>
         <button id="day3-previous" type="button">← Previous question</button>
         <button id="day3-next" type="button">Next question →</button>
       </nav>
 
       <section class="complete-card" id="complete-card" role="status" hidden>
         <span aria-hidden="true">★</span>
-        <div><strong id="complete-title">Day 1 complete!</strong><p id="final-score">Final score: 0/100.</p></div>
+        <div><strong id="complete-title">Practice session complete!</strong><p id="final-score">Final score: 0/100.</p></div>
       </section>
 
       <footer><a href="../">← Return to Marco &amp; Harry Learning Hub</a></footer>

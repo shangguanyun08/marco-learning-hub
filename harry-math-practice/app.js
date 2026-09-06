@@ -85,7 +85,7 @@ const APP_ID = "harry-math-practice-v1";
 const SET_NUMBERS = Object.keys(questionSets).map(Number);
 // Display days from 1 while retaining the original set IDs used by saved work.
 function dayLabel(setNumber) {
-  return `Day ${SET_NUMBERS.indexOf(setNumber) + 1}`;
+  return setNumber === DAY3_SET ? "Practice session" : `Day ${SET_NUMBERS.indexOf(setNumber) + 1}`;
 }
 
 const cards = [...document.querySelectorAll("[data-question]")];
@@ -97,8 +97,7 @@ const fill = document.querySelector("#score-fill");
 const complete = document.querySelector("#complete-card");
 const completeTitle = document.querySelector("#complete-title");
 const finalScore = document.querySelector("#final-score");
-const setButtons = [...document.querySelectorAll(".set-button")];
-let activeSet = SET_NUMBERS[0];
+let activeSet = DAY3_SET;
 let activeDay3Index = null;
 const day3Drafts = new Map();
 let receivedRemote = false;
@@ -648,34 +647,6 @@ function focusPractice(card) {
   else if (panel) { panel.tabIndex = -1; panel.focus(); }
 }
 
-function renderSetButtons() {
-  setButtons.forEach((button) => {
-    const setNumber = Number(button.dataset.set);
-    const selected = setNumber === activeSet;
-    const stats = recordStats(setNumber);
-    const count = questionCount(setNumber);
-    const isComplete = stats.finished === count;
-    const scoreValue = scoreOutOf100(stats, count);
-    button.classList.toggle("active", selected);
-    button.classList.toggle("completed", isComplete);
-    button.classList.toggle("has-unmastered", isComplete && stats.unmastered > 0);
-    button.setAttribute("aria-pressed", String(selected));
-    button.setAttribute("aria-label", `${dayLabel(setNumber)}, ${count} questions${isComplete ? `, completed, first-try score ${scoreValue} out of 100` : ""}`);
-    button.textContent = dayLabel(setNumber);
-    if (isComplete) {
-      const status = document.createElement("span");
-      status.className = "set-status";
-      status.textContent = stats.unmastered ? `${stats.unmastered} unmastered` : "✓ Done";
-      const score = document.createElement("span");
-      score.className = "set-score";
-      const scoreNumber = document.createElement("strong");
-      scoreNumber.textContent = `${scoreValue}/100`;
-      score.append("First try", scoreNumber);
-      button.append(status, score);
-    }
-  });
-}
-
 function updateProgress() {
   const stats = recordStats(activeSet);
   const activeQuestionCount = questionCount(activeSet);
@@ -695,10 +666,9 @@ function updateProgress() {
   }
   complete.hidden = !isComplete;
   completeTitle.textContent = activeSet === DAY3_SET && stats.unmastered
-    ? `Day 3 finished · ${stats.unmastered} unmastered` : `${dayLabel(activeSet)} complete!`;
+    ? `Session finished · ${stats.unmastered} unmastered` : `${dayLabel(activeSet)} complete!`;
   const completedAt = formatCompletedAt(activeRecord().completedAt);
   finalScore.textContent = `First-try score: ${scoreValue}/100 · ${stats.right} right and ${stats.wrong} wrong${activeSet === DAY3_SET ? ` · ${stats.solved} mastered · ${stats.unmastered} unmastered` : ""}${completedAt ? ` · ${completedAt}` : ""}.`;
-  renderSetButtons();
   updateDay3Progress();
 }
 
@@ -811,13 +781,10 @@ cards.forEach((card, index) => {
   });
 });
 
-setButtons.forEach((button) => {
-  button.addEventListener("click", () => loadSet(Number(button.dataset.set)));
-});
 document.querySelector("#day3-previous").addEventListener("click", () => moveDay3Question(-1));
 document.querySelector("#day3-next").addEventListener("click", () => moveDay3Question(1));
 
-loadSet(SET_NUMBERS[0]);
+loadSet(DAY3_SET);
 
 const isLocalPreview = location.hostname === "127.0.0.1" || location.hostname === "localhost";
 if (window.MarcoOnlineSync && !isLocalPreview) {

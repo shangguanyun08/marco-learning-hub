@@ -148,6 +148,8 @@ button { color: inherit; }
 .score-card .solved-summary { font-size: 14px !important; line-height: 1.5; }
 .day3-mode .practice-hero, .day3-mode .practice-guide { display: none; }
 .day3-mode .set-picker { margin-top: 20px; }
+.question-session { display: block; max-width: 760px; margin-inline: auto; }
+.question-session > div > p { font-size: 14px; }
 .day3-mode .question-grid { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
 .day3-mode .question-card > form:has(input:disabled) { display: none; }
 .day3-mode .question-card:has(.mastery-practice) > .expression,

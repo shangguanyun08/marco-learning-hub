@@ -15,8 +15,7 @@ function boot(saved = {}, online = false) {
   let options;
   const pushed = [];
   if (online) w.MarcoOnlineSync = { create(value) { options = value; return { start() {}, push(state) { pushed.push(clone(state)); } }; } };
-  w.eval(`${source}\nglobalThis.testApi = { questionSets, day3Banks, recordStats, syncScore, isCorrectAnswer, get records() { return records; } };`);
-  w.document.querySelector('[data-set="6"]').click();
+  w.eval(`${source}\nglobalThis.testApi = { questionSets, day3Banks, recordStats, syncScore, isCorrectAnswer, loadSet, get records() { return records; } };`);
   return { w, api: w.testApi, pushed, remote: value => options.onRemote(clone(value)), close: () => dom.window.close() };
 }
 
@@ -254,9 +253,9 @@ test("reload and day switches preserve the next question, feedback, streak, and 
   submitExtra(app, 0, true);
   submitExtra(app, 0, true);
   const snapshot = saved(app);
-  app.w.document.querySelector('[data-set="7"]').click();
+  app.api.loadSet(7);
   assert.equal(app.w.document.querySelectorAll(".mastery-practice").length, 0);
-  app.w.document.querySelector('[data-set="6"]').click();
+  app.api.loadSet(6);
   assert.equal(progress(app, 0).streak, 2);
   const restored = boot(snapshot);
   assert.match(card(restored, 0).textContent, /2\/3 right in a row · 2\/10 used/);
@@ -318,7 +317,7 @@ test("stored follow-up correctness and streaks are recalculated from answers, ca
 test("other days retain their question counts and recalculate-and-retry behavior", () => {
   const app = boot();
   for (const [set, count] of [[4,14],[5,14],[7,10],[8,10]]) {
-    app.w.document.querySelector(`[data-set="${set}"]`).click();
+    app.api.loadSet(set);
     assert.equal(app.w.document.querySelectorAll(".question-card:not([hidden])").length, count);
     assert.equal(app.w.document.querySelectorAll(".mastery-badge, .mastery-practice, .answer-track").length, 0);
     submitMain(app, 0, -1);
@@ -395,7 +394,8 @@ test("the full 11-answer track remains red when attempts run out, and total mast
 test("question buttons allow answering the last question first and preserve independent work and drafts", () => {
   const app = boot();
   const jump = position => app.w.document.querySelectorAll(".question-jump")[position].click();
-  assert.equal(app.w.document.querySelectorAll(".question-jump").length, 6);
+  assert.equal(app.w.document.querySelectorAll(".question-session .question-jump").length, 6);
+  assert.equal(app.w.document.querySelectorAll(".set-button").length, 0);
   assert.equal(app.w.document.querySelector("#day3-previous").disabled, true);
   card(app, 0).querySelector("input").value = "98";
   jump(5);
