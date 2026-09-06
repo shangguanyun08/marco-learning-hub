@@ -255,20 +255,55 @@ test("question buttons navigate past unanswered questions and preserve drafts", 
     moveDay3Question(1);
     const bounded=activeDay3Index===last;
     moveDay3Question(-1);
-    ({count,last,boundary,bounded,previous:activeDay3Index,draft:day3Drafts.get("5:main"),mastered:document.querySelector("#day3-mastered-count").textContent});
+    ({count,last,boundary,bounded,previous:activeDay3Index,draft:day3Drafts.get("5:main")});
   `,api.context);
-  assert.deepEqual(clone(result),{count:20,last:27,boundary:true,bounded:true,previous:26,draft:"79",mastered:"2 of 20 mastered"});
+  assert.deepEqual(clone(result),{count:20,last:27,boundary:true,bounded:true,previous:26,draft:"79"});
 });
 
 test("session markup and assets match the expanded question set without day tabs", () => {
   assert.equal((html.match(/id="day3-total-track"/g)||[]).length,1);
   assert.equal(html.includes('data-set='),false);
   assert.ok(html.includes("Q1–Q20"));
-  assert.ok(html.includes('max="20"'));
-  assert.ok(html.indexOf('star-mastery.js?v=1')<html.indexOf('app.js?v=21'));
-  for(const asset of ["./styles.css?v=15","./day3-mastery.js?v=3","./star-mastery.js?v=1","./app.js?v=21"]) assert.ok(html.includes(asset));
+  assert.doesNotMatch(html, /id="day3-guide"|id="day3-progress"/);
+  assert.ok(html.indexOf('star-mastery.js?v=1')<html.indexOf('app.js?v=22'));
+  for(const asset of ["./styles.css?v=16","./day3-mastery.js?v=3","./star-mastery.js?v=1","./app.js?v=22"]) assert.ok(html.includes(asset));
   assert.ok(source.includes('loadSet(DAY3_SET);'));
   assert.ok(source.includes('while (cards.length < Math.max'));
   assert.ok(source.includes('question.promptHtml'));
   assert.ok(source.includes('question.choicesHtml'));
+});
+
+test("answer tracks grow only with checked answers and keep earlier misses after resets and reload", () => {
+  function render(api, value) {
+    api.context.document = {createElement() { return {
+      childNodes: [], attributes: {}, classList: {toggle() {}},
+      append(...nodes) { this.childNodes.push(...nodes); },
+      setAttribute(key, value) { this.attributes[key] = value; },
+    }; }};
+    for (const name of ["lightStep", "renderAnswerTrack"]) vm.runInContext(declaration(name), api.context);
+    api.context.trackRecord = value;
+    const before = clone(value);
+    const track = vm.runInContext("renderAnswerTrack(trackRecord)", api.context);
+    assert.deepEqual(clone(value), before, "Rendering cannot change saved work");
+    return track;
+  }
+  const results = track => track.childNodes.find(node => node.className === "answer-lights")?.childNodes.map(node => node.className) || [];
+  const api = boot(), current = api.records[6].questions[5];
+  const empty = render(api, current);
+  assert.deepEqual(results(empty), []);
+  assert.equal(empty.childNodes.length, 1, "No future answer row or empty-result legend");
+  assert.equal(empty.childNodes[0].childNodes[1].childNodes.length, 0, "No placeholder streak dots");
+  current.firstTry = false;
+  current.attempts = 1;
+  const expected = ["light-step incorrect"];
+  assert.deepEqual(results(render(api, current)), expected);
+  for (const correct of [true, false, true, true, true]) {
+    submit(api, current, api.day3Banks[5], correct);
+    expected.push(`light-step ${correct ? "correct" : "incorrect"}`);
+    assert.deepEqual(results(render(api, current)), expected);
+  }
+  assert.equal(api.mastery.progress(current).status, "mastered");
+  const restored = boot(api.records);
+  assert.deepEqual(results(render(restored, restored.records[6].questions[5])), expected);
+  assert.deepEqual(results(render(restored, restored.records[6].questions[0])), [], "Parent-confirmed mastery does not invent answer lights");
 });

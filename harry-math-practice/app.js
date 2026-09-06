@@ -156,34 +156,24 @@ function renderAnswerTrack(record) {
   const streak = document.createElement("span");
   streak.className = "visual-streak";
   streak.textContent = `${state.streak}/3 in a row`;
-  for (let index = 0; index < mastery.TARGET; index++) {
-    const light = document.createElement("span");
-    light.className = `streak-light${index < state.streak ? " lit" : ""}`;
-    light.setAttribute("aria-hidden", "true");
-    light.textContent = index < state.streak ? "✓" : "·";
-    streak.append(light);
-  }
   heading.append(title, streak);
   const list = document.createElement("ol");
   list.className = "answer-lights";
-  list.setAttribute("aria-label", "Main answer, then up to 10 follow-ups");
-  for (let position = 0; position <= mastery.LIMIT; position++) {
+  list.setAttribute("aria-label", "Checked answers in order");
+  results.forEach((correct, position) => {
     const label = position === 0 ? "Main" : String(position);
     const name = position === 0 ? "Main answer" : `Follow-up ${position}`;
-    const answered = position < results.length;
-    const status = answered ? results[position] ? "correct" : "incorrect" : "pending";
-    const next = !state.finished && position === results.length;
-    const description = `${name}: ${answered ? results[position] ? "correct" : "incorrect" : state.finished ? "not needed" : next ? "up next" : "not answered"}`;
+    const status = correct ? "correct" : "incorrect";
+    const description = `${name}: ${status}`;
     const step = lightStep(status, label, description);
-    step.classList.toggle("in-streak", answered && results[position] && position >= results.length - state.streak);
-    step.classList.toggle("unused", !answered && state.finished);
-    if (next) { step.classList.add("up-next"); step.setAttribute("aria-current", "step"); }
+    step.classList.toggle("in-streak", correct && position >= results.length - state.streak);
     list.append(step);
-  }
+  });
   const legend = document.createElement("p");
   legend.className = "light-legend";
-  legend.textContent = "✓ Green = right · × Red = wrong · Empty = not answered";
-  track.append(heading, list, legend);
+  legend.textContent = "✓ Green = right · × Red = wrong";
+  track.append(heading);
+  if (results.length) track.append(list, legend);
   return track;
 }
 
@@ -219,13 +209,6 @@ function updateDay3Progress() {
   if (activeSet !== DAY3_SET) return;
   const indexes = day3Indexes();
   const position = indexes.indexOf(activeDay3Index);
-  const stats = recordStats(DAY3_SET);
-  document.querySelector("#day3-position").textContent = `Question ${position + 1} of ${indexes.length}`;
-  document.querySelector("#day3-mastered-count").textContent = `${stats.solved} of ${indexes.length} mastered`;
-  const bar = document.querySelector("#day3-mastered-progress");
-  bar.max = indexes.length;
-  bar.value = stats.solved;
-  document.querySelector("#day3-progress-detail").textContent = `${stats.unmastered} unmastered · ${stats.finished} of ${indexes.length} finished · First-try score: ${scoreOutOf100(stats, indexes.length)}/100`;
   document.querySelector("#day3-previous").disabled = position === 0;
   document.querySelector("#day3-next").disabled = position === indexes.length - 1;
   renderDay3TotalTrack();
@@ -244,7 +227,7 @@ function openDay3Question(target) {
   captureDay3Draft();
   activeDay3Index = target;
   loadSet(DAY3_SET, false);
-  document.querySelector("#day3-progress").scrollIntoView?.({ block: "start", behavior: "instant" });
+  cards[target].scrollIntoView?.({ block: "start", behavior: "instant" });
 }
 
 function captureDay3Draft() {
@@ -710,7 +693,7 @@ function loadSet(setNumber, captureDraft = true) {
   activeSet = setNumber;
   const isDay3 = setNumber === DAY3_SET;
   document.body.classList.toggle("day3-mode", isDay3);
-  for (const id of ["day3-guide", "day3-progress", "day3-question-nav"]) document.querySelector(`#${id}`).hidden = !isDay3;
+  document.querySelector("#day3-question-nav").hidden = !isDay3;
   if (isDay3 && !day3Indexes().includes(activeDay3Index)) {
     activeDay3Index = day3Indexes().find(index => !mastery.progress(records[DAY3_SET].questions[index]).finished) ?? day3Indexes()[0];
   }

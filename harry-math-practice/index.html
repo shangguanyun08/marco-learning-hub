@@ -7,11 +7,11 @@
     <meta name="theme-color" content="#172f61" />
     <title>Harry’s Math Practice · Q1–Q20</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=15" />
+    <link rel="stylesheet" href="./styles.css?v=16" />
     <script src="../shared-online-sync.js?v=1" defer></script>
     <script src="./day3-mastery.js?v=3" defer></script>
     <script src="./star-mastery.js?v=1" defer></script>
-    <script src="./app.js?v=21" defer></script>
+    <script src="./app.js?v=22" defer></script>
   </head>
   <body class="day3-mode">
     <main class="practice-shell">
@@ -49,18 +49,6 @@
           <small class="set-picker-note">Start anywhere. Your progress is saved.</small>
         </div>
         <ol id="day3-total-track" class="total-question-lights" aria-label="Choose any of the 20 main questions"></ol>
-      </section>
-
-      <aside id="day3-guide" class="mastery-guide" hidden>
-        <strong>Get 3 right in a row</strong>
-        <p>Every question needs 3 correct answers in a row. Your main answer starts the streak; then try similar questions one at a time. A wrong answer resets the streak. You have up to 10 follow-ups for each main question. After 10 without a streak of 3, it is unmastered. Your progress is saved.</p>
-      </aside>
-
-      <section id="day3-progress" class="mastery-progress" aria-label="Session progress" hidden>
-        <div class="mastery-progress-top"><strong id="day3-position"></strong><span id="day3-mastered-count" role="status"></span></div>
-        <progress id="day3-mastered-progress" value="0" max="20" aria-label="Main questions mastered"></progress>
-        <p class="light-legend">✓ Mastered · × Unmastered · ◔ In practice · Empty = not started</p>
-        <p id="day3-progress-detail" aria-live="polite"></p>
       </section>
 
       <section class="question-grid" aria-label="20 math questions">
