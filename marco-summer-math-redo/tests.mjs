@@ -222,7 +222,7 @@ test('both sixteen-question reviews each cover every miss and precede Session 1'
   assert.equal(pushed.length, 0);
   assert.ok(app.innerHTML.indexOf('<b>Review 1</b>') < app.innerHTML.indexOf('<b>Review 2</b>'));
   assert.ok(app.innerHTML.indexOf('<b>Review 2</b>') < app.innerHTML.indexOf('<b>Session 1</b>'));
-  assert.match(app.innerHTML, /90\/100<\/strong> on your main answers/);
+  assert.doesNotMatch(app.innerHTML, /Tap any main question below|on your main answers\. Extra practice/);
   assert.ok(reviewDays.every(day => api.metrics(day).resolved === 0), 'Reviews must not inherit original answers');
   for (const q of questions) {
     assert.equal(q.options.length, 4);
@@ -354,14 +354,14 @@ test('expanding a finished ten-question review keeps its score and carries its a
 const wrongIndex = q => q.options.findIndex((_, i) => !q.correctIndexes.includes(i));
 const check = (api, q, correct) => api.answer(q.id, correct ? q.correctIndexes[0] : wrongIndex(q));
 
-test('Review 1 allows main-question selection at any time and grows green/red answer tracks', async () => {
+test('Review 1 allows direct question selection but shows Next main only after mastery, with full answer tracks', async () => {
   const { api, app, pushed, remote } = await boot();
   const day = api.bank.days.find(d => d.day === 29), [first, second, third] = day.questions;
   const selectMain = question => app.click({ target: { closest: () => ({ dataset: { action: 'choose-main', questionId: question.id } }) } });
   const track = () => app.innerHTML.match(/<div class="answer-track-panel"[\s\S]*?<\/ol>/)?.[0] || '';
   assert.match(app.innerHTML, /Question 1<\/strong>/);
   assert.equal((app.innerHTML.match(/data-action="choose-main"/g) || []).length, day.questions.length);
-  assert.doesNotMatch(app.innerHTML, /class="answer-step |Practice question \d+ of|All 16 main questions|Up to 10/);
+  assert.doesNotMatch(app.innerHTML, /class="answer-step |Practice question \d+ of|All 16 main questions|Up to 10|streak-light|data-action="next-main"/);
   api.selectAnswer(first.id, first.correctIndexes[0]);
   selectMain(third);
   assert.equal(api.currentReviewQuestion(day).id, third.id);
@@ -377,14 +377,17 @@ test('Review 1 allows main-question selection at any time and grows green/red an
   selectMain(first);
   assert.match(app.innerHTML, /class="selected"/);
   api.nextMainQuestion();
-  assert.equal(api.currentReviewQuestion(day).id, second.id, 'Next main works before answering');
+  assert.equal(api.currentReviewQuestion(day).id, first.id, 'Next main cannot advance before answering');
   selectMain(first);
   check(api, first, false);
   assert.equal((track().match(/class="answer-step /g) || []).length, 1);
   assert.match(track(), /answer-step incorrect/);
   assert.match(app.innerHTML, new RegExp(`review-track-step incorrect current" data-action="choose-main" data-question-id="${first.id}"`));
   api.nextMainQuestion();
-  assert.equal(api.currentReviewQuestion(day).id, second.id, 'Extra practice does not lock main navigation');
+  assert.equal(api.currentReviewQuestion(day).id, first.id, 'Next main cannot advance before mastery');
+  assert.doesNotMatch(app.innerHTML, /data-action="next-main"/);
+  selectMain(second);
+  assert.equal(api.currentReviewQuestion(day).id, second.id, 'The numbered picker still allows direct navigation');
   check(api, second, true);
   assert.match(track(), /answer-step correct/);
   assert.equal((track().match(/class="answer-step /g) || []).length, 1);
@@ -395,10 +398,12 @@ test('Review 1 allows main-question selection at any time and grows green/red an
   selectMain(first);
   assert.match(app.innerHTML, /class="selected"/);
   for (const q of first.practiceQuestions.slice(0, 3)) {
+    assert.doesNotMatch(app.innerHTML, /data-action="next-main"/);
     check(api, q, true);
     if (q.practiceNumber < 3) api.nextPracticeQuestion(first.id);
   }
   assert.equal(api.masteryProgress(day, first).mastered, true);
+  assert.match(app.innerHTML, /data-action="next-main"[^>]*>Next main question/);
   assert.equal((track().match(/class="answer-step /g) || []).length, 4);
   assert.equal((track().match(/answer-step correct/g) || []).length, 3);
   assert.equal((track().match(/answer-step incorrect/g) || []).length, 1);
@@ -410,6 +415,12 @@ test('Review 1 allows main-question selection at any time and grows green/red an
   assert.equal((restored.app.innerHTML.match(/class="answer-step /g) || []).length, 4);
   assert.equal(restored.api.metrics(day).firstWrong, 1);
   assert.doesNotMatch(restored.app.innerHTML, /answer-step unanswered|Practice question \d+ of/);
+  assert.match(restored.app.innerHTML, /data-action="next-main"[^>]*>Next main question/);
+  const beforeNavigation = clone(restored.api.state);
+  restored.app.click({ target: { closest: () => ({ dataset: { action: 'next-main' } }) } });
+  assert.equal(restored.api.currentReviewQuestion(day).id, second.id);
+  assert.doesNotMatch(restored.app.innerHTML, /data-action="next-main"/);
+  assert.deepEqual(clone(restored.api.state), beforeNavigation, 'Navigation preserves saved work');
 });
 
 test('practice counts distinct questions, resets the streak on a miss, and survives reload and remote sync', async () => {
@@ -438,6 +449,7 @@ test('practice counts distinct questions, resets the streak on a miss, and survi
   api = session.api;
   assert.equal(api.masteryProgress(day,parent).streak,1);
   assert.match(session.app.innerHTML,/Practice question 5/);
+  assert.deepEqual([...session.app.innerHTML.matchAll(/class="answer-step (correct|incorrect)"/g)].map(match => match[1]), ['incorrect', 'correct', 'correct', 'incorrect', 'correct'], 'Reload keeps the full ordered track, including results before a streak reset');
   check(api,p5,true);
   const remoteState = clone(api.state);
   const otherDevice = await boot(fresh());
@@ -446,6 +458,7 @@ test('practice counts distinct questions, resets the streak on a miss, and survi
   check(otherDevice.api,p6,true);
   assert.equal(otherDevice.api.masteryProgress(day,parent).mastered,true);
   assert.equal(otherDevice.api.masteryProgress(day,parent).practice.length,6);
+  assert.deepEqual([...otherDevice.app.innerHTML.matchAll(/class="answer-step (correct|incorrect)"/g)].map(match => match[1]), ['incorrect', 'correct', 'correct', 'incorrect', 'correct', 'correct', 'correct'], 'Every answer remains visible through sync and mastery');
   const finished = clone(otherDevice.api.state);
   check(otherDevice.api,p7,true);
   assert.deepEqual(clone(otherDevice.api.state),finished);
@@ -494,8 +507,9 @@ test('ten-question limit ends as unmastered, while a third consecutive correct o
     assert.equal(progress.done,true);
     assert.match(app.innerHTML,win ? /Mastered!/ : /Keep practicing this skill/);
     assert.doesNotMatch(app.innerHTML,/Next practice question|Practice question 11/);
+    assert.equal(app.innerHTML.includes('>Next main question</button>'), win);
     api.nextMainQuestion();
-    assert.equal(api.currentReviewQuestion(day).id,day.questions[1].id);
+    assert.equal(api.currentReviewQuestion(day).id,win ? day.questions[1].id : parent.id);
     const restored = await boot(clone(api.state));
     assert.equal(restored.api.masteryProgress(day,parent).unmastered,!win);
   }
