@@ -482,8 +482,8 @@
     const streakLights = Array.from({ length: day.mastery.requiredStreak }, (_, index) => `<span class="streak-light ${index < progress.streak ? 'lit' : ''}" aria-hidden="true">${index < progress.streak ? '✓' : '·'}</span>`).join('');
     return `<div class="answer-track-panel${compact ? ' compact' : ''}" aria-label="Answer track for Question ${question.position}">
       ${compact ? '' : `<div class="answer-track-heading"><strong>Your answer track</strong><div class="streak-meter" aria-label="${progress.streak} of ${day.mastery.requiredStreak} correct in a row"><span>In a row</span>${streakLights}<b>${progress.streak}/${day.mastery.requiredStreak}</b></div></div>`}
-      ${answers.length ? `<ol class="answer-track" aria-label="Checked answers">${lights}</ol>` : '<p class="answer-track-hint">Your results appear here as you answer.</p>'}
-      ${compact ? '' : '<div class="track-legend"><span><i class="legend-light correct" aria-hidden="true">✓</i>Correct</span><span><i class="legend-light incorrect" aria-hidden="true">×</i>Incorrect</span></div><p class="answer-track-hint">Three greens in a row = mastered.</p>'}
+      ${answers.length ? `<ol class="answer-track" aria-label="Checked answers">${lights}</ol>` : ''}
+      ${compact ? '' : '<p class="answer-track-hint">Three greens in a row = mastered.</p>'}
     </div>`;
   }
 
