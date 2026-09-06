@@ -229,3 +229,64 @@ footer a:hover { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* STAR Math question content and mathematical diagrams. */
+.star-equation { margin:14px 0 2px; text-align:center; font-family:"DM Sans",sans-serif; font-size:1.1em; font-weight:800; }
+.math-fraction { display:inline-grid; grid-template-rows:1fr 1fr; min-width:1.7em; margin:0 .12em; text-align:center; vertical-align:middle; line-height:1.05; }
+.math-fraction > span:first-child { padding:0 .2em .08em; border-bottom:.08em solid currentColor; }
+.math-fraction > span:last-child { padding:.08em .2em 0; }
+.question-visual { display:grid; place-items:center; min-height:115px; margin:13px 0 17px; padding:15px; border:1px solid #e1e7e9; border-radius:14px; background:#fbfcfc; }
+.input-output { width:min(330px,100%); border-collapse:collapse; }
+.input-output th,.input-output td { padding:9px; border:1px solid #cbd6da; text-align:center; }
+.input-output th { background:var(--ink); color:#fff; }
+.data-table { font-size:12px; }
+.data-table tbody td:first-child { text-align:left; font-weight:700; }
+.pictograph { width:min(390px,100%); border-collapse:collapse; background:#fff; font-size:14px; }
+.pictograph caption { padding:8px; border:1px solid #cbd6da; border-bottom:0; background:var(--ink); color:#fff; font-weight:800; }
+.pictograph th,.pictograph td { padding:8px 10px; border:1px solid #cbd6da; text-align:left; }
+.pictograph th { width:35%; color:var(--ink); }
+.pictograph tbody td { color:#48a82f; font-size:20px; letter-spacing:.08em; }
+.pictograph tfoot td { color:var(--muted); text-align:center; font-size:11px; font-weight:700; }
+.cylinder-visual { position:relative; width:150px; height:190px; min-height:190px !important; margin-inline:auto; overflow:hidden; border:3px solid #26384d; border-radius:50% / 12%; background:#fff; }
+.cylinder-visual::before,.cylinder-visual::after { position:absolute; z-index:3; left:-3px; width:calc(100% + 6px); height:24px; border:3px solid #26384d; border-radius:50%; content:""; }
+.cylinder-visual::before { top:-3px; background:#fff; }
+.cylinder-visual::after { bottom:-3px; background:transparent; }
+.cylinder-fill { position:absolute; z-index:1; right:0; bottom:0; left:0; background:#49a9cb; }
+.cylinder-fill::before { position:absolute; top:-12px; left:0; width:100%; height:24px; border-radius:50%; background:#49a9cb; content:""; }
+.fill-five-sixths { height:83%; }
+.fill-three-fourths { height:75%; }
+.prism-diagram { position:relative; min-width:220px; min-height:205px; padding:15px 48px 45px 42px; }
+.prism-grid { position:relative; z-index:2; display:grid; width:100px; height:140px; border:2px solid #5635bd; background:#cfb9ff; box-shadow:15px -15px 0 #a88af2,17px -17px 0 2px #5635bd; transform:skewY(0deg); }
+.prism-grid i { border:1px solid #7659ce; background:#c8b0fa; }
+.prism-2-by-4 { grid-template-columns:repeat(2,1fr); grid-template-rows:repeat(4,1fr); }
+.prism-3-by-3 { grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); }
+.prism-diagram span { position:absolute; color:var(--ink); font-size:11px; font-weight:800; }
+.prism-diagram .width-label { left:61px; bottom:22px; }
+.prism-diagram .height-label { top:80px; left:0; transform:rotate(-90deg); }
+.prism-diagram .depth-label { top:0; right:23px; transform:rotate(-35deg); }
+.vertical-math { display:grid; min-width:125px; text-align:right; font-size:24px; font-weight:800; line-height:1.35; }
+.vertical-math span:last-child { padding-bottom:3px; border-bottom:3px solid #26384d; }
+.rich-expression { font: 500 20px/1.55 "DM Sans", sans-serif; letter-spacing: normal; }
+.rich-expression span { color: inherit; }
+.rich-expression strong { font-weight: 800; }
+.rich-expression .star-equation { font-size: 24px; }
+.rich-expression .data-table { font-size: 16px; }
+.rich-expression .pictograph tfoot td { font-size: 14px; }
+.rich-expression .prism-diagram span { font-size: 14px; }
+.rich-expression .vertical-math { font-variant-numeric: tabular-nums; }
+.choice-option .math-fraction { font-size: 22px; }
+.card-top { gap: 12px; flex-wrap: wrap; }
+.skill { flex: 1; font-size: 14px; line-height: 1.4; letter-spacing: .03em; }
+.source-label { margin: 12px 0 0; color: #66718b; font-size: 14px; }
+.mastery-credit { color: #155d44; font-weight: 800; font-size: 18px; }
+.total-question-lights { grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); }
+.question-jump { flex-direction: row; justify-content: center; min-height: 52px; gap: 8px; padding: 8px 6px; }
+.question-jump .track-lamp { width: 28px; height: 28px; font-size: 20px; flex: 0 0 auto; }
+.question-jump-skill { display: none; }
+@media (max-width: 480px) {
+  .rich-expression { font-size: 18px; }
+  .question-visual { padding: 8px; }
+  .rich-expression .data-table { font-size: 14px; }
+  .pictograph th, .pictograph td { padding: 8px 5px; }
+  .pictograph tbody td { font-size: 18px; letter-spacing: 0; }
+}

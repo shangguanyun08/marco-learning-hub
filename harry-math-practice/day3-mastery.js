@@ -86,10 +86,11 @@
     const attempts = record.review?.attempts || [];
     let streak = record.firstTry === true ? 1 : 0;
     for (const attempt of attempts) streak = attempt.correct ? streak + 1 : 0;
-    const status = record.firstTry === null || record.firstTry === undefined ? "unanswered"
+    const credited = record.masteryCredit === "parent-confirmed";
+    const status = credited ? "mastered" : record.firstTry === null || record.firstTry === undefined ? "unanswered"
       : streak >= TARGET ? "mastered"
       : attempts.length >= LIMIT ? "unmastered" : "practicing";
-    return { status, streak, used: attempts.length, finished: status === "mastered" || status === "unmastered" };
+    return { status, streak, credited, used: attempts.length, finished: status === "mastered" || status === "unmastered" };
   }
 
   function normalizeReview(value, bank, check, firstTry = false) {
@@ -123,3 +124,4 @@
 
   global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next };
 })(globalThis);
+

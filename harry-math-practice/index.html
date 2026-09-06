@@ -3,14 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Math practice for Harry: 6 main questions, one per skill. Pick any question and master it with 3 correct answers in a row, plus up to 10 follow-ups." />
+    <meta name="description" content="Math practice for Harry: 20 main questions, including the August 30 STAR Math mistakes. Pick any question and master it with 3 correct answers in a row, plus up to 10 follow-ups." />
     <meta name="theme-color" content="#172f61" />
-    <title>Harry’s Math Practice · Q1–Q6</title>
+    <title>Harry’s Math Practice · Q1–Q20</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%234255ff'/%3E%3Cpath d='M16 16h8v13h16V16h8v32h-8V36H24v12h-8z' fill='white'/%3E%3C/svg%3E" />
-    <link rel="stylesheet" href="./styles.css?v=14" />
+    <link rel="stylesheet" href="./styles.css?v=15" />
     <script src="../shared-online-sync.js?v=1" defer></script>
-    <script src="./day3-mastery.js?v=2" defer></script>
-    <script src="./app.js?v=20" defer></script>
+    <script src="./day3-mastery.js?v=3" defer></script>
+    <script src="./star-mastery.js?v=1" defer></script>
+    <script src="./app.js?v=21" defer></script>
   </head>
   <body class="day3-mode">
     <main class="practice-shell">
@@ -47,7 +48,7 @@
           <h2 id="set-picker-title">Choose a question</h2>
           <small class="set-picker-note">Start anywhere. Your progress is saved.</small>
         </div>
-        <ol id="day3-total-track" class="total-question-lights" aria-label="Choose any of the 6 main questions"></ol>
+        <ol id="day3-total-track" class="total-question-lights" aria-label="Choose any of the 20 main questions"></ol>
       </section>
 
       <aside id="day3-guide" class="mastery-guide" hidden>
@@ -57,78 +58,78 @@
 
       <section id="day3-progress" class="mastery-progress" aria-label="Session progress" hidden>
         <div class="mastery-progress-top"><strong id="day3-position"></strong><span id="day3-mastered-count" role="status"></span></div>
-        <progress id="day3-mastered-progress" value="0" max="6" aria-label="Main questions mastered"></progress>
+        <progress id="day3-mastered-progress" value="0" max="20" aria-label="Main questions mastered"></progress>
         <p class="light-legend">✓ Mastered · × Unmastered · ◔ In practice · Empty = not started</p>
         <p id="day3-progress-detail" aria-live="polite"></p>
       </section>
 
-      <section class="question-grid" aria-label="6 math questions">
+      <section class="question-grid" aria-label="20 math questions">
         <article class="question-card" data-question="1">
           <div class="card-top"><span class="number">1</span><span class="skill">Multiply</span></div>
-          <p class="expression">263 × 3 <span>=</span></p>
+          <div class="expression">263 × 3 <span>=</span></div>
           <form><label for="answer-1">Your answer</label><div class="answer-row"><input id="answer-1" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-1" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="2">
           <div class="card-top"><span class="number">2</span><span class="skill">Multiply</span></div>
-          <p class="expression">414 × 4 <span>=</span></p>
+          <div class="expression">414 × 4 <span>=</span></div>
           <form><label for="answer-2">Your answer</label><div class="answer-row"><input id="answer-2" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-2" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="3">
           <div class="card-top"><span class="number">3</span><span class="skill">Multiply</span></div>
-          <p class="expression">229 × 3 <span>=</span></p>
+          <div class="expression">229 × 3 <span>=</span></div>
           <form><label for="answer-3">Your answer</label><div class="answer-row"><input id="answer-3" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-3" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="4">
           <div class="card-top"><span class="number">4</span><span class="skill">Divide</span></div>
-          <p class="expression">485 <span class="division-mark" aria-label="divided by">÷</span> 5 <span>=</span></p>
+          <div class="expression">485 <span class="division-mark" aria-label="divided by">÷</span> 5 <span>=</span></div>
           <form><label for="answer-4">Your answer</label><div class="answer-row"><input id="answer-4" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-4" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="5">
           <div class="card-top"><span class="number">5</span><span class="skill">Divide</span></div>
-          <p class="expression">874 <span class="division-mark" aria-label="divided by">÷</span> 2 <span>=</span></p>
+          <div class="expression">874 <span class="division-mark" aria-label="divided by">÷</span> 2 <span>=</span></div>
           <form><label for="answer-5">Your answer</label><div class="answer-row"><input id="answer-5" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-5" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="6">
           <div class="card-top"><span class="number">6</span><span class="skill">Add</span></div>
-          <p class="expression">442 + 257 <span>=</span></p>
+          <div class="expression">442 + 257 <span>=</span></div>
           <form><label for="answer-6">Your answer</label><div class="answer-row"><input id="answer-6" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-6" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="7" hidden>
           <div class="card-top"><span class="number">7</span><span class="skill">Add</span></div>
-          <p class="expression">64 + 78 <span>=</span></p>
+          <div class="expression">64 + 78 <span>=</span></div>
           <form><label for="answer-7">Your answer</label><div class="answer-row"><input id="answer-7" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-7" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="8">
           <div class="card-top"><span class="number">8</span><span class="skill">Subtract</span></div>
-          <p class="expression">280 − 96 <span>=</span></p>
+          <div class="expression">280 − 96 <span>=</span></div>
           <form><label for="answer-8">Your answer</label><div class="answer-row"><input id="answer-8" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-8" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="9">
           <div class="card-top"><span class="number">9</span><span class="skill">Subtract</span></div>
-          <p class="expression">430 − 267 <span>=</span></p>
+          <div class="expression">430 − 267 <span>=</span></div>
           <form><label for="answer-9">Your answer</label><div class="answer-row"><input id="answer-9" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-9" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="10" hidden>
           <div class="card-top"><span class="number">10</span><span class="skill">Subtract</span></div>
-          <p class="expression">760 − 438 <span>=</span></p>
+          <div class="expression">760 − 438 <span>=</span></div>
           <form><label for="answer-10">Your answer</label><div class="answer-row"><input id="answer-10" type="number" inputmode="numeric" step="1" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-10" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
@@ -163,14 +164,14 @@
 
         <article class="question-card" data-question="15">
           <div class="card-top"><span class="number">15</span><span class="skill">Decimal Multiply</span></div>
-          <p class="expression">0.46 × 0.2 <span>=</span></p>
+          <div class="expression">0.46 × 0.2 <span>=</span></div>
           <form><label for="answer-15">Your answer</label><div class="answer-row"><input id="answer-15" type="number" inputmode="decimal" step="any" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-15" aria-live="polite">Enter your answer when you are ready.</p>
         </article>
 
         <article class="question-card" data-question="16">
           <div class="card-top"><span class="number">16</span><span class="skill">Decimal Multiply</span></div>
-          <p class="expression">0.37 × 0.4 <span>=</span></p>
+          <div class="expression">0.37 × 0.4 <span>=</span></div>
           <form><label for="answer-16">Your answer</label><div class="answer-row"><input id="answer-16" type="number" inputmode="decimal" step="any" autocomplete="off" /><button type="submit">Check</button></div></form>
           <p class="feedback" id="feedback-16" aria-live="polite">Enter your answer when you are ready.</p>
         </article>

@@ -78,7 +78,10 @@ const questionSets = {
 
 const DAY3_SET = 6;
 const mastery = globalThis.HarryDay3Mastery;
-const day3Banks = mastery.createBanks(questionSets[DAY3_SET]);
+const starEntries = globalThis.HarryStarMastery.entries;
+const PARENT_CONFIRMED_QUESTIONS = new Set([0, 3]); // Current Q1 and Q2, confirmed by Harry's parent.
+questionSets[DAY3_SET].push(...starEntries.map(entry => entry.question));
+const day3Banks = [...mastery.createBanks(questionSets[DAY3_SET]), ...starEntries.map(entry => entry.followUps)];
 
 const STORAGE_KEY = "harry-math-practice-record-v1";
 const APP_ID = "harry-math-practice-v1";
@@ -88,8 +91,19 @@ function dayLabel(setNumber) {
   return setNumber === DAY3_SET ? "Practice session" : `Day ${SET_NUMBERS.indexOf(setNumber) + 1}`;
 }
 
-const cards = [...document.querySelectorAll("[data-question]")];
 const questionGrid = document.querySelector(".question-grid");
+const cards = [...document.querySelectorAll("[data-question]")];
+while (cards.length < Math.max(...Object.values(questionSets).map(questions => questions.length))) {
+  const card = cards[0].cloneNode(true);
+  const number = cards.length + 1;
+  card.dataset.question = String(number);
+  card.hidden = true;
+  card.querySelector("input").id = `answer-${number}`;
+  card.querySelector("label").htmlFor = `answer-${number}`;
+  card.querySelector(".feedback").id = `feedback-${number}`;
+  questionGrid.append(card);
+  cards.push(card);
+}
 const firstTryScore = document.querySelector("#first-try-score");
 const attemptSummary = document.querySelector("#attempt-summary");
 const solvedSummary = document.querySelector("#solved-summary");
@@ -124,6 +138,12 @@ function lightStep(status, label, description) {
 
 function renderAnswerTrack(record) {
   const state = mastery.progress(record);
+  if (state.credited) {
+    const track = document.createElement("section");
+    track.className = "answer-track mastery-credit";
+    track.textContent = "✓ Already mastered";
+    return track;
+  }
   const results = record.firstTry === null ? []
     : [record.firstTry, ...(record.review?.attempts || []).map(attempt => attempt.correct)];
   const track = document.createElement("section");
@@ -181,6 +201,7 @@ function renderDay3TotalTrack() {
     button.dataset.questionIndex = String(index);
     button.setAttribute("aria-label", `Question ${position + 1}: ${questionSets[DAY3_SET][index].skill}, ${description}`);
     button.setAttribute("aria-controls", `answer-${index + 1}`);
+    button.title = questionSets[DAY3_SET][index].skill;
     button.append(...step.childNodes);
     const skill = document.createElement("span");
     skill.className = "question-jump-skill";
@@ -242,7 +263,9 @@ function emptyQuestionRecord() {
 }
 
 function normalizeQuestionRecord(value, setNumber, questionIndex) {
+  const confirmed = setNumber === DAY3_SET && PARENT_CONFIRMED_QUESTIONS.has(questionIndex);
   return {
+    ...(confirmed ? { masteryCredit: "parent-confirmed" } : {}),
     firstTry: typeof value?.firstTry === "boolean" ? value.firstTry : null,
     attempts: Number.isInteger(value?.attempts) && value.attempts > 0 ? value.attempts : 0,
     solved: value?.solved === true,
@@ -264,10 +287,7 @@ function normalizeRecords(saved = {}) {
         {
           questions: Array.from(
             { length: questionSets[setNumber].length },
-            (_, questionIndex) =>
-              savedQuestions[questionIndex]
-                ? normalizeQuestionRecord(savedQuestions[questionIndex], setNumber, questionIndex)
-                : emptyQuestionRecord(),
+            (_, questionIndex) => normalizeQuestionRecord(savedQuestions[questionIndex], setNumber, questionIndex),
           ),
           completedAt:
             savedQuestions.length === questionSets[setNumber].length &&
@@ -391,7 +411,13 @@ function makeFraction(numerator, denominator, unknown = false) {
 
 function renderExpression(element, question) {
   element.replaceChildren();
-  element.classList.remove("fraction-expression", "prompt-expression");
+  element.classList.remove("fraction-expression", "prompt-expression", "rich-expression");
+
+  if (question.promptHtml) {
+    element.classList.add("rich-expression");
+    element.innerHTML = `${question.promptHtml}${question.visualHtml || ""}`;
+    return;
+  }
 
   if (question.kind === "fraction") {
     element.classList.add("fraction-expression");
@@ -478,12 +504,13 @@ function renderChoiceOptions(card, index, question, record, locked = record.solv
   grid.setAttribute("role", "group");
   grid.setAttribute("aria-labelledby", `choice-label-${index + 1}`);
 
-  question.choices.forEach((choice) => {
+  question.choices.forEach((choice, choiceIndex) => {
     const value = String(choice);
     const option = document.createElement("button");
     option.type = "button";
     option.className = "choice-option";
-    option.textContent = value;
+    if (question.choicesHtml) option.innerHTML = question.choicesHtml[choiceIndex];
+    else option.textContent = value;
     option.dataset.value = value;
     option.disabled = locked;
 
@@ -514,7 +541,7 @@ function renderQuestionState(card, index) {
   const activeQuestion = activeQuestions()[index];
   const isDay3 = activeSet === DAY3_SET;
   const state = isDay3 ? mastery.progress(question) : null;
-  const locked = isDay3 ? question.firstTry !== null : question.solved;
+  const locked = isDay3 ? question.firstTry !== null || state.finished : question.solved;
 
   card.classList.toggle("right", isDay3 ? state.status === "mastered" : question.solved);
   const needsRetry = question.firstTry === false && !question.solved;
@@ -538,10 +565,14 @@ function renderQuestionState(card, index) {
     badge.className = `mastery-badge ${state.status}`;
     badge.textContent = { unanswered: "Not answered", practicing: "In practice", mastered: "Mastered", unmastered: "Unmastered" }[state.status];
     card.querySelector(".card-top").append(badge);
+    if (state.credited) {
+      feedback.textContent = "You already mastered this question. Choose another question when you are ready.";
+      return;
+    }
     feedback.textContent = question.firstTry === true
       ? "✓ Main question correct — 1 right in a row. Continue the practice to reach 3."
       : question.firstTry === false
-        ? `Main question incorrect. Correct answer: ${activeQuestion.answer}. First-try score is saved.`
+        ? `Main question incorrect. Correct answer: ${activeQuestion.answer}. ${activeQuestion.explanation || ""} First-try score is saved.`
         : "Start your streak here. Get 3 answers right in a row, including this question.";
     if (question.firstTry !== null) renderMasteryPractice(card, index);
   }
@@ -560,11 +591,11 @@ function renderMasteryPractice(card, index) {
   const previous = record.review?.attempts.at(-1);
   if (previous) {
     result.textContent = previous.correct ? "✓ Correct!"
-      : `Not quite. Correct answer: ${day3Banks[index][state.used - 1].answer}. Your streak starts again at 0.`;
+      : `Not quite. Correct answer: ${day3Banks[index][state.used - 1].answer}. ${day3Banks[index][state.used - 1].explanation || ""} Your streak starts again at 0.`;
   } else {
     result.textContent = record.firstTry === true
       ? "✓ Main question correct! That counts as 1. Get the next 2 right to master this question."
-      : `Main question incorrect. Correct answer: ${activeQuestions()[index].answer}. Get 3 right in a row to master this question.`;
+      : `Main question incorrect. Correct answer: ${activeQuestions()[index].answer}. ${activeQuestions()[index].explanation || ""} Get 3 right in a row to master this question.`;
   }
   if (state.finished) {
     result.textContent += state.status === "mastered"
@@ -590,7 +621,7 @@ function renderMasteryPractice(card, index) {
   }
   const question = day3Banks[index][state.used];
   const content = document.createElement("div");
-  content.innerHTML = `<p class="practice-number">Practice ${state.used + 1} of 10</p><p class="expression"></p>
+  content.innerHTML = `<p class="practice-number">Practice ${state.used + 1} of 10</p><div class="expression"></div>
     <form><label id="practice-label-${index}" for="practice-answer-${index}">Your answer</label>
     <div class="answer-row"><input id="practice-answer-${index}" autocomplete="off" aria-describedby="practice-error-${index}" /><button type="submit">Check</button></div></form>
     <p class="practice-error" id="practice-error-${index}" aria-live="polite"></p>`;
@@ -612,11 +643,13 @@ function renderMasteryPractice(card, index) {
     choices.className = "choice-grid";
     choices.setAttribute("role", "group");
     choices.setAttribute("aria-labelledby", label.id);
-    question.choices.forEach(value => {
+    question.choices.forEach((value, choiceIndex) => {
       const choice = document.createElement("button");
       choice.type = "button";
       choice.className = "choice-option";
-      choice.textContent = String(value);
+      if (question.choicesHtml) choice.innerHTML = question.choicesHtml[choiceIndex];
+      else choice.textContent = String(value);
+      choice.dataset.value = String(value);
       choice.addEventListener("click", () => { input.value = String(value); form.requestSubmit(); });
       choices.append(choice);
     });
@@ -718,6 +751,13 @@ function loadSet(setNumber, captureDraft = true) {
             ? "Missing numerator"
             : "Your answer";
     card.querySelector(".skill").textContent = question.skill;
+    card.querySelector(".source-label")?.remove();
+    if (question.sourceLabel) {
+      const source = document.createElement("p");
+      source.className = "source-label";
+      source.textContent = question.sourceLabel;
+      card.querySelector(".card-top").after(source);
+    }
     renderExpression(card.querySelector(".expression"), question);
     renderQuestionState(card, index);
   });
@@ -755,7 +795,7 @@ cards.forEach((card, index) => {
     const question = activeRecord().questions[index];
     const activeQuestion = activeQuestions()[index];
     if (card.hidden || !question || !activeQuestion || activeQuestion.removed ||
-      (activeSet === DAY3_SET ? question.firstTry !== null : question.solved)) return;
+      (activeSet === DAY3_SET ? question.firstTry !== null || mastery.progress(question).finished : question.solved)) return;
     const typed = input.value.trim();
     if (!typed) {
       feedback.textContent = "Enter an answer before checking.";
