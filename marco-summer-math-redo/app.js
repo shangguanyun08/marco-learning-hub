@@ -287,7 +287,7 @@
       attemptNumber,
       selectedIndex: index,
       resolved: isResolved,
-      reveal: !correct && attemptNumber === 2
+      reveal: !correct
         ? { correctHtml: question.correctHtml, explanation: question.explanation }
         : null,
     };
@@ -406,10 +406,10 @@
     const saved = savedAttempts(day, question.id);
     const currentResolved = resolved(saved);
     const selectedAnswer = selectedAnswers[question.id];
-    const secondWrong = saved.find((attempt) => attempt.attemptNumber === 2 && !attempt.correct);
-    const currentFeedback = feedbackByQuestion[question.id] || (secondWrong ? {
+    const latestAttempt = saved.at(-1);
+    const currentFeedback = feedbackByQuestion[question.id] || (latestAttempt && !latestAttempt.correct ? {
       correct: false,
-      resolved: true,
+      resolved: currentResolved,
       reveal: { correctHtml: question.correctHtml, explanation: question.explanation },
     } : day.review && currentResolved ? { correct: saved.some((attempt) => attempt.correct), resolved: true } : null);
     if (day.review && currentFeedback?.resolved) {
@@ -432,7 +432,7 @@
         <div class="feedback-icon">${currentFeedback.correct ? "✓" : currentFeedback.resolved ? "2" : "1"}</div>
         <div>
           <strong>${currentFeedback.correct ? "Right — nice work!" : currentFeedback.resolved ? "Let’s learn this one." : "Not quite. Try once more."}</strong>
-          ${!currentFeedback.correct && !currentFeedback.resolved ? "<span>Your first try is saved. Check the signs, units, and what the question is asking.</span>" : ""}
+          ${!currentFeedback.correct && !currentFeedback.resolved ? "<span>Your first try is saved. Read the correct answer below, then try once more.</span>" : ""}
           ${currentFeedback.reveal ? `<div class="reveal"><p><b>Correct answer:</b> <span>${currentFeedback.reveal.correctHtml}</span></p><p><b>Quick explanation:</b> ${esc(currentFeedback.reveal.explanation)}</p></div>` : ""}
           ${currentFeedback.correct ? "<span>Answer saved online.</span>" : ""}
         </div>
@@ -517,7 +517,7 @@
     return `<section class="question-card" id="question-${esc(question.id)}">
       <div class="question-meta"><div><span>${esc(day.label)}</span><strong>Question ${question.position}</strong></div><span class="mastery-badge ${statusClass}">${progress.status}</span><small>${esc(question.skill)}</small></div>
       ${answerTrackHtml(day, question, progress)}
-      ${progress.nominal ? `<details class="missed-main"><summary>Main question: ${progress.nominal.correct ? 'correct' : 'incorrect'} · Review answer and explanation</summary><div class="problem">${question.questionHtml}</div><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></details>` : masteryAnswerHtml(question, savedAttempts(day, question.id))}
+      ${progress.nominal ? `<details class="missed-main"${progress.nominal.correct ? '' : ' open'}><summary>Main question: ${progress.nominal.correct ? 'correct' : 'incorrect'} · Review answer and explanation</summary><div class="problem">${question.questionHtml}</div><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></details>` : masteryAnswerHtml(question, savedAttempts(day, question.id))}
       ${extra}
       ${progress.mastered || dayMetrics.completed ? `<footer class="question-footer"><span>${progress.mastered ? 'Mastered' : 'Review complete'}</span><button class="primary-action" data-action="next-main" type="button">${dayMetrics.completed ? 'See Review 1 results' : 'Next main question'}</button></footer>` : ''}
     </section>`;
