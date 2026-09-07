@@ -120,6 +120,21 @@ function day3Indexes() {
   return questionSets[DAY3_SET].map((question, index) => question.removed ? -1 : index).filter(index => index !== -1);
 }
 
+function day3UnlockPosition() {
+  const indexes = day3Indexes();
+  const firstUnfinished = indexes.findIndex(index => !mastery.progress(records[DAY3_SET].questions[index]).finished);
+  return firstUnfinished === -1 ? indexes.length - 1 : firstUnfinished;
+}
+
+function canPracticeDay3Question(index) {
+  const position = day3Indexes().indexOf(index);
+  return position >= 0 && position <= day3UnlockPosition();
+}
+
+function canOpenDay3Question(index) {
+  return day3Indexes().includes(index) && (canPracticeDay3Question(index) || records[DAY3_SET].questions[index].firstTry !== null);
+}
+
 function lightStep(status, label, description) {
   const step = document.createElement("li");
   step.className = `light-step ${status}`;
@@ -264,15 +279,19 @@ function renderDay3TotalTrack() {
   day3Indexes().forEach((index, position) => {
     const state = mastery.progress(records[DAY3_SET].questions[index]);
     const status = { mastered: "correct", unmastered: "incorrect", practicing: "practicing", unanswered: "pending" }[state.status];
-    const description = { mastered: "mastered", unmastered: "unmastered", practicing: `in practice, ${state.streak} of 3 right in a row`, unanswered: "not started" }[state.status];
+    const locked = !canPracticeDay3Question(index);
+    const accessible = canOpenDay3Question(index);
+    const statusDescription = { mastered: "mastered", unmastered: "unmastered", practicing: `in practice, ${state.streak} of 3 right in a row`, unanswered: "not started" }[state.status];
+    const description = locked ? `${accessible ? `${statusDescription}, review only` : "locked"}; finish Question ${day3UnlockPosition() + 1} first` : statusDescription;
     const step = lightStep(status, `Q${position + 1}`, `Question ${position + 1}: ${description}`);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "question-jump";
+    button.disabled = !accessible;
     button.dataset.questionIndex = String(index);
     button.setAttribute("aria-label", `Question ${position + 1}: ${questionSets[DAY3_SET][index].skill}, ${description}`);
     button.setAttribute("aria-controls", `answer-${index + 1}`);
-    button.title = questionSets[DAY3_SET][index].skill;
+    button.title = locked ? description : questionSets[DAY3_SET][index].skill;
     button.append(...step.childNodes);
     const skill = document.createElement("span");
     skill.className = "question-jump-skill";
@@ -290,8 +309,8 @@ function updateDay3Progress() {
   if (activeSet !== DAY3_SET) return;
   const indexes = day3Indexes();
   const position = indexes.indexOf(activeDay3Index);
-  document.querySelector("#day3-previous").disabled = position === 0;
-  document.querySelector("#day3-next").disabled = position === indexes.length - 1;
+  document.querySelector("#day3-previous").disabled = !indexes.slice(0, position).some(canOpenDay3Question);
+  document.querySelector("#day3-next").disabled = !canPracticeDay3Question(indexes[position + 1]);
   renderDay3TotalTrack();
 }
 
@@ -299,12 +318,13 @@ function moveDay3Question(direction) {
   if (activeSet !== DAY3_SET) return;
   const indexes = day3Indexes();
   const position = indexes.indexOf(activeDay3Index);
-  const target = indexes[position + direction];
+  const target = direction < 0 ? indexes.slice(0, position).findLast(canOpenDay3Question) : indexes[position + direction];
+  if (direction > 0 && !canPracticeDay3Question(target)) return;
   openDay3Question(target);
 }
 
 function openDay3Question(target) {
-  if (activeSet !== DAY3_SET || !day3Indexes().includes(target)) return;
+  if (activeSet !== DAY3_SET || !canOpenDay3Question(target)) return;
   captureDay3Draft();
   activeDay3Index = target;
   loadSet(DAY3_SET, false);
@@ -623,7 +643,7 @@ function renderQuestionState(card, index) {
   const activeQuestion = activeQuestions()[index];
   const isDay3 = activeSet === DAY3_SET;
   const state = isDay3 ? mastery.progress(question) : null;
-  const locked = isDay3 ? question.firstTry !== null || state.finished : question.solved;
+  const locked = isDay3 ? question.firstTry !== null || state.finished || !canPracticeDay3Question(index) : question.solved;
 
   card.classList.toggle("right", isDay3 ? state.status === "mastered" : question.solved);
   const needsRetry = question.firstTry === false && !question.solved;
@@ -695,13 +715,21 @@ function renderMasteryPractice(card, index) {
     card.append(panel);
     return;
   }
+  if (!canPracticeDay3Question(index)) {
+    const note = document.createElement("p");
+    note.className = "practice-order-note";
+    note.textContent = `You can review your saved answers here. Finish Question ${day3UnlockPosition() + 1} before continuing this question.`;
+    panel.append(note);
+    card.append(panel);
+    return;
+  }
   if (record.review?.ready === false) {
     const next = document.createElement("button");
     next.type = "button";
     next.className = "next-practice";
     next.textContent = `Next practice question (${state.used + 1}/10)`;
     next.addEventListener("click", () => {
-      if (!mastery.next(record)) return;
+      if (activeSet !== DAY3_SET || card.hidden || !canPracticeDay3Question(index) || !mastery.next(record)) return;
       saveRecords();
       renderQuestionState(card, index);
       focusPractice(card);
@@ -754,7 +782,7 @@ function renderMasteryPractice(card, index) {
       input.focus();
       return;
     }
-    if (!mastery.submit(record, typed, day3Banks[index], isCorrectAnswer)) return;
+    if (activeSet !== DAY3_SET || card.hidden || !canPracticeDay3Question(index) || !mastery.submit(record, typed, day3Banks[index], isCorrectAnswer)) return;
     saveRecords();
     renderQuestionState(card, index);
     updateProgress();
@@ -802,8 +830,8 @@ function loadSet(setNumber, captureDraft = true) {
   const isDay3 = setNumber === DAY3_SET;
   document.body.classList.toggle("day3-mode", isDay3);
   document.querySelector("#day3-question-nav").hidden = !isDay3;
-  if (isDay3 && !day3Indexes().includes(activeDay3Index)) {
-    activeDay3Index = day3Indexes().find(index => !mastery.progress(records[DAY3_SET].questions[index]).finished) ?? day3Indexes()[0];
+  if (isDay3 && !canOpenDay3Question(activeDay3Index)) {
+    activeDay3Index = day3Indexes()[day3UnlockPosition()];
   }
   const questions = activeQuestions();
   questionGrid.setAttribute(
@@ -886,7 +914,7 @@ cards.forEach((card, index) => {
     const question = activeRecord().questions[index];
     const activeQuestion = activeQuestions()[index];
     if (card.hidden || !question || !activeQuestion || activeQuestion.removed ||
-      (activeSet === DAY3_SET ? question.firstTry !== null || mastery.progress(question).finished : question.solved)) return;
+      (activeSet === DAY3_SET ? question.firstTry !== null || mastery.progress(question).finished || !canPracticeDay3Question(index) : question.solved)) return;
     const typed = input.value.trim();
     if (!typed) {
       feedback.textContent = "Enter an answer before checking.";

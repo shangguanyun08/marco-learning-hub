@@ -234,31 +234,29 @@ test("out-of-order STAR progress restores independently and cannot invent master
   assert.ok(normalized.attempts.every(a=>a.correct===false));
 });
 
-test("question buttons navigate past unanswered questions and preserve drafts", () => {
-  const api=boot();
-  vm.runInContext(`
-    function element() {return {childNodes:[],dataset:{},attributes:{},classList:{add(){},toggle(){}},append(...children){this.childNodes.push(...children);},replaceChildren(){this.childNodes=[];},setAttribute(k,v){this.attributes[k]=v;},addEventListener(k,v){this[k]=v;},scrollIntoView(){}};}
-    const elements=new Map();
-    const document={createElement:element,querySelector(selector){if(!elements.has(selector))elements.set(selector,element());return elements.get(selector);}};
-    const cards=Array.from({length:28},()=>({input:{value:""},querySelector(selector){return selector==="input"?this.input:null;}}));
-    let activeSet=6, activeDay3Index=5;
-    const day3Drafts=new Map();
-    function loadSet(set,capture){if(set!==6 || capture!==false)throw Error("Wrong reload");updateDay3Progress();}
-  `,api.context);
-  for(const name of ["lightStep","renderDay3TotalTrack","updateDay3Progress","moveDay3Question","openDay3Question","captureDay3Draft"]) vm.runInContext(declaration(name),api.context);
-  const result=vm.runInContext(`
-    updateDay3Progress();
-    const track=document.querySelector("#day3-total-track");
-    const count=track.childNodes.length;
-    cards[5].input.value="79";
-    track.childNodes[19].childNodes.at(-1).click();
-    const last=activeDay3Index, boundary=document.querySelector("#day3-next").disabled;
-    moveDay3Question(1);
-    const bounded=activeDay3Index===last;
-    moveDay3Question(-1);
-    ({count,last,boundary,bounded,previous:activeDay3Index,draft:day3Drafts.get("5:main")});
-  `,api.context);
-  assert.deepEqual(clone(result),{count:20,last:27,boundary:true,bounded:true,previous:26,draft:"79"});
+test("future question buttons stay locked while earlier questions and the current draft remain accessible", () => {
+  const page = bootHistoryPage(boot().records);
+  try {
+    const jumps = [...page.document.querySelectorAll(".question-jump")];
+    assert.equal(jumps.length, 20);
+    assert.deepEqual(jumps.map(button => button.disabled), [false, false, false, ...Array(17).fill(true)]);
+    const card = page.document.querySelector('[data-question="6"]');
+    card.querySelector("input").value = "79";
+    const before = JSON.stringify(page.api.records);
+    jumps[19].click();
+    page.api.openDay3Question(27);
+    page.api.moveDay3Question(1);
+    assert.equal(card.hidden, false, "A hidden or programmatic navigation cannot skip ahead");
+    assert.equal(page.document.querySelector("#day3-next").disabled, true);
+    jumps[0].click();
+    assert.equal(page.document.querySelector("#day3-previous").disabled, true);
+    assert.equal(page.document.querySelector("#day3-next").disabled, false);
+    page.document.querySelector('[data-question-index="5"]').click();
+    assert.equal(card.querySelector("input").value, "79");
+    assert.equal(JSON.stringify(page.api.records), before);
+    assert.equal(page.pushed.length, 0);
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
 });
 
 test("session markup and assets match the expanded question set without day tabs", () => {
@@ -352,7 +350,7 @@ function bootHistoryPage(saved) {
   win.HTMLDialogElement.prototype.close = function () {this.removeAttribute("open"); this.dispatchEvent(new win.Event("close"));};
   win.eval(read("./day3-mastery.js"));
   win.eval(read("./star-mastery.js"));
-  win.eval(source + "\n;globalThis.historyTest = {get records() {return records;}, missedAnswerDetails, openMissedAnswer};");
+  win.eval(source + "\n;globalThis.historyTest = {get records() {return records;}, missedAnswerDetails, openMissedAnswer, openDay3Question, moveDay3Question};");
   return {win, document: win.document, api: win.historyTest, pushed, errors, remote: value => remote(clone(value)), close: () => win.close()};
 }
 
@@ -447,6 +445,124 @@ test("mastered questions retain their misses without inventing unavailable first
     page.document.querySelector('[data-question="1"] [data-review-position="0"]').click();
     assert.match(page.document.querySelector("dialog .saved-wrong-answer").textContent, /123/);
     assert.equal(page.pushed.length, 0);
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+function finishBefore(data, number) {
+  for (const index of data.day3Indexes().slice(0, number - 1)) {
+    const current = data.records[6].questions[index];
+    if (data.mastery.progress(current).finished) continue;
+    Object.assign(current, {firstTry: true, attempts: 1, lastAnswer: String(data.questionSets[6][index].answer)});
+    submit(data, current, data.day3Banks[index], true);
+    submit(data, current, data.day3Banks[index], true);
+  }
+}
+
+function checkFollowUp(page, data, index, correct) {
+  const card = page.document.querySelector(`[data-question="${index + 1}"]`);
+  card.querySelector(".next-practice")?.click();
+  const count = page.api.records[6].questions[index].review.attempts.length;
+  const question = data.day3Banks[index][count];
+  const input = card.querySelector(".mastery-practice input");
+  assert.ok(input, "The unlocked question offers the next follow-up");
+  input.value = String(correct ? question.answer : question.choices?.find(value => !data.isCorrectAnswer(String(value), question)) ?? "-999");
+  input.closest("form").dispatchEvent(new page.win.Event("submit", {bubbles: true, cancelable: true}));
+}
+
+test("Q6 must finish before Q7 unlocks, with Q1–Q6 and their missed answers still reviewable", () => {
+  const data = boot();
+  finishBefore(data, 6);
+  Object.assign(data.records[6].questions[12], {firstTry: false, attempts: 1, lastAnswer: "1"});
+  const page = bootHistoryPage(data.records);
+  try {
+    const jump = index => page.document.querySelector(`[data-question-index="${index}"]`);
+    assert.equal(jump(14).disabled, true, "Q7 is locked during Q6");
+    for (const [index, correct] of [false, true, true, true].entries()) {
+      checkFollowUp(page, data, 12, correct);
+      assert.equal(jump(14).disabled, index < 3);
+    }
+    assert.equal(page.document.querySelector("#day3-next").disabled, false);
+    assert.equal(jump(15).disabled, true, "Q8 stays locked");
+    const beforeReview = JSON.stringify(page.api.records), writes = page.pushed.length;
+    jump(0).click();
+    jump(12).click();
+    page.document.querySelector('[data-question="13"] [data-review-position="1"]').click();
+    assert.ok(page.document.querySelector("dialog[open]"));
+    page.document.querySelector("dialog").close();
+    assert.equal(JSON.stringify(page.api.records), beforeReview);
+    assert.equal(page.pushed.length, writes);
+    page.document.querySelector("#day3-next").click();
+    const q7 = page.document.querySelector('[data-question="15"]');
+    assert.equal(q7.hidden, false);
+    [...q7.querySelectorAll(".choice-option")].find(button => button.dataset.value === data.questionSets[6][14].answer).click();
+    assert.equal(jump(15).disabled, true, "One right main answer is not enough to unlock Q8");
+    checkFollowUp(page, data, 14, true);
+    assert.equal(jump(15).disabled, true);
+    checkFollowUp(page, data, 14, true);
+    assert.equal(jump(15).disabled, false);
+    const reloaded = bootHistoryPage(page.api.records);
+    try {
+      assert.equal(reloaded.document.querySelector('[data-question="16"]').hidden, false, "Reload opens the first unfinished question, Q8");
+      assert.equal(reloaded.document.querySelector('[data-question-index="16"]').disabled, true);
+      assert.deepEqual(clone(reloaded.api.records), clone(page.api.records));
+    } finally { reloaded.close(); }
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+test("earlier out-of-order work stays reviewable but cannot continue until its turn", () => {
+  const data = boot(), later = data.records[6].questions[14];
+  Object.assign(later, {firstTry: false, attempts: 1, lastAnswer: "27:24"});
+  submit(data, later, data.day3Banks[14], false);
+  const page = bootHistoryPage(data.records);
+  try {
+    page.document.querySelector('[data-question-index="14"]').click();
+    const card = page.document.querySelector('[data-question="15"]');
+    assert.equal(card.hidden, false);
+    assert.match(card.querySelector(".practice-order-note").textContent, /Finish Question 3/);
+    assert.equal(card.querySelector(".mastery-practice form, .next-practice"), null);
+    assert.equal(page.document.querySelector("#day3-next").disabled, true);
+    const before = JSON.stringify(page.api.records);
+    card.querySelector('[data-review-position="1"]').click();
+    page.document.querySelector("dialog").close();
+    card.querySelector("form").dispatchEvent(new page.win.Event("submit", {bubbles: true, cancelable: true}));
+    assert.equal(JSON.stringify(page.api.records), before);
+    assert.equal(page.pushed.length, 0);
+    page.document.querySelector("#day3-previous").click();
+    assert.equal(page.document.querySelector('[data-question="6"]').hidden, false, "Previous returns to the nearest accessible question");
+    page.document.querySelector('[data-question-index="14"]').click();
+    finishBefore(data, 7);
+    page.remote(data.records);
+    assert.equal(card.hidden, false);
+    assert.equal(card.querySelector(".practice-order-note"), null);
+    assert.ok(card.querySelector(".next-practice"), "Remote completion of Q3–Q6 unlocks continuation of Q7");
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+test("finishing the ten-follow-up limit unlocks the next question and the last question has no next", () => {
+  const data = boot();
+  finishBefore(data, 6);
+  const current = data.records[6].questions[12];
+  Object.assign(current, {firstTry: false, attempts: 1, lastAnswer: "1"});
+  for (let i = 0; i < 9; i++) submit(data, current, data.day3Banks[12], false);
+  const page = bootHistoryPage(data.records);
+  try {
+    assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, true);
+    checkFollowUp(page, data, 12, false);
+    assert.equal(data.mastery.progress(page.api.records[6].questions[12]).status, "unmastered");
+    assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, false);
+    const allDone = boot(page.api.records);
+    finishBefore(allDone, 21);
+    page.remote(allDone.records);
+    page.document.querySelector('[data-question-index="27"]').click();
+    assert.equal(page.document.querySelector("#day3-next").disabled, true);
+    assert.equal(page.document.querySelectorAll(".question-jump:disabled").length, 0);
+    const saved = JSON.stringify(page.api.records);
+    page.api.moveDay3Question(1);
+    assert.equal(page.document.querySelector('[data-question="28"]').hidden, false);
+    assert.equal(JSON.stringify(page.api.records), saved);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
 });
