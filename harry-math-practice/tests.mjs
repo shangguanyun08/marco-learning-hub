@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
+import { JSDOM } from "jsdom";
 
 const read = file => readFileSync(new URL(file, import.meta.url), "utf8");
 const source = read("./app.js");
@@ -276,8 +277,10 @@ test("session markup and assets match the expanded question set without day tabs
 test("answer tracks grow only with checked answers and keep earlier misses after resets and reload", () => {
   function render(api, value) {
     api.context.document = {createElement() { return {
-      childNodes: [], attributes: {}, classList: {toggle() {}},
+      childNodes: [], attributes: {}, dataset: {}, classList: {toggle() {}},
       append(...nodes) { this.childNodes.push(...nodes); },
+      replaceChildren(...nodes) { this.childNodes = nodes; },
+      addEventListener() {},
       setAttribute(key, value) { this.attributes[key] = value; },
     }; }};
     for (const name of ["lightStep", "renderAnswerTrack"]) vm.runInContext(declaration(name), api.context);
@@ -332,4 +335,118 @@ test("mastery records the third correct answer time and preserves it through rel
   const oldQuestions = [];
   oldQuestions[5] = legacy;
   assert.equal(api.normalizeRecords({ 6: { questions: oldQuestions } })[6].questions[5].masteredAt, undefined);
+});
+
+function bootHistoryPage(saved) {
+  const dom = new JSDOM(html, {url: "https://practice.test/harry-math-practice/", runScripts: "outside-only"});
+  const win = dom.window, pushed = [], errors = [];
+  let remote;
+  win.addEventListener("error", event => errors.push(event.error));
+  win.localStorage.setItem("harry-math-practice-record-v1", JSON.stringify(saved));
+  win.MarcoOnlineSync = {create(options) {
+    remote = options.onRemote;
+    return {start() {}, push(value) { pushed.push(clone(value)); }};
+  }};
+  // Exercise dialog lifecycle without a browser layout engine.
+  win.HTMLDialogElement.prototype.showModal = function () {this.setAttribute("open", ""); this.querySelector("button")?.focus();};
+  win.HTMLDialogElement.prototype.close = function () {this.removeAttribute("open"); this.dispatchEvent(new win.Event("close"));};
+  win.eval(read("./day3-mastery.js"));
+  win.eval(read("./star-mastery.js"));
+  win.eval(source + "\n;globalThis.historyTest = {get records() {return records;}, missedAnswerDetails, openMissedAnswer};");
+  return {win, document: win.document, api: win.historyTest, pushed, errors, remote: value => remote(clone(value)), close: () => win.close()};
+}
+
+test("clicking a saved red answer opens the exact missed question and preserves the current draft and streak", () => {
+  const data = boot(), record = data.records[6].questions[5];
+  Object.assign(record, {firstTry: false, attempts: 1, lastAnswer: "700"});
+  submit(data, record, data.day3Banks[5], true);
+  submit(data, record, data.day3Banks[5], false);
+  const page = bootHistoryPage(data.records);
+  try {
+    const card = page.document.querySelector('[data-question="6"]');
+    card.querySelector(".next-practice").click();
+    const draft = card.querySelector(".mastery-practice input");
+    draft.value = "123";
+    const before = JSON.stringify(page.api.records), writes = page.pushed.length;
+    const storage = page.win.localStorage.getItem("harry-math-practice-record-v1");
+    const red = card.querySelector('[data-review-position="2"]');
+    assert.ok(red);
+    assert.equal(card.querySelectorAll(".answer-history-button").length, 2);
+    assert.equal(card.querySelector(".light-step.correct button"), null);
+    red.click();
+    const dialog = page.document.querySelector("dialog[open]");
+    assert.match(dialog.querySelector("h2").textContent, /Question 3 · Practice question 2/);
+    assert.match(dialog.querySelector(".expression").textContent, /476.*319/);
+    assert.equal(dialog.querySelector(".correct-answer strong").textContent, "795");
+    assert.match(dialog.querySelector(".saved-wrong-answer").textContent, /-999/);
+    assert.equal(dialog.querySelector("form, input"), null);
+    dialog.querySelector(".close-answer-review").click();
+    assert.equal(page.document.querySelector("dialog"), null);
+    assert.equal(page.document.activeElement, red);
+    assert.equal(draft.value, "123");
+    assert.equal(JSON.stringify(page.api.records), before);
+    assert.equal(page.pushed.length, writes);
+    assert.equal(page.win.localStorage.getItem("harry-math-practice-record-v1"), storage);
+    card.querySelector('[data-review-position="0"]').click();
+    assert.match(page.document.querySelector("dialog .saved-wrong-answer").textContent, /700/);
+    page.document.querySelector("dialog").close();
+    assert.equal(JSON.stringify(page.api.records), before);
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+test("missed diagram questions remain clickable after all ten follow-ups, reload and remote sync", () => {
+  const data = boot(), index = 20, record = data.records[6].questions[index];
+  const main = data.questionSets[6][index];
+  Object.assign(record, {firstTry: false, attempts: 1, lastAnswer: main.choices.find(value => !data.isCorrectAnswer(String(value), main))});
+  for (let i = 0; i < 10; i++) submit(data, record, data.day3Banks[index], false);
+  const page = bootHistoryPage(data.records);
+  try {
+    page.remote(data.records);
+    page.document.querySelector(`[data-question-index="${index}"]`).click();
+    const card = page.document.querySelector(`[data-question="${index + 1}"]`);
+    assert.equal(card.querySelectorAll(".answer-history-button").length, 11);
+    const before = JSON.stringify(page.api.records);
+    for (const position of [0, 1, 5, 10]) {
+      card.querySelector(`[data-review-position="${position}"]`).click();
+      const dialog = page.document.querySelector("dialog[open]");
+      const expected = position ? data.day3Banks[index][position - 1] : main;
+      assert.equal(dialog.querySelector(".correct-answer strong").textContent, expected.answer);
+      assert.ok(dialog.querySelector(".expression table"), "The saved question keeps its original data table");
+      assert.equal(dialog.querySelector(".correct-answer p").textContent, expected.explanation);
+      assert.equal(dialog.querySelectorAll(".saved-review-choice").length, 4);
+      assert.equal(dialog.querySelectorAll(".saved-review-choice.correct").length, 1);
+      assert.equal(dialog.querySelectorAll(".saved-review-choice.selected-wrong").length, 1);
+      dialog.close();
+    }
+    assert.equal(JSON.stringify(page.api.records), before);
+    assert.equal(page.pushed.length, 0);
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+test("mastered questions retain their misses without inventing unavailable first answers or future attempts", () => {
+  const data = boot(), record = data.records[6].questions[5];
+  Object.assign(record, {firstTry: false, attempts: 2, lastAnswer: "795", solved: true});
+  for (let i = 0; i < 3; i++) submit(data, record, data.day3Banks[5], true);
+  Object.assign(data.records[6].questions[0], {firstTry: false, attempts: 1, lastAnswer: "123"});
+  const page = bootHistoryPage(data.records);
+  try {
+    page.document.querySelector('[data-question-index="5"]').click();
+    const card = page.document.querySelector('[data-question="6"]');
+    assert.match(card.querySelector(".mastery-badge").textContent, /Mastered/);
+    card.querySelector('[data-review-position="0"]').click();
+    const dialog = page.document.querySelector("dialog[open]");
+    assert.match(dialog.querySelector(".saved-wrong-answer").textContent, /original answer was not saved/);
+    dialog.close();
+    for (const [index, position] of [[5, -1], [5, 1], [5, 4], [5, 11], [99, 0], [6, 0]]) {
+      page.api.openMissedAnswer(index, position);
+      assert.equal(page.document.querySelector("dialog"), null);
+    }
+    page.document.querySelector('[data-question-index="0"]').click();
+    page.document.querySelector('[data-question="1"] [data-review-position="0"]').click();
+    assert.match(page.document.querySelector("dialog .saved-wrong-answer").textContent, /123/);
+    assert.equal(page.pushed.length, 0);
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
 });

@@ -136,9 +136,79 @@ function lightStep(status, label, description) {
   return step;
 }
 
-function renderAnswerTrack(record) {
+function missedAnswerDetails(questionIndex, position) {
+  if (!Number.isInteger(position) || position < 0 || !day3Indexes().includes(questionIndex)) return null;
+  const record = records[DAY3_SET].questions[questionIndex];
+  const attempt = position === 0 ? { correct: record.firstTry, answer: record.attempts === 1 ? record.lastAnswer : null }
+    : record.review?.attempts[position - 1];
+  const question = position === 0 ? questionSets[DAY3_SET][questionIndex] : day3Banks[questionIndex]?.[position - 1];
+  if (!question || !attempt || attempt.correct !== false) return null;
+  return { question, answer: attempt.answer, number: day3Indexes().indexOf(questionIndex) + 1,
+    label: position === 0 ? "Main question" : `Practice question ${position}` };
+}
+
+function openMissedAnswer(questionIndex, position, opener) {
+  const details = missedAnswerDetails(questionIndex, position);
+  if (!details) return;
+  document.querySelector("#missed-answer-review")?.close();
+  const dialog = document.createElement("dialog");
+  dialog.id = "missed-answer-review";
+  dialog.className = "missed-answer-review";
+  dialog.setAttribute("aria-labelledby", "missed-answer-title");
+  const header = document.createElement("div");
+  header.className = "missed-answer-heading";
+  const title = document.createElement("h2");
+  title.id = "missed-answer-title";
+  title.textContent = `Question ${details.number} · ${details.label}`;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "close-answer-review";
+  close.textContent = "Back to practice";
+  close.autofocus = true;
+  close.addEventListener("click", () => dialog.close());
+  header.append(title, close);
+  const expression = document.createElement("div");
+  expression.className = "expression";
+  renderExpression(expression, details.question);
+  dialog.append(header, expression);
+  if (details.question.choices) {
+    const choices = document.createElement("div");
+    choices.className = "choice-grid saved-review-choices";
+    details.question.choices.forEach((value, index) => {
+      const item = document.createElement("div");
+      item.className = "saved-review-choice";
+      if (details.question.choicesHtml) item.innerHTML = details.question.choicesHtml[index];
+      else item.textContent = String(value);
+      const correct = isCorrectAnswer(String(value), details.question);
+      const selected = details.answer !== null && String(value) === details.answer;
+      item.classList.toggle("correct", correct);
+      item.classList.toggle("selected-wrong", selected && !correct);
+      if (correct || selected) {
+        const label = document.createElement("strong");
+        label.className = "saved-choice-result";
+        label.textContent = correct ? "✓ Correct answer" : "× Harry’s answer";
+        item.append(label);
+      }
+      choices.append(item);
+    });
+    dialog.append(choices);
+  }
+  const savedAnswer = document.createElement("p");
+  savedAnswer.className = "saved-wrong-answer";
+  savedAnswer.textContent = details.answer ? `Harry’s answer: ${details.answer}` : "His first answer was incorrect, but that original answer was not saved.";
+  dialog.append(savedAnswer, renderCorrectAnswer(details.question));
+  dialog.addEventListener("close", () => {
+    dialog.remove();
+    const target = opener?.isConnected ? opener : cards[questionIndex]?.querySelector(`[data-review-position="${position}"]`);
+    target?.focus();
+  });
+  document.body.append(dialog);
+  dialog.showModal();
+}
+
+function renderAnswerTrack(record, questionIndex) {
   const state = mastery.progress(record);
-  if (state.credited) {
+  if (state.credited && record.firstTry === null) {
     const track = document.createElement("section");
     track.className = "answer-track mastery-credit";
     track.textContent = "✓ Already mastered";
@@ -155,7 +225,7 @@ function renderAnswerTrack(record) {
   title.textContent = "Your answer track";
   const streak = document.createElement("span");
   streak.className = "visual-streak";
-  streak.textContent = `${state.streak}/3 in a row`;
+  streak.textContent = state.credited ? "Already mastered" : `${state.streak}/3 in a row`;
   heading.append(title, streak);
   const list = document.createElement("ol");
   list.className = "answer-lights";
@@ -167,11 +237,22 @@ function renderAnswerTrack(record) {
     const description = `${name}: ${status}`;
     const step = lightStep(status, label, description);
     step.classList.toggle("in-streak", correct && position >= results.length - state.streak);
+    if (!correct) {
+      const review = document.createElement("button");
+      review.type = "button";
+      review.className = "answer-history-button";
+      review.dataset.reviewPosition = String(position);
+      review.setAttribute("aria-label", `Review ${name.toLowerCase()}: incorrect`);
+      review.setAttribute("aria-haspopup", "dialog");
+      review.append(...step.childNodes);
+      review.addEventListener("click", () => openMissedAnswer(questionIndex, position, review));
+      step.replaceChildren(review);
+    }
     list.append(step);
   });
   const legend = document.createElement("p");
   legend.className = "light-legend";
-  legend.textContent = "✓ Green = right · × Red = wrong";
+  legend.textContent = "✓ Green = right · Tap a red answer to review it.";
   track.append(heading);
   if (results.length) track.append(list, legend);
   return track;
@@ -565,7 +646,7 @@ function renderQuestionState(card, index) {
   card.querySelector(".mastery-practice")?.remove();
   card.querySelector(".answer-track")?.remove();
   if (isDay3) {
-    card.querySelector(".card-top").after(renderAnswerTrack(question));
+    card.querySelector(".card-top").after(renderAnswerTrack(question, index));
     card.classList.toggle("retry", state.status === "practicing");
     card.classList.toggle("wrong", state.status === "unmastered");
     const badge = document.createElement("span");
