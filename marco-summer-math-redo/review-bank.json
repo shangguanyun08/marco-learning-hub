@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "targetScore": 90,
   "sourceDays": [
     1,
@@ -660,6 +660,7 @@
     {
       "day": 30,
       "label": "Review 2",
+      "archived": true,
       "questions": [
         {
           "id": "review2-q01",

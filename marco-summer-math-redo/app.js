@@ -95,8 +95,9 @@
       targetScore: reviewBank.targetScore,
       questionCount: session.questions.length,
     }));
-    const days = [...previousDays, ...reviewDays, ...practiceDays];
-    bank = { ...questionBank, totalQuestions: days.reduce((total, day) => total + day.questionCount, 0), days };
+    const days = [...previousDays, ...reviewDays.filter((day) => !day.archived), ...practiceDays];
+    bank = { ...questionBank, totalQuestions: days.reduce((total, day) => total + day.questionCount, 0), days,
+      archivedDays: reviewDays.filter((day) => day.archived) };
   }
 
   function carriedAttempts(day) {
@@ -590,7 +591,7 @@
   }
 
   function allRecordedQuestions() {
-    return new Map([...sourceBank.days, ...bank.days.filter((day) => day.review)].flatMap((day) => day.questions.flatMap((question) => [question, ...(question.practiceQuestions || [])])).map((question) => [question.id, question]));
+    return new Map([...sourceBank.days, ...bank.days.filter((day) => day.review), ...bank.archivedDays].flatMap((day) => day.questions.flatMap((question) => [question, ...(question.practiceQuestions || [])])).map((question) => [question.id, question]));
   }
 
   function attemptDetails(attempt, questions = allRecordedQuestions()) {
@@ -599,7 +600,7 @@
     const parentId = attempt.parentQuestionId || question.parentQuestionId || question.id;
     const parent = questions.get(parentId) || question;
     const session = state.sessions.find((item) => item.id === attempt.sessionId);
-    const day = bank.days.find((item) => item.day === (session?.day ?? attempt.day));
+    const day = [...bank.days, ...bank.archivedDays].find((item) => item.day === (session?.day ?? attempt.day));
     const label = question.parentQuestionId
       ? `Extra question ${question.practiceNumber}`
       : `Main question${attempt.attemptNumber > 1 ? ` · Try ${attempt.attemptNumber}` : ''}`;
@@ -674,7 +675,7 @@
     const completedSessions = state.sessions
       .filter((session) => session.completedAt)
       .map((session) => {
-        const day = bank.days.find((item) => item.day === session.day) || sourceBank.days.find((item) => item.day === session.day);
+        const day = [...bank.days, ...bank.archivedDays].find((item) => item.day === session.day) || sourceBank.days.find((item) => item.day === session.day);
         return day ? {
           day,
           session,
@@ -743,7 +744,7 @@
               <div class="record-row record-header" role="row"><span>Question</span><span>Wrong times</span><span>First-try</span><span>Second-try</span><span>Last checked</span></div>
               ${historyRows.map((row) => {
                 return `<div class="record-row" role="row">
-                  <span><b>${row.question.sourceDay ? esc(bank.days.find((day) => day.day === row.question.day)?.label || 'Review') : `Day ${row.question.day}`} · Q${row.question.position}</b><small>${row.question.sourceDay ? `Similar to Day ${row.question.sourceDay} · ` : ''}Original #${esc(row.question.sourceNumber || "—")}${row.practiceWrong ? ` · Extra practice misses: ${row.practiceWrong}` : ''}</small><button class="history-review-link" data-action="wrong-question" data-question-id="${esc(row.question.id)}" type="button">Review wrong answers</button></span>
+                  <span><b>${row.question.sourceDay ? esc([...bank.days, ...bank.archivedDays].find((day) => day.day === row.question.day)?.label || 'Review') : `Day ${row.question.day}`} · Q${row.question.position}</b><small>${row.question.sourceDay ? `Similar to Day ${row.question.sourceDay} · ` : ''}Original #${esc(row.question.sourceNumber || "—")}${row.practiceWrong ? ` · Extra practice misses: ${row.practiceWrong}` : ''}</small><button class="history-review-link" data-action="wrong-question" data-question-id="${esc(row.question.id)}" type="button">Review wrong answers</button></span>
                   <span><i class="wrong-count">${row.wrong.length}×</i></span>
                   <span><i class="${row.firstWrong ? "miss-mark" : "clear-mark"}">${row.firstWrong || "—"}</i></span>
                   <span><i class="${row.secondWrong ? "miss-mark strong" : "clear-mark"}">${row.secondWrong || "—"}</i></span>
@@ -761,7 +762,7 @@
     const day = bank.days.find((item) => item.day === selectedDay) || bank.days[0];
     const dayMetrics = metrics(day);
     app.className = "site-shell";
-    const navigation = day.mastery ? `<details class="session-picker"><summary>${esc(day.label)} · Change session</summary>${railHtml(day)}</details>` : railHtml(day);
+    const navigation = railHtml(day);
     app.innerHTML = `${headerHtml()}${view === 'answer-review' ? answerReviewHtml() : view === 'wrong' ? wrongAnswersHtml() : view === "progress" ? progressHtml(stats) : `<section class="workspace">${navigation}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
   }
 
@@ -786,7 +787,7 @@
     if (action === "next-main") nextMainQuestion();
   });
 
-  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=2', 'review1-practice-bank.json?v=1'].map(async (url) => {
+  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=3', 'review1-practice-bank.json?v=1'].map(async (url) => {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error('The practice sessions could not be loaded. Please refresh.');
     return response.json();

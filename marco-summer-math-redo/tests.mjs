@@ -185,12 +185,12 @@ test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', asy
   assert.equal((app.innerHTML.match(/class="question-card" id=/g) || []).length, 1);
   assert.match(app.innerHTML, /Choose any main question/);
   assert.match(app.innerHTML, /<strong>All sessions<\/strong>/);
-  assert.match(app.innerHTML, /5 of 21 finished/);
+  assert.match(app.innerHTML, /5 of 20 finished/);
   const rail = app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
-  assert.equal((rail.match(/data-action="day"/g) || []).length, 21);
+  assert.equal((rail.match(/data-action="day"/g) || []).length, 20);
   assert.equal((app.innerHTML.match(/class="session-score">First try: 100\/100/g) || []).length, 5);
   assert.doesNotMatch(app.innerHTML, /completed-work/);
-  assert.match(app.innerHTML, /<details class="session-picker">/);
+  assert.doesNotMatch(app.innerHTML, /<details class="session-picker">/);
   assert.doesNotMatch(app.innerHTML, /hero-strip|sessions finished|missed first try|missed second try/);
   assert.equal(pushed.length, 0, 'Rendering must not modify saved progress');
 });
@@ -216,7 +216,7 @@ test('opening on a new device selects the next unfinished session after online s
     finishPractice(first.api, question);
   }
   const { api } = await boot(fresh(), clone(first.api.state));
-  assert.equal(api.selectedDay, 30);
+  assert.equal(api.selectedDay, 15);
 });
 
 test('selection does not save; checking supports two tries, reload and out-of-order completion', async () => {
@@ -244,11 +244,11 @@ test('selection does not save; checking supports two tries, reload and out-of-or
   reloaded.api.answer(question.id, question.correctIndexes[0]);
   assert.deepEqual(clone(reloaded.api.state), finalState, 'Completed answers cannot start a new run');
   assert.match(reloaded.app.innerHTML, /Continue to Review 1/);
-  assert.match(reloaded.app.innerHTML, /6 of 21 finished/);
+  assert.match(reloaded.app.innerHTML, /6 of 20 finished/);
   assert.match(reloaded.app.innerHTML, /class="active done" data-action="day" data-day="15"/);
   assert.match(reloaded.app.innerHTML, /class="session-score">First try: 90\/100/);
   const rail = reloaded.app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
-  assert.equal((rail.match(/data-action="day"/g) || []).length, 21);
+  assert.equal((rail.match(/data-action="day"/g) || []).length, 20);
 });
 
 test('legacy first tries carry into regrouped sessions once, without copying history', async () => {
@@ -300,7 +300,7 @@ test('final session contains only 4 questions and completion handles no remainin
       finishPractice(api, question);
     }
   }
-  assert.equal(api.summary().resolvedQuestions, 228);
+  assert.equal(api.summary().resolvedQuestions, 212);
   assert.match(app.innerHTML, /All sessions are finished/);
   assert.match(app.innerHTML, /All 4 questions/);
   assert.doesNotMatch(app.innerHTML, /Continue to Session/);
@@ -320,11 +320,12 @@ test('regrouped membership is unchanged by new answers and original reruns keep 
   assert.deepEqual(clone(reload.api.bank.days.map(day => day.questions.map(q => q.id))), membership);
 });
 
-test('both sixteen-question reviews each cover every miss and precede Session 1', async () => {
+test('Review 1 covers all sixteen misses and precedes Session 1 with stable session IDs', async () => {
   const initial = completedOriginalDays();
   const { api, app, pushed } = await boot(initial);
   const reviewDays = api.bank.days.filter(day => day.review);
-  assert.deepEqual(clone(reviewDays.map(day => [day.day, day.label, day.questionCount, day.targetScore])), [[29, 'Review 1', 16, 90], [30, 'Review 2', 16, 90]]);
+  assert.deepEqual(clone(reviewDays.map(day => [day.day, day.label, day.questionCount, day.targetScore])), [[29, 'Review 1', 16, 90]]);
+  assert.deepEqual(clone(api.bank.days.map(day => day.day)), [1, 2, 7, 8, 9, 29, ...Array.from({length: 14}, (_, i) => i + 15)]);
   const sourceIds = [
     'd01-q05', 'd02-q04', 'd02-q08', 'd02-q13', 'd02-q17', 'd02-q18', 'd02-q19', 'd02-q21',
     'd07-q01', 'd07-q03', 'd07-q08', 'd08-q04', 'd09-q04', 'd09-q11', 'd09-q12', 'd09-q13',
@@ -334,17 +335,16 @@ test('both sixteen-question reviews each cover every miss and precede Session 1'
   for (const day of reviewDays) assert.deepEqual(clone(day.questions.map(q => q.sourceQuestionId).sort()), sourceIds);
   for (const id of sourceIds) {
     const pair = questions.filter(q => q.sourceQuestionId === id);
-    assert.equal(pair.length, 2);
-    assert.notEqual(pair[0].questionText, pair[1].questionText);
+    assert.equal(pair.length, 1);
   }
   const originalIds = new Set(originalBank.days.flatMap(day => day.questions.map(q => q.id)));
-  assert.equal(new Set(questions.map(q => q.id)).size, 32);
-  assert.equal(api.bank.totalQuestions, 228);
+  assert.equal(new Set(questions.map(q => q.id)).size, 16);
+  assert.equal(api.bank.totalQuestions, 212);
   assert.ok(questions.every(q => !originalIds.has(q.id)));
   assert.deepEqual(clone(api.state), initial, 'Opening reviews must leave all completed work untouched');
   assert.equal(pushed.length, 0);
-  assert.ok(app.innerHTML.indexOf('<b>Review 1</b>') < app.innerHTML.indexOf('<b>Review 2</b>'));
-  assert.ok(app.innerHTML.indexOf('<b>Review 2</b>') < app.innerHTML.indexOf('<b>Session 1</b>'));
+  assert.ok(app.innerHTML.indexOf('<b>Review 1</b>') < app.innerHTML.indexOf('<b>Session 1</b>'));
+  assert.doesNotMatch(app.innerHTML, /<b>Review 2<\/b>|data-day="30"/);
   assert.doesNotMatch(app.innerHTML, /Tap any main question below|on your main answers\. Extra practice/);
   assert.ok(reviewDays.every(day => api.metrics(day).resolved === 0), 'Reviews must not inherit original answers');
   for (const q of questions) {
@@ -423,10 +423,6 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   finish(review, 1);
   assert.equal(api.metrics(review).firstTryScore, 94);
   assert.match(app.innerHTML, /Goal met!/);
-  assert.equal(api.nextPracticeDay().day, 30);
-  const next = api.bank.days.find(day => day.day === 30);
-  finish(next, 0);
-  assert.equal(api.metrics(next).firstTryScore, 100);
   assert.equal(api.nextPracticeDay().day, 15);
   assert.deepEqual(clone(api.state.attempts.slice(0, initial.attempts.length)), initial.attempts);
   assert.deepEqual(clone(api.state.sessions.slice(0, initial.sessions.length)), initial.sessions);
@@ -697,16 +693,34 @@ test('all sixteen mastery outcomes finish a round, preserve the 16-question scor
   assert.equal(api.masteryProgress(day,day.questions[0]).practice.length,0);
 });
 
-test('Review 2 retains all sixteen cards and its original two-try behavior', async () => {
-  const {api,app}=await boot();
+test('Review 2 is absent from practice while its saved scores and answers remain reviewable', async () => {
+  const initial = completedOriginalDays();
+  const archived = reviews.sessions.find(day => day.day === 30);
+  const session = {id: 'retired-review-2', day: 30, runNumber: 1, startedAt: '2026-09-06T01:00:00Z', completedAt: '2026-09-06T02:00:00Z'};
+  initial.sessions.push(session);
+  archived.questions.forEach((q, index) => initial.attempts.push({
+    id: `retired-answer-${index}`, sessionId: session.id, day: 30, questionId: q.id,
+    questionPosition: q.position, attemptNumber: 1, selectedIndex: index ? q.correctIndexes[0] : wrongIndex(q),
+    correct: index > 0, createdAt: session.completedAt,
+  }));
+  const {api, app, pushed, remote} = await boot(initial);
+  assert.equal(api.bank.days.some(day => day.day === 30), false);
+  assert.equal(api.bank.archivedDays[0].day, 30);
+  assert.match(app.innerHTML, /5 of 20 finished/);
+  assert.doesNotMatch(app.innerHTML, /Review 2|data-day="30"|class="session-picker"/);
   api.chooseDay(30);
-  const day=api.bank.days.find(d=>d.day===30),q=day.questions[0];
-  assert.equal((app.innerHTML.match(/class="question-card" id=/g)||[]).length,16);
-  check(api,q,false);
-  assert.match(app.innerHTML,/Not quite. Try once more./);
-  check(api,q,true);
-  assert.equal(api.metrics(day).resolved,1);
-  assert.doesNotMatch(app.innerHTML,/class="extra-practice"/);
+  assert.equal(api.selectedDay, 29, 'Retired reviews cannot be opened for new practice');
+  click(app, {action: 'view', view: 'progress'});
+  assert.match(app.innerHTML, /Review 2/);
+  assert.match(app.innerHTML, /94\/100/);
+  click(app, {action: 'view', view: 'wrong'});
+  assert.match(app.innerHTML, /Review 2/);
+  click(app, {action: 'review-answer', attemptId: 'retired-answer-0'});
+  assert.match(app.innerHTML, /Review 2/);
+  assert.match(app.innerHTML, /Correct answer/);
+  remote(clone(initial));
+  assert.deepEqual(clone(api.state), initial);
+  assert.equal(pushed.length, 0, 'Removing a practice entry and reading history must not alter saved work');
 });
 
 test('exactly 160 unique practice questions have independently verified answers and distinct choices', () => {
