@@ -11,6 +11,7 @@ const reviews = JSON.parse(await readFile(new URL('./review-bank.json', import.m
 const practiceBank = JSON.parse(await readFile(new URL('./review1-practice-bank.json', import.meta.url), 'utf8'));
 const clone = value => JSON.parse(JSON.stringify(value));
 const fresh = () => ({ schemaVersion: 1, learner: 'Marco', sessions: [], attempts: [], updatedAt: null });
+const click = (app, dataset) => app.click({ target: { closest: () => ({ dataset }) } });
 
 function completedOriginalDays() {
   const state = fresh();
@@ -46,6 +47,128 @@ function finishPractice(api, question) {
     api.answer(practice.id, practice.correctIndexes[0]);
   }
 }
+
+test('reviewing track answers preserves the streak, saved state and unfinished answer selection', async () => {
+  const { api, app, storage, pushed } = await boot();
+  const day = api.bank.days.find(day => day.day === 29);
+  const main = day.questions[0];
+  const wrongIndex = q => q.options.findIndex((_, index) => !q.correctIndexes.includes(index));
+  api.answer(main.id, wrongIndex(main));
+  const [first, second, current] = main.practiceQuestions;
+  api.answer(first.id, wrongIndex(first));
+  api.answer(second.id, second.correctIndexes[0]);
+  api.nextPracticeQuestion(main.id);
+  api.selectAnswer(current.id, current.correctIndexes[0]);
+  const saved = clone(api.state);
+  const stored = storage.get('marco-summer-isee-math-redo-v1:state');
+  const pushCount = pushed.length;
+  const mainAttempt = saved.attempts.find(a => a.questionId === main.id);
+  const firstAttempt = saved.attempts.find(a => a.questionId === first.id);
+  const secondAttempt = saved.attempts.find(a => a.questionId === second.id);
+  assert.match(app.innerHTML, new RegExp(`data-action="review-answer" data-attempt-id="${firstAttempt.id}"`));
+  click(app, { action: 'review-answer', attemptId: mainAttempt.id });
+  assert.ok(app.innerHTML.includes(main.questionHtml));
+  assert.match(app.innerHTML, /1 of 3 saved answers/);
+  assert.match(app.innerHTML, /disabled>Previous answer/);
+  click(app, { action: 'review-answer', attemptId: firstAttempt.id });
+  assert.ok(app.innerHTML.includes(first.questionHtml), 'Review uses the exact missed extra question');
+  assert.ok(app.innerHTML.includes(first.options[wrongIndex(first)].html), 'His selected wrong answer is visible');
+  assert.ok(app.innerHTML.includes(first.correctHtml));
+  assert.match(app.innerHTML, /Marco's answer/);
+  assert.match(app.innerHTML, /2 of 3 saved answers/);
+  assert.doesNotMatch(app.innerHTML, /data-action="check-answer"|data-action="select-answer"/);
+  click(app, { action: 'review-answer', attemptId: secondAttempt.id });
+  assert.match(app.innerHTML, /3 of 3 saved answers/);
+  assert.match(app.innerHTML, /disabled>Next answer/);
+  click(app, { action: 'close-review' });
+  assert.ok(app.innerHTML.includes(current.questionHtml));
+  assert.match(app.innerHTML, new RegExp(`class="selected"[^>]*data-question-id="${current.id}"`));
+  assert.deepEqual(clone(api.state), saved);
+  assert.equal(storage.get('marco-summer-isee-math-redo-v1:state'), stored);
+  assert.equal(pushed.length, pushCount, 'Browsing never writes or syncs practice progress');
+  assert.equal(api.masteryProgress(day, main).streak, 1);
+  click(app, { action: 'review-answer', attemptId: 'unsaved-answer' });
+  assert.ok(app.innerHTML.includes(current.questionHtml), 'Only saved attempts can be reviewed');
+});
+
+test('all 11 checked answers remain reviewable after exhaustion, reload and remote sync', async () => {
+  const first = await boot();
+  const day = first.api.bank.days.find(day => day.day === 29);
+  const main = day.questions[0];
+  for (const question of [main, ...main.practiceQuestions]) {
+    first.api.answer(question.id, question.options.findIndex((_, index) => !question.correctIndexes.includes(index)));
+  }
+  const saved = clone(first.api.state);
+  const restored = await boot(fresh(), saved);
+  click(restored.app, { action: 'choose-main', questionId: main.id });
+  const attempts = saved.attempts.filter(a => a.questionId === main.id || a.parentQuestionId === main.id);
+  assert.equal(attempts.length, 11);
+  for (const attempt of [attempts[0], attempts.at(-1)]) {
+    click(restored.app, { action: 'review-answer', attemptId: attempt.id });
+    const question = [main, ...main.practiceQuestions].find(q => q.id === attempt.questionId);
+    assert.ok(restored.app.innerHTML.includes(question.questionHtml));
+    assert.match(restored.app.innerHTML, /of 11 saved answers/);
+    restored.remote(saved);
+    assert.ok(restored.app.innerHTML.includes(question.questionHtml), 'Sync preserves the open review');
+    click(restored.app, { action: 'close-review' });
+  }
+  assert.equal(restored.api.masteryProgress(day, main).unmastered, true);
+  assert.deepEqual(clone(restored.api.state), saved);
+  assert.equal(restored.pushed.length, 0);
+});
+
+test('wrong answers include earlier rounds and both original and extra questions', async () => {
+  const first = await boot();
+  const review = first.api.bank.days.find(day => day.day === 29);
+  const main = review.questions[0];
+  const extra = main.practiceQuestions[0];
+  for (const q of [main, extra]) first.api.answer(q.id, q.options.findIndex((_, i) => !q.correctIndexes.includes(i)));
+  first.api.chooseDay(15);
+  const original = first.api.bank.days.find(day => day.day === 15).questions[0];
+  const wrong = original.options.map((_, i) => i).filter(i => !original.correctIndexes.includes(i));
+  first.api.answer(original.id, wrong[0]);
+  first.api.answer(original.id, wrong[1]);
+  const saved = clone(first.api.state);
+  saved.sessions.push({ id: 'later-round', day: 29, runNumber: 2, completedAt: null });
+  const { api, app, pushed } = await boot(saved);
+  click(app, { action: 'view', view: 'wrong' });
+  assert.match(app.innerHTML, /4 wrong answers/);
+  assert.match(app.innerHTML, /Main question · Try 2/);
+  assert.match(app.innerHTML, /Extra question 1 · Round 1/);
+  const extraAttempt = saved.attempts.find(a => a.questionId === extra.id);
+  click(app, { action: 'review-answer', attemptId: extraAttempt.id });
+  assert.ok(app.innerHTML.includes(extra.questionHtml));
+  assert.match(app.innerHTML, /Saved answer · Round 1/);
+  assert.match(app.innerHTML, /Back to wrong answers/);
+  click(app, { action: 'close-review' });
+  assert.match(app.innerHTML, /4 wrong answers/);
+  click(app, { action: 'view', view: 'progress' });
+  assert.match(app.innerHTML, /data-action="wrong-question"/);
+  click(app, { action: 'wrong-question', questionId: main.id });
+  assert.match(app.innerHTML, /2 wrong answers/);
+  assert.doesNotMatch(app.innerHTML, /Main question · Try 2/);
+  click(app, { action: 'view', view: 'wrong' });
+  assert.match(app.innerHTML, /4 wrong answers/);
+  assert.deepEqual(clone(api.state), saved);
+  assert.equal(pushed.length, 0);
+});
+
+test('progress track reviews return to progress and an empty history is clear', async () => {
+  const { api, app, pushed } = await boot();
+  click(app, { action: 'view', view: 'wrong' });
+  assert.match(app.innerHTML, /No saved wrong answers yet/);
+  click(app, { action: 'view', view: 'practice' });
+  const main = api.bank.days.find(day => day.day === 29).questions[0];
+  api.answer(main.id, main.correctIndexes[0]);
+  const attempt = api.state.attempts.at(-1);
+  click(app, { action: 'view', view: 'progress' });
+  assert.match(app.innerHTML, new RegExp(`data-action="review-answer" data-attempt-id="${attempt.id}"`));
+  click(app, { action: 'review-answer', attemptId: attempt.id });
+  assert.match(app.innerHTML, /Back to progress/);
+  click(app, { action: 'close-review' });
+  assert.match(app.innerHTML, /Marco's Progress/);
+  assert.equal(pushed.length, 1);
+});
 
 test('134 unfinished questions form stable, disjoint sessions of 10 plus 4', async () => {
   const { api, app, pushed } = await boot();

@@ -13,6 +13,9 @@
   let feedbackByQuestion = {};
   let selectedAnswers = {};
   let reviewQuestionId = null;
+  let reviewedAttemptId = null;
+  let reviewReturnView = "practice";
+  let wrongQuestionId = null;
   let sync = null;
 
   function freshState() {
@@ -346,6 +349,7 @@
           <nav aria-label="Main navigation">
             <button class="${view === "practice" ? "active" : ""}" data-action="view" data-view="practice" type="button">Practice</button>
             <button class="${view === "progress" ? "active" : ""}" data-action="view" data-view="progress" type="button">Progress</button>
+            <button class="${view === "wrong" || view === "answer-review" ? "active" : ""}" data-action="view" data-view="wrong" type="button">Wrong answers</button>
           </nav>
           <div class="sync-pill" data-online-sync="${APP_ID}" role="status"><span></span> Connecting online…</div>
         </div>
@@ -477,12 +481,12 @@
       const result = answer.correct ? 'correct' : 'incorrect';
       const label = index === 0 ? 'Main question' : `Extra question ${index}`;
       const status = answer.correct ? 'Correct' : 'Incorrect';
-      return `<li class="answer-step ${result}" aria-label="${label}: ${status}" title="${label}: ${status}"><span class="answer-light" aria-hidden="true">${answer.correct ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></li>`;
+      return `<li class="answer-step ${result}"><button class="answer-review-button" data-action="review-answer" data-attempt-id="${esc(answer.id)}" type="button" aria-label="${label}: ${status}. Review answer" title="${label}: ${status}. Review answer"><span class="answer-light" aria-hidden="true">${answer.correct ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></button></li>`;
     }).join('');
     return `<div class="answer-track-panel${compact ? ' compact' : ''}" aria-label="Answer track for Question ${question.position}">
       ${compact ? '' : `<div class="answer-track-heading"><strong>Your answer track</strong><div class="streak-meter" aria-label="${progress.streak} of ${day.mastery.requiredStreak} correct in a row"><span>In a row</span><b>${progress.streak}/${day.mastery.requiredStreak}</b></div></div>`}
       ${answers.length ? `<ol class="answer-track" aria-label="Checked answers">${lights}</ol>` : ''}
-      ${compact ? '' : '<p class="answer-track-hint">Three greens in a row = mastered.</p>'}
+      ${compact ? '' : '<p class="answer-track-hint">Three greens in a row = mastered. Tap any red or green mark to review that answer.</p>'}
     </div>`;
   }
 
@@ -585,8 +589,86 @@
       </main>`;
   }
 
+  function allRecordedQuestions() {
+    return new Map([...sourceBank.days, ...bank.days.filter((day) => day.review)].flatMap((day) => day.questions.flatMap((question) => [question, ...(question.practiceQuestions || [])])).map((question) => [question.id, question]));
+  }
+
+  function attemptDetails(attempt, questions = allRecordedQuestions()) {
+    const question = questions.get(attempt.questionId);
+    if (!question) return null;
+    const parentId = attempt.parentQuestionId || question.parentQuestionId || question.id;
+    const parent = questions.get(parentId) || question;
+    const session = state.sessions.find((item) => item.id === attempt.sessionId);
+    const day = bank.days.find((item) => item.day === (session?.day ?? attempt.day));
+    const label = question.parentQuestionId
+      ? `Extra question ${question.practiceNumber}`
+      : `Main question${attempt.attemptNumber > 1 ? ` · Try ${attempt.attemptNumber}` : ''}`;
+    return { question, parentId, parent, session, label,
+      heading: `${day?.label || `Day ${attempt.day}`} · Q${parent.position}` };
+  }
+
+  function openAnswerReview(attemptId) {
+    const attempt = state.attempts.find((item) => item.id === attemptId);
+    if (!attempt || !attemptDetails(attempt)) return;
+    if (view !== 'answer-review') reviewReturnView = view;
+    reviewedAttemptId = attemptId;
+    view = 'answer-review';
+    hasChosenDay = true;
+    render();
+    app.querySelector?.('#saved-answer-review')?.focus();
+  }
+
+  function answerReviewHtml() {
+    const attempt = state.attempts.find((item) => item.id === reviewedAttemptId);
+    const details = attempt && attemptDetails(attempt);
+    if (!details) return `<main class="progress-page"><div class="empty-record">This answer is no longer in the saved record.</div><button class="secondary-action" data-action="close-review" type="button">Go back</button></main>`;
+    const { question, parentId, parent, session, label, heading } = details;
+    const questions = allRecordedQuestions();
+    const sequence = state.attempts.filter((item) => item.sessionId === attempt.sessionId
+      && attemptDetails(item, questions)?.parentId === parentId)
+      .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    const index = sequence.findIndex((item) => item.id === attempt.id);
+    const chosen = question.options[attempt.selectedIndex];
+    const backLabel = reviewReturnView === 'wrong' ? 'Back to wrong answers' : reviewReturnView === 'progress' ? 'Back to progress' : 'Back to practice';
+    return `<main class="saved-answer-page">
+      <section class="question-card saved-answer-card" id="saved-answer-review" tabindex="-1" aria-label="Saved answer review">
+        <div class="saved-answer-heading"><div><p class="eyebrow">Saved answer · Round ${session?.runNumber || 1}</p><h2>${esc(heading)} · ${esc(label)}</h2>${parent.skill ? `<p>${esc(parent.skill)}</p>` : ''}</div><button class="secondary-action" data-action="close-review" type="button">${backLabel}</button></div>
+        <p class="saved-answer-time">${esc(formatFinishedAt(attempt.createdAt))} · <strong>${attempt.correct ? 'Correct' : 'Incorrect'}</strong></p>
+        <div class="problem">${question.questionHtml}</div>
+        <div class="saved-answer-choice ${attempt.correct ? 'right' : 'wrong'}"><strong>Marco's answer</strong><div>${chosen ? `${esc(chosen.label)}. ${chosen.html}` : 'Answer choice unavailable'}</div></div>
+        <div class="saved-answer-choice right"><strong>Correct answer</strong><div>${question.correctHtml}</div></div>
+        <div class="saved-answer-explanation"><strong>Quick explanation</strong><p>${esc(question.explanation)}</p></div>
+        <footer class="saved-answer-navigation">
+          <button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(sequence[index - 1]?.id || '')}" type="button" ${index === 0 ? 'disabled' : ''}>Previous answer</button>
+          <span>${index + 1} of ${sequence.length} saved answers</span>
+          <button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(sequence[index + 1]?.id || '')}" type="button" ${index === sequence.length - 1 ? 'disabled' : ''}>Next answer</button>
+        </footer>
+      </section>
+    </main>`;
+  }
+
+  function wrongAnswersHtml() {
+    const questions = allRecordedQuestions();
+    const groups = new Map();
+    const wrong = state.attempts.filter((attempt) => !attempt.correct)
+      .map((attempt) => ({ attempt, details: attemptDetails(attempt, questions) }))
+      .filter((item) => item.details && (!wrongQuestionId || item.details.parentId === wrongQuestionId))
+      .sort((a, b) => new Date(b.attempt.createdAt) - new Date(a.attempt.createdAt));
+    for (const item of wrong) {
+      if (!groups.has(item.details.parentId)) groups.set(item.details.parentId, []);
+      groups.get(item.details.parentId).push(item);
+    }
+    return `<main class="progress-page wrong-answers-page">
+      <div class="progress-heading"><div><p class="eyebrow">All saved rounds</p><h2>Wrong answers</h2><p>${wrong.length} wrong ${wrong.length === 1 ? 'answer' : 'answers'}. Open one to see the question, Marco's answer, and the correct answer.</p></div><div class="complete-actions">${wrongQuestionId ? '<button class="secondary-action" data-action="view" data-view="wrong" type="button">Show all wrong answers</button>' : ''}<button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button></div></div>
+      ${wrong.length ? [...groups.values()].map((items) => {
+        const { parent, heading } = items[0].details;
+        return `<section class="miss-record"><div class="record-heading"><h3>${esc(heading)}${parent.skill ? ` · ${esc(parent.skill)}` : ''}</h3><span>${items.length} wrong</span></div><ul class="wrong-answer-list">${items.map(({ attempt, details }) => `<li><div><strong>${esc(details.label)} · Round ${details.session?.runNumber || 1}</strong><time datetime="${esc(attempt.createdAt)}">${esc(formatFinishedAt(attempt.createdAt))}</time></div><button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(attempt.id)}" type="button" aria-label="Review ${esc(details.heading)}, ${esc(details.label)}, round ${details.session?.runNumber || 1}">Review answer</button></li>`).join('')}</ul></section>`;
+      }).join('') : '<div class="empty-record">No saved wrong answers yet.</div>'}
+    </main>`;
+  }
+
   function progressHtml(stats) {
-    const questionMap = new Map([...sourceBank.days, ...bank.days.filter((day) => day.review)].flatMap((day) => day.questions.flatMap((question) => [question, ...(question.practiceQuestions || [])])).map((question) => [question.id, question]));
+    const questionMap = allRecordedQuestions();
     const recordedAttempts = state.attempts.filter((attempt) => questionMap.has(attempt.questionId));
     const wrongAttempts = recordedAttempts.filter((attempt) => !attempt.correct);
     const completedSessions = state.sessions
@@ -661,7 +743,7 @@
               <div class="record-row record-header" role="row"><span>Question</span><span>Wrong times</span><span>First-try</span><span>Second-try</span><span>Last checked</span></div>
               ${historyRows.map((row) => {
                 return `<div class="record-row" role="row">
-                  <span><b>${row.question.sourceDay ? esc(bank.days.find((day) => day.day === row.question.day)?.label || 'Review') : `Day ${row.question.day}`} · Q${row.question.position}</b><small>${row.question.sourceDay ? `Similar to Day ${row.question.sourceDay} · ` : ''}Original #${esc(row.question.sourceNumber || "—")}${row.practiceWrong ? ` · Extra practice misses: ${row.practiceWrong}` : ''}</small></span>
+                  <span><b>${row.question.sourceDay ? esc(bank.days.find((day) => day.day === row.question.day)?.label || 'Review') : `Day ${row.question.day}`} · Q${row.question.position}</b><small>${row.question.sourceDay ? `Similar to Day ${row.question.sourceDay} · ` : ''}Original #${esc(row.question.sourceNumber || "—")}${row.practiceWrong ? ` · Extra practice misses: ${row.practiceWrong}` : ''}</small><button class="history-review-link" data-action="wrong-question" data-question-id="${esc(row.question.id)}" type="button">Review wrong answers</button></span>
                   <span><i class="wrong-count">${row.wrong.length}×</i></span>
                   <span><i class="${row.firstWrong ? "miss-mark" : "clear-mark"}">${row.firstWrong || "—"}</i></span>
                   <span><i class="${row.secondWrong ? "miss-mark strong" : "clear-mark"}">${row.secondWrong || "—"}</i></span>
@@ -680,14 +762,17 @@
     const dayMetrics = metrics(day);
     app.className = "site-shell";
     const navigation = day.mastery ? `<details class="session-picker"><summary>${esc(day.label)} · Change session</summary>${railHtml(day)}</details>` : railHtml(day);
-    app.innerHTML = `${headerHtml()}${view === "progress" ? progressHtml(stats) : `<section class="workspace">${navigation}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
+    app.innerHTML = `${headerHtml()}${view === 'answer-review' ? answerReviewHtml() : view === 'wrong' ? wrongAnswersHtml() : view === "progress" ? progressHtml(stats) : `<section class="workspace">${navigation}${allQuestionsHtml(day, dayMetrics)}</section>`}`;
   }
 
   app.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-action]");
     if (!button) return;
     const action = button.dataset.action;
-    if (action === "view") { view = button.dataset.view || "practice"; feedbackByQuestion = {}; selectedAnswers = {}; render(); }
+    if (action === "view") { view = button.dataset.view || "practice"; wrongQuestionId = null; render(); }
+    if (action === "review-answer") openAnswerReview(button.dataset.attemptId);
+    if (action === "close-review") { view = reviewReturnView; render(); app.querySelector?.(`button[data-attempt-id="${reviewedAttemptId}"]`)?.focus(); }
+    if (action === "wrong-question") { wrongQuestionId = button.dataset.questionId; view = 'wrong'; render(); }
     if (action === "day") chooseDay(Number(button.dataset.day));
     if (action === "select-answer") selectAnswer(button.dataset.questionId, Number(button.dataset.index));
     if (action === "check-answer") {
