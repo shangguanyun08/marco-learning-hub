@@ -1,5 +1,5 @@
 {
-  "version": 3,
+  "version": 4,
   "targetScore": 90,
   "sourceDays": [
     1,
@@ -1285,6 +1285,1098 @@
           "correctAnswer": "90°, 90°, 90°, 90°",
           "correctHtml": "90°, 90°, 90°, 90°",
           "explanation": "A rectangle must have four right angles, so all four interior angles must be 90°. The other sets each add to 360°, but none has four right angles. A total of 360° alone does not prove a rectangle."
+        }
+      ]
+    },
+    {
+      "day": 31,
+      "label": "Review 2",
+      "sourceSessionDays": [
+        15,
+        16,
+        17,
+        23,
+        24,
+        27,
+        28
+      ],
+      "sourceQuestionIds": [
+        "d03-q02",
+        "d03-q03",
+        "d03-q09",
+        "d03-q18",
+        "d04-q03",
+        "d04-q04",
+        "d04-q06",
+        "d04-q08",
+        "d05-q01",
+        "d05-q02",
+        "d11-q04",
+        "d11-q06",
+        "d11-q10",
+        "d11-q12",
+        "d12-q04",
+        "d12-q05",
+        "d12-q07",
+        "d14-q06",
+        "d14-q07",
+        "d14-q08",
+        "d14-q10",
+        "d14-q11",
+        "d14-q12",
+        "d14-q14",
+        "d14-q16"
+      ],
+      "questions": [
+        {
+          "id": "review2-sessions-q01",
+          "day": 31,
+          "position": 1,
+          "sourceQuestionId": "d03-q02",
+          "sourceDay": 3,
+          "sourceNumber": "5",
+          "sourceSessionDay": 15,
+          "sourceSessionLabel": "Session 1",
+          "sourceSessionPosition": 2,
+          "skill": "Repeating shape patterns",
+          "questionText": "The block circle, triangle, square, star repeats in that order, starting at position 1. Which shape is at position 47?",
+          "questionHtml": "<p>The block circle, triangle, square, star repeats in that order, starting at position 1.</p><svg class=\"review-diagram\" viewBox=\"0 0 390 65\" role=\"img\" aria-label=\"The repeating block is circle, triangle, square, star. Two blocks are shown.\"><text x=\"25\" y=\"40\" text-anchor=\"middle\">●</text><text x=\"73\" y=\"40\" text-anchor=\"middle\">▲</text><text x=\"121\" y=\"40\" text-anchor=\"middle\">■</text><text x=\"169\" y=\"40\" text-anchor=\"middle\">★</text><text x=\"217\" y=\"40\" text-anchor=\"middle\">●</text><text x=\"265\" y=\"40\" text-anchor=\"middle\">▲</text><text x=\"313\" y=\"40\" text-anchor=\"middle\">■</text><text x=\"361\" y=\"40\" text-anchor=\"middle\">★</text></svg><p>Which shape is at position 47?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "circle",
+              "html": "circle"
+            },
+            {
+              "label": "B",
+              "text": "triangle",
+              "html": "triangle"
+            },
+            {
+              "label": "C",
+              "text": "star",
+              "html": "star"
+            },
+            {
+              "label": "D",
+              "text": "square",
+              "html": "square"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "square",
+          "correctHtml": "square",
+          "explanation": "There are 4 shapes in each block. (47 − 1) ÷ 4 leaves remainder 2, so position 47 is the square in position 3 of its block."
+        },
+        {
+          "id": "review2-sessions-q02",
+          "day": 31,
+          "position": 2,
+          "sourceQuestionId": "d03-q03",
+          "sourceDay": 3,
+          "sourceNumber": "7",
+          "sourceSessionDay": 15,
+          "sourceSessionLabel": "Session 1",
+          "sourceSessionPosition": 3,
+          "skill": "Repeating number patterns",
+          "questionText": "The six-number block 2, 5, 1, 8, 4, 7 repeats in that order, starting at position 1. What is the sum of the numbers at positions 29 and 34?",
+          "questionHtml": "<p>The six-number block 2, 5, 1, 8, 4, 7 repeats in that order, starting at position 1. What is the sum of the numbers at positions 29 and 34?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "15",
+              "html": "15"
+            },
+            {
+              "label": "B",
+              "text": "11",
+              "html": "11"
+            },
+            {
+              "label": "C",
+              "text": "12",
+              "html": "12"
+            },
+            {
+              "label": "D",
+              "text": "13",
+              "html": "13"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "12",
+          "correctHtml": "12",
+          "explanation": "The positions within each block are 5 and 4. Those entries are 4 and 8; their sum is 12."
+        },
+        {
+          "id": "review2-sessions-q03",
+          "day": 31,
+          "position": 3,
+          "sourceQuestionId": "d03-q09",
+          "sourceDay": 3,
+          "sourceNumber": "3",
+          "sourceSessionDay": 15,
+          "sourceSessionLabel": "Session 1",
+          "sourceSessionPosition": 9,
+          "skill": "Comparing algebraic expressions",
+          "questionText": "If m + 17 = n − 12, what is n − m?",
+          "questionHtml": "<p>If m + 17 = n − 12, what is n − m?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "31",
+              "html": "31"
+            },
+            {
+              "label": "B",
+              "text": "29",
+              "html": "29"
+            },
+            {
+              "label": "C",
+              "text": "5",
+              "html": "5"
+            },
+            {
+              "label": "D",
+              "text": "-5",
+              "html": "-5"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "29",
+          "correctHtml": "29",
+          "explanation": "Add 12 to both sides and subtract m: n − m = 17 + 12 = 29."
+        },
+        {
+          "id": "review2-sessions-q04",
+          "day": 31,
+          "position": 4,
+          "sourceQuestionId": "d03-q18",
+          "sourceDay": 3,
+          "sourceNumber": "16",
+          "sourceSessionDay": 16,
+          "sourceSessionLabel": "Session 2",
+          "sourceSessionPosition": 8,
+          "skill": "Rearranging equations",
+          "questionText": "If 2c + 6d = 18, which expression equals c?",
+          "questionHtml": "<p>If 2c + 6d = 18, which expression equals c?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "9 − 3d",
+              "html": "9 − 3d"
+            },
+            {
+              "label": "B",
+              "text": "18 − 6d",
+              "html": "18 − 6d"
+            },
+            {
+              "label": "C",
+              "text": "9 + 3d",
+              "html": "9 + 3d"
+            },
+            {
+              "label": "D",
+              "text": "9 − 6d",
+              "html": "9 − 6d"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "9 − 3d",
+          "correctHtml": "9 − 3d",
+          "explanation": "Subtract 6d and divide every term by 2: c = (18 − 6d)/2 = 9 − 3d."
+        },
+        {
+          "id": "review2-sessions-q05",
+          "day": 31,
+          "position": 5,
+          "sourceQuestionId": "d04-q03",
+          "sourceDay": 4,
+          "sourceNumber": "3",
+          "sourceSessionDay": 17,
+          "sourceSessionLabel": "Session 3",
+          "sourceSessionPosition": 2,
+          "skill": "Writing expressions",
+          "questionText": "A tower is 3 times as tall as a pole. The tower's height is (3x + 15) meters. Which expression gives the pole's height in meters?",
+          "questionHtml": "<p>A tower is 3 times as tall as a pole. The tower's height is (3x + 15) meters. Which expression gives the pole's height in meters?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "3x + 5",
+              "html": "3x + 5"
+            },
+            {
+              "label": "B",
+              "text": "9x + 45",
+              "html": "9x + 45"
+            },
+            {
+              "label": "C",
+              "text": "x + 15",
+              "html": "x + 15"
+            },
+            {
+              "label": "D",
+              "text": "x + 5",
+              "html": "x + 5"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "x + 5",
+          "correctHtml": "x + 5",
+          "explanation": "Divide the entire tower height by 3: (3x + 15)/3 = x + 5."
+        },
+        {
+          "id": "review2-sessions-q06",
+          "day": 31,
+          "position": 6,
+          "sourceQuestionId": "d04-q04",
+          "sourceDay": 4,
+          "sourceNumber": "8",
+          "sourceSessionDay": 17,
+          "sourceSessionLabel": "Session 3",
+          "sourceSessionPosition": 3,
+          "skill": "Equivalent expressions",
+          "questionText": "Mia has a stickers. Noah has 2 times as many stickers as Mia. Leo has 5 more stickers than Noah. Which expression does NOT give their total number of stickers?",
+          "questionHtml": "<p>Mia has a stickers. Noah has 2 times as many stickers as Mia. Leo has 5 more stickers than Noah. Which expression does NOT give their total number of stickers?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "3a + (2a + 5)",
+              "html": "3a + (2a + 5)"
+            },
+            {
+              "label": "B",
+              "text": "a + 2a + (2a + 5)",
+              "html": "a + 2a + (2a + 5)"
+            },
+            {
+              "label": "C",
+              "text": "a + 2(2a + 5)",
+              "html": "a + 2(2a + 5)"
+            },
+            {
+              "label": "D",
+              "text": "5a + 5",
+              "html": "5a + 5"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "a + 2(2a + 5)",
+          "correctHtml": "a + 2(2a + 5)",
+          "explanation": "Their total is a + 2a + (2a + 5) = 5a + 5. The expression a + 2(2a + 5) adds the extra 5 twice."
+        },
+        {
+          "id": "review2-sessions-q07",
+          "day": 31,
+          "position": 7,
+          "sourceQuestionId": "d04-q06",
+          "sourceDay": 4,
+          "sourceNumber": "13",
+          "sourceSessionDay": 17,
+          "sourceSessionLabel": "Session 3",
+          "sourceSessionPosition": 5,
+          "skill": "Writing a cost equation",
+          "questionText": "A call costs $5.00 for the first 4 minutes and $0.35 for each additional minute. For a call lasting m minutes, where m > 4, which equation gives the total cost C in dollars?",
+          "questionHtml": "<p>A call costs $5.00 for the first 4 minutes and $0.35 for each additional minute. For a call lasting m minutes, where m &gt; 4, which equation gives the total cost C in dollars?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "C = 5.00 + 0.35m",
+              "html": "C = 5.00 + 0.35m"
+            },
+            {
+              "label": "B",
+              "text": "C = 0.35 + 5.00(m − 4)",
+              "html": "C = 0.35 + 5.00(m − 4)"
+            },
+            {
+              "label": "C",
+              "text": "C = 5.00 + 0.35(m − 4)",
+              "html": "C = 5.00 + 0.35(m − 4)"
+            },
+            {
+              "label": "D",
+              "text": "C = 5.00 + 0.35(m + 4)",
+              "html": "C = 5.00 + 0.35(m + 4)"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "C = 5.00 + 0.35(m − 4)",
+          "correctHtml": "C = 5.00 + 0.35(m − 4)",
+          "explanation": "The first 4 minutes are already included in $5.00. Charge $0.35 for only the remaining m − 4 minutes, then add the initial cost."
+        },
+        {
+          "id": "review2-sessions-q08",
+          "day": 31,
+          "position": 8,
+          "sourceQuestionId": "d04-q08",
+          "sourceDay": 4,
+          "sourceNumber": "16",
+          "sourceSessionDay": 17,
+          "sourceSessionLabel": "Session 3",
+          "sourceSessionPosition": 7,
+          "skill": "Coin equations",
+          "questionText": "A purse contains only nickels (5 cents) and dimes (10 cents). There are 2 more nickels than dimes, and the total value is $1.00. If d is the number of dimes, which equation models this in cents?",
+          "questionHtml": "<p>A purse contains only nickels (5 cents) and dimes (10 cents). There are 2 more nickels than dimes, and the total value is $1.00. If d is the number of dimes, which equation models this in cents?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "10d + 5(d + 2) = 100",
+              "html": "10d + 5(d + 2) = 100"
+            },
+            {
+              "label": "B",
+              "text": "5d + 10(d + 2) = 100",
+              "html": "5d + 10(d + 2) = 100"
+            },
+            {
+              "label": "C",
+              "text": "10d + 5(d − 2) = 100",
+              "html": "10d + 5(d − 2) = 100"
+            },
+            {
+              "label": "D",
+              "text": "15d + 2 = 100",
+              "html": "15d + 2 = 100"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "10d + 5(d + 2) = 100",
+          "correctHtml": "10d + 5(d + 2) = 100",
+          "explanation": "There are d dimes and d + 2 nickels. Their values in cents are 10d and 5(d + 2); together these equal 100 cents."
+        },
+        {
+          "id": "review2-sessions-q09",
+          "day": 31,
+          "position": 9,
+          "sourceQuestionId": "d05-q01",
+          "sourceDay": 5,
+          "sourceNumber": "4",
+          "sourceSessionDay": 17,
+          "sourceSessionLabel": "Session 3",
+          "sourceSessionPosition": 9,
+          "skill": "Defined operations",
+          "questionText": "Define m ◆ n = (4 × m) ÷ n. What is 6 ◆ 6?",
+          "questionHtml": "<p>Define m ◆ n = (4 × m) ÷ n. What is 6 ◆ 6?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "7",
+              "html": "7"
+            },
+            {
+              "label": "B",
+              "text": "3",
+              "html": "3"
+            },
+            {
+              "label": "C",
+              "text": "5",
+              "html": "5"
+            },
+            {
+              "label": "D",
+              "text": "4",
+              "html": "4"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "4",
+          "correctHtml": "4",
+          "explanation": "Substitute m = 6 and n = 6 into the definition: (4 × 6) ÷ 6 = 24 ÷ 6 = 4."
+        },
+        {
+          "id": "review2-sessions-q10",
+          "day": 31,
+          "position": 10,
+          "sourceQuestionId": "d05-q02",
+          "sourceDay": 5,
+          "sourceNumber": "9",
+          "sourceSessionDay": 17,
+          "sourceSessionLabel": "Session 3",
+          "sourceSessionPosition": 10,
+          "skill": "Solving a defined function",
+          "questionText": "Define F(x) = 5 + (3/2)x. If F(y) = 14, what is y?",
+          "questionHtml": "<p>Define F(x) = 5 + (3/2)x. If F(y) = 14, what is y?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "6",
+              "html": "6"
+            },
+            {
+              "label": "B",
+              "text": "14",
+              "html": "14"
+            },
+            {
+              "label": "C",
+              "text": "4",
+              "html": "4"
+            },
+            {
+              "label": "D",
+              "text": "8",
+              "html": "8"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "6",
+          "correctHtml": "6",
+          "explanation": "Subtract 5 to get (3/2)y = 9. Multiply by 2/3: y = 6. Check: 5 + (3/2) × 6 = 14."
+        },
+        {
+          "id": "review2-sessions-q11",
+          "day": 31,
+          "position": 11,
+          "sourceQuestionId": "d11-q04",
+          "sourceDay": 11,
+          "sourceNumber": "3",
+          "sourceSessionDay": 23,
+          "sourceSessionLabel": "Session 9",
+          "sourceSessionPosition": 1,
+          "skill": "Perimeter and possible areas",
+          "questionText": "A rectangle has perimeter 32 centimeters. Quantity A: the area of the rectangle in square centimeters. Quantity B: 64. Compare the quantities.",
+          "questionHtml": "<p>A rectangle has perimeter 32 centimeters.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>the area of the rectangle in square centimeters</td><td>64</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "The relationship cannot be determined.",
+          "correctHtml": "The relationship cannot be determined.",
+          "explanation": "A 8 by 8 square has area 64. A 7 by 9 rectangle has the same perimeter and area 63. Quantity A can equal Quantity B or be smaller, so one relationship cannot be determined."
+        },
+        {
+          "id": "review2-sessions-q12",
+          "day": 31,
+          "position": 12,
+          "sourceQuestionId": "d11-q06",
+          "sourceDay": 11,
+          "sourceNumber": "6",
+          "sourceSessionDay": 23,
+          "sourceSessionLabel": "Session 9",
+          "sourceSessionPosition": 3,
+          "skill": "Angle relationships",
+          "questionText": "BA is perpendicular to BC. The two angles x and y together fill angle ABC. Quantity A: x + 12. Quantity B: 102 − y. Compare the quantities.",
+          "questionHtml": "<p>BA is perpendicular to BC. The two angles x and y together fill angle ABC.</p><svg class=\"review-diagram\" viewBox=\"0 0 400 260\" role=\"img\" aria-label=\"Perpendicular rays BA and BC form a right angle, divided by an interior ray into angles x and y.\"><path d=\"M75 25V215H330 M75 215L265 70 M75 191H99V215\" fill=\"none\" stroke=\"#173957\" stroke-width=\"2\"/><text x=\"50\" y=\"24\">A</text><text x=\"50\" y=\"240\">B</text><text x=\"335\" y=\"220\">C</text><text x=\"89\" y=\"137\">x°</text><text x=\"149\" y=\"202\">y°</text></svg><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>x + 12</td><td>102 − y</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "The two quantities are equal.",
+          "correctHtml": "The two quantities are equal.",
+          "explanation": "The right angle gives x + y = 90, so x = 90 − y. Adding 12 gives x + 12 = 102 − y. The quantities are equal."
+        },
+        {
+          "id": "review2-sessions-q13",
+          "day": 31,
+          "position": 13,
+          "sourceQuestionId": "d11-q10",
+          "sourceDay": 11,
+          "sourceNumber": "14",
+          "sourceSessionDay": 23,
+          "sourceSessionLabel": "Session 9",
+          "sourceSessionPosition": 7,
+          "skill": "What a diagram tells us",
+          "questionText": "An equilateral triangle has side length 5 cm and an interior angle x°. A rhombus has side length 7 cm and an interior angle y°. No angle measure of the rhombus is given. Quantity A: x. Quantity B: y. Compare the quantities.",
+          "questionHtml": "<p>An equilateral triangle has side length 5 cm and an interior angle x°. A rhombus has side length 7 cm and an interior angle y°. No angle measure of the rhombus is given.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>x</td><td>y</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "The relationship cannot be determined.",
+          "correctHtml": "The relationship cannot be determined.",
+          "explanation": "The equilateral triangle gives x = 60°. Equal sides in a rhombus do not determine its angles: y could be 45°, 60°, or 80°, for example. The relationship cannot be determined."
+        },
+        {
+          "id": "review2-sessions-q14",
+          "day": 31,
+          "position": 14,
+          "sourceQuestionId": "d11-q12",
+          "sourceDay": 11,
+          "sourceNumber": "19",
+          "sourceSessionDay": 23,
+          "sourceSessionLabel": "Session 9",
+          "sourceSessionPosition": 9,
+          "skill": "Parallelogram area and height",
+          "questionText": "A parallelogram has area 32 cm² and base 8 cm. Its side of length x cm is slanted, not perpendicular to the base. Quantity A: x. Quantity B: 4. Compare the quantities.",
+          "questionHtml": "<p>A parallelogram has area 32 cm² and base 8 cm. Its side of length x cm is slanted, not perpendicular to the base.</p><svg class=\"review-diagram\" viewBox=\"0 0 400 260\" role=\"img\" aria-label=\"A slanted parallelogram has base 8 cm, area 32 square cm, a dotted perpendicular height, and slanted side x cm.\"><path d=\"M70 210L130 45H330L270 210Z\" fill=\"#eaf1ff\" stroke=\"#173957\" stroke-width=\"2\"/><path d=\"M130 45V210\" stroke=\"#173957\" stroke-dasharray=\"5 4\"/><path d=\"M130 190H150V210\" fill=\"none\" stroke=\"#173957\"/><text x=\"18\" y=\"138\">x cm</text><text x=\"160\" y=\"239\">8 cm</text></svg><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>x</td><td>4</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "Quantity A is greater.",
+          "correctHtml": "Quantity A is greater.",
+          "explanation": "The perpendicular height is area ÷ base = 32 ÷ 8 = 4 cm. The slanted side x is the hypotenuse of a right triangle with height 4, so x is greater than 4."
+        },
+        {
+          "id": "review2-sessions-q15",
+          "day": 31,
+          "position": 15,
+          "sourceQuestionId": "d12-q04",
+          "sourceDay": 12,
+          "sourceNumber": "10",
+          "sourceSessionDay": 24,
+          "sourceSessionLabel": "Session 10",
+          "sourceSessionPosition": 3,
+          "skill": "Interpreting the median",
+          "questionText": "The median age of 18 workers is 34 years. No worker is exactly 34 years old. How many workers are older than 34?",
+          "questionHtml": "<p>The median age of 18 workers is 34 years. No worker is exactly 34 years old. How many workers are older than 34?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "10",
+              "html": "10"
+            },
+            {
+              "label": "B",
+              "text": "9",
+              "html": "9"
+            },
+            {
+              "label": "C",
+              "text": "8",
+              "html": "8"
+            },
+            {
+              "label": "D",
+              "text": "12",
+              "html": "12"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "9",
+          "correctHtml": "9",
+          "explanation": "With 18 ages in order, the median lies between the two middle ages. Since nobody is 34, exactly half are below 34 and half are above: 18 ÷ 2 = 9 workers."
+        },
+        {
+          "id": "review2-sessions-q16",
+          "day": 31,
+          "position": 16,
+          "sourceQuestionId": "d12-q05",
+          "sourceDay": 12,
+          "sourceNumber": "1",
+          "sourceSessionDay": 24,
+          "sourceSessionLabel": "Session 10",
+          "sourceSessionPosition": 4,
+          "skill": "Mean and missing totals",
+          "questionText": "A list of 10 numbers has mean 24. The sum of the largest 8 numbers is 220. What is the sum of the two smallest numbers?",
+          "questionHtml": "<p>A list of 10 numbers has mean 24. The sum of the largest 8 numbers is 220. What is the sum of the two smallest numbers?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "20",
+              "html": "20"
+            },
+            {
+              "label": "B",
+              "text": "240",
+              "html": "240"
+            },
+            {
+              "label": "C",
+              "text": "220",
+              "html": "220"
+            },
+            {
+              "label": "D",
+              "text": "48",
+              "html": "48"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "20",
+          "correctHtml": "20",
+          "explanation": "The total of all 10 numbers is 10 × 24 = 240. Subtract the largest 8 numbers: 240 − 220 = 20."
+        },
+        {
+          "id": "review2-sessions-q17",
+          "day": 31,
+          "position": 17,
+          "sourceQuestionId": "d12-q07",
+          "sourceDay": 12,
+          "sourceNumber": "6",
+          "sourceSessionDay": 24,
+          "sourceSessionLabel": "Session 10",
+          "sourceSessionPosition": 6,
+          "skill": "Finding a missing value from the mean",
+          "questionText": "Three students have a mean height of 59 inches. The shortest is 54 inches and the tallest is 64 inches. How tall is the third student?",
+          "questionHtml": "<p>Three students have a mean height of 59 inches. The shortest is 54 inches and the tallest is 64 inches. How tall is the third student?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "123",
+              "html": "123"
+            },
+            {
+              "label": "B",
+              "text": "10",
+              "html": "10"
+            },
+            {
+              "label": "C",
+              "text": "61",
+              "html": "61"
+            },
+            {
+              "label": "D",
+              "text": "59",
+              "html": "59"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "59",
+          "correctHtml": "59",
+          "explanation": "Their total height is 59 × 3 = 177. Subtract the shortest and tallest: 177 − 54 − 64 = 59 inches."
+        },
+        {
+          "id": "review2-sessions-q18",
+          "day": 31,
+          "position": 18,
+          "sourceQuestionId": "d14-q06",
+          "sourceDay": 14,
+          "sourceNumber": "11",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 1,
+          "skill": "Finding the median",
+          "questionText": "What is the median of this data set: 18, 10, 13, 25, 15, 11, 16, 22?",
+          "questionHtml": "<p>What is the median of this data set: 18, 10, 13, 25, 15, 11, 16, 22?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "16",
+              "html": "16"
+            },
+            {
+              "label": "B",
+              "text": "17.5",
+              "html": "17.5"
+            },
+            {
+              "label": "C",
+              "text": "15.5",
+              "html": "15.5"
+            },
+            {
+              "label": "D",
+              "text": "13",
+              "html": "13"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "15.5",
+          "correctHtml": "15.5",
+          "explanation": "In order: 10, 11, 13, 15, 16, 18, 22, 25. With 8 values, average the 4th and 5th: (15 + 16) ÷ 2 = 15.5."
+        },
+        {
+          "id": "review2-sessions-q19",
+          "day": 31,
+          "position": 19,
+          "sourceQuestionId": "d14-q07",
+          "sourceDay": 14,
+          "sourceNumber": "12",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 2,
+          "skill": "How a correction changes statistics",
+          "questionText": "The table records books read by students. One student's entry is corrected from 1 books to 2 books. Which statistics change: mean, median, mode, or range?",
+          "questionHtml": "<p>The table records books read by students. One student's entry is corrected from 1 books to 2 books. Which statistics change: mean, median, mode, or range?</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Before the correction</caption><thead><tr><th scope=\"col\">Books read</th><th scope=\"col\">Number of students</th></tr></thead><tbody><tr><td>0</td><td>2</td></tr><tr><td>1</td><td>3</td></tr><tr><td>2</td><td>6</td></tr><tr><td>3</td><td>3</td></tr><tr><td>4</td><td>2</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "All four statistics change.",
+              "html": "All four statistics change."
+            },
+            {
+              "label": "B",
+              "text": "Only the mean changes.",
+              "html": "Only the mean changes."
+            },
+            {
+              "label": "C",
+              "text": "Only the median changes.",
+              "html": "Only the median changes."
+            },
+            {
+              "label": "D",
+              "text": "The mean, median, and mode change.",
+              "html": "The mean, median, and mode change."
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "Only the mean changes.",
+          "correctHtml": "Only the mean changes.",
+          "explanation": "The total rises by 1 while the number of students stays 16, so the mean rises. The middle values and most frequent value remain 2. The minimum 0 and maximum 4 remain, so the range stays 4."
+        },
+        {
+          "id": "review2-sessions-q20",
+          "day": 31,
+          "position": 20,
+          "sourceQuestionId": "d14-q08",
+          "sourceDay": 14,
+          "sourceNumber": "14",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 3,
+          "skill": "Reading data and quartiles",
+          "questionText": "The table shows monthly profit in hundreds of dollars. Which statement is NOT true? For quartiles, use the medians of the lower four and upper four values. Profits: 24, 25, 26, 26, 26, 27, 29, 33.",
+          "questionHtml": "<p>The table shows monthly profit in hundreds of dollars. Which statement is NOT true? For quartiles, use the medians of the lower four and upper four values.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Monthly profit</caption><thead><tr><th scope=\"col\">Month</th><th scope=\"col\">Profit (hundreds of dollars)</th></tr></thead><tbody><tr><td>January</td><td>24</td></tr><tr><td>February</td><td>25</td></tr><tr><td>March</td><td>26</td></tr><tr><td>April</td><td>26</td></tr><tr><td>May</td><td>26</td></tr><tr><td>June</td><td>27</td></tr><tr><td>July</td><td>29</td></tr><tr><td>August</td><td>33</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "The interquartile range is 3.",
+              "html": "The interquartile range is 3."
+            },
+            {
+              "label": "B",
+              "text": "The mode equals the median.",
+              "html": "The mode equals the median."
+            },
+            {
+              "label": "C",
+              "text": "The mean is greater than the range.",
+              "html": "The mean is greater than the range."
+            },
+            {
+              "label": "D",
+              "text": "The profits in March and April add to 52.",
+              "html": "The profits in March and April add to 52."
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "The interquartile range is 3.",
+          "correctHtml": "The interquartile range is 3.",
+          "explanation": "The median and mode are both 26. The mean is 27, greater than the range 9. March plus April is 52. Q1 = 25.5 and Q3 = 28, so the interquartile range is 2.5, not 3."
+        },
+        {
+          "id": "review2-sessions-q21",
+          "day": 31,
+          "position": 21,
+          "sourceQuestionId": "d14-q10",
+          "sourceDay": 14,
+          "sourceNumber": "16",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 5,
+          "skill": "Finding the mode",
+          "questionText": "The table shows the number of goals scored by players. What is the mode of the number of goals? Goals and player counts: 2: 9; 3: 3; 4: 4; 5: 5; 6: 6.",
+          "questionHtml": "<p>The table shows the number of goals scored by players. What is the mode of the number of goals?</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Goals per player</caption><thead><tr><th scope=\"col\">Goals scored</th><th scope=\"col\">Number of players</th></tr></thead><tbody><tr><td>2</td><td>9</td></tr><tr><td>3</td><td>3</td></tr><tr><td>4</td><td>4</td></tr><tr><td>5</td><td>5</td></tr><tr><td>6</td><td>6</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "3",
+              "html": "3"
+            },
+            {
+              "label": "B",
+              "text": "1",
+              "html": "1"
+            },
+            {
+              "label": "C",
+              "text": "4",
+              "html": "4"
+            },
+            {
+              "label": "D",
+              "text": "2",
+              "html": "2"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "2",
+          "correctHtml": "2",
+          "explanation": "The mode is the value with the greatest frequency. 9 players scored 2 goals, more players than for any other goal count. Therefore the mode is 2 goals."
+        },
+        {
+          "id": "review2-sessions-q22",
+          "day": 31,
+          "position": 22,
+          "sourceQuestionId": "d14-q11",
+          "sourceDay": 14,
+          "sourceNumber": "20",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 6,
+          "skill": "Interpreting scatter plots",
+          "questionText": "The scatter plot shows temperature and cups of lemonade sold on six days. Which conclusion is best supported? Data (°F, cups): (52, 14), (56, 22), (60, 26), (64, 34), (68, 38), (72, 46).",
+          "questionHtml": "<p>The scatter plot shows temperature and cups of lemonade sold on six days. Which conclusion is best supported?</p><svg class=\"review-diagram\" viewBox=\"0 0 395 285\" role=\"img\" aria-label=\"Temperature in degrees F and cups sold: 52, 14; 56, 22; 60, 26; 64, 34; 68, 38; 72, 46.\"><path d=\"M58 20V215H365\" fill=\"none\" stroke=\"#173957\" stroke-width=\"2\"/><text x=\"48\" y=\"220\" text-anchor=\"end\">0</text><text x=\"48\" y=\"160\" text-anchor=\"end\">20</text><text x=\"48\" y=\"100\" text-anchor=\"end\">40</text><text x=\"48\" y=\"40\" text-anchor=\"end\">60</text><circle cx=\"85\" cy=\"173\" r=\"5\" fill=\"#2468e5\"/><text x=\"85\" y=\"237\" text-anchor=\"middle\">52</text><circle cx=\"134\" cy=\"149\" r=\"5\" fill=\"#2468e5\"/><text x=\"134\" y=\"237\" text-anchor=\"middle\">56</text><circle cx=\"183\" cy=\"137\" r=\"5\" fill=\"#2468e5\"/><text x=\"183\" y=\"237\" text-anchor=\"middle\">60</text><circle cx=\"232\" cy=\"113\" r=\"5\" fill=\"#2468e5\"/><text x=\"232\" y=\"237\" text-anchor=\"middle\">64</text><circle cx=\"281\" cy=\"101\" r=\"5\" fill=\"#2468e5\"/><text x=\"281\" y=\"237\" text-anchor=\"middle\">68</text><circle cx=\"330\" cy=\"77\" r=\"5\" fill=\"#2468e5\"/><text x=\"330\" y=\"237\" text-anchor=\"middle\">72</text><text x=\"210\" y=\"265\" text-anchor=\"middle\">Temperature (°F)</text><text transform=\"translate(17 120) rotate(-90)\" text-anchor=\"middle\">Cups sold</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Exactly the same number of cups was sold each day.",
+              "html": "Exactly the same number of cups was sold each day."
+            },
+            {
+              "label": "B",
+              "text": "The plot proves that temperature is the only factor affecting sales.",
+              "html": "The plot proves that temperature is the only factor affecting sales."
+            },
+            {
+              "label": "C",
+              "text": "On these days, higher temperatures tended to go with more cups sold.",
+              "html": "On these days, higher temperatures tended to go with more cups sold."
+            },
+            {
+              "label": "D",
+              "text": "On these days, higher temperatures tended to go with fewer cups sold.",
+              "html": "On these days, higher temperatures tended to go with fewer cups sold."
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "On these days, higher temperatures tended to go with more cups sold.",
+          "correctHtml": "On these days, higher temperatures tended to go with more cups sold.",
+          "explanation": "Reading from lower to higher temperatures, the points generally move up, showing a positive association. A scatter plot shows a pattern in these data; it does not prove that temperature alone causes sales."
+        },
+        {
+          "id": "review2-sessions-q23",
+          "day": 31,
+          "position": 23,
+          "sourceQuestionId": "d14-q12",
+          "sourceDay": 14,
+          "sourceNumber": "1",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 7,
+          "skill": "Combined averages",
+          "questionText": "The mean weight of the dogs at a shelter is 36 pounds, and the mean weight of the cats is 12 pounds. There is at least one of each, but their counts are not given. Quantity A: the mean weight of all the dogs and cats combined. Quantity B: 24. Compare the quantities.",
+          "questionHtml": "<p>The mean weight of the dogs at a shelter is 36 pounds, and the mean weight of the cats is 12 pounds. There is at least one of each, but their counts are not given.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>the mean weight of all the dogs and cats combined</td><td>24</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "The relationship cannot be determined.",
+          "correctHtml": "The relationship cannot be determined.",
+          "explanation": "Equal numbers would give 24 pounds. More dogs would raise the combined mean; more cats would lower it. Without their counts, the relationship cannot be determined."
+        },
+        {
+          "id": "review2-sessions-q24",
+          "day": 31,
+          "position": 24,
+          "sourceQuestionId": "d14-q14",
+          "sourceDay": 14,
+          "sourceNumber": "4",
+          "sourceSessionDay": 27,
+          "sourceSessionLabel": "Session 13",
+          "sourceSessionPosition": 9,
+          "skill": "Probability and possible totals",
+          "questionText": "A bucket contains red and blue balls. Each ball is equally likely to be selected. The probability of selecting a red ball is exactly 4/13. Quantity A: the total number of balls in the bucket. Quantity B: 11. Compare the quantities.",
+          "questionHtml": "<p>A bucket contains red and blue balls. Each ball is equally likely to be selected. The probability of selecting a red ball is exactly 4/13.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>the total number of balls in the bucket</td><td>11</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "Quantity A is greater.",
+          "correctHtml": "Quantity A is greater.",
+          "explanation": "The fraction 4/13 is in lowest terms. A whole-number count requires the total to be a positive multiple of 13, so it is at least 13, greater than 11."
+        },
+        {
+          "id": "review2-sessions-q25",
+          "day": 31,
+          "position": 25,
+          "sourceQuestionId": "d14-q16",
+          "sourceDay": 14,
+          "sourceNumber": "7",
+          "sourceSessionDay": 28,
+          "sourceSessionLabel": "Session 14",
+          "sourceSessionPosition": 1,
+          "skill": "Range with incomplete information",
+          "questionText": "The youngest person in a group is 18 years old. Nora is 58 years old and is in the group. No other ages are given. Quantity A: the range of ages in the group. Quantity B: 40. Compare the quantities.",
+          "questionHtml": "<p>The youngest person in a group is 18 years old. Nora is 58 years old and is in the group. No other ages are given.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><caption>Compare the quantities</caption><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>the range of ages in the group</td><td>40</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "The relationship cannot be determined.",
+          "correctHtml": "The relationship cannot be determined.",
+          "explanation": "If Nora is oldest, the range is 40. If someone is older than Nora, the range is larger. Quantity A could equal Quantity B or be greater, so the relationship cannot be determined."
         }
       ]
     }

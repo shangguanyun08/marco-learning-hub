@@ -72,7 +72,7 @@
 
   // The fixed plan keeps session membership stable across answers, devices and reloads.
   // Original question IDs and saved sessions remain unchanged.
-  function organizeBank(questionBank, plan, reviewBank, practiceBank) {
+  function organizeBank(questionBank, plan, reviewBank, practiceBanks) {
     sourceBank = questionBank;
     const questions = new Map(questionBank.days.flatMap((day) => day.questions).map((question) => [question.id, question]));
     const plannedIds = new Set(plan.sessions.flatMap((session) => session.questionIds));
@@ -87,15 +87,27 @@
       });
       return { day: session.day, label: session.label, questions: items, questionCount: items.length };
     });
-    const reviewDays = reviewBank.sessions.map((session) => ({
-      ...session,
-      review: true,
-      mastery: session.day === practiceBank.day ? { maxQuestions: practiceBank.maxQuestions, requiredStreak: practiceBank.requiredStreak } : null,
-      questions: session.questions.map((question) => ({ ...question, practiceQuestions: practiceBank.groups[question.id] || [] })),
-      targetScore: reviewBank.targetScore,
-      questionCount: session.questions.length,
-    }));
-    const days = [...previousDays, ...reviewDays.filter((day) => !day.archived), ...practiceDays];
+    const reviewDays = reviewBank.sessions.map((session) => {
+      const practiceBank = practiceBanks.find((item) => item.day === session.day);
+      return {
+        ...session,
+        review: true,
+        mastery: practiceBank ? { maxQuestions: practiceBank.maxQuestions, requiredStreak: practiceBank.requiredStreak } : null,
+        questions: session.questions.map((question) => ({ ...question, practiceQuestions: practiceBank?.groups[question.id] || [] })),
+        targetScore: reviewBank.targetScore,
+        questionCount: session.questions.length,
+      };
+    });
+    const activeReviews = reviewDays.filter((day) => !day.archived);
+    const sessionReview = activeReviews.find((day) => day.sourceSessionDays?.length);
+    // Keep stable question/session IDs; only change their presentation order.
+    const days = sessionReview ? [
+      ...sessionReview.sourceSessionDays.map((id) => practiceDays.find((day) => day.day === id)),
+      sessionReview,
+      ...practiceDays.filter((day) => !sessionReview.sourceSessionDays.includes(day.day)),
+      ...previousDays,
+      ...activeReviews.filter((day) => day !== sessionReview),
+    ] : [...previousDays, ...activeReviews, ...practiceDays];
     bank = { ...questionBank, totalQuestions: days.reduce((total, day) => total + day.questionCount, 0), days,
       archivedDays: reviewDays.filter((day) => day.archived) };
   }
@@ -153,8 +165,7 @@
   }
 
   function nextPracticeDay() {
-    return bank.days.find((day) => day.review && (!metrics(day).completed || reviewNeedsWork(day, metrics(day))))
-      || bank.days.find((day) => !day.original && !metrics(day).completed)
+    return bank.days.find((day) => !day.original && (!metrics(day).completed || reviewNeedsWork(day, metrics(day))))
       || bank.days.find((day) => !metrics(day).completed && metrics(day).attempts.length)
       || bank.days.find((day) => !day.original) || bank.days[0];
   }
@@ -524,7 +535,7 @@
       ${answerTrackHtml(day, question, progress)}
       ${progress.nominal ? `<details class="missed-main"${progress.nominal.correct ? '' : ' open'}><summary>Main question: ${progress.nominal.correct ? 'correct' : 'incorrect'} · Review answer and explanation</summary><div class="problem">${question.questionHtml}</div><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></details>` : masteryAnswerHtml(question, savedAttempts(day, question.id))}
       ${extra}
-      ${progress.mastered || dayMetrics.completed ? `<footer class="question-footer"><span>${progress.mastered ? 'Mastered' : 'Review complete'}</span><button class="primary-action" data-action="next-main" type="button">${dayMetrics.completed ? 'See Review 1 results' : 'Next main question'}</button></footer>` : ''}
+      ${progress.mastered || dayMetrics.completed ? `<footer class="question-footer"><span>${progress.mastered ? 'Mastered' : 'Review complete'}</span><button class="primary-action" data-action="next-main" type="button">${dayMetrics.completed ? `See ${esc(day.label)} results` : 'Next main question'}</button></footer>` : ''}
     </section>`;
   }
 
@@ -704,7 +715,7 @@
     return `
       <section class="progress-page">
         <div class="progress-heading">
-          <div><p class="eyebrow">Online record</p><h2>Marco's Progress</h2><p>Every answer is saved when he presses “Check answer.” Review 1 tracks mastery separately from the main-question score. Extra practice misses appear with their main question.</p></div>
+          <div><p class="eyebrow">Online record</p><h2>Marco's Progress</h2><p>Every answer is saved when he presses “Check answer.” Reviews track mastery separately from the main-question score. Extra practice misses appear with their main question.</p></div>
           <button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button>
         </div>
         ${bank.days.filter((day) => day.mastery).map((day) => `<section class="miss-record"><div class="record-heading"><h3>${esc(day.label)} mastery</h3><span>Latest round · ${metrics(day).mastered}/${day.questionCount} mastered</span></div><div class="mastery-record-grid">${day.questions.map((question) => {
@@ -787,13 +798,13 @@
     if (action === "next-main") nextMainQuestion();
   });
 
-  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=3', 'review1-practice-bank.json?v=1'].map(async (url) => {
+  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=4', 'review1-practice-bank.json?v=1', 'review2-practice-bank.json?v=1'].map(async (url) => {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error('The practice sessions could not be loaded. Please refresh.');
     return response.json();
   }))
-    .then(([questionBank, plan, reviewBank, practiceBank]) => {
-      organizeBank(questionBank, plan, reviewBank, practiceBank);
+    .then(([questionBank, plan, reviewBank, ...practiceBanks]) => {
+      organizeBank(questionBank, plan, reviewBank, practiceBanks);
       state = loadLocal();
       selectedDay = nextPracticeDay().day;
       render();
