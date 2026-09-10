@@ -114,6 +114,7 @@ const finalScore = document.querySelector("#final-score");
 let activeSet = DAY3_SET;
 let activeDay3Index = null;
 const day3Drafts = new Map();
+const correctionDrafts = new Map();
 let receivedRemote = false;
 
 function day3Indexes() {
@@ -142,12 +143,44 @@ function lightStep(status, label, description) {
   const lamp = document.createElement("span");
   lamp.className = "track-lamp";
   lamp.setAttribute("aria-hidden", "true");
-  lamp.textContent = { correct: "✓", incorrect: "×", practicing: "◔", pending: "·" }[status];
+  lamp.textContent = { correct: "✓", corrected: "✓", incorrect: "×", practicing: "◔", pending: "·" }[status];
   const caption = document.createElement("span");
   caption.className = "light-caption";
   caption.textContent = label;
   step.append(lamp, caption);
   return step;
+}
+
+function correctionQuestion(questionIndex, position) {
+  const number = day3Indexes().indexOf(questionIndex) + 1;
+  if (number < 3 || number > 15 || !Number.isInteger(position) || position < 0) return null;
+  const original = position === 0 ? questionSets[DAY3_SET][questionIndex] : day3Banks[questionIndex]?.[position - 1];
+  if (!original) return null;
+  const question = {...original, response: {kind: "number", unit: ""}};
+  delete question.choices;
+  delete question.choicesHtml;
+  if (number === 5) {
+    question.response = {kind: "fraction"};
+  } else if (number === 7) {
+    question.response = {kind: "ratio"};
+    question.promptHtml = original.promptHtml.replace(/Which ratio is equivalent[^?]*\?/, "Write an equivalent ratio in simplest form.");
+  } else if (number === 11) {
+    const parts = original.promptHtml.match(/digit <strong>(\d)<\/strong> in (?:the number )?<strong>([\d.]+)<\/strong>/);
+    const places = {ones: 1, tens: 10, hundreds: 100, tenths: 0.1, hundredths: 0.01, thousandths: 0.001};
+    if (!parts || !Object.hasOwn(places, original.answer)) return null;
+    question.answer = String(places[original.answer]);
+    question.promptHtml = `Look at the digit <strong>${parts[1]}</strong> in <strong>${parts[2]}</strong>. What would a <strong>1</strong> in that same place be worth?`;
+    question.explanation = `A 1 in the ${original.answer} place is worth ${question.answer}.`;
+  } else if (number === 14) {
+    question.response = {kind: "remainder"};
+  } else {
+    question.response.unit = {8: "quarts", 10: "points per game", 13: "kg"}[number] || "";
+    question.answer = String(original.answer).replaceAll(",", "");
+    if (number === 12) {
+      question.promptHtml = original.promptHtml.replace(/^Estimate:/, "Estimate by rounding each mixed number to the nearest whole number:");
+    }
+  }
+  return question;
 }
 
 function savedAnswerDetails(questionIndex, position) {
@@ -158,7 +191,22 @@ function savedAnswerDetails(questionIndex, position) {
   const question = position === 0 ? questionSets[DAY3_SET][questionIndex] : day3Banks[questionIndex]?.[position - 1];
   if (!question || !attempt || typeof attempt.correct !== "boolean") return null;
   return { question, answer: attempt.answer, correct: attempt.correct, number: day3Indexes().indexOf(questionIndex) + 1,
+    retryQuestion: attempt.correct ? null : correctionQuestion(questionIndex, position),
+    correction: record.corrections?.[position] || null,
     label: position === 0 ? "Main question" : `Practice question ${position}` };
+}
+
+function saveCorrection(questionIndex, position, answer) {
+  const details = savedAnswerDetails(questionIndex, position);
+  if (!details?.retryQuestion || details.correction || !isCorrectAnswer(answer, details.retryQuestion)) return false;
+  const record = records[DAY3_SET].questions[questionIndex];
+  record.corrections ||= {};
+  record.corrections[position] = {answer, createdAt: new Date().toISOString()};
+  correctionDrafts.delete(`${questionIndex}:${position}`);
+  saveRecords();
+  const track = cards[questionIndex]?.querySelector(".answer-track");
+  if (track) track.replaceWith(renderAnswerTrack(record, questionIndex));
+  return true;
 }
 
 function openSavedAnswer(questionIndex, position, opener) {
@@ -168,6 +216,8 @@ function openSavedAnswer(questionIndex, position, opener) {
   const dialog = document.createElement("dialog");
   dialog.id = "answer-review";
   dialog.className = "answer-review";
+  dialog.dataset.questionIndex = String(questionIndex);
+  dialog.dataset.position = String(position);
   dialog.setAttribute("aria-labelledby", "answer-review-title");
   const header = document.createElement("div");
   header.className = "answer-review-heading";
@@ -181,11 +231,68 @@ function openSavedAnswer(questionIndex, position, opener) {
   close.autofocus = true;
   close.addEventListener("click", () => dialog.close());
   header.append(title, close);
+  const content = document.createElement("div");
+  content.className = "answer-review-content";
+  dialog.append(header, content);
+  renderSavedAnswerContent(content, details, questionIndex, position);
+  dialog.addEventListener("close", () => {
+    const form = dialog.querySelector(".correction-form");
+    if (form) correctionDrafts.set(`${questionIndex}:${position}`, answerDraft(form, details.retryQuestion));
+    dialog.remove();
+    const target = opener?.isConnected ? opener : cards[questionIndex]?.querySelector(`[data-review-position="${position}"]`);
+    target?.focus();
+  });
+  document.body.append(dialog);
+  dialog.showModal();
+}
+
+function renderSavedAnswerContent(content, details, questionIndex, position) {
+  content.replaceChildren();
   const expression = document.createElement("div");
   expression.className = "expression";
-  renderExpression(expression, details.question);
-  dialog.append(header, expression);
-  if (details.question.choices) {
+  renderExpression(expression, details.retryQuestion || details.question);
+  content.append(expression);
+  if (details.retryQuestion && !details.correction) {
+    const instruction = document.createElement("p");
+    instruction.className = "correction-instruction";
+    instruction.textContent = "Correct this question to turn its red mark yellow.";
+    const form = document.createElement("form");
+    form.className = "correction-form";
+    form.innerHTML = `<label id="correction-label" for="correction-answer">Your answer</label>
+      <div class="answer-row"><input id="correction-answer" autocomplete="off" aria-describedby="correction-feedback" /><button type="submit">Check</button></div>`;
+    renderNumberEntry(form, details.retryQuestion, correctionDrafts.get(`${questionIndex}:${position}`) || "");
+    const feedback = document.createElement("p");
+    feedback.id = "correction-feedback";
+    feedback.className = "correction-feedback";
+    feedback.setAttribute("aria-live", "polite");
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const {answer, error} = readAnswer(form, details.retryQuestion);
+      if (error) {
+        feedback.textContent = error;
+        form.querySelector("input:not([hidden])")?.focus();
+        return;
+      }
+      if (!saveCorrection(questionIndex, position, answer)) {
+        feedback.textContent = "Not quite. Try again.";
+        form.querySelector("input:not([hidden])")?.focus();
+        return;
+      }
+      renderSavedAnswerContent(content, savedAnswerDetails(questionIndex, position), questionIndex, position);
+      content.querySelector(".correction-status")?.focus();
+    });
+    content.append(instruction, form, feedback);
+    return;
+  }
+  if (details.correction) {
+    const status = document.createElement("p");
+    status.className = "correction-status";
+    status.tabIndex = -1;
+    status.setAttribute("role", "status");
+    status.textContent = `✓ Corrected later · Harry’s answer: ${details.correction.answer}`;
+    content.append(status);
+  }
+  if (details.question.choices && !details.retryQuestion) {
     const choices = document.createElement("div");
     choices.className = "choice-grid saved-review-choices";
     details.question.choices.forEach((value, index) => {
@@ -205,21 +312,14 @@ function openSavedAnswer(questionIndex, position, opener) {
       }
       choices.append(item);
     });
-    dialog.append(choices);
+    content.append(choices);
   }
   const savedAnswer = document.createElement("p");
   savedAnswer.className = "saved-answer " + (details.correct ? "correct" : "incorrect");
   savedAnswer.textContent = typeof details.answer === "string" && details.answer.trim()
     ? `${details.correct ? "✓" : "×"} Harry’s answer: ${details.answer} · ${details.correct ? "Correct" : "Incorrect"}`
     : `His first answer was ${details.correct ? "correct" : "incorrect"}, but that original answer was not saved.`;
-  dialog.append(savedAnswer, renderCorrectAnswer(details.question));
-  dialog.addEventListener("close", () => {
-    dialog.remove();
-    const target = opener?.isConnected ? opener : cards[questionIndex]?.querySelector(`[data-review-position="${position}"]`);
-    target?.focus();
-  });
-  document.body.append(dialog);
-  dialog.showModal();
+  content.append(savedAnswer, renderCorrectAnswer(details.retryQuestion || details.question));
 }
 
 function renderAnswerTrack(record, questionIndex) {
@@ -249,8 +349,8 @@ function renderAnswerTrack(record, questionIndex) {
   results.forEach((correct, position) => {
     const label = position === 0 ? "Main" : String(position);
     const name = position === 0 ? "Main answer" : `Follow-up ${position}`;
-    const status = correct ? "correct" : "incorrect";
-    const description = `${name}: ${status}`;
+    const status = correct ? "correct" : record.corrections?.[position] ? "corrected" : "incorrect";
+    const description = `${name}: ${status === "corrected" ? "corrected later" : status}`;
     const step = lightStep(status, label, description);
     step.classList.toggle("in-streak", correct && position >= results.length - state.streak);
     {
@@ -258,7 +358,7 @@ function renderAnswerTrack(record, questionIndex) {
       review.type = "button";
       review.className = "answer-history-button";
       review.dataset.reviewPosition = String(position);
-      review.setAttribute("aria-label", `Review ${name.toLowerCase()}: ${status}`);
+      review.setAttribute("aria-label", `${status === "incorrect" && correctionQuestion(questionIndex, position) ? "Correct" : "Review"} ${name.toLowerCase()}: ${status === "corrected" ? "corrected later" : status}`);
       review.setAttribute("aria-haspopup", "dialog");
       review.append(...step.childNodes);
       review.addEventListener("click", () => openSavedAnswer(questionIndex, position, review));
@@ -268,7 +368,9 @@ function renderAnswerTrack(record, questionIndex) {
   });
   const legend = document.createElement("p");
   legend.className = "light-legend";
-  legend.textContent = "Tap any green or red answer to see the question and Harry’s answer.";
+  legend.textContent = correctionQuestion(questionIndex, 0)
+    ? "Green: correct · Red: try again · Yellow: corrected later. Tap a mark."
+    : "Tap any green or red answer to see the question and Harry’s answer.";
   track.append(heading);
   if (results.length) track.append(list, legend);
   return track;
@@ -346,9 +448,24 @@ function emptyQuestionRecord() {
   return { firstTry: null, attempts: 0, solved: false, lastAnswer: "" };
 }
 
+function normalizeCorrections(value, questionIndex, record) {
+  const corrections = {};
+  for (const [key, correction] of Object.entries(value && typeof value === "object" ? value : {})) {
+    if (!/^(0|[1-9]\d*)$/.test(key)) continue;
+    const position = Number(key);
+    const question = correctionQuestion(questionIndex, position);
+    const originalCorrect = position === 0 ? record.firstTry : record.review?.attempts[position - 1]?.correct;
+    if (!question || originalCorrect !== false || typeof correction?.answer !== "string" ||
+      !isCorrectAnswer(correction.answer, question) || typeof correction.createdAt !== "string" ||
+      !Number.isFinite(Date.parse(correction.createdAt))) continue;
+    corrections[position] = {answer: correction.answer, createdAt: correction.createdAt};
+  }
+  return Object.keys(corrections).length ? {corrections} : {};
+}
+
 function normalizeQuestionRecord(value, setNumber, questionIndex) {
   const confirmed = setNumber === DAY3_SET && PARENT_CONFIRMED_QUESTIONS.has(questionIndex);
-  return {
+  const record = {
     ...(confirmed ? { masteryCredit: "parent-confirmed" } : {}),
     firstTry: typeof value?.firstTry === "boolean" ? value.firstTry : null,
     attempts: Number.isInteger(value?.attempts) && value.attempts > 0 ? value.attempts : 0,
@@ -359,6 +476,8 @@ function normalizeQuestionRecord(value, setNumber, questionIndex) {
       ...(typeof value?.masteredAt === "string" && Number.isFinite(Date.parse(value.masteredAt)) ? { masteredAt: value.masteredAt } : {}),
     } : {}),
   };
+  if (setNumber === DAY3_SET) Object.assign(record, normalizeCorrections(value?.corrections, questionIndex, record));
+  return record;
 }
 
 function normalizeRecords(saved = {}) {
@@ -409,7 +528,7 @@ function syncScore(value) {
       normalized[setNumber].questions.reduce(
         (setTotal, question) =>
           setTotal + (question.solved ? 1000 : 0) + (question.firstTry !== null ? 1 : 0)
-            + (question.review?.attempts.length || 0),
+            + (question.review?.attempts.length || 0) + Object.keys(question.corrections || {}).length,
         0,
       ),
     0,
@@ -551,6 +670,12 @@ function parseNumberAnswer(value, question) {
 }
 
 function isCorrectAnswer(typed, question) {
+  if (question.response?.kind === "ratio" || question.response?.kind === "remainder") {
+    const separator = question.response.kind === "ratio" ? ":" : "R";
+    const parts = typed.split(separator).map(part => part.trim());
+    const expected = question.answer.split(separator).map(Number);
+    return parts.length === 2 && parts.every((part, index) => /^\d+$/.test(part) && Number(part) === expected[index]);
+  }
   if (question.response?.kind === "number") {
     const actual = parseNumberAnswer(typed, question);
     const expected = parseNumberAnswer(question.answer, question);
@@ -615,6 +740,9 @@ function feedbackFor(question) {
 }
 
 function answerDraft(form, question) {
+  if (["ratio", "remainder"].includes(question.response?.kind)) {
+    return [...form.querySelectorAll(".pair-input input")].map(input => input.value).join(question.response.kind === "ratio" ? ":" : " R");
+  }
   if (question.response?.kind === "fraction") {
     return [...form.querySelectorAll(".fraction-input input")].map(input => input.value).join("/");
   }
@@ -623,6 +751,15 @@ function answerDraft(form, question) {
 
 function readAnswer(form, question) {
   const typed = answerDraft(form, question).trim();
+  if (["ratio", "remainder"].includes(question.response?.kind)) {
+    const parts = [...form.querySelectorAll(".pair-input input")].map(input => input.value);
+    if (parts.some(part => !part)) return {error: "Fill in both number boxes before checking."};
+    if (parts.some(part => !Number.isSafeInteger(Number(part)) || Number(part) < 0) ||
+      (question.response.kind === "ratio" && Number(parts[1]) === 0)) {
+      return {error: "Use whole numbers in both boxes."};
+    }
+    return {answer: parts.map(Number).join(question.response.kind === "ratio" ? ":" : " R")};
+  }
   if (question.response?.kind === "fraction") {
     const [numerator, denominator] = typed.split("/");
     if (!numerator || !denominator) return {error: "Fill in both fraction boxes before checking."};
@@ -644,12 +781,53 @@ function renderNumberEntry(form, question, value, locked = false) {
   const row = form.querySelector(".answer-row");
   const label = form.querySelector("label");
   row.querySelector(".fraction-input")?.remove();
+  row.querySelector(".pair-input")?.remove();
   row.querySelector(".answer-unit")?.remove();
-  row.classList.remove("with-unit", "with-fraction");
+  row.classList.remove("with-unit", "with-fraction", "with-pair");
   if (!question.response) return;
   form.noValidate = true;
   row.hidden = false;
   input.disabled = locked;
+  if (["ratio", "remainder"].includes(question.response.kind)) {
+    input.type = "hidden";
+    input.hidden = true;
+    const pair = document.createElement("span");
+    pair.className = "pair-input";
+    pair.setAttribute("role", "group");
+    pair.setAttribute("aria-labelledby", label.id);
+    const ratio = question.response.kind === "ratio";
+    const parts = String(value).split(ratio ? ":" : "R");
+    const names = ratio ? ["First number", "Second number"] : ["Quotient", "Remainder"];
+    names.forEach((name, index) => {
+      const fieldLabel = document.createElement("label");
+      const field = document.createElement("input");
+      field.id = `${input.id}-${index}`;
+      fieldLabel.htmlFor = field.id;
+      fieldLabel.textContent = name;
+      field.type = "number";
+      field.inputMode = "numeric";
+      field.step = "1";
+      field.autocomplete = "off";
+      field.placeholder = "?";
+      field.setAttribute("aria-describedby", input.getAttribute("aria-describedby") || "");
+      field.value = parts[index]?.trim() || "";
+      field.disabled = locked;
+      fieldLabel.append(field);
+      pair.append(fieldLabel);
+      if (ratio && index === 0) {
+        const colon = document.createElement("span");
+        colon.className = "ratio-colon";
+        colon.textContent = ":";
+        pair.append(colon);
+      }
+    });
+    pair.classList.toggle("ratio-input", ratio);
+    input.after(pair);
+    row.classList.add("with-pair");
+    label.htmlFor = `${input.id}-0`;
+    label.textContent = "Your answer · Fill in both boxes";
+    return;
+  }
   if (question.response.kind === "fraction") {
     input.type = "hidden";
     input.hidden = true;
@@ -1061,6 +1239,15 @@ if (window.MarcoOnlineSync && !isLocalPreview) {
       // Keep the synced snapshot intact: adding empty sets is not an offline edit.
       storeRecords(remote);
       loadSet(activeSet);
+      const dialog = document.querySelector("#answer-review");
+      if (dialog?.querySelector(".correction-form")) {
+        const index = Number(dialog.dataset.questionIndex), position = Number(dialog.dataset.position);
+        const details = savedAnswerDetails(index, position);
+        if (details?.correction) {
+          correctionDrafts.delete(`${index}:${position}`);
+          renderSavedAnswerContent(dialog.querySelector(".answer-review-content"), details, index, position);
+        }
+      }
     },
   });
   void sync.start(isValidRecords(savedRecords) ? savedRecords : records);

@@ -122,6 +122,11 @@ button { color: inherit; }
 .fraction-input input::-webkit-inner-spin-button,
 .fraction-input input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .fraction-input input { appearance: textfield; -moz-appearance: textfield; }
+.answer-row.with-pair { align-items: end; }
+.pair-input { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: end; gap: 12px; }
+.pair-input.ratio-input { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+.pair-input label { display: grid; min-width: 0; margin: 0; gap: 6px; font-size: 14px; }
+.ratio-colon { padding-bottom: 10px; font-size: 24px; font-weight: 800; }
 .choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
 .choice-option { min-height: 50px; padding: 10px 12px; border: 2px solid #cbd3e4; border-radius: 11px; background: #fff; color: var(--ink); font-size: 17px; font-weight: 800; cursor: pointer; }
 .choice-option:hover:not(:disabled) { border-color: var(--blue); background: #f4f6ff; }
@@ -219,6 +224,7 @@ button { color: inherit; }
 .light-caption { color: #46516b; font-size: 14px; font-weight: 700; }
 .light-step.correct .track-lamp { border-color: #08723e; background: #148247; color: #fff; box-shadow: 0 0 0 3px #d0efdd; }
 .light-step.incorrect .track-lamp { border-color: #a62939; background: #c63849; color: #fff; box-shadow: 0 0 0 3px #f9dce0; }
+.light-step.corrected .track-lamp { border-color: #996900; background: #facc15; color: #422900; box-shadow: 0 0 0 3px #fff0b3; }
 .light-step.practicing .track-lamp { border-color: #315ecb; background: #e3ebff; color: #294ca8; }
 .light-step.in-streak .track-lamp { outline: 2px solid #08723e; outline-offset: 4px; }
 .light-step.up-next .track-lamp, .light-step.current-question .track-lamp { outline: 2px solid #315ecb; outline-offset: 4px; }
@@ -329,3 +335,10 @@ footer a:hover { text-decoration: underline; }
 
 .saved-answer.correct { color: #08723e; }
 .saved-answer.incorrect { color: #a62939; }
+.correction-instruction { color: #46516b; line-height: 1.5; }
+.correction-feedback { min-height: 1.5em; color: #a62939; font-weight: 700; }
+.correction-status { padding: 14px 16px; border: 1px solid #b48700; border-radius: 12px; background: #fff0a3; color: #573900; font-weight: 800; line-height: 1.5; }
+@media (max-width: 480px) {
+  .answer-row.with-pair { grid-template-columns: 1fr; }
+  .answer-row.with-pair > button { justify-self: end; }
+}
