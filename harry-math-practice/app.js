@@ -120,19 +120,18 @@ function day3Indexes() {
   return questionSets[DAY3_SET].map((question, index) => question.removed ? -1 : index).filter(index => index !== -1);
 }
 
-function day3UnlockPosition() {
+function firstUnfinishedDay3Position() {
   const indexes = day3Indexes();
   const firstUnfinished = indexes.findIndex(index => !mastery.progress(records[DAY3_SET].questions[index]).finished);
   return firstUnfinished === -1 ? indexes.length - 1 : firstUnfinished;
 }
 
 function canPracticeDay3Question(index) {
-  const position = day3Indexes().indexOf(index);
-  return position >= 0 && position <= day3UnlockPosition();
+  return day3Indexes().includes(index);
 }
 
 function canOpenDay3Question(index) {
-  return day3Indexes().includes(index) && (canPracticeDay3Question(index) || records[DAY3_SET].questions[index].firstTry !== null);
+  return day3Indexes().includes(index);
 }
 
 function lightStep(status, label, description) {
@@ -151,29 +150,29 @@ function lightStep(status, label, description) {
   return step;
 }
 
-function missedAnswerDetails(questionIndex, position) {
+function savedAnswerDetails(questionIndex, position) {
   if (!Number.isInteger(position) || position < 0 || !day3Indexes().includes(questionIndex)) return null;
   const record = records[DAY3_SET].questions[questionIndex];
   const attempt = position === 0 ? { correct: record.firstTry, answer: record.attempts === 1 ? record.lastAnswer : null }
     : record.review?.attempts[position - 1];
   const question = position === 0 ? questionSets[DAY3_SET][questionIndex] : day3Banks[questionIndex]?.[position - 1];
-  if (!question || !attempt || attempt.correct !== false) return null;
-  return { question, answer: attempt.answer, number: day3Indexes().indexOf(questionIndex) + 1,
+  if (!question || !attempt || typeof attempt.correct !== "boolean") return null;
+  return { question, answer: attempt.answer, correct: attempt.correct, number: day3Indexes().indexOf(questionIndex) + 1,
     label: position === 0 ? "Main question" : `Practice question ${position}` };
 }
 
-function openMissedAnswer(questionIndex, position, opener) {
-  const details = missedAnswerDetails(questionIndex, position);
+function openSavedAnswer(questionIndex, position, opener) {
+  const details = savedAnswerDetails(questionIndex, position);
   if (!details) return;
-  document.querySelector("#missed-answer-review")?.close();
+  document.querySelector("#answer-review")?.close();
   const dialog = document.createElement("dialog");
-  dialog.id = "missed-answer-review";
-  dialog.className = "missed-answer-review";
-  dialog.setAttribute("aria-labelledby", "missed-answer-title");
+  dialog.id = "answer-review";
+  dialog.className = "answer-review";
+  dialog.setAttribute("aria-labelledby", "answer-review-title");
   const header = document.createElement("div");
-  header.className = "missed-answer-heading";
+  header.className = "answer-review-heading";
   const title = document.createElement("h2");
-  title.id = "missed-answer-title";
+  title.id = "answer-review-title";
   title.textContent = `Question ${details.number} · ${details.label}`;
   const close = document.createElement("button");
   close.type = "button";
@@ -195,13 +194,13 @@ function openMissedAnswer(questionIndex, position, opener) {
       if (details.question.choicesHtml) item.innerHTML = details.question.choicesHtml[index];
       else item.textContent = String(value);
       const correct = isCorrectAnswer(String(value), details.question);
-      const selected = details.answer !== null && String(value) === details.answer;
+      const selected = typeof details.answer === "string" && String(value) === details.answer;
       item.classList.toggle("correct", correct);
       item.classList.toggle("selected-wrong", selected && !correct);
       if (correct || selected) {
         const label = document.createElement("strong");
         label.className = "saved-choice-result";
-        label.textContent = correct ? "✓ Correct answer" : "× Harry’s answer";
+        label.textContent = correct ? (selected ? "✓ Harry’s answer · Correct" : "✓ Correct answer") : "× Harry’s answer";
         item.append(label);
       }
       choices.append(item);
@@ -209,8 +208,10 @@ function openMissedAnswer(questionIndex, position, opener) {
     dialog.append(choices);
   }
   const savedAnswer = document.createElement("p");
-  savedAnswer.className = "saved-wrong-answer";
-  savedAnswer.textContent = details.answer ? `Harry’s answer: ${details.answer}` : "His first answer was incorrect, but that original answer was not saved.";
+  savedAnswer.className = "saved-answer " + (details.correct ? "correct" : "incorrect");
+  savedAnswer.textContent = typeof details.answer === "string" && details.answer.trim()
+    ? `${details.correct ? "✓" : "×"} Harry’s answer: ${details.answer} · ${details.correct ? "Correct" : "Incorrect"}`
+    : `His first answer was ${details.correct ? "correct" : "incorrect"}, but that original answer was not saved.`;
   dialog.append(savedAnswer, renderCorrectAnswer(details.question));
   dialog.addEventListener("close", () => {
     dialog.remove();
@@ -252,22 +253,22 @@ function renderAnswerTrack(record, questionIndex) {
     const description = `${name}: ${status}`;
     const step = lightStep(status, label, description);
     step.classList.toggle("in-streak", correct && position >= results.length - state.streak);
-    if (!correct) {
+    {
       const review = document.createElement("button");
       review.type = "button";
       review.className = "answer-history-button";
       review.dataset.reviewPosition = String(position);
-      review.setAttribute("aria-label", `Review ${name.toLowerCase()}: incorrect`);
+      review.setAttribute("aria-label", `Review ${name.toLowerCase()}: ${status}`);
       review.setAttribute("aria-haspopup", "dialog");
       review.append(...step.childNodes);
-      review.addEventListener("click", () => openMissedAnswer(questionIndex, position, review));
+      review.addEventListener("click", () => openSavedAnswer(questionIndex, position, review));
       step.replaceChildren(review);
     }
     list.append(step);
   });
   const legend = document.createElement("p");
   legend.className = "light-legend";
-  legend.textContent = "✓ Green = right · Tap a red answer to review it.";
+  legend.textContent = "Tap any green or red answer to see the question and Harry’s answer.";
   track.append(heading);
   if (results.length) track.append(list, legend);
   return track;
@@ -279,19 +280,17 @@ function renderDay3TotalTrack() {
   day3Indexes().forEach((index, position) => {
     const state = mastery.progress(records[DAY3_SET].questions[index]);
     const status = { mastered: "correct", unmastered: "incorrect", practicing: "practicing", unanswered: "pending" }[state.status];
-    const locked = !canPracticeDay3Question(index);
-    const accessible = canOpenDay3Question(index);
     const statusDescription = { mastered: "mastered", unmastered: "unmastered", practicing: `in practice, ${state.streak} of 3 right in a row`, unanswered: "not started" }[state.status];
-    const description = locked ? `${accessible ? `${statusDescription}, review only` : "locked"}; finish Question ${day3UnlockPosition() + 1} first` : statusDescription;
+    const description = statusDescription;
     const step = lightStep(status, `Q${position + 1}`, `Question ${position + 1}: ${description}`);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "question-jump";
-    button.disabled = !accessible;
+    button.disabled = false;
     button.dataset.questionIndex = String(index);
     button.setAttribute("aria-label", `Question ${position + 1}: ${questionSets[DAY3_SET][index].skill}, ${description}`);
     button.setAttribute("aria-controls", `answer-${index + 1}`);
-    button.title = locked ? description : questionSets[DAY3_SET][index].skill;
+    button.title = questionSets[DAY3_SET][index].skill;
     button.append(...step.childNodes);
     const skill = document.createElement("span");
     skill.className = "question-jump-skill";
@@ -715,14 +714,6 @@ function renderMasteryPractice(card, index) {
     card.append(panel);
     return;
   }
-  if (!canPracticeDay3Question(index)) {
-    const note = document.createElement("p");
-    note.className = "practice-order-note";
-    note.textContent = `You can review your saved answers here. Finish Question ${day3UnlockPosition() + 1} before continuing this question.`;
-    panel.append(note);
-    card.append(panel);
-    return;
-  }
   if (record.review?.ready === false) {
     const next = document.createElement("button");
     next.type = "button";
@@ -831,7 +822,7 @@ function loadSet(setNumber, captureDraft = true) {
   document.body.classList.toggle("day3-mode", isDay3);
   document.querySelector("#day3-question-nav").hidden = !isDay3;
   if (isDay3 && !canOpenDay3Question(activeDay3Index)) {
-    activeDay3Index = day3Indexes()[day3UnlockPosition()];
+    activeDay3Index = day3Indexes()[firstUnfinishedDay3Position()];
   }
   const questions = activeQuestions();
   questionGrid.setAttribute(

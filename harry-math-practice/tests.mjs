@@ -234,29 +234,30 @@ test("out-of-order STAR progress restores independently and cannot invent master
   assert.ok(normalized.attempts.every(a=>a.correct===false));
 });
 
-test("future question buttons stay locked while earlier questions and the current draft remain accessible", () => {
-  const page = bootHistoryPage(boot().records);
+test("all 27 questions can be opened without changing answers or losing a draft", () => {
+  const page=bootHistoryPage(boot().records);
   try {
-    const jumps = [...page.document.querySelectorAll(".question-jump")];
-    assert.equal(jumps.length, 27);
-    assert.deepEqual(jumps.map(button => button.disabled), [false, false, false, ...Array(24).fill(true)]);
-    const card = page.document.querySelector('[data-question="6"]');
-    card.querySelector("input").value = "79";
-    const before = JSON.stringify(page.api.records);
-    jumps[19].click();
-    page.api.openDay3Question(27);
+    const jumps=[...page.document.querySelectorAll(".question-jump")];
+    assert.equal(jumps.length,27);assert.ok(jumps.every(button=>!button.disabled));
+    const card=page.document.querySelector('[data-question="6"]');
+    card.querySelector("input").value="79";
+    const before=JSON.stringify(page.api.records), storage=page.win.localStorage.getItem("harry-math-practice-record-v1");
+    for(const button of jumps){
+      button.click();
+      assert.equal(page.document.querySelector(`[data-question="${Number(button.dataset.questionIndex)+1}"]`).hidden,false);
+    }
+    assert.equal(page.document.querySelector("#day3-next").disabled,true);
     page.api.moveDay3Question(1);
-    assert.equal(card.hidden, false, "A hidden or programmatic navigation cannot skip ahead");
-    assert.equal(page.document.querySelector("#day3-next").disabled, true);
-    jumps[0].click();
-    assert.equal(page.document.querySelector("#day3-previous").disabled, true);
-    assert.equal(page.document.querySelector("#day3-next").disabled, false);
+    assert.equal(page.document.querySelector('[data-question="35"]').hidden,false);
+    page.document.querySelector('[data-question-index="0"]').click();
+    assert.equal(page.document.querySelector("#day3-previous").disabled,true);
+    assert.equal(page.document.querySelector("#day3-next").disabled,false);
     page.document.querySelector('[data-question-index="5"]').click();
-    assert.equal(card.querySelector("input").value, "79");
-    assert.equal(JSON.stringify(page.api.records), before);
-    assert.equal(page.pushed.length, 0);
-    assert.deepEqual(page.errors, []);
-  } finally { page.close(); }
+    assert.equal(card.querySelector("input").value,"79");
+    assert.equal(JSON.stringify(page.api.records),before);
+    assert.equal(page.win.localStorage.getItem("harry-math-practice-record-v1"),storage);
+    assert.equal(page.pushed.length,0);assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
 });
 
 test("session markup and assets match the expanded question set without day tabs", () => {
@@ -350,7 +351,7 @@ function bootHistoryPage(saved) {
   win.HTMLDialogElement.prototype.close = function () {this.removeAttribute("open"); this.dispatchEvent(new win.Event("close"));};
   win.eval(read("./day3-mastery.js"));
   win.eval(read("./star-mastery.js"));
-  win.eval(source + "\n;globalThis.historyTest = {get records() {return records;}, missedAnswerDetails, openMissedAnswer, openDay3Question, moveDay3Question};");
+  win.eval(source + "\n;globalThis.historyTest = {get records() {return records;}, savedAnswerDetails, openSavedAnswer, openDay3Question, moveDay3Question};");
   return {win, document: win.document, api: win.historyTest, pushed, errors, remote: value => remote(clone(value)), close: () => win.close()};
 }
 
@@ -369,14 +370,14 @@ test("clicking a saved red answer opens the exact missed question and preserves 
     const storage = page.win.localStorage.getItem("harry-math-practice-record-v1");
     const red = card.querySelector('[data-review-position="2"]');
     assert.ok(red);
-    assert.equal(card.querySelectorAll(".answer-history-button").length, 2);
-    assert.equal(card.querySelector(".light-step.correct button"), null);
+    assert.equal(card.querySelectorAll(".answer-history-button").length, 3);
+    assert.ok(card.querySelector(".light-step.correct button"));
     red.click();
     const dialog = page.document.querySelector("dialog[open]");
     assert.match(dialog.querySelector("h2").textContent, /Question 3 · Practice question 2/);
     assert.match(dialog.querySelector(".expression").textContent, /476.*319/);
     assert.equal(dialog.querySelector(".correct-answer strong").textContent, "795");
-    assert.match(dialog.querySelector(".saved-wrong-answer").textContent, /-999/);
+    assert.match(dialog.querySelector(".saved-answer").textContent, /-999/);
     assert.equal(dialog.querySelector("form, input"), null);
     dialog.querySelector(".close-answer-review").click();
     assert.equal(page.document.querySelector("dialog"), null);
@@ -386,7 +387,7 @@ test("clicking a saved red answer opens the exact missed question and preserves 
     assert.equal(page.pushed.length, writes);
     assert.equal(page.win.localStorage.getItem("harry-math-practice-record-v1"), storage);
     card.querySelector('[data-review-position="0"]').click();
-    assert.match(page.document.querySelector("dialog .saved-wrong-answer").textContent, /700/);
+    assert.match(page.document.querySelector("dialog .saved-answer").textContent, /700/);
     page.document.querySelector("dialog").close();
     assert.equal(JSON.stringify(page.api.records), before);
     assert.deepEqual(page.errors, []);
@@ -435,15 +436,15 @@ test("mastered questions retain their misses without inventing unavailable first
     assert.match(card.querySelector(".mastery-badge").textContent, /Mastered/);
     card.querySelector('[data-review-position="0"]').click();
     const dialog = page.document.querySelector("dialog[open]");
-    assert.match(dialog.querySelector(".saved-wrong-answer").textContent, /original answer was not saved/);
+    assert.match(dialog.querySelector(".saved-answer").textContent, /original answer was not saved/);
     dialog.close();
-    for (const [index, position] of [[5, -1], [5, 1], [5, 4], [5, 11], [99, 0], [6, 0]]) {
-      page.api.openMissedAnswer(index, position);
+    for (const [index, position] of [[5, -1], [5, 4], [5, 11], [99, 0], [6, 0]]) {
+      page.api.openSavedAnswer(index, position);
       assert.equal(page.document.querySelector("dialog"), null);
     }
     page.document.querySelector('[data-question-index="0"]').click();
     page.document.querySelector('[data-question="1"] [data-review-position="0"]').click();
-    assert.match(page.document.querySelector("dialog .saved-wrong-answer").textContent, /123/);
+    assert.match(page.document.querySelector("dialog .saved-answer").textContent, /123/);
     assert.equal(page.pushed.length, 0);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
@@ -470,78 +471,54 @@ function checkFollowUp(page, data, index, correct) {
   input.closest("form").dispatchEvent(new page.win.Event("submit", {bubbles: true, cancelable: true}));
 }
 
-test("Q6 must finish before Q7 unlocks, with Q1–Q6 and their missed answers still reviewable", () => {
-  const data = boot();
-  finishBefore(data, 6);
-  Object.assign(data.records[6].questions[12], {firstTry: false, attempts: 1, lastAnswer: "1"});
-  const page = bootHistoryPage(data.records);
+test("later questions can be answered independently while earlier practice remains unfinished", () => {
+  const data=boot(),page=bootHistoryPage(data.records);
   try {
-    const jump = index => page.document.querySelector(`[data-question-index="${index}"]`);
-    assert.equal(jump(14).disabled, true, "Q7 is locked during Q6");
-    for (const [index, correct] of [false, true, true, true].entries()) {
-      checkFollowUp(page, data, 12, correct);
-      assert.equal(jump(14).disabled, index < 3);
-    }
-    assert.equal(page.document.querySelector("#day3-next").disabled, false);
-    assert.equal(jump(15).disabled, true, "Q8 stays locked");
-    const beforeReview = JSON.stringify(page.api.records), writes = page.pushed.length;
-    jump(0).click();
-    jump(12).click();
-    page.document.querySelector('[data-question="13"] [data-review-position="1"]').click();
-    assert.ok(page.document.querySelector("dialog[open]"));
-    page.document.querySelector("dialog").close();
-    assert.equal(JSON.stringify(page.api.records), beforeReview);
-    assert.equal(page.pushed.length, writes);
-    page.document.querySelector("#day3-next").click();
-    const q7 = page.document.querySelector('[data-question="15"]');
-    assert.equal(q7.hidden, false);
-    [...q7.querySelectorAll(".choice-option")].find(button => button.dataset.value === data.questionSets[6][14].answer).click();
-    assert.equal(jump(15).disabled, true, "One right main answer is not enough to unlock Q8");
-    checkFollowUp(page, data, 14, true);
-    assert.equal(jump(15).disabled, true);
-    checkFollowUp(page, data, 14, true);
-    assert.equal(jump(15).disabled, false);
-    const reloaded = bootHistoryPage(page.api.records);
+    page.document.querySelector('[data-question-index="14"]').click();
+    const card=page.document.querySelector('[data-question="15"]');
+    [...card.querySelectorAll(".choice-option")].find(button=>button.dataset.value===data.questionSets[6][14].answer).click();
+    assert.equal(page.api.records[6].questions[14].firstTry,true);
+    assert.equal(page.api.records[6].questions[5].firstTry,null);
+    assert.equal(page.api.records[6].questions[12].firstTry,null);
+    checkFollowUp(page,data,14,true);checkFollowUp(page,data,14,true);
+    assert.equal(data.mastery.progress(page.api.records[6].questions[14]).status,"mastered");
+    assert.equal(page.document.querySelectorAll(".question-jump:disabled").length,0);
+    const reloaded=bootHistoryPage(page.api.records);
     try {
-      assert.equal(reloaded.document.querySelector('[data-question="16"]').hidden, false, "Reload opens the first unfinished question, Q8");
-      assert.equal(reloaded.document.querySelector('[data-question-index="16"]').disabled, true);
-      assert.deepEqual(clone(reloaded.api.records), clone(page.api.records));
-    } finally { reloaded.close(); }
-    assert.deepEqual(page.errors, []);
-  } finally { page.close(); }
+      assert.equal(reloaded.document.querySelectorAll(".question-jump:disabled").length,0);
+      reloaded.document.querySelector('[data-question-index="14"]').click();
+      assert.equal(reloaded.document.querySelector('[data-question="15"]').hidden,false);
+      assert.deepEqual(clone(reloaded.api.records),clone(page.api.records));
+    } finally {reloaded.close();}
+    assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
 });
 
-test("earlier out-of-order work stays reviewable but cannot continue until its turn", () => {
-  const data = boot(), later = data.records[6].questions[14];
-  Object.assign(later, {firstTry: false, attempts: 1, lastAnswer: "27:24"});
-  submit(data, later, data.day3Banks[14], false);
-  const page = bootHistoryPage(data.records);
+test("saved out-of-order work can resume immediately and remains readable after online sync", () => {
+  const data=boot(),later=data.records[6].questions[14];
+  Object.assign(later,{firstTry:false,attempts:1,lastAnswer:"27:24"});
+  submit(data,later,data.day3Banks[14],false);
+  const page=bootHistoryPage(data.records);
   try {
-    page.document.querySelector('[data-question-index="14"]').click();
-    const card = page.document.querySelector('[data-question="15"]');
-    assert.equal(card.hidden, false);
-    assert.match(card.querySelector(".practice-order-note").textContent, /Finish Question 3/);
-    assert.equal(card.querySelector(".mastery-practice form, .next-practice"), null);
-    assert.equal(page.document.querySelector("#day3-next").disabled, true);
-    const before = JSON.stringify(page.api.records);
-    card.querySelector('[data-review-position="1"]').click();
-    page.document.querySelector("dialog").close();
-    card.querySelector("form").dispatchEvent(new page.win.Event("submit", {bubbles: true, cancelable: true}));
-    assert.equal(JSON.stringify(page.api.records), before);
-    assert.equal(page.pushed.length, 0);
-    page.document.querySelector("#day3-previous").click();
-    assert.equal(page.document.querySelector('[data-question="6"]').hidden, false, "Previous returns to the nearest accessible question");
-    page.document.querySelector('[data-question-index="14"]').click();
-    finishBefore(data, 7);
     page.remote(data.records);
-    assert.equal(card.hidden, false);
-    assert.equal(card.querySelector(".practice-order-note"), null);
-    assert.ok(card.querySelector(".next-practice"), "Remote completion of Q3–Q6 unlocks continuation of Q7");
-    assert.deepEqual(page.errors, []);
-  } finally { page.close(); }
+    page.document.querySelector('[data-question-index="14"]').click();
+    const card=page.document.querySelector('[data-question="15"]');
+    assert.equal(card.querySelector(".practice-order-note"),null);
+    assert.ok(card.querySelector(".next-practice"));
+    assert.equal(page.document.querySelector("#day3-next").disabled,false);
+    const before=JSON.stringify(page.api.records);
+    card.querySelector('[data-review-position="1"]').click();page.document.querySelector("dialog").close();
+    assert.equal(JSON.stringify(page.api.records),before);assert.equal(page.pushed.length,0);
+    checkFollowUp(page,data,14,true);
+    assert.equal(page.api.records[6].questions[14].review.attempts.length,2);
+    assert.equal(page.api.records[6].questions[5].firstTry,null);
+    page.document.querySelector("#day3-previous").click();
+    assert.equal(page.document.querySelector('[data-question="13"]').hidden,false);
+    assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
 });
 
-test("finishing the ten-follow-up limit unlocks the next question and the last question has no next", () => {
+test("finishing the ten-follow-up limit preserves free navigation and the last question has no next", () => {
   const data = boot();
   finishBefore(data, 6);
   const current = data.records[6].questions[12];
@@ -549,7 +526,7 @@ test("finishing the ten-follow-up limit unlocks the next question and the last q
   for (let i = 0; i < 9; i++) submit(data, current, data.day3Banks[12], false);
   const page = bootHistoryPage(data.records);
   try {
-    assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, true);
+    assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, false);
     checkFollowUp(page, data, 12, false);
     assert.equal(data.mastery.progress(page.api.records[6].questions[12]).status, "unmastered");
     assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, false);
@@ -626,4 +603,53 @@ test("appending seven questions preserves saved August 30 mastery and starts new
   }
   submit(restored,restored.records[6].questions[14],restored.day3Banks[14],true);
   assert.equal(restored.mastery.progress(restored.records[6].questions[14]).status,"mastered");
+});
+
+
+test("green main answers and every correct follow-up reopen with the exact question, answer and diagrams",()=>{
+  const data=boot();
+  for(const index of [5,28,29,30,31,32,33,34]){
+    const r=data.records[6].questions[index];
+    Object.assign(r,{firstTry:true,attempts:1,lastAnswer:String(data.questionSets[6][index].answer)});
+    submit(data,r,data.day3Banks[index],true);submit(data,r,data.day3Banks[index],true);
+  }
+  const page=bootHistoryPage(data.records);
+  try {
+    page.remote(data.records);
+    const before=JSON.stringify(page.api.records), storage=page.win.localStorage.getItem("harry-math-practice-record-v1");
+    for(const index of [5,28,29,30,31,32,33,34]){
+      page.document.querySelector(`[data-question-index="${index}"]`).click();
+      const card=page.document.querySelector(`[data-question="${index+1}"]`);
+      assert.equal(card.querySelectorAll(".light-step.correct .answer-history-button").length,3);
+      for(const position of [0,1,2]){
+        const button=card.querySelector(`[data-review-position="${position}"]`);
+        assert.match(button.getAttribute("aria-label"),/: correct$/);
+        button.click();
+        const dialog=page.document.querySelector("dialog[open]");
+        const q=position===0?data.questionSets[6][index]:data.day3Banks[index][position-1];
+        assert.equal(dialog.querySelector(".correct-answer strong").textContent,String(q.answer));
+        assert.equal(dialog.querySelector(".saved-answer.correct").textContent,`✓ Harry’s answer: ${q.answer} · Correct`);
+        if(q.choices)assert.equal(dialog.querySelectorAll(".saved-review-choice.correct").length,1);
+        if(q.visualHtml?.includes("<svg"))assert.ok(dialog.querySelector("svg"));
+        assert.equal(dialog.querySelector("form,input"),null);
+        dialog.close();assert.equal(page.document.activeElement,button);
+      }
+    }
+    assert.equal(JSON.stringify(page.api.records),before);
+    assert.equal(page.win.localStorage.getItem("harry-math-practice-record-v1"),storage);
+    assert.equal(page.pushed.length,0);assert.deepEqual(page.errors,[]);
+  }finally{page.close();}
+});
+
+test("legacy correct marks remain reviewable without inventing a missing first answer",()=>{
+  const data=boot();Object.assign(data.records[6].questions[5],{firstTry:true,attempts:2,lastAnswer:"795",solved:true});
+  const page=bootHistoryPage(data.records);
+  try{
+    page.document.querySelector('[data-question-index="5"]').click();
+    page.document.querySelector('[data-question="6"] [data-review-position="0"]').click();
+    const dialog=page.document.querySelector("dialog[open]");
+    assert.match(dialog.querySelector(".saved-answer.correct").textContent,/first answer was correct.*original answer was not saved/);
+    assert.equal(dialog.querySelector(".correct-answer strong").textContent,"795");
+    assert.equal(page.pushed.length,0);
+  }finally{page.close();}
 });
