@@ -113,6 +113,15 @@ button { color: inherit; }
 .answer-row button { min-width: 87px; min-height: 48px; padding: 9px 15px; border: 0; border-radius: 11px; background: #263d75; color: #fff; font-weight: 800; cursor: pointer; }
 .answer-row button:hover:not(:disabled) { background: #3656a1; }
 .answer-row button:disabled { background: var(--teal); cursor: default; }
+.answer-row.with-unit { grid-template-columns: minmax(64px, 1fr) auto auto; align-items: center; }
+.answer-unit { max-width: 7ch; font-weight: 700; line-height: 1.3; }
+.answer-row.with-fraction { align-items: center; }
+.fraction-input { display: grid; position: relative; width: 108px; gap: 14px; }
+.fraction-input::after { content: ""; position: absolute; top: 50%; left: 0; right: 0; border-top: 2px solid var(--ink); pointer-events: none; }
+.fraction-input input { text-align: center; }
+.fraction-input input::-webkit-inner-spin-button,
+.fraction-input input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.fraction-input input { appearance: textfield; -moz-appearance: textfield; }
 .choice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
 .choice-option { min-height: 50px; padding: 10px 12px; border: 2px solid #cbd3e4; border-radius: 11px; background: #fff; color: var(--ink); font-size: 17px; font-weight: 800; cursor: pointer; }
 .choice-option:hover:not(:disabled) { border-color: var(--blue); background: #f4f6ff; }

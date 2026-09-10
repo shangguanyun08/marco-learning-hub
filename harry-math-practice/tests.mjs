@@ -18,7 +18,7 @@ function boot(saved = {}) {
   const context = vm.createContext({});
   vm.runInContext(read("./day3-mastery.js") + "\n" + read("./star-mastery.js"), context);
   vm.runInContext(source.slice(0, source.indexOf("const questionGrid =")), context);
-  for (const name of ["day3Indexes", "normalizeQuestionRecord", "normalizeRecords", "isCorrectAnswer", "questionCount", "recordStats", "scoreOutOf100", "syncScore"]) {
+  for (const name of ["day3Indexes", "normalizeQuestionRecord", "normalizeRecords", "numberAnswerText", "parseNumberAnswer", "isCorrectAnswer", "questionCount", "recordStats", "scoreOutOf100", "syncScore"]) {
     vm.runInContext(declaration(name), context);
   }
   context.saved = clone(saved);
@@ -652,4 +652,142 @@ test("legacy correct marks remain reviewable without inventing a missing first a
     assert.equal(dialog.querySelector(".correct-answer strong").textContent,"795");
     assert.equal(page.pushed.length,0);
   }finally{page.close();}
+});
+
+test("Q16 onward changes ten question families to numeric entry and preserves Q17 and Q25 choices", () => {
+  const data = boot(), indexes = data.day3Indexes();
+  for (const [position, index] of indexes.entries()) {
+    const q = data.questionSets[6][index];
+    const converted = position >= 15 && ![16, 24].includes(position);
+    assert.equal(Boolean(q.response), converted, `Q${position + 1}`);
+    if (!converted) continue;
+    for (const question of [q, ...data.day3Banks[index]]) {
+      assert.equal(question.response.kind, position === 20 ? "fraction" : "number");
+      assert.equal(data.isCorrectAnswer(question.answer, question), true, "Old unit-bearing answers remain correct");
+      if (question.response.kind === "number") {
+        const number = Number.parseFloat(question.answer);
+        assert.equal(data.isCorrectAnswer(String(number), question), true);
+        assert.equal(data.isCorrectAnswer(number.toFixed(5), question), true);
+        assert.equal(data.isCorrectAnswer(String(number + 1), question), false);
+        for (const invalid of ["", " ", `${number} bananas`, "0x10", "Infinity"]) {
+          assert.equal(data.isCorrectAnswer(invalid, question), false);
+        }
+      }
+    }
+  }
+});
+
+test("all nine numeric question families accept numbers with printed units through mastery and reload", () => {
+  const data = boot(), page = bootHistoryPage(data.records);
+  try {
+    for (const index of data.day3Indexes().filter(i => data.questionSets[6][i].response?.kind === "number")) {
+      page.api.openDay3Question(index);
+      const card = page.document.querySelector(`[data-question="${index + 1}"]`);
+      for (let position = 0; position < 3; position++) {
+        card.querySelector(".next-practice")?.click();
+        const question = position ? data.day3Banks[index][position - 1] : data.questionSets[6][index];
+        const form = position ? card.querySelector(".mastery-practice form") : card.querySelector("form");
+        assert.equal(form.querySelector(".choice-grid"), null);
+        const input = form.querySelector("input");
+        assert.equal(input.type, "number");
+        assert.equal(input.hidden, false);
+        assert.equal(form.querySelector(".answer-row").hidden, false);
+        assert.equal(form.querySelector(".answer-unit")?.textContent || "", question.response.unit);
+        input.value = String(Number.parseFloat(question.answer));
+        form.requestSubmit();
+        const saved = page.api.records[6].questions[index];
+        assert.equal(position ? saved.review.attempts[position - 1].correct : saved.firstTry, true);
+      }
+      assert.equal(data.mastery.progress(page.api.records[6].questions[index]).status, "mastered");
+      card.querySelector('[data-review-position="0"]').click();
+      const expected = data.questionSets[6][index];
+      assert.ok(page.document.querySelector("dialog .saved-answer.correct").textContent.includes(`${Number.parseFloat(expected.answer)}${expected.response.unit ? ` ${expected.response.unit}` : ""}`));
+      page.document.querySelector("dialog").close();
+    }
+    for (const number of [17, 25]) {
+      const index = data.day3Indexes()[number - 1];
+      page.api.openDay3Question(index);
+      const card = page.document.querySelector(`[data-question="${index + 1}"]`);
+      assert.equal(card.querySelectorAll(".choice-option").length, 4);
+      assert.equal(card.querySelector(".answer-row").hidden, true);
+      card.querySelector(".choice-option").click();
+      assert.equal(card.querySelectorAll(".mastery-practice .choice-option").length, 4);
+    }
+    const reloaded = boot(page.api.records);
+    assert.deepEqual(clone(reloaded.records), clone(page.api.records));
+    assert.deepEqual(page.errors, []);
+  } finally {page.close();}
+});
+
+test("Q21 uses two stacked fraction boxes, retains partial drafts and accepts equivalent fractions", () => {
+  const data = boot(), page = bootHistoryPage(data.records), index = 28;
+  try {
+    page.api.openDay3Question(index);
+    const card = page.document.querySelector('[data-question="29"]');
+    let form = card.querySelector("form");
+    assert.equal(form.querySelector(".choice-grid"), null);
+    assert.ok(form.querySelector(".answer-row.with-fraction .fraction-input"));
+    assert.equal(form.querySelectorAll("input:not([hidden])").length, 2);
+    let fields = form.querySelectorAll(".fraction-input input");
+    fields[0].value = "2";
+    form.requestSubmit();
+    assert.equal(page.api.records[6].questions[index].firstTry, null);
+    assert.match(card.querySelector(".feedback").textContent, /both fraction boxes/);
+    page.api.openDay3Question(23);page.api.openDay3Question(index);
+    form = card.querySelector("form");fields = form.querySelectorAll(".fraction-input input");
+    assert.equal(fields[0].value, "2");assert.equal(fields[1].value, "");
+    fields[1].value = "0";form.requestSubmit();
+    assert.equal(page.api.records[6].questions[index].firstTry, null);
+    assert.match(card.querySelector(".feedback").textContent, /greater than 0/);
+    fields[1].value = "160";form.requestSubmit();
+    assert.equal(page.api.records[6].questions[index].firstTry, true);
+    assert.equal(page.api.records[6].questions[index].lastAnswer, "2/160");
+    form = card.querySelector(".mastery-practice form");
+    fields = form.querySelectorAll(".fraction-input input");
+    fields[0].value = "1";fields[1].value = "24";
+    page.api.openDay3Question(24);page.api.openDay3Question(index);
+    form = card.querySelector(".mastery-practice form");fields = form.querySelectorAll(".fraction-input input");
+    assert.deepEqual([...fields].map(input => input.value), ["1", "24"]);
+    card.querySelector('[data-review-position="0"]').click();
+    assert.match(page.document.querySelector("dialog .saved-answer").textContent, /2\/160/);
+    page.document.querySelector("dialog").close();
+    assert.deepEqual([...fields].map(input => input.value), ["1", "24"]);
+    form.requestSubmit();card.querySelector(".next-practice").click();
+    form = card.querySelector(".mastery-practice form");fields = form.querySelectorAll(".fraction-input input");
+    fields[0].value = "2";fields[1].value = "30";form.requestSubmit();
+    assert.equal(data.mastery.progress(page.api.records[6].questions[index]).status, "mastered");
+    assert.deepEqual(clone(boot(page.api.records).records), clone(page.api.records));
+    assert.deepEqual(page.errors, []);
+  } finally {page.close();}
+});
+
+test("numeric blanks do not count as misses; wrong numbers and drafts remain reviewable", () => {
+  const data = boot(), page = bootHistoryPage(data.records);
+  try {
+    page.api.openDay3Question(23);
+    const card = page.document.querySelector('[data-question="24"]');
+    let form = card.querySelector("form");
+    form.requestSubmit();
+    assert.equal(page.api.records[6].questions[23].firstTry, null);
+    assert.equal(page.pushed.length, 0);
+    form.querySelector("input").value = "13";
+    page.api.openDay3Question(25);page.api.openDay3Question(23);
+    form = card.querySelector("form");assert.equal(form.querySelector("input").value, "13");
+    form.requestSubmit();
+    assert.equal(page.api.records[6].questions[23].firstTry, false);
+    card.querySelector('[data-review-position="0"]').click();
+    assert.match(page.document.querySelector("dialog .saved-answer.incorrect").textContent, /13 children/);
+    page.document.querySelector("dialog").close();
+    form = card.querySelector(".mastery-practice form");form.requestSubmit();
+    assert.equal(page.api.records[6].questions[23].review.attempts.length, 0);
+    form.querySelector("input").value = "9";
+    page.api.openDay3Question(25);page.api.openDay3Question(23);
+    form = card.querySelector(".mastery-practice form");assert.equal(form.querySelector("input").value, "9");
+    form.requestSubmit();
+    assert.equal(page.api.records[6].questions[23].review.attempts[0].correct, false);
+    card.querySelector('[data-review-position="1"]').click();
+    assert.match(page.document.querySelector("dialog .saved-answer.incorrect").textContent, /9 children/);
+    assert.equal(page.document.querySelector("dialog .correct-answer strong").textContent, "10 children");
+    assert.deepEqual(page.errors, []);
+  } finally {page.close();}
 });

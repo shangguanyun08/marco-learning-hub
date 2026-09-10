@@ -1034,5 +1034,28 @@
     throw new Error(`Missing earlier-test follow-ups for ${parent.id}`);
   }
   entries.push(...earlierOriginals.map((question,index)=>({question,followUps:[earlierSimilar[index],...Array.from({length:9},(_,i)=>({...earlierExtra(question,i),id:`${question.id}-extra-${i+2}`,skill:question.skill}))]})));
+  // Keep the original answer keys and choices so saved attempts still match.
+  // These questions now ask Harry to enter numbers, including every follow-up.
+  const numberEntryUnits = {
+    "2026-08-30-q26": "children",
+    "2026-08-30-q29": "oz",
+    "2026-08-30-q30": "inches",
+    "2026-08-30-q34": "cubic inches",
+    "2026-08-23-q25": "houses",
+    "2026-08-23-q13": "",
+    "2026-08-16-q18": "",
+    "2026-08-23-q27": "radius",
+    "2026-08-09-q23": "feet",
+  };
+  for (const entry of entries) {
+    for (const question of [entry.question, ...entry.followUps]) {
+      if (entry.question.id === "2026-08-16-q31") {
+        question.response = {kind: "fraction"};
+      } else if (Object.hasOwn(numberEntryUnits, entry.question.id)) {
+        const unit = numberEntryUnits[entry.question.id];
+        question.response = {kind: "number", unit: unit === "radius" ? question.answer.split(" ").at(-1) : unit};
+      }
+    }
+  }
   global.HarryStarMastery = {entries};
 })(globalThis);

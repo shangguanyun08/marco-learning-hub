@@ -335,10 +335,11 @@ function captureDay3Draft() {
   const card = cards[activeDay3Index];
   const record = records[DAY3_SET].questions[activeDay3Index];
   if (record.firstTry === null) {
-    day3Drafts.set(`${activeDay3Index}:main`, card.querySelector("input").value);
+    day3Drafts.set(`${activeDay3Index}:main`, answerDraft(card.querySelector("form"), questionSets[DAY3_SET][activeDay3Index]));
   }
-  const input = card.querySelector(".mastery-practice input");
-  if (input) day3Drafts.set(`${activeDay3Index}:${mastery.progress(record).used}`, input.value);
+  const form = card.querySelector(".mastery-practice form");
+  const used = mastery.progress(record).used;
+  if (form) day3Drafts.set(`${activeDay3Index}:${used}`, answerDraft(form, day3Banks[activeDay3Index][used]));
 }
 
 function emptyQuestionRecord() {
@@ -536,7 +537,31 @@ function renderExpression(element, question) {
   element.append(` ${question.right} `, equals);
 }
 
+function numberAnswerText(value, question) {
+  const text = String(value).trim();
+  const suffix = question.response?.unit ? ` ${question.response.unit}` : "";
+  return suffix && text.toLowerCase().endsWith(suffix) ? text.slice(0, -suffix.length).trim() : text;
+}
+
+function parseNumberAnswer(value, question) {
+  const text = numberAnswerText(value, question);
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(text)) return null;
+  const number = Number(text);
+  return Number.isFinite(number) ? number : null;
+}
+
 function isCorrectAnswer(typed, question) {
+  if (question.response?.kind === "number") {
+    const actual = parseNumberAnswer(typed, question);
+    const expected = parseNumberAnswer(question.answer, question);
+    return actual !== null && expected !== null && Math.abs(actual - expected) < 1e-10;
+  }
+  if (question.response?.kind === "fraction") {
+    const actual = typed.replace(/\s/g, "").match(/^(-?\d+)\/(\d+)$/);
+    const expected = question.answer.split("/").map(Number);
+    return Boolean(actual && Number(actual[2]) > 0 &&
+      Number(actual[1]) * expected[1] === expected[0] * Number(actual[2]));
+  }
   if (typeof question.answer === "number") {
     return Number(typed) === question.answer;
   }
@@ -589,15 +614,99 @@ function feedbackFor(question) {
   return "Enter your answer when you are ready.";
 }
 
+function answerDraft(form, question) {
+  if (question.response?.kind === "fraction") {
+    return [...form.querySelectorAll(".fraction-input input")].map(input => input.value).join("/");
+  }
+  return form.querySelector("input").value;
+}
+
+function readAnswer(form, question) {
+  const typed = answerDraft(form, question).trim();
+  if (question.response?.kind === "fraction") {
+    const [numerator, denominator] = typed.split("/");
+    if (!numerator || !denominator) return {error: "Fill in both fraction boxes before checking."};
+    if (!Number.isSafeInteger(Number(numerator)) || !Number.isSafeInteger(Number(denominator)) || Number(denominator) <= 0) {
+      return {error: "Use whole numbers in both boxes, with a bottom number greater than 0."};
+    }
+    return {answer: `${Number(numerator)}/${Number(denominator)}`};
+  }
+  if (question.response?.kind === "number") {
+    const number = parseNumberAnswer(typed, question);
+    if (number === null) return {error: "Enter a number before checking."};
+    return {answer: `${typed}${question.response.unit ? ` ${question.response.unit}` : ""}`};
+  }
+  return typed ? {answer: typed} : {error: "Enter an answer before checking."};
+}
+
+function renderNumberEntry(form, question, value, locked = false) {
+  const input = form.querySelector("input");
+  const row = form.querySelector(".answer-row");
+  const label = form.querySelector("label");
+  row.querySelector(".fraction-input")?.remove();
+  row.querySelector(".answer-unit")?.remove();
+  row.classList.remove("with-unit", "with-fraction");
+  if (!question.response) return;
+  form.noValidate = true;
+  row.hidden = false;
+  input.disabled = locked;
+  if (question.response.kind === "fraction") {
+    input.type = "hidden";
+    input.hidden = true;
+    const fraction = document.createElement("span");
+    fraction.className = "fraction-input";
+    fraction.setAttribute("role", "group");
+    fraction.setAttribute("aria-labelledby", label.id);
+    const parts = String(value).split("/");
+    ["numerator", "denominator"].forEach((name, index) => {
+      const field = document.createElement("input");
+      field.id = `${input.id}-${name}`;
+      field.type = "number";
+      field.inputMode = "numeric";
+      field.step = "1";
+      field.autocomplete = "off";
+      field.placeholder = "?";
+      field.setAttribute("aria-label", index ? "Denominator (bottom number)" : "Numerator (top number)");
+      field.setAttribute("aria-describedby", input.getAttribute("aria-describedby") || form.nextElementSibling?.id || "");
+      field.value = parts[index] || "";
+      field.disabled = locked;
+      fraction.append(field);
+    });
+    input.after(fraction);
+    row.classList.add("with-fraction");
+    label.htmlFor = `${input.id}-numerator`;
+    label.textContent = "Your answer · Fill in both fraction boxes";
+    return;
+  }
+  input.type = "number";
+  input.hidden = false;
+  input.step = "any";
+  input.inputMode = "decimal";
+  input.placeholder = "?";
+  input.value = numberAnswerText(value, question);
+  label.htmlFor = input.id;
+  label.textContent = "Your answer · Type a number";
+  if (question.response.unit) {
+    const unit = document.createElement("span");
+    unit.className = "answer-unit";
+    unit.id = `${input.id}-unit`;
+    unit.textContent = question.response.unit;
+    input.setAttribute("aria-describedby", unit.id);
+    input.after(unit);
+    row.classList.add("with-unit");
+  }
+}
+
 function renderChoiceOptions(card, index, question, record, locked = record.solved) {
   const form = card.querySelector("form");
   const input = card.querySelector("input");
   const answerRow = card.querySelector(".answer-row");
   form.querySelector(".choice-grid")?.remove();
 
-  const hasChoices = Array.isArray(question.choices);
+  const hasChoices = Array.isArray(question.choices) && !question.response;
   answerRow.hidden = hasChoices;
   input.hidden = hasChoices;
+  renderNumberEntry(form, question, input.value, locked);
   if (!hasChoices) return;
 
   const grid = document.createElement("div");
@@ -648,6 +757,7 @@ function renderQuestionState(card, index) {
   const needsRetry = question.firstTry === false && !question.solved;
   card.classList.toggle("retry", needsRetry && question.attempts < 2);
   card.classList.toggle("wrong", needsRetry && question.attempts >= 2);
+  if (activeQuestion.response) input.type = "text";
   input.value = isDay3 && question.firstTry === null
     ? day3Drafts.get(`${index}:main`) ?? question.lastAnswer : question.lastAnswer;
   input.disabled = locked;
@@ -745,7 +855,8 @@ function renderMasteryPractice(card, index) {
   input.inputMode = numeric ? Number.isInteger(question.answer) ? "numeric" : "decimal" : "text";
   input.value = day3Drafts.get(`${index}:${state.used}`) ?? "";
   label.textContent = question.choices ? "Choose one answer" : question.kind === "fraction" ? "Missing numerator" : "Your answer";
-  if (question.choices) {
+  renderNumberEntry(form, question, input.value);
+  if (question.choices && !question.response) {
     content.querySelector(".answer-row").hidden = true;
     input.hidden = true;
     label.htmlFor = "";
@@ -767,10 +878,10 @@ function renderMasteryPractice(card, index) {
   }
   form.addEventListener("submit", event => {
     event.preventDefault();
-    const typed = input.value.trim();
-    if (!typed) {
-      content.querySelector(".practice-error").textContent = "Enter an answer before checking.";
-      input.focus();
+    const {answer: typed, error} = readAnswer(form, question);
+    if (error) {
+      content.querySelector(".practice-error").textContent = error;
+      form.querySelector("input:not([hidden]):not(:disabled)")?.focus();
       return;
     }
     if (activeSet !== DAY3_SET || card.hidden || !canPracticeDay3Question(index) || !mastery.submit(record, typed, day3Banks[index], isCorrectAnswer)) return;
@@ -906,10 +1017,10 @@ cards.forEach((card, index) => {
     const activeQuestion = activeQuestions()[index];
     if (card.hidden || !question || !activeQuestion || activeQuestion.removed ||
       (activeSet === DAY3_SET ? question.firstTry !== null || mastery.progress(question).finished || !canPracticeDay3Question(index) : question.solved)) return;
-    const typed = input.value.trim();
-    if (!typed) {
-      feedback.textContent = "Enter an answer before checking.";
-      input.focus();
+    const {answer: typed, error} = readAnswer(form, activeQuestion);
+    if (error) {
+      feedback.textContent = error;
+      form.querySelector("input:not([hidden]):not(:disabled)")?.focus();
       return;
     }
 
