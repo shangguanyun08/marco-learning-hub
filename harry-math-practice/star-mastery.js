@@ -1,4 +1,4 @@
-/* August 30 STAR Math missed questions. Original prompts, choices and diagrams
+/* August 30 and selected earlier STAR Math missed questions. Original prompts, choices and diagrams
    are preserved from the linked test. Bank order is stable for saved attempts. */
 (function installStarMastery(global) {
   "use strict";
@@ -684,5 +684,355 @@
     throw new Error(`Missing follow-up bank for ${parent.id}`);
   }
   const entries=originals.map((question,index)=>({question,followUps:[similar[index],...Array.from({length:9},(_,i)=>({...extra(question,i),id:`${question.id}-extra-${i+2}`,skill:question.skill}))]}));
+
+  // Append only: Q21–Q27 must never shift the saved slots for Q1–Q20.
+  const earlierOriginals = [
+  {
+    "id": "2026-08-16-q31",
+    "skill": "Divide a fraction",
+    "promptHtml": "Find the quotient.",
+    "choices": [
+      "1/18",
+      "5/4",
+      "1/80",
+      "5/8"
+    ],
+    "choicesHtml": [
+      "<span class=\"math-fraction\" aria-label=\"1 over 18\"><span>1</span><span>18</span></span>",
+      "<span class=\"math-fraction\" aria-label=\"5 over 4\"><span>5</span><span>4</span></span>",
+      "<span class=\"math-fraction\" aria-label=\"1 over 80\"><span>1</span><span>80</span></span>",
+      "<span class=\"math-fraction\" aria-label=\"5 over 8\"><span>5</span><span>8</span></span>"
+    ],
+    "answer": "1/80",
+    "explanation": "Dividing 1/8 into 10 equal parts gives 1/(8 × 10), or 1/80.",
+    "visualHtml": "<div class=\"question-visual big-equation\"><span class=\"math-fraction\"><span>1</span><span>8</span></span><span>÷ 10 = ?</span></div>",
+    "sourceLabel": "STAR Math · Aug 16 · Question 31"
+  },
+  {
+    "id": "2026-08-23-q25",
+    "skill": "Fraction word problem",
+    "promptHtml": "A home builder uses the land shown for each house and has the total land shown. How many houses can she build?",
+    "choices": [
+      "10",
+      "1",
+      "11",
+      "13"
+    ],
+    "choicesHtml": [
+      "10",
+      "1",
+      "11",
+      "13"
+    ],
+    "answer": "11",
+    "explanation": "Each house uses 1/2 acre. There are eleven halves in 5 1/2, so she can build 11 houses.",
+    "visualHtml": "<div class=\"question-visual land-visual\"><p><strong>Land per house:</strong> <span class=\"math-fraction\"><span>1</span><span>2</span></span> acre</p><p><strong>Total land:</strong> 5 <span class=\"math-fraction\"><span>1</span><span>2</span></span> acres</p></div>",
+    "sourceLabel": "STAR Math · Aug 23 · Question 25"
+  },
+  {
+    "id": "2026-08-23-q13",
+    "skill": "Multiply decimals",
+    "promptHtml": "Multiply.",
+    "choices": [
+      "11.7",
+      "0.097",
+      "1.17",
+      "0.117"
+    ],
+    "choicesHtml": [
+      "11.7",
+      "0.097",
+      "1.17",
+      "0.117"
+    ],
+    "answer": "0.117",
+    "explanation": "39 × 3 = 117. The factors have three decimal places altogether, so the product is 0.117.",
+    "visualHtml": "<div class=\"question-visual\"><div class=\"vertical-math\"><span>0.39</span><span>× 0.3</span></div></div>",
+    "sourceLabel": "STAR Math · Aug 23 · Question 13"
+  },
+  {
+    "id": "2026-08-16-q18",
+    "skill": "Greatest common factor",
+    "promptHtml": "What is the greatest common factor of <strong>15</strong> and <strong>35</strong>?",
+    "choices": [
+      "5",
+      "30",
+      "15",
+      "35"
+    ],
+    "choicesHtml": [
+      "5",
+      "30",
+      "15",
+      "35"
+    ],
+    "answer": "5",
+    "explanation": "The common factors are 1 and 5. The greatest common factor is 5.",
+    "visualHtml": "",
+    "sourceLabel": "STAR Math · Aug 16 · Question 18"
+  },
+  {
+    "id": "2026-08-09-q18",
+    "skill": "Break apart multiplication",
+    "promptHtml": "Which expression has the same value as <strong>1,695 × 6</strong>?",
+    "choices": [
+      "(1 × 6) + (6 × 6) + (9 × 6) + (5 × 6)",
+      "(1,000 × 6) + (600 × 6) + (9 × 6) + (5 × 6)",
+      "(1,000 × 6) + (600 × 6) + (90 × 6) + (5 × 6)",
+      "(1 × 6) + (600 × 6) + (90 × 6) + (5 × 6)"
+    ],
+    "choicesHtml": [
+      "(1 × 6) + (6 × 6) + (9 × 6) + (5 × 6)",
+      "(1,000 × 6) + (600 × 6) + (9 × 6) + (5 × 6)",
+      "(1,000 × 6) + (600 × 6) + (90 × 6) + (5 × 6)",
+      "(1 × 6) + (600 × 6) + (90 × 6) + (5 × 6)"
+    ],
+    "answer": "(1,000 × 6) + (600 × 6) + (90 × 6) + (5 × 6)",
+    "explanation": "Break 1,695 into 1,000 + 600 + 90 + 5, then multiply every part by 6.",
+    "visualHtml": "",
+    "sourceLabel": "STAR Math · Aug 9 · Question 18"
+  },
+  {
+    "id": "2026-08-23-q27",
+    "skill": "Radius of a circle",
+    "promptHtml": "The diameter of a circle is 22 millimeters. What is its radius?",
+    "choices": [
+      "44 mm",
+      "12 mm",
+      "41 mm",
+      "11 mm"
+    ],
+    "choicesHtml": [
+      "44 mm",
+      "12 mm",
+      "41 mm",
+      "11 mm"
+    ],
+    "answer": "11 mm",
+    "explanation": "The radius is half the diameter. 22 ÷ 2 = 11 millimeters.",
+    "visualHtml": "<div class=\"question-visual circle-visual\"><div><span>22 mm</span></div></div>",
+    "sourceLabel": "STAR Math · Aug 23 · Question 27"
+  },
+  {
+    "id": "2026-08-09-q23",
+    "skill": "Perimeter of a rectangle",
+    "promptHtml": "What is the perimeter of the rectangle?",
+    "choices": [
+      "1,740 feet",
+      "170 feet",
+      "85 feet",
+      "1,750 feet"
+    ],
+    "choicesHtml": [
+      "1,740 feet",
+      "170 feet",
+      "85 feet",
+      "1,750 feet"
+    ],
+    "answer": "170 feet",
+    "explanation": "Add all four sides: 50 + 35 + 50 + 35 = 170 feet.",
+    "visualHtml": "<div class=\"question-visual rectangle-visual\"><div><span>50 feet</span><b>35 feet</b></div></div>",
+    "sourceLabel": "STAR Math · Aug 9 · Question 23"
+  }
+];
+  const earlierSimilar = [
+  {
+    "id": "2026-08-16-q31-similar",
+    "skill": "Divide a fraction",
+    "promptHtml": "Find the quotient.",
+    "choices": [
+      "1/10",
+      "1/24",
+      "4/6",
+      "2/3"
+    ],
+    "choicesHtml": [
+      "<span class=\"math-fraction\" aria-label=\"1 over 10\"><span>1</span><span>10</span></span>",
+      "<span class=\"math-fraction\" aria-label=\"1 over 24\"><span>1</span><span>24</span></span>",
+      "<span class=\"math-fraction\" aria-label=\"4 over 6\"><span>4</span><span>6</span></span>",
+      "<span class=\"math-fraction\" aria-label=\"2 over 3\"><span>2</span><span>3</span></span>"
+    ],
+    "answer": "1/24",
+    "explanation": "Dividing 1/6 into 4 equal parts gives 1/(6 × 4), or 1/24.",
+    "visualHtml": "<div class=\"question-visual big-equation\"><span class=\"math-fraction\"><span>1</span><span>6</span></span><span>÷ 4 = ?</span></div>",
+    "sourceLabel": "STAR Math · Aug 16 · Question 31"
+  },
+  {
+    "id": "2026-08-23-q25-similar",
+    "skill": "Fraction word problem",
+    "promptHtml": "A home builder uses the land shown for each house and has the total land shown. How many houses can she build?",
+    "choices": [
+      "6",
+      "8",
+      "9",
+      "12"
+    ],
+    "choicesHtml": [
+      "6",
+      "8",
+      "9",
+      "12"
+    ],
+    "answer": "8",
+    "explanation": "Each house uses 3/4 acre. Six acres contains eight groups of 3/4, so she can build 8 houses.",
+    "visualHtml": "<div class=\"question-visual land-visual\"><p><strong>Land per house:</strong> <span class=\"math-fraction\"><span>3</span><span>4</span></span> acre</p><p><strong>Total land:</strong> 6 acres</p></div>",
+    "sourceLabel": "STAR Math · Aug 23 · Question 25"
+  },
+  {
+    "id": "2026-08-23-q13-similar",
+    "skill": "Multiply decimals",
+    "promptHtml": "Multiply.",
+    "choices": [
+      "9.6",
+      "0.96",
+      "0.096",
+      "0.0096"
+    ],
+    "choicesHtml": [
+      "9.6",
+      "0.96",
+      "0.096",
+      "0.0096"
+    ],
+    "answer": "0.096",
+    "explanation": "48 × 2 = 96. The factors have three decimal places altogether, so the product is 0.096.",
+    "visualHtml": "<div class=\"question-visual\"><div class=\"vertical-math\"><span>0.48</span><span>× 0.2</span></div></div>",
+    "sourceLabel": "STAR Math · Aug 23 · Question 13"
+  },
+  {
+    "id": "2026-08-16-q18-similar",
+    "skill": "Greatest common factor",
+    "promptHtml": "What is the greatest common factor of <strong>18</strong> and <strong>42</strong>?",
+    "choices": [
+      "3",
+      "6",
+      "9",
+      "12"
+    ],
+    "choicesHtml": [
+      "3",
+      "6",
+      "9",
+      "12"
+    ],
+    "answer": "6",
+    "explanation": "The greatest number that divides both 18 and 42 is 6.",
+    "visualHtml": "",
+    "sourceLabel": "STAR Math · Aug 16 · Question 18"
+  },
+  {
+    "id": "2026-08-09-q18-similar",
+    "skill": "Break apart multiplication",
+    "promptHtml": "Which expression has the same value as <strong>2,483 × 4</strong>?",
+    "choices": [
+      "(2,000 × 4) + (400 × 4) + (80 × 4) + (3 × 4)",
+      "(2 × 4) + (400 × 4) + (80 × 4) + (3 × 4)",
+      "(2,000 × 4) + (40 × 4) + (8 × 4) + (3 × 4)",
+      "(2,000 × 4) + (400 × 4) + (8 × 4) + (3 × 4)"
+    ],
+    "choicesHtml": [
+      "(2,000 × 4) + (400 × 4) + (80 × 4) + (3 × 4)",
+      "(2 × 4) + (400 × 4) + (80 × 4) + (3 × 4)",
+      "(2,000 × 4) + (40 × 4) + (8 × 4) + (3 × 4)",
+      "(2,000 × 4) + (400 × 4) + (8 × 4) + (3 × 4)"
+    ],
+    "answer": "(2,000 × 4) + (400 × 4) + (80 × 4) + (3 × 4)",
+    "explanation": "Break 2,483 into 2,000 + 400 + 80 + 3, then multiply every part by 4.",
+    "visualHtml": "",
+    "sourceLabel": "STAR Math · Aug 9 · Question 18"
+  },
+  {
+    "id": "2026-08-23-q27-similar",
+    "skill": "Radius of a circle",
+    "promptHtml": "The diameter of a circle is 34 centimeters. What is its radius?",
+    "choices": [
+      "8.5 cm",
+      "17 cm",
+      "34 cm",
+      "68 cm"
+    ],
+    "choicesHtml": [
+      "8.5 cm",
+      "17 cm",
+      "34 cm",
+      "68 cm"
+    ],
+    "answer": "17 cm",
+    "explanation": "The radius is half the diameter. 34 ÷ 2 = 17 centimeters.",
+    "visualHtml": "<div class=\"question-visual circle-visual\"><div><span>34 cm</span></div></div>",
+    "sourceLabel": "STAR Math · Aug 23 · Question 27"
+  },
+  {
+    "id": "2026-08-09-q23-similar",
+    "skill": "Perimeter of a rectangle",
+    "promptHtml": "What is the perimeter of the rectangle?",
+    "choices": [
+      "70 feet",
+      "140 feet",
+      "1,176 feet",
+      "84 feet"
+    ],
+    "choicesHtml": [
+      "70 feet",
+      "140 feet",
+      "1,176 feet",
+      "84 feet"
+    ],
+    "answer": "140 feet",
+    "explanation": "Add all four sides: 42 + 28 + 42 + 28 = 140 feet.",
+    "visualHtml": "<div class=\"question-visual rectangle-visual\"><div class=\"wide-rectangle\"><span>42 feet</span><b>28 feet</b></div></div>",
+    "sourceLabel": "STAR Math · Aug 9 · Question 23"
+  }
+];
+  function radiusDiagram(diameter, unit) {
+    return `<div class="question-visual"><svg viewBox="0 0 300 210" style="width:100%;max-width:300px;height:auto" role="img" aria-label="Circle with diameter ${diameter} ${unit}"><circle cx="150" cy="105" r="78" fill="#edf4ff" stroke="#244775" stroke-width="3"/><path d="M72 105H228" stroke="#244775" stroke-width="3"/><circle cx="150" cy="105" r="4" fill="#244775"/><text x="150" y="87" text-anchor="middle" font-size="20" fill="#172f61">${diameter} ${unit}</text></svg></div>`;
+  }
+  function perimeterDiagram(length, width, unit) {
+    return `<div class="question-visual"><svg viewBox="0 0 360 220" style="width:100%;max-width:360px;height:auto" role="img" aria-label="Rectangle ${length} by ${width} ${unit}; diagram not to scale"><rect x="35" y="50" width="220" height="120" fill="#edf4ff" stroke="#244775" stroke-width="3"/><text x="145" y="34" text-anchor="middle" font-size="20" fill="#172f61">${length} ${unit}</text><text x="270" y="116" font-size="20" fill="#172f61">${width} ${unit}</text><text x="145" y="205" text-anchor="middle" font-size="16" fill="#526780">Not to scale</text></svg></div>`;
+  }
+  // These exact diagrams also stand alone on the math-practice page.
+  earlierOriginals[5].visualHtml = radiusDiagram(22,"mm");
+  earlierSimilar[5].visualHtml = radiusDiagram(34,"cm");
+  earlierOriginals[6].visualHtml = perimeterDiagram(50,35,"feet");
+  earlierSimilar[6].visualHtml = perimeterDiagram(42,28,"feet");
+  function earlierExtra(parent, i) {
+    if (parent.id === "2026-08-16-q31") {
+      const [d,n]=[[3,5],[4,6],[5,3],[7,4],[9,2],[6,5],[8,3],[10,4],[12,5]][i];
+      const q=choiceQuestion(`Find the quotient.<div class="star-equation">${fraction(1,d)} ÷ ${n} = ?</div>`,`1/${d*n}`,[`${n}/${d}`,`1/${d+n}`,`1/${d*n*10}`],`Split 1/${d} into ${n} equal parts. Multiply the denominator by ${n}: 1/(${d} × ${n}) = 1/${d*n}.`,i,{math:{type:"fractionDivide",d,n}});
+      q.choicesHtml=q.choices.map(v=>fraction(...v.split("/")));
+      return q;
+    }
+    if (parent.id === "2026-08-23-q25") {
+      const [whole,n,d]=[[4,1,2],[3,2,3],[2,3,4],[5,1,3],[4,3,4],[2,1,5],[3,5,6],[1,7,8],[2,3,10]][i], answer=whole*d+n;
+      return choiceQuestion(`A builder has ${whole} ${fraction(n,d)} acres. Each house needs ${fraction(1,d)} acre. How many houses can the builder build?`,answer,[answer-1,answer+1,answer*2],`There are ${whole*d} pieces of size 1/${d} in ${whole} whole acres, plus ${n} more. ${whole*d} + ${n} = ${answer} houses.`,i,{math:{type:"mixedDivide",whole,n,d}});
+    }
+    if (parent.id === "2026-08-23-q13") {
+      const [a,b]=[[27,4],[56,3],[63,2],[38,4],[45,3],[72,4],[29,3],[64,2],[57,4]][i];
+      const product=a*b, answer=product/1000;
+      return choiceQuestion(`Multiply.<div class="star-equation">${a/100} × ${b/10} = ?</div>`,answer,[product/100,product/10000,product/10],`${a} × ${b} = ${product}. The two factors have 3 decimal places altogether, so the answer is ${answer}.`,i,{math:{type:"decimalProduct",a,b}});
+    }
+    if (parent.id === "2026-08-16-q18") {
+      const [a,b]=[[12,20],[16,24],[21,35],[18,30],[24,36],[28,42],[32,48],[27,45],[20,50]][i];
+      const common=Array.from({length:Math.min(a,b)},(_,j)=>j+1).filter(n=>a%n===0&&b%n===0),answer=common[common.length-1];
+      return choiceQuestion(`What is the greatest common factor of <strong>${a}</strong> and <strong>${b}</strong>?`,answer,[1,a,b],`The common factors are ${common.join(", ")}. The greatest is ${answer}.`,i,{math:{type:"gcf",a,b}});
+    }
+    if (parent.id === "2026-08-09-q18") {
+      const [number,m]=[[1346,3],[2578,5],[3624,4],[4762,6],[5837,3],[6249,7],[7358,4],[8463,5],[9572,6]][i];
+      const digits=String(number).split("").map(Number),parts=digits.map((d,j)=>d*10**(3-j));
+      const expression=values=>values.map(v=>`(${format(v)} × ${m})`).join(" + ");
+      const answer=expression(parts);
+      return choiceQuestion(`Which expression has the same value as <strong>${format(number)} × ${m}</strong>?`,answer,[expression([digits[0],...parts.slice(1)]),expression([parts[0],digits[1],parts[2],parts[3]]),expression([parts[0],parts[1],digits[2],parts[3]])],`Break ${format(number)} into ${parts.map(format).join(" + ")}, then multiply each part by ${m}.`,i,{math:{type:"distributive",number,m}});
+    }
+    if (parent.id === "2026-08-23-q27") {
+      const diameter=[18,26,38,42,54,62,74,25,35][i],answer=diameter/2;
+      return choiceQuestion(`The diameter of a circle is ${diameter} centimeters. What is its radius?`,`${answer} cm`,[`${diameter} cm`,`${diameter*2} cm`,`${answer+1} cm`],`The radius is half the diameter: ${diameter} ÷ 2 = ${answer} centimeters.`,i,{visualHtml:radiusDiagram(diameter,"cm"),math:{type:"radius",diameter}});
+    }
+    if (parent.id === "2026-08-09-q23") {
+      const [length,width]=[[24,16],[35,20],[46,18],[52,27],[63,32],[75,40],[84,36],[95,45],[68,23]][i],answer=2*(length+width);
+      return choiceQuestion("What is the perimeter of the rectangle?",`${answer} feet`,[`${length+width} feet`,`${length*width} feet`,`${2*length+width} feet`],`Add all four sides: ${length} + ${width} + ${length} + ${width} = ${answer} feet.`,i,{visualHtml:perimeterDiagram(length,width,"feet"),math:{type:"perimeter",length,width}});
+    }
+    throw new Error(`Missing earlier-test follow-ups for ${parent.id}`);
+  }
+  entries.push(...earlierOriginals.map((question,index)=>({question,followUps:[earlierSimilar[index],...Array.from({length:9},(_,i)=>({...earlierExtra(question,i),id:`${question.id}-extra-${i+2}`,skill:question.skill}))]})));
   global.HarryStarMastery = {entries};
 })(globalThis);

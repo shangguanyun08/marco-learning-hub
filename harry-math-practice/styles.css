@@ -314,3 +314,6 @@ footer a:hover { text-decoration: underline; }
   .pictograph th, .pictograph td { padding: 8px 5px; }
   .pictograph tbody td { font-size: 18px; letter-spacing: 0; }
 }
+
+/* Keep fraction division readable alongside the existing question cards. */
+.question-visual.big-equation { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }

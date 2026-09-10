@@ -36,13 +36,13 @@ function submit(api, result, bank, correct) {
   assert.equal(api.mastery.submit(result,String(answer),bank,api.isCorrectAnswer),true);
 }
 
-test("20 main questions retain the six existing slots and append all 14 STAR mistakes", () => {
+test("27 main questions retain all existing slots and append seven earlier STAR mistakes", () => {
   const api=boot();
-  assert.equal(api.questionSets[6].length,28);
-  assert.equal(api.questionCount(6),20);
+  assert.equal(api.questionSets[6].length,35);
+  assert.equal(api.questionCount(6),27);
   assert.deepEqual(clone(api.day3Indexes().slice(0,6)),[0,3,5,6,8,12]);
-  assert.deepEqual(clone(api.questionSets[6].slice(14).map(q=>q.id)),[2,5,7,15,16,18,21,23,24,26,27,29,30,34].map(n=>`2026-08-30-q${n}`));
-  assert.equal(api.day3Banks.length,28);
+  assert.deepEqual(clone(api.questionSets[6].slice(14,28).map(q=>q.id)),[2,5,7,15,16,18,21,23,24,26,27,29,30,34].map(n=>`2026-08-30-q${n}`));
+  assert.equal(api.day3Banks.length,35);
   assert.ok(api.day3Banks.every(bank=>bank.length===10));
   for (const [set,count] of [[4,14],[5,14],[7,10],[8,10]]) assert.equal(api.questionCount(set),count);
 });
@@ -51,7 +51,7 @@ test("original STAR answer keys, options, tables and diagrams are complete", () 
   const api=boot();
   const answers=["7:6","12","677,846","6 points per game","tenths","12","290 kg","14 R1","500,000","14 children","5/6","60 oz","60","32 cubic inches"];
   const similar=["6:5","20","556,842","8 points per game","hundredths","11","365 kg","12 R1","700,000","10 children","3/4","27 oz","84","36 cubic inches"];
-  api.entries.forEach((entry,index)=>{
+  api.entries.slice(0,14).forEach((entry,index)=>{
     assert.equal(entry.question.answer,answers[index]);
     assert.equal(entry.followUps[0].answer,similar[index]);
     assert.equal(entry.question.choices.length,4);
@@ -71,7 +71,7 @@ test("original STAR answer keys, options, tables and diagrams are complete", () 
   assert.match(api.entries[13].question.visualHtml,/4 deep/);
 });
 
-test("140 STAR follow-ups are distinct, skill-matched, with exactly one correct choice", () => {
+test("210 STAR follow-ups are distinct, skill-matched, with exactly one correct choice", () => {
   const api=boot();
   let count=0;
   for (const entry of api.entries) {
@@ -89,12 +89,12 @@ test("140 STAR follow-ups are distinct, skill-matched, with exactly one correct 
       count++;
     }
   }
-  assert.equal(count,140);
+  assert.equal(count,210);
 });
 
 test("new follow-up arithmetic, ratios, remainders, rounding and visual data have valid keys", () => {
   const api=boot();
-  for (const entry of api.entries) for(const q of entry.followUps.slice(1)) {
+  for (const entry of api.entries.slice(0,14)) for(const q of entry.followUps.slice(1)) {
     const m=q.math;
     const numeric=Number(q.answer.replaceAll(",","").match(/^[\d.]+/)?.[0]);
     let expected;
@@ -163,7 +163,7 @@ test("adding STAR questions preserves all old answer slots, first tries and foll
   const old={4:{questions:Array.from({length:16},()=>({firstTry:true,attempts:1,solved:true,lastAnswer:"5"})),completedAt:"2026-08-28T23:48:41.249Z"},6:{questions:Array.from({length:14},(_,i)=>({firstTry:i%2===0,attempts:2,solved:true,lastAnswer:String(i)})),completedAt:null}};
   old[6].questions[12]=existing;
   const restored=boot(old);
-  assert.equal(restored.records[6].questions.length,28);
+  assert.equal(restored.records[6].questions.length,35);
   for(let i=0;i<14;i++) {
     assert.equal(restored.records[6].questions[i].lastAnswer,old[6].questions[i].lastAnswer);
     assert.equal(restored.records[6].questions[i].firstTry,old[6].questions[i].firstTry);
@@ -238,8 +238,8 @@ test("future question buttons stay locked while earlier questions and the curren
   const page = bootHistoryPage(boot().records);
   try {
     const jumps = [...page.document.querySelectorAll(".question-jump")];
-    assert.equal(jumps.length, 20);
-    assert.deepEqual(jumps.map(button => button.disabled), [false, false, false, ...Array(17).fill(true)]);
+    assert.equal(jumps.length, 27);
+    assert.deepEqual(jumps.map(button => button.disabled), [false, false, false, ...Array(24).fill(true)]);
     const card = page.document.querySelector('[data-question="6"]');
     card.querySelector("input").value = "79";
     const before = JSON.stringify(page.api.records);
@@ -262,7 +262,7 @@ test("future question buttons stay locked while earlier questions and the curren
 test("session markup and assets match the expanded question set without day tabs", () => {
   assert.equal((html.match(/id="day3-total-track"/g)||[]).length,1);
   assert.equal(html.includes('data-set='),false);
-  assert.ok(html.includes("Q1–Q20"));
+  assert.ok(html.includes("Q1–Q27"));
   assert.doesNotMatch(html, /id="day3-guide"|id="day3-progress"/);
   assert.ok(html.indexOf('star-mastery.js?')<html.indexOf('app.js?'));
   for(const asset of ["./styles.css?", "./day3-mastery.js?", "./star-mastery.js?", "./app.js?"]) assert.ok(html.includes(asset));
@@ -554,15 +554,76 @@ test("finishing the ten-follow-up limit unlocks the next question and the last q
     assert.equal(data.mastery.progress(page.api.records[6].questions[12]).status, "unmastered");
     assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, false);
     const allDone = boot(page.api.records);
-    finishBefore(allDone, 21);
+    finishBefore(allDone, 28);
     page.remote(allDone.records);
-    page.document.querySelector('[data-question-index="27"]').click();
+    page.document.querySelector('[data-question-index="34"]').click();
     assert.equal(page.document.querySelector("#day3-next").disabled, true);
     assert.equal(page.document.querySelectorAll(".question-jump:disabled").length, 0);
     const saved = JSON.stringify(page.api.records);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="28"]').hidden, false);
+    assert.equal(page.document.querySelector('[data-question="35"]').hidden, false);
     assert.equal(JSON.stringify(page.api.records), saved);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
+});
+
+
+test("the seven requested earlier questions have original keys and source labels", () => {
+  const api=boot(), entries=api.entries.slice(14);
+  assert.deepEqual(clone(entries.map(e=>e.question.id)), ["2026-08-16-q31","2026-08-23-q25","2026-08-23-q13","2026-08-16-q18","2026-08-09-q18","2026-08-23-q27","2026-08-09-q23"]);
+  const answers=["1/80","11","0.117","5","(1,000 × 6) + (600 × 6) + (90 × 6) + (5 × 6)","11 mm","170 feet"];
+  const similar=["1/24","8","0.096","6","(2,000 × 4) + (400 × 4) + (80 × 4) + (3 × 4)","17 cm","140 feet"];
+  entries.forEach((e,i)=>{
+    assert.equal(e.question.answer,answers[i]);
+    assert.equal(e.followUps[0].answer,similar[i]);
+    assert.ok(e.question.sourceLabel.includes("Question " + e.question.id.split("-q")[1]));
+    assert.equal(e.question.choices.filter(v=>api.isCorrectAnswer(v,e.question)).length,1);
+  });
+  assert.match(entries[0].question.visualHtml,/÷ 10/);
+  assert.match(entries[1].question.visualHtml,/Land per house/);
+  assert.match(entries[2].question.visualHtml,/0.39/);
+  assert.match(entries[5].question.visualHtml,/22 mm/);
+  assert.match(entries[6].question.visualHtml,/50 feet/);
+  assert.match(entries[6].question.visualHtml,/35 feet/);
+});
+
+test("earlier-test follow-ups each have one mathematically correct choice", () => {
+  const api=boot();
+  const value=s=>s.includes("/") ? s.split("/").map(Number).reduce((a,b)=>a/b) : Number.parseFloat(s);
+  const expression=s=>s.split(" + ").reduce((sum,term)=>{
+    const parts=term.replaceAll(",","").match(/\d+/g).map(Number);
+    return sum+parts[0]*parts[1];
+  },0);
+  for(const e of api.entries.slice(14)) for(const q of e.followUps.slice(1)){
+    const m=q.math;
+    let expected;
+    if(m.type==="fractionDivide") expected=1/m.d/m.n;
+    else if(m.type==="mixedDivide") expected=(m.whole+m.n/m.d)/(1/m.d);
+    else if(m.type==="decimalProduct") expected=(m.a/100)*(m.b/10);
+    else if(m.type==="gcf") {
+      for(let f=1;f<=Math.min(m.a,m.b);f++)if(m.a%f===0&&m.b%f===0)expected=f;
+    } else if(m.type==="distributive") expected=m.number*m.m;
+    else if(m.type==="radius") expected=m.diameter/2;
+    else if(m.type==="perimeter") expected=m.length+m.width+m.length+m.width;
+    else assert.fail("Unexpected skill");
+    const correct=v=>Math.abs((m.type==="distributive"?expression(v):value(v))-expected)<1e-10;
+    assert.ok(correct(q.answer),q.promptHtml);
+    assert.equal(q.choices.filter(correct).length,1,q.promptHtml);
+  }
+});
+
+test("appending seven questions preserves saved August 30 mastery and starts new slots empty",()=>{
+  const api=boot();
+  const old=clone(api.records);old[6].questions=old[6].questions.slice(0,28);
+  old[6].questions[14]=record(false);
+  submit(api,old[6].questions[14],api.day3Banks[14],true);
+  submit(api,old[6].questions[14],api.day3Banks[14],true);
+  const restored=boot(old);
+  assert.deepEqual(clone(restored.records[6].questions.slice(0,28)),clone(old[6].questions));
+  assert.equal(restored.mastery.progress(restored.records[6].questions[14]).streak,2);
+  for(const q of restored.records[6].questions.slice(28)){
+    assert.equal(q.firstTry,null);assert.equal(q.review.attempts.length,0);assert.equal(q.masteredAt,undefined);
+  }
+  submit(restored,restored.records[6].questions[14],restored.day3Banks[14],true);
+  assert.equal(restored.mastery.progress(restored.records[6].questions[14]).status,"mastered");
 });
