@@ -274,7 +274,7 @@ function renderSavedAnswerContent(content, details, questionIndex, position) {
         return;
       }
       if (!saveCorrection(questionIndex, position, answer)) {
-        feedback.textContent = "Not quite. Try again.";
+        feedback.textContent = "✗ Incorrect. Try again.";
         form.querySelector("input:not([hidden])")?.focus();
         return;
       }
@@ -289,8 +289,9 @@ function renderSavedAnswerContent(content, details, questionIndex, position) {
     status.className = "correction-status";
     status.tabIndex = -1;
     status.setAttribute("role", "status");
-    status.textContent = `✓ Corrected later · Harry’s answer: ${details.correction.answer}`;
+    status.textContent = "✓ Correct. This mark is now yellow.";
     content.append(status);
+    return;
   }
   if (details.question.choices && !details.retryQuestion) {
     const choices = document.createElement("div");

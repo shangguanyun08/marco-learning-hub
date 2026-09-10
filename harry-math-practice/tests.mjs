@@ -860,7 +860,9 @@ test("correcting main and follow-up misses across all 13 families turns only tho
         form.requestSubmit();
         assert.equal(page.api.records[6].questions[index].corrections?.[position], undefined);
         enterCorrection(form, question);
-        assert.ok(dialog.querySelector(".correction-status"));
+        assert.equal(dialog.querySelector(".correction-status").textContent, "✓ Correct. This mark is now yellow.");
+        assert.equal(dialog.querySelector(".correct-answer, .saved-answer, .choice-grid"), null);
+        assert.equal(dialog.querySelector(".answer-review-content").children.length, 2, "Only the question and result remain");
         assert.equal(dialog.querySelector("form"), null);
         assert.ok(card.querySelector(`[data-review-position="${position}"]`).closest(".light-step.corrected"));
         assert.match(card.querySelector(`[data-review-position="${position}"]`).getAttribute("aria-label"), /corrected later/);
@@ -870,7 +872,8 @@ test("correcting main and follow-up misses across all 13 families turns only tho
         dialog.close();
         assert.equal(page.document.activeElement, card.querySelector(`[data-review-position="${position}"]`));
         card.querySelector(`[data-review-position="${position}"]`).click();
-        assert.ok(page.document.querySelector("dialog .correction-status"));
+        assert.equal(page.document.querySelector("dialog .correction-status").textContent, "✓ Correct. This mark is now yellow.");
+        assert.equal(page.document.querySelector("dialog .correct-answer, dialog .saved-answer, dialog .choice-grid"), null);
         assert.equal(page.document.querySelector("dialog form"), null);
         page.document.querySelector("dialog").close();
       }
@@ -914,7 +917,7 @@ test("wrong correction attempts keep answers hidden and retain both correction a
     fields[0].value = "12";form.requestSubmit();
     assert.match(dialog.querySelector(".correction-feedback").textContent, /both number boxes/);
     fields[1].value = "7";form.requestSubmit();
-    assert.match(dialog.querySelector(".correction-feedback").textContent, /Not quite/);
+    assert.match(dialog.querySelector(".correction-feedback").textContent, /Incorrect/);
     assert.equal(dialog.querySelector(".correct-answer, .saved-answer, .choice-grid"), null);
     dialog.close();card.querySelector('[data-review-position="1"]').click();
     dialog = page.document.querySelector("dialog[open]");form = dialog.querySelector("form");
@@ -948,7 +951,8 @@ test("remote corrections update an open retry and all ten corrected follow-ups r
       {answer: String(data.correctionQuestion(index, position).answer), createdAt: "2026-09-10T12:00:00.000Z"}]));
     page.remote(remote);
     assert.equal(page.document.querySelector("dialog .correction-form"), null);
-    assert.match(page.document.querySelector("dialog .correction-status").textContent, /237 kg/);
+    assert.equal(page.document.querySelector("dialog .correction-status").textContent, "✓ Correct. This mark is now yellow.");
+    assert.equal(page.document.querySelector("dialog .correct-answer, dialog .saved-answer, dialog .choice-grid"), null);
     page.document.querySelector("dialog").close();
     page.api.openDay3Question(index);
     assert.equal(card.querySelectorAll(".light-step.corrected").length, 11);
