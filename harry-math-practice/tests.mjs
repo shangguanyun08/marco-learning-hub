@@ -786,6 +786,12 @@ test("numeric blanks do not count as misses; wrong numbers and drafts remain rev
     form = card.querySelector(".mastery-practice form");assert.equal(form.querySelector("input").value, "9");
     form.requestSubmit();
     assert.equal(page.api.records[6].questions[23].review.attempts[0].correct, false);
+    assert.equal(card.querySelector(".correct-answer"), null, "Previous main and follow-up answers do not clutter practice");
+    card.querySelector(".next-practice").click();
+    assert.equal(card.querySelector(".practice-result").hidden, true);
+    assert.equal(card.querySelector(".practice-number").textContent, "Practice 2 of 10");
+    assert.ok(card.querySelector(".mastery-practice form"));
+    assert.equal(card.querySelector(".correct-answer"), null);
     card.querySelector('[data-review-position="1"]').click();
     assert.match(page.document.querySelector("dialog .saved-answer.incorrect").textContent, /9 children/);
     assert.equal(page.document.querySelector("dialog .correct-answer strong").textContent, "10 children");

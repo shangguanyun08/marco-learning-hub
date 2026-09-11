@@ -171,6 +171,7 @@ button { color: inherit; }
 .day3-mode .question-grid { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
 .day3-mode .question-card > form:has(input:disabled) { display: none; }
 .day3-mode .question-card:has(.mastery-practice) > .expression,
+.day3-mode .question-card:has(.mastery-practice) > .source-label,
 .day3-mode .question-card:has(.mastery-practice) > .feedback { display: none; }
 .day3-mode .question-card > .feedback { font-size: 14px; line-height: 1.5; }
 .mastery-guide, .mastery-progress, .question-navigation { max-width: 760px; margin-inline: auto; }

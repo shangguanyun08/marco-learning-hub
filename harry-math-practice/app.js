@@ -944,7 +944,7 @@ function renderQuestionState(card, index) {
   button.textContent = locked ? (isDay3 ? "Recorded" : "Solved") : "Check";
   feedback.textContent = feedbackFor(question);
   card.querySelector(".main-correct-answer")?.remove();
-  if (question.firstTry === false && (isDay3 || !question.solved) && !state?.credited) {
+  if (!isDay3 && question.firstTry === false && !question.solved) {
     const correction = renderCorrectAnswer(activeQuestion);
     correction.classList.add("main-correct-answer");
     feedback.after(correction);
@@ -988,9 +988,6 @@ function renderMasteryPractice(card, index) {
   if (previous) {
     result.textContent = previous.correct ? "✓ Correct!"
       : "Not quite. Your streak starts again at 0.";
-    if (!previous.correct) {
-      result.after(renderCorrectAnswer(day3Banks[index][state.used - 1], `Practice ${state.used} · Correct answer`));
-    }
   } else {
     result.textContent = record.firstTry === true
       ? "✓ Main question correct! That counts as 1. Get the next 2 right to master this question."
@@ -1003,6 +1000,7 @@ function renderMasteryPractice(card, index) {
     card.append(panel);
     return;
   }
+  result.hidden = record.review?.ready !== false;
   if (record.review?.ready === false) {
     const next = document.createElement("button");
     next.type = "button";
