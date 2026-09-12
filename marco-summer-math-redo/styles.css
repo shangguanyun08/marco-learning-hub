@@ -271,6 +271,8 @@ button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); ou
 .problem math, .option-content math { font-size: 1em; }
 .answer-review-button { display: flex; min-width: 44px; min-height: 58px; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 8px; padding: 4px; background: transparent; font: inherit; cursor: pointer; }
 .answer-review-button:hover { background: #eaf1ff; }
+.answer-review-button[aria-pressed="true"] .answer-light { outline: 3px solid #173957; outline-offset: 4px; }
+.answer-review-button[aria-pressed="true"] .answer-step-label { color: #173957; text-decoration: underline; text-underline-offset: 3px; }
 .compact .answer-step { flex-basis: 44px; }
 .compact .answer-review-button { min-height: 52px; }
 .saved-answer-page { max-width: 940px; margin: 24px auto 0; }

@@ -13,6 +13,7 @@
   let feedbackByQuestion = {};
   let selectedAnswers = {};
   let reviewQuestionId = null;
+  let selectedReviewItemId = null;
   let reviewedAttemptId = null;
   let reviewReturnView = "practice";
   let wrongQuestionId = null;
@@ -254,6 +255,7 @@
     feedbackByQuestion = {};
     selectedAnswers = {};
     reviewQuestionId = null;
+    selectedReviewItemId = null;
     view = "practice";
     render();
   }
@@ -276,7 +278,10 @@
     if (!canAnswer(day, question, previous) || previous.some((attempt) => attempt.selectedIndex === index)) return;
     const session = ensureSession(day.day);
     hasChosenDay = true;
-    if (day.mastery) reviewQuestionId = question.parentQuestionId || question.id;
+    if (day.mastery) {
+      reviewQuestionId = question.parentQuestionId || question.id;
+      selectedReviewItemId = question.id;
+    }
 
     const attemptNumber = previous.length + 1;
     const correct = question.correctIndexes.includes(index);
@@ -326,6 +331,7 @@
     feedbackByQuestion = {};
     selectedAnswers = {};
     reviewQuestionId = null;
+    selectedReviewItemId = null;
     saveState();
     render();
   }
@@ -487,18 +493,19 @@
         : `<div class="mastery-check"><button class="primary-action" data-action="check-answer" data-question-id="${esc(question.id)}" type="button" ${selected === undefined ? 'disabled' : ''}>Check answer</button></div>`}`;
   }
 
-  function answerTrackHtml(day, question, progress, compact = false) {
+  function answerTrackHtml(day, question, progress, compact = false, selectedItemId = question.id) {
     const answers = progress.nominal ? [progress.nominal, ...progress.practice] : [];
     const lights = answers.map((answer, index) => {
       const result = answer.correct ? 'correct' : 'incorrect';
       const label = index === 0 ? 'Main question' : `Extra question ${index}`;
       const status = answer.correct ? 'Correct' : 'Incorrect';
-      return `<li class="answer-step ${result}"><button class="answer-review-button" data-action="review-answer" data-attempt-id="${esc(answer.id)}" type="button" aria-label="${label}: ${status}. Review answer" title="${label}: ${status}. Review answer"><span class="answer-light" aria-hidden="true">${answer.correct ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></button></li>`;
+      const action = compact ? `data-action="review-answer" data-attempt-id="${esc(answer.id)}"` : `data-action="choose-review-item" data-question-id="${esc(answer.questionId)}" aria-pressed="${answer.questionId === selectedItemId}"`;
+      return `<li class="answer-step ${result}"><button class="answer-review-button" ${action} type="button" aria-label="${label}: ${status}. Review answer" title="${label}: ${status}. Review answer"><span class="answer-light" aria-hidden="true">${answer.correct ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></button></li>`;
     }).join('');
     return `<div class="answer-track-panel${compact ? ' compact' : ''}" aria-label="Answer track for Question ${question.position}">
       ${compact ? '' : `<div class="answer-track-heading"><strong>Your answer track</strong><div class="streak-meter" aria-label="${progress.streak} of ${day.mastery.requiredStreak} correct in a row"><span>In a row</span><b>${progress.streak}/${day.mastery.requiredStreak}</b></div></div>`}
       ${answers.length ? `<ol class="answer-track" aria-label="Checked answers">${lights}</ol>` : ''}
-      ${compact ? '' : '<p class="answer-track-hint">Three greens in a row = mastered. Tap any red or green mark to review that answer.</p>'}
+      ${compact ? '' : '<p class="answer-track-hint">Three greens in a row = mastered. Tap a circle to show that question.</p>'}
     </div>`;
   }
 
@@ -515,26 +522,24 @@
   function masteryQuestionHtml(day, dayMetrics, question) {
     const progress = masteryProgress(day, question);
     const statusClass = progress.mastered ? 'mastered' : progress.unmastered ? 'unmastered' : 'pending';
-    let extra = '';
-    if (progress.nominal) {
-      const last = progress.practice.at(-1);
-      const showLast = last && (progress.done || feedbackByQuestion[last.questionId]);
-      const current = question.practiceQuestions[showLast ? progress.practice.length - 1 : progress.practice.length];
-      const saved = current ? savedAttempts(day, current.id).slice(0, 1) : [];
-      extra = `<section class="extra-practice" aria-label="Extra practice for Question ${question.position}">
+    const available = progress.nominal ? question.practiceQuestions.slice(0, progress.practice.length + (progress.done ? 0 : 1)) : [];
+    const current = available.find((item) => item.id === selectedReviewItemId) || question;
+    const isMain = current.id === question.id;
+    const saved = savedAttempts(day, current.id).slice(0, 1);
+    const panel = isMain
+      ? `<section class="main-review-question" aria-label="Main question"><p class="practice-number">Main question</p>${masteryAnswerHtml(question, saved)}</section>`
+      : `<section class="extra-practice" aria-label="Extra practice for Question ${question.position}">
         <div class="practice-heading"><div><p class="eyebrow">Extra practice · Question ${question.position}</p><h3>${esc(question.skill)}</h3></div><span class="mastery-badge ${statusClass}">${progress.status}</span></div>
         <div class="practice-counters" aria-live="polite"><span><b>${progress.streak}/${day.mastery.requiredStreak}</b> correct in a row</span></div>
         <p class="practice-rule">Get ${day.mastery.requiredStreak} correct in a row. The main answer counts. A wrong answer resets the streak.</p>
-        ${current ? `<div class="practice-item" id="question-${esc(current.id)}"><p class="practice-number">Practice question ${current.practiceNumber}</p>${masteryAnswerHtml(current, saved)}</div>` : ''}
-        ${showLast && !progress.done ? `<div class="mastery-check"><button class="primary-action" data-action="next-practice" data-question-id="${esc(question.id)}" type="button">Next practice question</button></div>` : ''}
-        ${progress.done ? `<p class="mastery-result ${statusClass}" role="status">${progress.mastered ? 'Mastered! You answered 3 questions correctly in a row.' : 'Keep practicing this skill in a later review.'}</p>` : ''}
+        <div class="practice-item" id="question-${esc(current.id)}"><p class="practice-number">Practice question ${current.practiceNumber}</p>${masteryAnswerHtml(current, saved)}</div>
       </section>`;
-    }
     return `<section class="question-card" id="question-${esc(question.id)}">
       <div class="question-meta"><div><span>${esc(day.label)}</span><strong>Question ${question.position}</strong></div><span class="mastery-badge ${statusClass}">${progress.status}</span><small>${esc(question.skill)}</small></div>
-      ${answerTrackHtml(day, question, progress)}
-      ${progress.nominal ? `<details class="missed-main"${progress.nominal.correct ? '' : ' open'}><summary>Main question: ${progress.nominal.correct ? 'correct' : 'incorrect'} · Review answer and explanation</summary><div class="problem">${question.questionHtml}</div><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></details>` : masteryAnswerHtml(question, savedAttempts(day, question.id))}
-      ${extra}
+      ${answerTrackHtml(day, question, progress, false, current.id)}
+      ${panel}
+      ${saved.length && !progress.done ? `<div class="mastery-check"><button class="primary-action" data-action="next-practice" data-question-id="${esc(question.id)}" type="button">${isMain ? (progress.practice.length ? 'Continue extra practice' : 'Start extra practice') : 'Next practice question'}</button></div>` : ''}
+      ${progress.done ? `<p class="mastery-result ${statusClass}" role="status">${progress.mastered ? 'Mastered! You answered 3 questions correctly in a row.' : 'Keep practicing this skill in a later review.'}</p>` : ''}
       ${progress.mastered || dayMetrics.completed ? `<footer class="question-footer"><span>${progress.mastered ? 'Mastered' : 'Review complete'}</span><button class="primary-action" data-action="next-main" type="button">${dayMetrics.completed ? `See ${esc(day.label)} results` : 'Next main question'}</button></footer>` : ''}
     </section>`;
   }
@@ -550,7 +555,22 @@
     if (!day?.mastery || !question) return;
     hasChosenDay = true;
     reviewQuestionId = question.id;
+    selectedReviewItemId = null;
     render();
+  }
+
+  function chooseReviewItem(questionId) {
+    const day = bank.days.find((item) => item.day === selectedDay);
+    if (!day?.mastery) return;
+    const question = currentReviewQuestion(day);
+    if (!question) return;
+    const progress = masteryProgress(day, question);
+    const answer = [progress.nominal, ...progress.practice].find((item) => item?.questionId === questionId);
+    if (!answer) return;
+    selectedReviewItemId = answer.questionId;
+    hasChosenDay = true;
+    render();
+    app.querySelector?.(`button[data-action="choose-review-item"][data-question-id="${selectedReviewItemId}"]`)?.focus({ preventScroll: true });
   }
 
   function nextMainQuestion() {
@@ -561,6 +581,7 @@
     const after = day.questions.slice(day.questions.indexOf(current) + 1);
     const next = [...after, ...day.questions].find((question) => question.id !== current.id && !masteryProgress(day, question).done);
     reviewQuestionId = next?.id || null;
+    selectedReviewItemId = null;
     hasChosenDay = true;
     render();
   }
@@ -583,8 +604,11 @@
     const question = day?.questions.find((item) => item.id === questionId);
     if (!day?.mastery || !question) return;
     const progress = masteryProgress(day, question);
-    if (progress.done || !progress.practice.length) return;
-    delete feedbackByQuestion[progress.practice.at(-1).questionId];
+    if (progress.done || !progress.nominal) return;
+    const next = question.practiceQuestions[progress.practice.length];
+    if (!next) return;
+    reviewQuestionId = question.id;
+    selectedReviewItemId = next.id;
     render();
   }
 
@@ -783,6 +807,7 @@
     const action = button.dataset.action;
     if (action === "view") { view = button.dataset.view || "practice"; wrongQuestionId = null; render(); }
     if (action === "review-answer") openAnswerReview(button.dataset.attemptId);
+    if (action === "choose-review-item") chooseReviewItem(button.dataset.questionId);
     if (action === "close-review") { view = reviewReturnView; render(); app.querySelector?.(`button[data-attempt-id="${reviewedAttemptId}"]`)?.focus(); }
     if (action === "wrong-question") { wrongQuestionId = button.dataset.questionId; view = 'wrong'; render(); }
     if (action === "day") chooseDay(Number(button.dataset.day));

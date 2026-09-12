@@ -68,7 +68,7 @@ test('reviewing track answers preserves the streak, saved state and unfinished a
   const mainAttempt = saved.attempts.find(a => a.questionId === main.id);
   const firstAttempt = saved.attempts.find(a => a.questionId === first.id);
   const secondAttempt = saved.attempts.find(a => a.questionId === second.id);
-  assert.match(app.innerHTML, new RegExp(`data-action="review-answer" data-attempt-id="${firstAttempt.id}"`));
+  assert.match(app.innerHTML, new RegExp(`data-action="choose-review-item" data-question-id="${first.id}"`));
   click(app, { action: 'review-answer', attemptId: mainAttempt.id });
   assert.ok(app.innerHTML.includes(main.questionHtml));
   assert.match(app.innerHTML, /1 of 3 saved answers/);
@@ -92,6 +92,69 @@ test('reviewing track answers preserves the streak, saved state and unfinished a
   assert.equal(api.masteryProgress(day, main).streak, 1);
   click(app, { action: 'review-answer', attemptId: 'unsaved-answer' });
   assert.ok(app.innerHTML.includes(current.questionHtml), 'Only saved attempts can be reviewed');
+});
+
+test('both reviews show only the selected circle question, default to main and preserve saved progress', async () => {
+  for (const dayNumber of [29, 31]) {
+    const { api, app, pushed, remote, storage } = await boot(fresh(), null, reviews);
+    api.chooseDay(dayNumber);
+    const day = api.bank.days.find(item => item.day === dayNumber);
+    const [main, other] = day.questions;
+    const [first, second, pending] = main.practiceQuestions;
+    const onlyQuestion = (current) => {
+      assert.equal((app.innerHTML.match(/class="problem"/g) || []).length, 1);
+      assert.ok(app.innerHTML.includes(current.questionHtml));
+      assert.equal(app.innerHTML.includes('class="extra-practice"'), current.id !== main.id);
+      if (api.savedAttempts(day, current.id).length) {
+        assert.equal((app.innerHTML.match(/class="answer-review-button"[^>]*aria-pressed="true"/g) || []).length, 1);
+        assert.match(app.innerHTML, new RegExp(`data-action="choose-review-item" data-question-id="${current.id}" aria-pressed="true"`));
+      }
+    };
+    onlyQuestion(main);
+    api.answer(main.id, wrongIndex(main));
+    onlyQuestion(main);
+    click(app, { action: 'next-practice', questionId: main.id });
+    onlyQuestion(first);
+    api.answer(first.id, wrongIndex(first));
+    onlyQuestion(first);
+    click(app, { action: 'next-practice', questionId: main.id });
+    api.answer(second.id, second.correctIndexes[0]);
+    click(app, { action: 'next-practice', questionId: main.id });
+    api.selectAnswer(pending.id, pending.correctIndexes[0]);
+    const saved = clone(api.state), stored = storage.get('marco-summer-isee-math-redo-v1:state'), pushCount = pushed.length;
+    for (const current of [main, first, second, main]) {
+      click(app, { action: 'choose-review-item', questionId: current.id });
+      onlyQuestion(current);
+    }
+    click(app, { action: 'choose-review-item', questionId: main.practiceQuestions[9].id });
+    onlyQuestion(main);
+    click(app, { action: 'next-practice', questionId: main.id });
+    onlyQuestion(pending);
+    assert.match(app.innerHTML, new RegExp(`class="selected"[^>]*data-question-id="${pending.id}"`));
+    click(app, { action: 'choose-review-item', questionId: first.id });
+    remote(saved);
+    onlyQuestion(first);
+    click(app, { action: 'choose-main', questionId: other.id });
+    click(app, { action: 'choose-main', questionId: main.id });
+    onlyQuestion(main);
+    assert.deepEqual(clone(api.state), saved);
+    assert.equal(storage.get('marco-summer-isee-math-redo-v1:state'), stored);
+    assert.equal(pushed.length, pushCount);
+    const restored = await boot(saved, saved, reviews);
+    restored.api.chooseDay(dayNumber);
+    assert.equal((restored.app.innerHTML.match(/class="problem"/g) || []).length, 1);
+    assert.ok(restored.app.innerHTML.includes(main.questionHtml));
+    // Exhausted groups still allow every checked circle to be selected individually.
+    for (const current of main.practiceQuestions.slice(2)) api.answer(current.id, wrongIndex(current));
+    assert.equal(api.masteryProgress(day, main).unmastered, true);
+    click(app, { action: 'choose-main', questionId: main.id });
+    onlyQuestion(main);
+    for (const current of main.practiceQuestions) {
+      click(app, { action: 'choose-review-item', questionId: current.id });
+      onlyQuestion(current);
+      assert.doesNotMatch(app.innerHTML, /data-action="next-practice"/);
+    }
+  }
 });
 
 test('all 11 checked answers remain reviewable after exhaustion, reload and remote sync', async () => {
@@ -409,7 +472,8 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   const firstQuestion = review.questions[0];
   assert.doesNotMatch(app.innerHTML, /Quick explanation:/);
   api.answer(firstQuestion.id, 0);
-  assert.match(app.innerHTML, /Extra practice · Question 1/);
+  assert.match(app.innerHTML, /Start extra practice/);
+  assert.doesNotMatch(app.innerHTML, /class="extra-practice"/);
   api.answer(firstQuestion.id, firstQuestion.correctIndexes[0]);
   assert.match(app.innerHTML, /Quick explanation:/);
   finish(review, 2);
@@ -657,9 +721,11 @@ test('Review 1 allows direct question selection but shows Next main only after m
   assert.equal((track().match(/class="answer-step /g) || []).length, 1);
   assert.match(app.innerHTML, new RegExp(`review-track-step pending current" data-action="choose-main" data-question-id="${second.id}"`), 'A correct main answer alone does not mark the skill mastered');
   selectMain(first);
+  api.nextPracticeQuestion(first.id);
   api.selectAnswer(first.practiceQuestions[0].id, first.practiceQuestions[0].correctIndexes[0]);
   selectMain(second);
   selectMain(first);
+  api.nextPracticeQuestion(first.id);
   assert.match(app.innerHTML, /class="selected"/);
   for (const q of first.practiceQuestions.slice(0, 3)) {
     assert.doesNotMatch(app.innerHTML, /data-action="next-main"/);
@@ -714,6 +780,8 @@ test('practice counts distinct questions, resets the streak on a miss, and survi
   session = await boot(saved);
   api = session.api;
   assert.equal(api.masteryProgress(day,parent).streak,1);
+  assert.ok(session.app.innerHTML.includes(parent.questionHtml), 'Reload defaults to the main question');
+  api.nextPracticeQuestion(parent.id);
   assert.match(session.app.innerHTML,/Practice question 5/);
   assert.deepEqual([...session.app.innerHTML.matchAll(/class="answer-step (correct|incorrect)"/g)].map(match => match[1]), ['incorrect', 'correct', 'correct', 'incorrect', 'correct'], 'Reload keeps the full ordered track, including results before a streak reset');
   check(api,p5,true);
@@ -744,6 +812,8 @@ test('a correct main answer contributes once across reloads, and a later miss re
   check(first.api,parent.practiceQuestions[0],true);
   const restored = await boot(clone(first.api.state));
   assert.equal(restored.api.masteryProgress(day,parent).streak,2);
+  assert.ok(restored.app.innerHTML.includes(parent.questionHtml), 'Reload defaults to the main question');
+  restored.api.nextPracticeQuestion(parent.id);
   assert.match(restored.app.innerHTML,/Practice question 2/);
   check(restored.api,parent.practiceQuestions[1],false);
   assert.equal(restored.api.masteryProgress(day,parent).streak,0);
