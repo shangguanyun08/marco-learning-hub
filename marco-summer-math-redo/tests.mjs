@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { test } from 'node:test';
 
 const source = await readFile(new URL('./app.js', import.meta.url), 'utf8');
+const inputSource = await readFile(new URL('./review-inputs.js', import.meta.url), 'utf8');
 const originalBank = JSON.parse(await readFile(new URL('./question-bank.json', import.meta.url), 'utf8'));
 const plan = JSON.parse(await readFile(new URL('./session-plan.json', import.meta.url), 'utf8'));
 const reviews = JSON.parse(await readFile(new URL('./review-bank.json', import.meta.url), 'utf8'));
@@ -15,6 +16,11 @@ const legacyReviews = { ...reviews, sessions: reviews.sessions.filter(day => day
 const clone = value => JSON.parse(JSON.stringify(value));
 const fresh = () => ({ schemaVersion: 1, learner: 'Marco', sessions: [], attempts: [], updatedAt: null });
 const click = (app, dataset) => app.click({ target: { closest: () => ({ dataset }) } });
+const typeWritten = (app, questionId, value, attemptId = '') => app.input({ target: { closest: () => ({ dataset: { draftKey: attemptId || questionId }, value }) } });
+const submitWritten = (app, questionId, value, attemptId = '') => {
+  typeWritten(app, questionId, value, attemptId);
+  app.submit({ preventDefault() {}, target: { closest: () => ({ dataset: { questionId, attemptId } }) } });
+};
 
 function completedOriginalDays() {
   const state = fresh();
@@ -39,10 +45,11 @@ async function boot(initial = completedOriginalDays(), remote = initial, catalog
     fetch: async url => ({ ok: true, json: async () => clone(url.startsWith('question-bank') ? originalBank : url.startsWith('review-bank') ? catalog : url.startsWith('review1-practice-bank') ? practiceBank : url.startsWith('review2-practice-bank') ? sessionPracticeBank : plan) }),
   });
   const instrumented = source.replace('  Promise.all(', `  globalThis.redo = { metrics, savedAttempts, chooseDay, selectAnswer, answer, startAgain, summary, progressHtml, nextPracticeDay, masteryProgress, nextPracticeQuestion, nextMainQuestion, currentReviewQuestion, get state() { return state; }, get bank() { return bank; }, get selectedDay() { return selectedDay; } };\n  Promise.all(`);
+  vm.runInContext(inputSource, context);
   vm.runInContext(instrumented, context);
   await new Promise(resolve => setImmediate(resolve));
   assert.doesNotMatch(app.innerHTML, /could not be loaded/);
-  return { api: context.redo, app, pushed, remote: next => options.onRemote(clone(next)), storage };
+  return { api: context.redo, app, pushed, remote: next => options.onRemote(clone(next)), storage, inputs: context.window.MarcoReviewInputs };
 }
 
 function finishPractice(api, question) {
@@ -50,6 +57,130 @@ function finishPractice(api, question) {
     api.answer(practice.id, practice.correctIndexes[0]);
   }
 }
+
+test('the reviewed fill-in families have unambiguous answers across all 253 main and extra questions', async () => {
+  const { api, inputs } = await boot(fresh(), null, reviews);
+  const expected = { 29: [2,3,4,6,8,9,10,11,12,13,15,16], 31: [1,2,3,9,10,15,16,17,18,19,21] };
+  let total = 0;
+  for (const day of api.bank.days.filter(day => day.mastery)) {
+    assert.deepEqual(day.questions.filter(q => inputs.spec(q)).map(q => q.position), expected[day.day]);
+    for (const parent of day.questions) for (const question of [parent, ...parent.practiceQuestions]) {
+      if (!inputs.spec(question)) continue;
+      total++;
+      assert.deepEqual(clone(inputs.check(question, question.correctAnswer)), {valid: true, correct: true}, question.id);
+      for (const option of question.options.filter((_, i) => !question.correctIndexes.includes(i))) {
+        assert.equal(inputs.check(question, option.text).correct, false, `${question.id}: ${option.text}`);
+      }
+      for (const invalid of ['', ' ', '<script>alert(1)</script>', 'A', 'B', 'C', 'D', '1/0']) {
+        assert.equal(inputs.check(question, invalid).correct, false, `${question.id}: ${invalid}`);
+      }
+    }
+  }
+  assert.equal(total, 253);
+  assert.equal(inputs.spec(api.bank.archivedDays[0].questions[0]), null);
+});
+
+test('fill-in checking accepts equivalent math and appropriate units without accepting a different answer or dimension', async () => {
+  const { api, inputs } = await boot();
+  const questions = api.bank.days.find(day => day.day === 29).questions;
+  const cases = [
+    [2, ['2^6', '2⁶', '2**6', '2 x 2 × 2 * 2 · 2 × 2'], ['64', '4^3', '2^5', '2^6 + 1']],
+    [4, ['1 1/4', '5/4', '10/8', '1.25', '1¼'], ['1/4', '1.24', '1/0', '5/4 + 0']],
+    [6, ['68', '68°', '68 degrees'], ['112', '68 feet']],
+    [9, ['72', '72 square feet', '72 ft²', '72 ft^2', '72 sq ft'], ['72 feet', '72 cm²']],
+    [10, ['8:27', '16:54', '8/27', '8 to 27'], ['27:8', '2:3', '8:0', '0:27']],
+    [15, ['6', '6 feet', '6 ft'], ['6 cm', '6 square feet']],
+    [16, ['72', '72 cm³', '72cm^3', '72 cubic centimeters'], ['72 cm', '72 cm²']],
+  ];
+  for (const [position, correct, incorrect] of cases) {
+    for (const text of correct) assert.equal(inputs.check(questions[position - 1], text).correct, true, text);
+    for (const text of incorrect) assert.equal(inputs.check(questions[position - 1], text).correct, false, text);
+  }
+});
+
+test('red numeric questions accept corrections, turn yellow only after success, and preserve original scores across devices', async () => {
+  for (const dayNumber of [29, 31]) {
+    const { api, app, pushed, remote } = await boot(fresh(), null, reviews);
+    api.chooseDay(dayNumber);
+    const day = api.bank.days.find(day => day.day === dayNumber);
+    const main = day.questions[dayNumber === 29 ? 3 : 1];
+    click(app, {action: 'choose-main', questionId: main.id});
+    const firstWrong = main.options.find((_, i) => !main.correctIndexes.includes(i)).text;
+    submitWritten(app, main.id, firstWrong);
+    const original = api.state.attempts.at(-1);
+    assert.equal(original.answerText, firstWrong);
+    assert.equal(original.selectedIndex, null);
+    assert.equal(original.correct, false);
+    assert.doesNotMatch(app.innerHTML, /class="options"|class="reveal"|Quick explanation/);
+    assert.match(app.innerHTML, /Check correction/);
+    // Correcting a first miss must not alter either its historical score or mastery.
+    const originalAttempts = clone(api.state.attempts), originalSessions = clone(api.state.sessions), originalMetrics = clone(api.metrics(day));
+    submitWritten(app, main.id, '1/0', original.id);
+    assert.equal(api.state.corrections, undefined, 'Invalid formatting is not saved as an answer');
+    submitWritten(app, main.id, '999999', original.id);
+    assert.equal(api.state.corrections.length, 1);
+    assert.equal(api.state.corrections[0].correct, false);
+    assert.match(app.innerHTML, /Not quite. Try again/);
+    assert.doesNotMatch(app.innerHTML, /class="reveal"|Quick explanation|answer-step corrected/);
+    const afterWrong = await boot(clone(api.state), clone(api.state), reviews);
+    afterWrong.api.chooseDay(dayNumber);
+    click(afterWrong.app, {action:'choose-main', questionId:main.id});
+    assert.doesNotMatch(afterWrong.app.innerHTML, /class="reveal"|Quick explanation/);
+    submitWritten(app, main.id, main.correctAnswer, original.id);
+    assert.equal(api.state.corrections.length, 2);
+    assert.match(app.innerHTML, /answer-step corrected|Corrected after an incorrect answer/);
+    assert.match(app.innerHTML, /Corrected! Yellow|Quick explanation/);
+    assert.doesNotMatch(app.innerHTML, /Check correction/);
+    assert.deepEqual(clone(api.state.attempts), originalAttempts);
+    assert.deepEqual(clone(api.state.sessions), originalSessions);
+    assert.deepEqual(clone(api.metrics(day)), originalMetrics);
+    const saved = clone(api.state), pushes = pushed.length;
+    submitWritten(app, main.id, '999999', original.id);
+    assert.deepEqual(clone(api.state), saved, 'A completed correction cannot be overwritten by a stale form');
+    assert.equal(pushed.length, pushes);
+    remote(saved);
+    assert.match(app.innerHTML, /answer-step corrected/);
+    const restored = await boot(fresh(), saved, reviews);
+    restored.api.chooseDay(dayNumber);
+    click(restored.app, {action:'choose-main', questionId:main.id});
+    assert.match(restored.app.innerHTML, /answer-step corrected/);
+    assert.deepEqual(clone(restored.api.state), saved);
+    assert.equal(restored.pushed.length, 0);
+    // A green first check still reveals its answer without correction work.
+    api.nextPracticeQuestion(main.id);
+    const extra = main.practiceQuestions[0];
+    submitWritten(app, extra.id, extra.correctAnswer);
+    assert.equal(api.state.attempts.at(-1).correct, true);
+    assert.match(app.innerHTML, /answer-step correct"|Quick explanation/);
+  }
+});
+
+test('choice corrections work for exhausted extras and earlier rounds without revealing red answers through history', async () => {
+  const {api, app} = await boot();
+  const day = api.bank.days.find(day => day.day === 29), main = day.questions[13];
+  for (const question of [main, ...main.practiceQuestions]) api.answer(question.id, wrongIndex(question));
+  const original = api.state.attempts.at(-1), question = main.practiceQuestions.at(-1);
+  assert.equal(api.masteryProgress(day, main).unmastered, true);
+  assert.doesNotMatch(app.innerHTML, /class="reveal"|Quick explanation/);
+  const saved = clone(api.state);
+  saved.sessions.push({id:'newer-round', day:29, runNumber:2, completedAt:null});
+  const restored = await boot(saved), app2 = restored.app;
+  click(app2, {action:'view', view:'wrong'});
+  click(app2, {action:'review-answer', attemptId:original.id});
+  assert.ok(app2.innerHTML.includes(question.questionHtml));
+  assert.doesNotMatch(app2.innerHTML, /class="reveal"|Quick explanation/);
+  click(app2, {action:'select-correction', attemptId:original.id, index:wrongIndex(question)});
+  click(app2, {action:'check-correction', attemptId:original.id});
+  assert.doesNotMatch(app2.innerHTML, /class="reveal"|Quick explanation/);
+  click(app2, {action:'select-correction', attemptId:original.id, index:question.correctIndexes[0]});
+  click(app2, {action:'check-correction', attemptId:original.id});
+  assert.match(app2.innerHTML, /Corrected! Yellow/);
+  assert.ok(app2.innerHTML.includes(question.explanation.replaceAll("'", '&#039;')));
+  assert.equal(restored.api.state.corrections.at(-1).attemptId, original.id);
+  assert.deepEqual(clone(restored.api.state.attempts), saved.attempts);
+  assert.deepEqual(clone(restored.api.state.sessions), saved.sessions);
+  assert.equal(restored.api.metrics(day).attempts.length, 0, 'Earlier corrections do not answer the new round');
+});
 
 test('reviewing track answers preserves the streak, saved state and unfinished answer selection', async () => {
   const { api, app, storage, pushed } = await boot();
@@ -77,7 +208,7 @@ test('reviewing track answers preserves the streak, saved state and unfinished a
   assert.ok(app.innerHTML.includes(first.questionHtml), 'Review uses the exact missed extra question');
   assert.ok(app.innerHTML.includes(first.options[wrongIndex(first)].html), 'His selected wrong answer is visible');
   assert.ok(app.innerHTML.includes(first.correctHtml));
-  assert.match(app.innerHTML, /Marco's answer/);
+  assert.doesNotMatch(app.innerHTML, /Marco's answer|class="reveal"|Quick explanation/);
   assert.match(app.innerHTML, /2 of 3 saved answers/);
   assert.doesNotMatch(app.innerHTML, /data-action="check-answer"|data-action="select-answer"/);
   click(app, { action: 'review-answer', attemptId: secondAttempt.id });
@@ -96,7 +227,7 @@ test('reviewing track answers preserves the streak, saved state and unfinished a
 
 test('both reviews show only the selected circle question, default to main and preserve saved progress', async () => {
   for (const dayNumber of [29, 31]) {
-    const { api, app, pushed, remote, storage } = await boot(fresh(), null, reviews);
+    const { api, app, pushed, remote, storage, inputs } = await boot(fresh(), null, reviews);
     api.chooseDay(dayNumber);
     const day = api.bank.days.find(item => item.day === dayNumber);
     const [main, other] = day.questions;
@@ -120,7 +251,8 @@ test('both reviews show only the selected circle question, default to main and p
     click(app, { action: 'next-practice', questionId: main.id });
     api.answer(second.id, second.correctIndexes[0]);
     click(app, { action: 'next-practice', questionId: main.id });
-    api.selectAnswer(pending.id, pending.correctIndexes[0]);
+    if (inputs.spec(pending)) typeWritten(app, pending.id, pending.correctAnswer);
+    else api.selectAnswer(pending.id, pending.correctIndexes[0]);
     const saved = clone(api.state), stored = storage.get('marco-summer-isee-math-redo-v1:state'), pushCount = pushed.length;
     for (const current of [main, first, second, main]) {
       click(app, { action: 'choose-review-item', questionId: current.id });
@@ -130,7 +262,8 @@ test('both reviews show only the selected circle question, default to main and p
     onlyQuestion(main);
     click(app, { action: 'next-practice', questionId: main.id });
     onlyQuestion(pending);
-    assert.match(app.innerHTML, new RegExp(`class="selected"[^>]*data-question-id="${pending.id}"`));
+    if (inputs.spec(pending)) assert.match(app.innerHTML, new RegExp(`data-draft-key="${pending.id}" value="${pending.correctAnswer}"`));
+    else assert.match(app.innerHTML, new RegExp(`class="selected"[^>]*data-question-id="${pending.id}"`));
     click(app, { action: 'choose-review-item', questionId: first.id });
     remote(saved);
     onlyQuestion(first);
@@ -198,7 +331,7 @@ test('wrong answers include earlier rounds and both original and extra questions
   saved.sessions.push({ id: 'later-round', day: 29, runNumber: 2, completedAt: null });
   const { api, app, pushed } = await boot(saved);
   click(app, { action: 'view', view: 'wrong' });
-  assert.match(app.innerHTML, /4 wrong answers/);
+  assert.match(app.innerHTML, /4 originally wrong answers/);
   assert.match(app.innerHTML, /Main question · Try 2/);
   assert.match(app.innerHTML, /Extra question 1 · Round 1/);
   const extraAttempt = saved.attempts.find(a => a.questionId === extra.id);
@@ -207,14 +340,14 @@ test('wrong answers include earlier rounds and both original and extra questions
   assert.match(app.innerHTML, /Saved answer · Round 1/);
   assert.match(app.innerHTML, /Back to wrong answers/);
   click(app, { action: 'close-review' });
-  assert.match(app.innerHTML, /4 wrong answers/);
+  assert.match(app.innerHTML, /4 originally wrong answers/);
   click(app, { action: 'view', view: 'progress' });
   assert.match(app.innerHTML, /data-action="wrong-question"/);
   click(app, { action: 'wrong-question', questionId: main.id });
-  assert.match(app.innerHTML, /2 wrong answers/);
+  assert.match(app.innerHTML, /2 originally wrong answers/);
   assert.doesNotMatch(app.innerHTML, /Main question · Try 2/);
   click(app, { action: 'view', view: 'wrong' });
-  assert.match(app.innerHTML, /4 wrong answers/);
+  assert.match(app.innerHTML, /4 originally wrong answers/);
   assert.deepEqual(clone(api.state), saved);
   assert.equal(pushed.length, 0);
 });
@@ -475,7 +608,7 @@ test('reviews use a 90-point target, preserve earlier rounds and appear in progr
   assert.match(app.innerHTML, /Start extra practice/);
   assert.doesNotMatch(app.innerHTML, /class="extra-practice"/);
   api.answer(firstQuestion.id, firstQuestion.correctIndexes[0]);
-  assert.match(app.innerHTML, /Quick explanation:/);
+  assert.doesNotMatch(app.innerHTML, /Quick explanation:/, 'Re-answering through the original attempt cannot bypass correction work');
   finish(review, 2);
   assert.equal(api.metrics(review).firstTryScore, 88);
   assert.match(app.innerHTML, /Try Review 1 again · aim for 90\/100/);
@@ -602,7 +735,8 @@ test('Review 2 retains every checked answer through resets, mastery, reload and 
   const missed=saved.attempts.find(a=>a.questionId===q.practiceQuestions[2].id);
   click(app,{action:'review-answer',attemptId:missed.id});
   assert.ok(app.innerHTML.includes(q.practiceQuestions[2].questionHtml));
-  assert.match(app.innerHTML,/Marco's answer|Correct answer/);
+  assert.doesNotMatch(app.innerHTML,/Marco's answer|Correct answer|Quick explanation/);
+  assert.match(app.innerHTML,/Check correction/);
   assert.doesNotMatch(app.innerHTML,/data-action="check-answer"/);
   click(app,{action:'close-review'});
   assert.deepEqual(clone(api.state),saved);

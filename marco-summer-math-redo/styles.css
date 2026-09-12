@@ -234,6 +234,17 @@ button:focus-visible, summary:focus-visible { outline: 3px solid var(--blue); ou
 .answer-light { display: grid; width: 40px; height: 40px; place-items: center; border: 2px solid #a5b3c0; border-radius: 50%; background: #edf1f5; color: #536475; font-size: 25px; font-weight: 800; line-height: 1; }
 .answer-step.correct .answer-light, .streak-light.lit, .legend-light.correct { border-color: #087443; background: #11864f; color: #fff; box-shadow: 0 0 0 3px #ddf5e6; }
 .answer-step.incorrect .answer-light, .legend-light.incorrect { border-color: #b52932; background: #cb3540; color: #fff; box-shadow: 0 0 0 3px #fbe1e4; }
+.answer-step.corrected .answer-light { border-color: #9a6d00; background: #f6cc43; color: #493700; box-shadow: 0 0 0 3px #fff1b8; }
+.feedback.corrected { background: #fff6d6; border-color: #d5aa2d; color: #624800; }
+.feedback.corrected .feedback-icon { background: #f6cc43; color: #493700; }
+.correction-notice { margin: 22px 0; padding: 14px 16px; border-left: 4px solid #c23a40; background: #fff0ed; color: #87322f; font-size: 16px; line-height: 1.6; }
+.review-write-in { margin-top: 24px; }
+.review-write-in label { display: block; font-size: 18px; font-weight: 700; }
+.write-in-hint { color: #415c73; font-size: 16px; line-height: 1.5; margin: 8px 0 14px; }
+.write-in-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+.write-in-row input { min-width: 0; width: min(100%, 380px); flex: 1 1 220px; border: 2px solid #8197ad; border-radius: 10px; padding: 14px 16px; background: #fff; color: #173957; font: inherit; font-size: 20px; }
+.write-in-row input:focus { outline: 3px solid #2468e5; outline-offset: 3px; }
+.correction-badge { display: inline-block; margin-top: 8px; border: 1px solid #9a6d00; border-radius: 20px; padding: 4px 10px; background: #f6cc43; color: #493700; font-size: 14px; font-weight: 700; }
 .answer-step.next .answer-light { outline: 2px solid #2468e5; outline-offset: 3px; }
 .answer-step-label { color: #415c73; font-size: 14px; font-weight: 700; }
 .answer-step.next .answer-step-label { color: #164fab; }

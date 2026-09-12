@@ -12,6 +12,9 @@
   let view = "practice";
   let feedbackByQuestion = {};
   let selectedAnswers = {};
+  let writtenAnswers = {};
+  let correctionSelections = {};
+  let reviewMessages = {};
   let reviewQuestionId = null;
   let selectedReviewItemId = null;
   let reviewedAttemptId = null;
@@ -24,7 +27,8 @@
   }
 
   function validState(value) {
-    return Boolean(value && value.schemaVersion === 1 && Array.isArray(value.sessions) && Array.isArray(value.attempts));
+    return Boolean(value && value.schemaVersion === 1 && Array.isArray(value.sessions) && Array.isArray(value.attempts)
+      && (value.corrections === undefined || Array.isArray(value.corrections)));
   }
 
   function loadLocal() {
@@ -270,12 +274,15 @@
     render();
   }
 
-  function answer(questionId, index) {
+  function answer(questionId, index, answerText) {
     const day = bank.days.find((item) => item.day === selectedDay);
     const question = findQuestion(day, questionId);
-    if (!day || !question || !Number.isInteger(index) || !question.options[index]) return;
+    if (!day || !question) return;
+    const written = typeof answerText === 'string';
+    const result = written && window.MarcoReviewInputs.check(question, answerText);
+    if (written ? !result.valid : !Number.isInteger(index) || !question.options[index]) return;
     const previous = savedAttempts(day, question.id);
-    if (!canAnswer(day, question, previous) || previous.some((attempt) => attempt.selectedIndex === index)) return;
+    if (!canAnswer(day, question, previous) || (!written && previous.some((attempt) => attempt.selectedIndex === index))) return;
     const session = ensureSession(day.day);
     hasChosenDay = true;
     if (day.mastery) {
@@ -284,7 +291,7 @@
     }
 
     const attemptNumber = previous.length + 1;
-    const correct = question.correctIndexes.includes(index);
+    const correct = written ? result.correct : question.correctIndexes.includes(index);
     const attempt = {
       id: newId(),
       sessionId: session.id,
@@ -292,7 +299,8 @@
       questionId: question.id,
       questionPosition: question.position,
       attemptNumber,
-      selectedIndex: index,
+      selectedIndex: written ? null : index,
+      ...(written ? { answerText: answerText.trim() } : {}),
       correct,
       createdAt: new Date().toISOString(),
       ...(question.parentQuestionId ? { parentQuestionId: question.parentQuestionId, practiceNumber: question.practiceNumber } : {}),
@@ -312,8 +320,54 @@
         : null,
     };
     delete selectedAnswers[question.id];
+    delete writtenAnswers[question.id];
+    delete reviewMessages[question.id];
     saveState();
     render();
+  }
+
+  function correctionFor(attempt) {
+    return attempt && (state.corrections || []).filter((item) => item.attemptId === attempt.id).at(-1);
+  }
+
+  function correctReviewAnswer(attemptId, value) {
+    const attempt = state.attempts.find((item) => item.id === attemptId);
+    const details = attempt && attemptDetails(attempt);
+    if (!details || ![29, 31].includes(details.session?.day ?? attempt.day) || attempt.correct || correctionFor(attempt)?.correct) return;
+    const question = details.question;
+    const input = window.MarcoReviewInputs.spec(question);
+    const result = input ? window.MarcoReviewInputs.check(question, value)
+      : { valid: Number.isInteger(value) && Boolean(question.options[value]), correct: question.correctIndexes.includes(value) };
+    if (!result.valid) {
+      reviewMessages[attemptId] = input ? 'Enter a valid answer. ' + input.hint : 'Choose an answer first.';
+      render();
+      return;
+    }
+    (state.corrections ||= []).push({
+      id: newId(), attemptId, questionId: question.id, correct: result.correct,
+      ...(input ? { answerText: value.trim() } : { selectedIndex: value }),
+      createdAt: new Date().toISOString(),
+    });
+    delete reviewMessages[attemptId];
+    delete correctionSelections[attemptId];
+    if (result.correct) delete writtenAnswers[attemptId];
+    saveState();
+    render();
+  }
+
+  function submitWrittenAnswer(questionId, attemptId) {
+    const question = allRecordedQuestions().get(questionId);
+    if (!question || !window.MarcoReviewInputs.spec(question)) return;
+    const key = attemptId || questionId;
+    const value = writtenAnswers[key] || '';
+    if (attemptId) return correctReviewAnswer(attemptId, value);
+    const result = window.MarcoReviewInputs.check(question, value);
+    if (!result.valid) {
+      reviewMessages[key] = 'Enter a valid answer. ' + window.MarcoReviewInputs.spec(question).hint;
+      render();
+      return;
+    }
+    answer(questionId, null, value);
   }
 
   function startAgain() {
@@ -482,30 +536,53 @@
 
   function masteryAnswerHtml(question, saved) {
     const checked = saved[0];
-    const selected = selectedAnswers[question.id];
+    const correction = correctionFor(checked);
+    const done = checked?.correct || correction?.correct;
+    const input = window.MarcoReviewInputs.spec(question);
+    const key = checked?.id || question.id;
+    const selected = checked ? correctionSelections[key] : selectedAnswers[question.id];
+    const message = reviewMessages[key];
+    if (done) {
+      const response = correction?.correct ? correction : checked;
+      const choice = question.options[response.selectedIndex];
+      const entered = response.answerText !== undefined ? esc(response.answerText) : choice?.html;
+      return `<div class="problem">${question.questionHtml}</div>
+        ${entered ? `<div class="saved-answer-choice right"><strong>Marco's answer</strong><div>${entered}</div></div>` : ''}
+        <div class="feedback ${correction?.correct ? 'corrected' : 'right'}" role="status"><div class="feedback-icon">✓</div><div><strong>${correction?.correct ? 'Corrected! Yellow means this was once wrong.' : 'Correct!'}</strong><div class="reveal"><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></div></div></div>`;
+    }
+    const notice = message || (checked ? (correction ? 'Not quite. Try again.' : 'Try this question again. The answer stays hidden until you get it right.') : '');
+    const feedback = notice ? `<p class="correction-notice" role="status">${esc(notice)}</p>` : '';
+    if (input) {
+      return `<div class="problem">${question.questionHtml}</div>${feedback}
+        <form class="review-write-in" data-review-form data-question-id="${esc(question.id)}" data-attempt-id="${esc(checked?.id || '')}">
+          <label for="write-${esc(key)}">Your answer${input.unit ? ` (${esc(input.unit)})` : ''}</label>
+          <p id="write-hint-${esc(key)}" class="write-in-hint">${esc(input.hint)}</p>
+          <div class="write-in-row"><input id="write-${esc(key)}" type="text" data-review-answer data-draft-key="${esc(key)}" value="${esc(writtenAnswers[key] || '')}" maxlength="120" autocomplete="off" autocapitalize="off" spellcheck="false" aria-describedby="write-hint-${esc(key)}" required><button class="primary-action" type="submit">${checked ? 'Check correction' : 'Check answer'}</button></div>
+        </form>`;
+    }
     const options = question.options.map((option, index) => {
-      const chosen = checked?.selectedIndex === index;
-      const className = chosen ? (checked.correct ? 'right' : 'wrong') : !checked && selected === index ? 'selected' : '';
-      return `<button class="${className}" ${checked ? 'disabled' : ''} data-action="select-answer" data-question-id="${esc(question.id)}" data-index="${index}" type="button" aria-pressed="${!checked && selected === index}"><span class="option-letter">${option.label}</span><span class="option-content">${option.html}</span></button>`;
+      const action = checked ? `data-action="select-correction" data-attempt-id="${esc(checked.id)}"` : 'data-action="select-answer"';
+      return `<button class="${selected === index ? 'selected' : ''}" ${action} data-question-id="${esc(question.id)}" data-index="${index}" type="button" aria-pressed="${selected === index}"><span class="option-letter">${option.label}</span><span class="option-content">${option.html}</span></button>`;
     }).join('');
-    return `<div class="problem">${question.questionHtml}</div><div class="options">${options}</div>
-      ${checked ? `<div class="feedback ${checked.correct ? 'right' : 'wrong'}" role="status"><div class="feedback-icon">${checked.correct ? '✓' : '!'}</div><div><strong>${checked.correct ? 'Correct!' : 'Let’s learn this one.'}</strong><div class="reveal"><p><b>Correct answer:</b> ${question.correctHtml}</p><p><b>Quick explanation:</b> ${esc(question.explanation)}</p></div></div></div>`
-        : `<div class="mastery-check"><button class="primary-action" data-action="check-answer" data-question-id="${esc(question.id)}" type="button" ${selected === undefined ? 'disabled' : ''}>Check answer</button></div>`}`;
+    const action = checked ? `data-action="check-correction" data-attempt-id="${esc(checked.id)}"` : 'data-action="check-answer"';
+    return `<div class="problem">${question.questionHtml}</div>${feedback}<div class="options">${options}</div>
+      <div class="mastery-check"><button class="primary-action" ${action} data-question-id="${esc(question.id)}" type="button" ${selected === undefined ? 'disabled' : ''}>${checked ? 'Check correction' : 'Check answer'}</button></div>`;
   }
 
   function answerTrackHtml(day, question, progress, compact = false, selectedItemId = question.id) {
     const answers = progress.nominal ? [progress.nominal, ...progress.practice] : [];
     const lights = answers.map((answer, index) => {
-      const result = answer.correct ? 'correct' : 'incorrect';
+      const corrected = correctionFor(answer)?.correct;
+      const result = corrected ? 'corrected' : answer.correct ? 'correct' : 'incorrect';
       const label = index === 0 ? 'Main question' : `Extra question ${index}`;
-      const status = answer.correct ? 'Correct' : 'Incorrect';
+      const status = corrected ? 'Corrected after an incorrect answer' : answer.correct ? 'Correct' : 'Incorrect';
       const action = compact ? `data-action="review-answer" data-attempt-id="${esc(answer.id)}"` : `data-action="choose-review-item" data-question-id="${esc(answer.questionId)}" aria-pressed="${answer.questionId === selectedItemId}"`;
-      return `<li class="answer-step ${result}"><button class="answer-review-button" ${action} type="button" aria-label="${label}: ${status}. Review answer" title="${label}: ${status}. Review answer"><span class="answer-light" aria-hidden="true">${answer.correct ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></button></li>`;
+      return `<li class="answer-step ${result}"><button class="answer-review-button" ${action} type="button" aria-label="${label}: ${status}. Review answer" title="${label}: ${status}. Review answer"><span class="answer-light" aria-hidden="true">${answer.correct || corrected ? '✓' : '×'}</span><span class="answer-step-label" aria-hidden="true">${index === 0 ? 'Main' : index}</span></button></li>`;
     }).join('');
     return `<div class="answer-track-panel${compact ? ' compact' : ''}" aria-label="Answer track for Question ${question.position}">
-      ${compact ? '' : `<div class="answer-track-heading"><strong>Your answer track</strong><div class="streak-meter" aria-label="${progress.streak} of ${day.mastery.requiredStreak} correct in a row"><span>In a row</span><b>${progress.streak}/${day.mastery.requiredStreak}</b></div></div>`}
+      ${compact ? '' : `<div class="answer-track-heading"><strong>Your answer track</strong><div class="streak-meter" aria-label="Original streak: ${progress.streak} of ${day.mastery.requiredStreak} correct in a row"><span>Original streak</span><b>${progress.streak}/${day.mastery.requiredStreak}</b></div></div>`}
       ${answers.length ? `<ol class="answer-track" aria-label="Checked answers">${lights}</ol>` : ''}
-      ${compact ? '' : '<p class="answer-track-hint">Three greens in a row = mastered. Tap a circle to show that question.</p>'}
+      ${compact ? '' : '<p class="answer-track-hint">Green: correct · Red: try again · Yellow: corrected after a miss. Tap a circle to choose a question.</p>'}
     </div>`;
   }
 
@@ -659,6 +736,7 @@
     const details = attempt && attemptDetails(attempt);
     if (!details) return `<main class="progress-page"><div class="empty-record">This answer is no longer in the saved record.</div><button class="secondary-action" data-action="close-review" type="button">Go back</button></main>`;
     const { question, parentId, parent, session, label, heading } = details;
+    const correctionReview = [29, 31].includes(session?.day ?? attempt.day);
     const questions = allRecordedQuestions();
     const sequence = state.attempts.filter((item) => item.sessionId === attempt.sessionId
       && attemptDetails(item, questions)?.parentId === parentId)
@@ -670,10 +748,10 @@
       <section class="question-card saved-answer-card" id="saved-answer-review" tabindex="-1" aria-label="Saved answer review">
         <div class="saved-answer-heading"><div><p class="eyebrow">Saved answer · Round ${session?.runNumber || 1}</p><h2>${esc(heading)} · ${esc(label)}</h2>${parent.skill ? `<p>${esc(parent.skill)}</p>` : ''}</div><button class="secondary-action" data-action="close-review" type="button">${backLabel}</button></div>
         <p class="saved-answer-time">${esc(formatFinishedAt(attempt.createdAt))} · <strong>${attempt.correct ? 'Correct' : 'Incorrect'}</strong></p>
-        <div class="problem">${question.questionHtml}</div>
-        <div class="saved-answer-choice ${attempt.correct ? 'right' : 'wrong'}"><strong>Marco's answer</strong><div>${chosen ? `${esc(chosen.label)}. ${chosen.html}` : 'Answer choice unavailable'}</div></div>
+        ${correctionReview ? masteryAnswerHtml(question, [attempt]) : `<div class="problem">${question.questionHtml}</div>
+        <div class="saved-answer-choice ${attempt.correct ? 'right' : 'wrong'}"><strong>Marco's answer</strong><div>${attempt.answerText !== undefined ? esc(attempt.answerText) : chosen ? `${esc(chosen.label)}. ${chosen.html}` : 'Answer choice unavailable'}</div></div>
         <div class="saved-answer-choice right"><strong>Correct answer</strong><div>${question.correctHtml}</div></div>
-        <div class="saved-answer-explanation"><strong>Quick explanation</strong><p>${esc(question.explanation)}</p></div>
+        <div class="saved-answer-explanation"><strong>Quick explanation</strong><p>${esc(question.explanation)}</p></div>`}
         <footer class="saved-answer-navigation">
           <button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(sequence[index - 1]?.id || '')}" type="button" ${index === 0 ? 'disabled' : ''}>Previous answer</button>
           <span>${index + 1} of ${sequence.length} saved answers</span>
@@ -695,10 +773,10 @@
       groups.get(item.details.parentId).push(item);
     }
     return `<main class="progress-page wrong-answers-page">
-      <div class="progress-heading"><div><p class="eyebrow">All saved rounds</p><h2>Wrong answers</h2><p>${wrong.length} wrong ${wrong.length === 1 ? 'answer' : 'answers'}. Open one to see the question, Marco's answer, and the correct answer.</p></div><div class="complete-actions">${wrongQuestionId ? '<button class="secondary-action" data-action="view" data-view="wrong" type="button">Show all wrong answers</button>' : ''}<button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button></div></div>
+      <div class="progress-heading"><div><p class="eyebrow">All saved rounds</p><h2>Wrong answers</h2><p>${wrong.length} originally wrong ${wrong.length === 1 ? 'answer' : 'answers'}. Open a Review 1 or Review 2 question to correct it. Yellow marks show saved corrections.</p></div><div class="complete-actions">${wrongQuestionId ? '<button class="secondary-action" data-action="view" data-view="wrong" type="button">Show all wrong answers</button>' : ''}<button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button></div></div>
       ${wrong.length ? [...groups.values()].map((items) => {
         const { parent, heading } = items[0].details;
-        return `<section class="miss-record"><div class="record-heading"><h3>${esc(heading)}${parent.skill ? ` · ${esc(parent.skill)}` : ''}</h3><span>${items.length} wrong</span></div><ul class="wrong-answer-list">${items.map(({ attempt, details }) => `<li><div><strong>${esc(details.label)} · Round ${details.session?.runNumber || 1}</strong><time datetime="${esc(attempt.createdAt)}">${esc(formatFinishedAt(attempt.createdAt))}</time></div><button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(attempt.id)}" type="button" aria-label="Review ${esc(details.heading)}, ${esc(details.label)}, round ${details.session?.runNumber || 1}">Review answer</button></li>`).join('')}</ul></section>`;
+        return `<section class="miss-record"><div class="record-heading"><h3>${esc(heading)}${parent.skill ? ` · ${esc(parent.skill)}` : ''}</h3><span>${items.length} wrong</span></div><ul class="wrong-answer-list">${items.map(({ attempt, details }) => `<li><div><strong>${esc(details.label)} · Round ${details.session?.runNumber || 1}</strong>${correctionFor(attempt)?.correct ? '<span class="correction-badge">✓ Corrected</span>' : ''}<time datetime="${esc(attempt.createdAt)}">${esc(formatFinishedAt(attempt.createdAt))}</time></div><button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(attempt.id)}" type="button" aria-label="Review ${esc(details.heading)}, ${esc(details.label)}, round ${details.session?.runNumber || 1}">Review answer</button></li>`).join('')}</ul></section>`;
       }).join('') : '<div class="empty-record">No saved wrong answers yet.</div>'}
     </main>`;
   }
@@ -808,6 +886,17 @@
     if (action === "view") { view = button.dataset.view || "practice"; wrongQuestionId = null; render(); }
     if (action === "review-answer") openAnswerReview(button.dataset.attemptId);
     if (action === "choose-review-item") chooseReviewItem(button.dataset.questionId);
+    if (action === "select-correction") {
+      const attempt = state.attempts.find((item) => item.id === button.dataset.attemptId);
+      const question = attempt && allRecordedQuestions().get(attempt.questionId);
+      const index = Number(button.dataset.index);
+      if (question && !window.MarcoReviewInputs.spec(question) && Number.isInteger(index) && question.options[index]) {
+        correctionSelections[attempt.id] = index;
+        delete reviewMessages[attempt.id];
+        render();
+      }
+    }
+    if (action === "check-correction") correctReviewAnswer(button.dataset.attemptId, correctionSelections[button.dataset.attemptId]);
     if (action === "close-review") { view = reviewReturnView; render(); app.querySelector?.(`button[data-attempt-id="${reviewedAttemptId}"]`)?.focus(); }
     if (action === "wrong-question") { wrongQuestionId = button.dataset.questionId; view = 'wrong'; render(); }
     if (action === "day") chooseDay(Number(button.dataset.day));
@@ -821,6 +910,18 @@
     if (action === "next-practice") nextPracticeQuestion(button.dataset.questionId);
     if (action === "choose-main") chooseMainQuestion(button.dataset.questionId);
     if (action === "next-main") nextMainQuestion();
+  });
+
+  app.addEventListener('input', (event) => {
+    const input = event.target.closest('input[data-review-answer]');
+    if (input) writtenAnswers[input.dataset.draftKey] = input.value;
+  });
+
+  app.addEventListener('submit', (event) => {
+    const form = event.target.closest('form[data-review-form]');
+    if (!form) return;
+    event.preventDefault();
+    submitWrittenAnswer(form.dataset.questionId, form.dataset.attemptId || null);
   });
 
   Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=4', 'review1-practice-bank.json?v=1', 'review2-practice-bank.json?v=1'].map(async (url) => {
@@ -838,7 +939,7 @@
         studentName: "Marco",
         validate: validState,
         score(value) {
-          return value.attempts.length * 10 + value.sessions.filter((session) => session.completedAt).length;
+          return (value.attempts.length + (value.corrections || []).length) * 10 + value.sessions.filter((session) => session.completedAt).length;
         },
         onRemote(remoteState) {
           state = remoteState;
