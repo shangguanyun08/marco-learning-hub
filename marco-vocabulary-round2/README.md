@@ -1,11 +1,13 @@
-# Marco's Round 2 Vocabulary Learner
+# Marco’s Vocabulary Practice
 
-- Combined snapshot: the original 660 unknown words plus 214 nonduplicate words from Marco R2
-- 18 sessions: Sessions 1–17 contain 50 words each; Session 18 contains 24
-- all words, meanings, sentence examples, and illustrated clues shown together during review
-- Known/Unknown review controls followed by all-at-once four-choice sentence tests
-- Round 1 tests every word in the session regardless of the review Known/Unknown choice; each later round tests only the previous round's misses
-- a top Progress tab records the wrong count for every session and round
-- dated answer history, local saving, and shared online progress
+Test-only replacement for the illustrated Round 2 learner. The original page, assets, and records remain at `../marco-vocabulary-round2-archive/`.
 
-Generated illustration sheets are measured at their real separator bands, then every complete scene is contained inside a fixed atlas cell with a neutral safety edge. The browser reads each word's explicit source session, position, atlas, and SVG viewport from the artwork manifest, then redistributes the final 224 words into 50-word study sessions without changing any illustration crop.
+- Matches the layout, palette, typography, definition-to-word questions, locked answer feedback, one-way progress, and missed-word rounds of the Weeks 8–11 reference.
+- Retains all 874 original words and the original 18-session order (17 × 50, then 24). Five set tabs group four sessions at a time.
+- Round 1 tests all words. Each subsequent round tests only the previous round’s misses, continuing until mastered. Finished scores and answer review remain in Results.
+- No illustration requests or Known/Unknown review phase.
+- A fresh test record lives in `vocabularyTests` within the existing shared progress envelope, using the already registered `marco-round2-vocabulary-660` service. Original `sessions` and `activity` stay intact for the archive. A separate local test backup also prevents a stale archive save from discarding test answers.
+- Session selection is local; answers and round position sync across devices. Immutable answers are merged when saves arrive out of order.
+- Localhost/file previews never start online sync or activity tracking.
+
+Run checks with `node --test marco-vocabulary-round2/quiz.test.cjs` from the repository root. Tests use the existing Harry math jsdom installation.

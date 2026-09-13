@@ -1,63 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Review and test Marco's 874 ISEE vocabulary words in 18 illustrated sessions.">
-  <title>Marco's Round 2 Vocabulary Learner</title>
-  <link rel="stylesheet" href="./styles.css?v=20260902-2">
+  <meta name="theme-color" content="#2d67d7">
+  <meta name="description" content="Marco’s 874-word vocabulary test in 18 sessions. Instant feedback, missed-word rounds, and saved online results.">
+  <title>Marco’s Vocabulary Practice</title>
+  <link rel="stylesheet" href="./styles.css?v=20260913-1">
 </head>
 <body>
-  <header class="topbar">
-    <div class="topbar-inner">
-      <nav class="nav" aria-label="Breadcrumb">
-        <a href="../">← Learning Hub</a>
-        <span>Progress saves automatically</span>
-      </nav>
-      <p class="eyebrow">MARCO · ISEE VOCABULARY</p>
-      <h1>Turn every unknown<br><em>into a word you own.</em></h1>
-      <p class="intro">874 words arranged in 18 illustrated sessions: 50 words per session, with 24 in the final session. Round 1 tests every word in the session—even words marked Known during review. Each new round then tests only the previous round’s misses.</p>
-    </div>
-  </header>
-
-  <main class="shell">
-    <div class="view-tabs" role="tablist" aria-label="Vocabulary pages">
-      <button class="view-tab active" id="learn-tab" data-view="learn" role="tab" aria-selected="true" aria-controls="learn-panel" type="button">Learn &amp; Test</button>
-      <button class="view-tab" id="progress-tab" data-view="progress" role="tab" aria-selected="false" aria-controls="progress-panel" type="button">Progress <span id="progress-tab-total">0 / 874</span></button>
-    </div>
-
-    <div id="learn-panel" role="tabpanel" aria-labelledby="learn-tab">
-      <section class="status-card" aria-label="Learning progress">
-        <div>
-          <div class="progress-copy"><span id="progress-label">Loading Session 1</span><strong id="progress-number">0 / 50 known</strong></div>
-          <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
-        </div>
-        <button class="primary compact" id="start-test" type="button">Start Round 1</button>
-      </section>
-
-      <div class="sessions" id="sessions" aria-label="Choose a vocabulary session"></div>
-      <div class="rounds" id="rounds" aria-label="Learning rounds"></div>
-
-      <section class="workspace" id="workspace" aria-live="polite">
-        <div class="loading"><span>…</span><h2>Preparing Marco’s word sessions</h2></div>
-      </section>
-    </div>
-
-    <section class="record-card" id="progress-panel" role="tabpanel" aria-labelledby="progress-tab" hidden>
-      <div class="record-head">
-        <div><p class="mini-label">LEARNING RECORD</p><h2 id="record-title">Progress by session and round</h2></div>
-        <span>Saved automatically</span>
-      </div>
-      <p class="record-explainer">Each round shows how many words Marco got wrong. The next round contains only those missed words.</p>
-      <div id="record-content"></div>
-    </section>
-  </main>
-
-  <div class="toast" id="toast" role="status" hidden></div>
+  <main class="site-shell" id="app"><p class="loading">Preparing vocabulary practice…</p></main>
   <script src="../shared-online-sync.js?v=1"></script>
-  <script src="./data.js?v=20260901-1"></script>
-  <script src="./art.js?v=20260901-1"></script>
-  <script src="./app.js?v=20260902-3"></script>
-  <script src="../shared-activity-tracker.js?v=1" data-app-id="marco-round2-vocabulary-660" data-course="Illustrated vocabulary"></script>
+  <script src="./data.js?v=20260913-1"></script>
+  <script src="./quiz-core.js?v=20260913-1"></script>
+  <script src="./app.js?v=20260913-1"></script>
 </body>
 </html>

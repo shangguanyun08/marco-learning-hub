@@ -1,665 +1,180 @@
-(function () {
-  "use strict";
-
-  const WORDS = Array.isArray(window.MARCO_R2_WORDS) ? window.MARCO_R2_WORDS : [];
-  const WORD_BY_ID = new Map(WORDS.map((item) => [item.id, item]));
-  const ART = window.MARCO_R2_ART && typeof window.MARCO_R2_ART === "object"
-    ? window.MARCO_R2_ART
-    : { atlases: [], images: [] };
-  const ART_BY_ID = new Map(ART.images.map((item) => [item.id, item]));
-  const ATLAS_BY_FILE = new Map(ART.atlases.map((item) => [item.file, item]));
-  const REPACKED_FIRST_SESSION = 14;
-  const LEGACY_LAST_SESSION = 19;
-  const REPACKED_LAST_SESSION = 18;
-  const SESSION_SIZE = 50;
-  const PROGRESS_LAYOUT_VERSION = 3;
-  const DISPLAY_SESSION_BY_WORD_ID = new Map();
-  let repackedPosition = 0;
-  ART.images.slice()
-    .sort((left, right) => Number(left.session) - Number(right.session)
-      || Number(left.position) - Number(right.position))
-    .forEach((item) => {
-      const sourceSession = Number(item.session);
-      if (sourceSession >= REPACKED_FIRST_SESSION && sourceSession <= LEGACY_LAST_SESSION) {
-        DISPLAY_SESSION_BY_WORD_ID.set(item.id, REPACKED_FIRST_SESSION + Math.floor(repackedPosition / SESSION_SIZE));
-        repackedPosition += 1;
-      } else {
-        DISPLAY_SESSION_BY_WORD_ID.set(item.id, sourceSession);
+(() => {
+  'use strict';
+  const Core = window.VocabularyQuiz;
+  const words = window.MARCO_VOCABULARY_WORDS;
+  const byId = new Map(words.map(word => [word.id, word]));
+  const sessions = Array.from({length: 18}, (_, i) => ({number: i + 1, set: Math.floor(i / 4) + 1, words: words.filter(word => word.session === i + 1)}));
+  const APP_ID = 'marco-round2-vocabulary-660';
+  const STORAGE_KEY = 'marco-round2-vocabulary-660-v1';
+  const TEST_KEY = 'marco-vocabulary-tests-v1';
+  const SELECTION_KEY = 'marco-vocabulary-tests-selection-v1';
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || location.protocol === 'file:';
+  const app = document.getElementById('app');
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const read = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
+  const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } };
+  const envelopeValid = value => value?.version === 1 && value.sessions && Array.isArray(value.activity);
+  let envelope = read(STORAGE_KEY);
+  if (!envelopeValid(envelope)) envelope = {version: 1, layoutVersion: 3, activeSession: 1, sessions: {}, activity: []};
+  let progress = Core.merge(envelope.vocabularyTests, read(TEST_KEY));
+  let selected = Number(read(SELECTION_KEY)) || 1;
+  if (!sessions.some(session => session.number === selected)) selected = 1;
+  let view = location.hash === '#results' ? 'results' : 'practice';
+  let sync = null;
+  let banner = '';
+  let storageError = false;
+  const now = () => new Date().toISOString();
+  const info = number => sessions[number - 1];
+  const range = number => { const items = info(number).words; return `Words ${items[0].number}–${items.at(-1).number}`; };
+  const label = number => `Set ${info(number).set} · Session ${number}`;
+  const date = value => value ? new Intl.DateTimeFormat(undefined, {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value)) : 'Not started';
+  const answered = round => round ? round.ids.filter(id => round.answers[id]).length : 0;
+  const current = () => Core.current(progress.sessions[selected]);
+  function save() {
+    const latest = read(STORAGE_KEY);
+    if (envelopeValid(latest)) envelope = latest;
+    progress = Core.merge(progress, envelope.vocabularyTests);
+    envelope.vocabularyTests = progress;
+    storageError = !write(TEST_KEY, progress);
+    storageError = !write(STORAGE_KEY, envelope) || storageError;
+    sync?.push(envelope);
+  }
+  function startSession(number) {
+    selected = number;
+    write(SELECTION_KEY, selected);
+    if (Core.start(progress, number, info(number).words.map(word => word.id), now())) save();
+  }
+  function header() {
+    return `<header class="topbar"><div><p class="eyebrow">Marco · 874 words · 18 sessions</p><h1>Vocabulary Practice</h1></div>
+      <div class="week-menu" role="group" aria-label="Select vocabulary set">${[1,2,3,4,5].map(set => {
+        const group = sessions.filter(session => session.set === set);
+        const mastered = group.filter(session => progress.sessions[session.number]?.completedAt).length;
+        return `<button class="${info(selected).set === set ? 'active' : ''}" aria-pressed="${info(selected).set === set}" data-set="${set}"><strong>Set ${set}</strong><small>${mastered}/${group.length} mastered</small></button>`;
+      }).join('')}</div><nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
+  }
+  function picker() {
+    return `<section class="session-picker" aria-label="Choose a vocabulary session">${sessions.filter(session => session.set === info(selected).set).map(session => {
+      const record = progress.sessions[session.number];
+      const round = Core.current(record);
+      const status = record?.completedAt ? 'Mastered' : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
+      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>Session ${session.number}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
+    }).join('')}</section>`;
+  }
+  function syncNote() {
+    return `<div class="sync-note" data-online-sync="${APP_ID}" role="status" aria-live="polite"><span aria-hidden="true"></span>${local ? 'Preview · answers save on this device only.' : 'Connecting online…'}</div>`;
+  }
+  function question() {
+    const record = progress.sessions[selected];
+    if (record?.completedAt) return `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All words from ${range(selected).replace('Words ', '')} have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${selected < 18 ? `<button data-session="${selected + 1}">Continue to Session ${selected + 1}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
+    const round = current();
+    const word = byId.get(round.ids[round.position]);
+    const answer = round.answers[word.id];
+    const options = Core.options(word, round.number, words);
+    const pos = {'adjective':'adj.','noun':'n.','verb':'v.','adverb':'adv.'}[word.partOfSpeech] || word.partOfSpeech;
+    return `<section class="practice-card"><aside class="round-panel"><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><strong>Round ${round.number}</strong><span>${round.number === 1 ? `${round.ids.length} words` : 'Missed words only'}</span></div>
+      <div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div><p class="grid-label">One-way progress</p>
+      <div class="number-grid" aria-label="Question progress">${round.ids.map((id,index) => {
+        const value = round.answers[id];
+        const status = value ? value.correct ? 'answered-correct' : 'answered-wrong' : index === round.position ? 'current' : '';
+        const description = value ? value.correct ? 'correct' : 'incorrect' : index === round.position ? 'current question' : 'unanswered';
+        return `<span class="${status}" aria-label="Question ${index + 1}: ${description}" ${index === round.position ? 'aria-current="step"' : ''}>${index + 1}</span>`;
+      }).join('')}</div><p class="locked-note">Answered questions cannot be reopened or changed.</p></aside>
+      <div class="question-panel"><div class="question-topline"><strong><b>${round.position + 1}</b>/${round.ids.length}</strong><div class="progress" role="progressbar" aria-label="Round progress" aria-valuenow="${round.position + 1}" aria-valuemin="0" aria-valuemax="${round.ids.length}"><span style="width:${(round.position + 1) / round.ids.length * 100}%"></span></div><small>Word #${word.number}</small></div>
+      <div class="chips"><span>${label(selected)}</span><span>${round.number === 1 ? 'All words' : `Round ${round.number - 1} misses`}</span></div><p class="prompt-label">Choose the vocabulary word</p><h2 id="question-heading" tabindex="-1">${escape(pos)} ${escape(word.meaning)}</h2>
+      <div class="options" aria-labelledby="question-heading">${options.map((id,index) => `<button data-answer="${escape(id)}" ${answer ? 'disabled' : ''} class="${answer ? id === word.id ? 'correct-option' : id === answer.choice ? 'wrong-option' : 'locked-other' : ''}"><span>${'ABCD'[index]}</span><b>${escape(byId.get(id).word)}</b></button>`).join('')}</div>
+      ${answer ? `<div class="instant-feedback ${answer.correct ? 'correct' : 'wrong'}" role="status"><div class="feedback-mark">${answer.correct ? '✓' : '×'}</div><div><strong>${answer.correct ? 'Correct!' : 'Not quite.'}</strong><span>${answer.correct ? `${escape(word.word)} is the right word.` : `The correct answer is ${'ABCD'[options.indexOf(word.id)]}. ${escape(word.word)}.`}</span><small>Answer locked — it cannot be changed.</small></div></div>` : ''}
+      <div class="question-footer one-way"><span>${answer ? 'Your answer is saved and locked.' : 'Choose one answer to continue.'}</span><button class="next-action" data-next ${answer ? '' : 'disabled'}>${round.position === round.ids.length - 1 ? 'Finish round & save' : 'Next question →'}</button></div></div></section>`;
+  }
+  function results() {
+    const finished = sessions.filter(session => progress.sessions[session.number]?.rounds.some(round => round.finishedAt));
+    return `<section class="results-card"><div class="results-heading"><div><p class="eyebrow">${local ? 'Preview record · this device' : 'Online record · all devices'}</p><h2>Marco’s Results</h2><p>Refresh from any device to see live answer progress and finished rounds.</p></div><button data-refresh>Refresh results</button></div>
+      <div class="live-progress-heading"><div><strong>Live session progress</strong><span>Updated after every answer</span></div></div><div class="live-progress-grid">${sessions.map(session => {
+        const record = progress.sessions[session.number];
+        const round = Core.current(record);
+        return `<article class="${record?.completedAt ? 'complete' : ''}"><span>${label(session.number)}</span><strong>${record?.completedAt ? 'Mastered' : `${answered(round)}/${round?.ids.length || session.words.length} answered`}</strong><small>${range(session.number)} · ${round ? `Round ${round.number}` : 'Not started'}</small></article>`;
+      }).join('')}</div><div class="finished-heading"><strong>Finished rounds</strong><span>Scores and answer review</span></div>
+      ${finished.length ? `<div class="session-list">${finished.map(session => `<article class="session-card"><div class="session-title"><div><strong>${label(session.number)} · ${range(session.number)}</strong><span>${progress.sessions[session.number].completedAt ? `Mastered ${date(progress.sessions[session.number].completedAt)}` : 'In progress'}</span></div><span>${progress.sessions[session.number].rounds.filter(round => round.finishedAt).length} finished rounds</span></div><div class="round-list">${progress.sessions[session.number].rounds.filter(round => round.finishedAt).map(round => {
+        const correct = round.ids.filter(id => round.answers[id].correct).length;
+        return `<details data-result="${session.number}-${round.number}"><summary><span class="round-number">${round.number}</span><span><strong>Round ${round.number}</strong><small>${date(round.finishedAt)}</small></span><span class="score"><strong>${correct}/${round.ids.length}</strong><small>correct</small></span><span class="missed"><strong>${round.ids.length-correct}</strong><small>missed</small></span></summary><div class="answer-review">${round.ids.map(id => {
+          const word = byId.get(id), answer = round.answers[id];
+          return `<div class="${answer.correct ? 'correct' : 'wrong'}"><span>#${word.number}</span><p>${escape(word.meaning)}</p><p><small>Your answer</small><strong>${escape(byId.get(answer.choice)?.word || answer.choice)}</strong></p><p><small>Correct</small><strong>${escape(word.word)}</strong></p></div>`;
+        }).join('')}</div></details>`;
+      }).join('')}</div></article>`).join('')}</div>` : '<div class="empty-results compact"><strong>No finished rounds yet.</strong><span>Live partial progress is shown above.</span></div>'}</section>`;
+  }
+  function render(focusQuestion = false) {
+    // Keep the sync badge attached so remote save feedback survives rendering.
+    const badge = app.querySelector('[data-online-sync]');
+    const expanded = [...app.querySelectorAll('details[open][data-result]')].map(node => node.dataset.result);
+    app.innerHTML = header() + (view === 'practice' ? picker() : '') + syncNote() +
+      (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
+      (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
+      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-vocabulary-round2-archive/">Original illustrated version · Archive</a></footer>';
+    if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
+    expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
+    if (focusQuestion) document.getElementById('question-heading')?.focus({preventScroll:true});
+  }
+  function changeView(next) {
+    view = next;
+    history.replaceState(null, '', next === 'results' ? '#results' : location.pathname + location.search);
+    render();
+  }
+  app.addEventListener('click', async event => {
+    const button = event.target.closest('button');
+    if (!button || button.disabled) return;
+    if (button.dataset.view) return changeView(button.dataset.view);
+    if (button.dataset.set || button.dataset.session) {
+      const group = sessions.filter(session => session.set === Number(button.dataset.set));
+      const number = button.dataset.session ? Number(button.dataset.session) : (group.find(session => progress.sessions[session.number] && !progress.sessions[session.number].completedAt) || group.find(session => !progress.sessions[session.number]?.completedAt) || group[0]).number;
+      banner = '';
+      startSession(number);
+      changeView('practice');
+      return;
+    }
+    if (button.dataset.answer) {
+      if (Core.answer(progress, selected, button.dataset.answer, words, now())) { save(); render(); app.querySelector('[data-next]')?.focus({preventScroll:true}); }
+      return;
+    }
+    if (button.hasAttribute('data-next')) {
+      const previous = current();
+      const number = previous.number, total = previous.ids.length;
+      const correct = previous.ids.filter(id => previous.answers[id]?.correct).length;
+      const action = Core.advance(progress, selected, now());
+      if (action) {
+        if (action !== 'next') banner = `${label(selected)}, Round ${number}: ${correct}/${total} correct.${action === 'round' ? ` Round ${number + 1} contains only the ${total-correct} missed word${total-correct === 1 ? '' : 's'}.` : ' Session mastered.'}`;
+        save(); render(true);
       }
-    });
-  const displaySession = (item) => {
-    const wordId = item?.wordId || item?.id;
-    return DISPLAY_SESSION_BY_WORD_ID.get(wordId) ?? Number(item?.session);
-  };
-  const SESSION_NUMBERS = [...new Set(ART.images.map(displaySession))]
-    .filter(Number.isInteger)
-    .sort((left, right) => left - right);
-  const WORDS_BY_SESSION = new Map(SESSION_NUMBERS.map((number) => {
-    const words = ART.images
-      .filter((item) => displaySession(item) === number)
-      .sort((left, right) => Number(left.session) - Number(right.session)
-        || Number(left.position) - Number(right.position))
-      .map((item) => WORD_BY_ID.get(item.id))
-      .filter(Boolean);
-    return [number, words];
-  }));
-  const SESSION_COUNT = SESSION_NUMBERS.length;
-  const MAX_SESSION_SIZE = 50;
-  const STORAGE_KEY = "marco-round2-vocabulary-660-v1";
-  const SYNC_APP_ID = "marco-round2-vocabulary-660";
-
-  const workspace = document.querySelector("#workspace");
-  const sessionsEl = document.querySelector("#sessions");
-  const roundsEl = document.querySelector("#rounds");
-  const progressBar = document.querySelector("#progress-bar");
-  const progressLabel = document.querySelector("#progress-label");
-  const progressNumber = document.querySelector("#progress-number");
-  const startTest = document.querySelector("#start-test");
-  const learnPanel = document.querySelector("#learn-panel");
-  const progressPanel = document.querySelector("#progress-panel");
-  const viewTabs = document.querySelector(".view-tabs");
-  const progressTabTotal = document.querySelector("#progress-tab-total");
-  const recordContent = document.querySelector("#record-content");
-  const toast = document.querySelector("#toast");
-
-  let onlineSync = null;
-  const artworkLoads = new Map();
-  const state = {
-    phase: "review",
-    session: 1,
-    round: 1,
-    known: new Set(),
-    reviewKnown: new Set(),
-    questions: [],
-    answers: {},
-    summaryRound: null,
-    progress: { version: 1, layoutVersion: PROGRESS_LAYOUT_VERSION, activeSession: 1, sessions: {}, activity: [] },
-  };
-
-  function escapeHtml(value) {
-    return String(value).replace(/[&<>'"]/g, (character) => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
-    })[character]);
-  }
-
-  function escapeRegExp(value) {
-    return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  }
-
-  function shuffle(items) {
-    const copy = items.slice();
-    for (let index = copy.length - 1; index > 0; index -= 1) {
-      const swap = Math.floor(Math.random() * (index + 1));
-      [copy[index], copy[swap]] = [copy[swap], copy[index]];
+      return;
     }
-    return copy;
-  }
-
-  function wordsForSession(number) {
-    return WORDS_BY_SESSION.get(Number(number)) || [];
-  }
-
-  function currentWords() {
-    return wordsForSession(state.session);
-  }
-
-  function validKnown(number, values) {
-    const valid = new Set(wordsForSession(number).map((item) => item.id));
-    return (Array.isArray(values) ? values : []).filter((id) => valid.has(id));
-  }
-
-  function sessionActivity(progress, number) {
-    return progress.activity.filter((entry) => displaySession(entry) === Number(number));
-  }
-
-  function testedKnownFromActivity(progress, number) {
-    const valid = new Set(wordsForSession(number).map((item) => item.id));
-    const known = new Set();
-    for (const entry of sessionActivity(progress, number)) {
-      if (!valid.has(entry.wordId)) continue;
-      if (entry.correct) known.add(entry.wordId);
-      else known.delete(entry.wordId);
+    if (button.hasAttribute('data-refresh')) {
+      button.disabled = true;
+      button.textContent = 'Refreshing…';
+      await sync?.refresh();
+      render();
     }
-    return Array.from(known);
-  }
-
-  function storedTestedKnown(number, stored, progress = state.progress) {
-    if (Array.isArray(stored?.testedKnown)) return validKnown(number, stored.testedKnown);
-    return testedKnownFromActivity(progress, number);
-  }
-
-  function defaultProgress() {
-    return { version: 1, layoutVersion: PROGRESS_LAYOUT_VERSION, activeSession: 1, sessions: {}, activity: [] };
-  }
-
-  function validateProgress(value) {
-    return Boolean(value && value.version === 1 && value.sessions && typeof value.sessions === "object" && Array.isArray(value.activity));
-  }
-
-  function migrateProgressLayout(progress) {
-    const hasLegacySessions = Object.hasOwn(progress.sessions, String(LEGACY_LAST_SESSION));
-    if (progress.layoutVersion === PROGRESS_LAYOUT_VERSION && !hasLegacySessions) return progress;
-
-    const entries = Array.from(
-      { length: LEGACY_LAST_SESSION - REPACKED_FIRST_SESSION + 1 },
-      (_, index) => progress.sessions[String(REPACKED_FIRST_SESSION + index)],
-    ).filter((entry) => entry && typeof entry === "object");
-    const allReviewKnown = entries.flatMap((entry) => entry.reviewKnown || entry.known || []);
-    const allExplicitTested = entries.flatMap((entry) => entry.testedKnown || []);
-    const validDates = (field) => entries.map((entry) => entry[field])
-      .filter((value) => value && !Number.isNaN(new Date(value).getTime()))
-      .sort((left, right) => new Date(left) - new Date(right));
-    const startedDates = validDates("startedAt");
-    const studiedDates = validDates("lastStudiedAt");
-    const completedDates = validDates("completedAt");
-
-    for (let number = REPACKED_FIRST_SESSION; number <= LEGACY_LAST_SESSION; number += 1) {
-      delete progress.sessions[String(number)];
-    }
-    progress.activity = progress.activity.map((entry) => ({ ...entry, session: displaySession(entry) }));
-
-    for (let number = REPACKED_FIRST_SESSION; number <= REPACKED_LAST_SESSION; number += 1) {
-      const matchingActivity = sessionActivity(progress, number);
-      const reviewKnown = validKnown(number, allReviewKnown);
-      const explicitTested = validKnown(number, allExplicitTested);
-      const testedKnown = matchingActivity.length
-        ? testedKnownFromActivity(progress, number)
-        : explicitTested;
-      const complete = testedKnown.length === wordsForSession(number).length;
-      progress.sessions[String(number)] = {
-        known: testedKnown,
-        testedKnown,
-        reviewKnown,
-        round: Math.max(1, ...entries.map((entry) => Number(entry.round) || 1), ...matchingActivity.map((entry) => Number(entry.round) || 1)),
-        startedAt: startedDates[0] || null,
-        lastStudiedAt: studiedDates.at(-1) || null,
-        completedAt: complete ? (completedDates.at(-1) || studiedDates.at(-1) || null) : null,
-      };
-    }
-
-    const priorActive = Math.max(1, Number(progress.activeSession) || 1);
-    if (priorActive >= REPACKED_FIRST_SESSION) {
-      progress.activeSession = SESSION_NUMBERS.slice(REPACKED_FIRST_SESSION - 1)
-        .find((number) => storedTestedKnown(number, progress.sessions[String(number)], progress).length < wordsForSession(number).length)
-        || REPACKED_LAST_SESSION;
-    } else {
-      progress.activeSession = Math.min(SESSION_COUNT, priorActive);
-    }
-    progress.layoutVersion = PROGRESS_LAYOUT_VERSION;
-    return progress;
-  }
-
-  function restoreProgress() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
-      state.progress = validateProgress(saved) ? migrateProgressLayout(saved) : defaultProgress();
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
-    } catch (_) {
-      state.progress = defaultProgress();
-    }
-    loadSession(state.progress.activeSession || 1);
-  }
-
-  function loadSession(number) {
-    state.session = Math.min(SESSION_COUNT, Math.max(1, Number(number) || 1));
-    const stored = state.progress.sessions[String(state.session)] || {};
-    state.known = new Set(storedTestedKnown(state.session, stored));
-    state.reviewKnown = new Set(validKnown(state.session, stored.reviewKnown || stored.known));
-    state.round = Math.max(1, Number(stored.round) || 1);
-    const roundOneAnswers = new Set(sessionActivity(state.progress, state.session)
-      .filter((entry) => Number(entry.round) === 1)
-      .map((entry) => entry.wordId)).size;
-    if (state.round === 1 && roundOneAnswers === currentWords().length && state.known.size < currentWords().length) {
-      state.round = 2;
-    }
-    state.phase = state.known.size === currentWords().length ? "complete" : "review";
-    state.questions = [];
-    state.answers = {};
-    state.summaryRound = null;
-  }
-
-  function persist(pushOnline = true) {
-    const now = new Date().toISOString();
-    const key = String(state.session);
-    const prior = state.progress.sessions[key] || {};
-    const complete = state.known.size === currentWords().length;
-    state.progress.version = 1;
-    state.progress.layoutVersion = PROGRESS_LAYOUT_VERSION;
-    state.progress.activeSession = state.session;
-    state.progress.sessions[key] = {
-      known: Array.from(state.known),
-      testedKnown: Array.from(state.known),
-      reviewKnown: Array.from(state.reviewKnown),
-      round: state.round,
-      startedAt: prior.startedAt || now,
-      lastStudiedAt: now,
-      completedAt: complete ? (prior.completedAt || now) : null,
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
-    if (pushOnline) onlineSync?.push(state.progress);
-  }
-
-  function sessionKnownCount(number) {
-    if (number === state.session) return state.known.size;
-    const stored = state.progress.sessions[String(number)] || {};
-    return storedTestedKnown(number, stored).length;
-  }
-
-  function totalKnownCount() {
-    let total = 0;
-    for (const number of SESSION_NUMBERS) total += sessionKnownCount(number);
-    return total;
-  }
-
-  function formatDate(value) {
-    if (!value) return "Not started";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Not started";
-    return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
-  }
-
-  function illustrationMarkup(item, extraClass = "") {
-    const art = ART_BY_ID.get(item.id);
-    const atlas = art ? ATLAS_BY_FILE.get(art.atlas) : null;
-    if (!art || !atlas) {
-      return `<div class="word-art ${extraClass}" role="img" aria-label="Illustration unavailable for ${escapeHtml(item.word)}"><span class="art-fallback visible" aria-hidden="true">${item.icon}</span></div>`;
-    }
-    const [left, top, width, height] = art.viewport.map(Number);
-    const isPortrait = height > width;
-    const source = `./illustrations/${art.atlas}?v=20260901-1`;
-    const viewBox = `${left} ${top} ${width} ${height}`;
-    return `<div class="word-art ${isPortrait ? "portrait-art" : ""} ${extraClass}" style="--panel-ratio:${width} / ${height}" data-art data-art-source="${source}" role="img" aria-label="Illustration for ${escapeHtml(item.word)}"><span class="art-fallback" aria-hidden="true">${item.icon}</span><svg class="word-illustration" viewBox="${viewBox}" preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false"><image href="${source}" width="${Number(atlas.width)}" height="${Number(atlas.height)}" preserveAspectRatio="none"></image></svg></div>`;
-  }
-
-  function loadArtwork(source) {
-    if (!artworkLoads.has(source)) {
-      artworkLoads.set(source, new Promise((resolve, reject) => {
-        const image = new Image();
-        image.addEventListener("load", resolve, { once: true });
-        image.addEventListener("error", reject, { once: true });
-        image.src = source;
-        if (image.complete && image.naturalWidth > 0) resolve();
-      }));
-    }
-    return artworkLoads.get(source);
-  }
-
-  function markLoadedImages() {
-    document.querySelectorAll("[data-art]").forEach((art) => {
-      const source = art.dataset.artSource;
-      if (!source) return;
-      loadArtwork(source).then(() => {
-        if (art.isConnected) art.classList.add("has-image");
-      }).catch(() => {});
-    });
-  }
-
-  function renderSessionTabs() {
-    sessionsEl.innerHTML = Array.from({ length: SESSION_COUNT }, (_, index) => {
-      const number = index + 1;
-      const total = wordsForSession(number).length;
-      const known = sessionKnownCount(number);
-      const classes = ["session-button"];
-      if (known === total) classes.push("complete");
-      if (number === state.session) classes.push("active");
-      return `<button class="${classes.join(" ")}" data-session="${number}" type="button"><span>Session ${number}</span><small>${known} / ${total}</small></button>`;
-    }).join("");
-  }
-
-  function renderSteps() {
-    const steps = [{ label: "Review all", status: state.phase === "review" ? "active" : "done" }];
-    for (let number = 1; number <= Math.max(3, state.round, state.summaryRound || 1); number += 1) {
-      let status = number < state.round || (state.phase === "complete" && number === state.round) ? "done" : "";
-      if (state.phase === "test" && number === state.round) status = "active";
-      if (state.phase === "summary" && number === state.summaryRound) status = "done";
-      steps.push({ label: `Round ${number}`, status });
-    }
-    roundsEl.innerHTML = steps.map((step) => `<span class="step ${step.status}">${step.label}</span>`).join("");
-  }
-
-  function updateChrome() {
-    const total = currentWords().length || MAX_SESSION_SIZE;
-    const known = state.known.size;
-    progressLabel.textContent = `Session ${state.session} progress`;
-    progressNumber.textContent = `${known} / ${total} known`;
-    progressBar.style.width = `${(known / total) * 100}%`;
-    progressTabTotal.textContent = `${totalKnownCount()} / ${WORDS.length}`;
-    const testCount = state.round === 1 ? total : total - known;
-    startTest.hidden = state.phase !== "review" || testCount === 0;
-    startTest.textContent = `Start Round ${state.round} · ${testCount} word${testCount === 1 ? "" : "s"}`;
-    renderSessionTabs();
-    renderSteps();
-  }
-
-  function renderRecord() {
-    const activity = state.progress.activity;
-    const correct = activity.filter((entry) => entry.correct).length;
-    const latest = activity.at(-1);
-    const stats = `<div class="record-stats">
-      <div class="record-stat"><span>TOTAL KNOWN</span><strong>${totalKnownCount()} / ${WORDS.length}</strong></div>
-      <div class="record-stat"><span>TEST ANSWERS</span><strong>${activity.length}</strong></div>
-      <div class="record-stat"><span>CORRECT</span><strong>${correct}</strong></div>
-      <div class="record-stat"><span>LAST ANSWER</span><strong>${latest ? formatDate(latest.answeredAt) : "Not started"}</strong></div>
-    </div>`;
-    const sessions = SESSION_NUMBERS.map((number) => {
-      const total = wordsForSession(number).length;
-      const stored = state.progress.sessions[String(number)] || {};
-      const sessionActivity = activity.filter((entry) => Number(entry.session) === number);
-      const latestRound = Math.max(0, ...sessionActivity.map((entry) => Number(entry.round) || 0));
-      const roundCount = Math.max(3, latestRound);
-      const rounds = Array.from({ length: roundCount }, (_, index) => {
-        const round = index + 1;
-        const latestByWord = new Map();
-        sessionActivity.filter((entry) => Number(entry.round) === round)
-          .forEach((entry) => latestByWord.set(entry.wordId, entry));
-        const answers = Array.from(latestByWord.values());
-        const wrong = answers.filter((entry) => !entry.correct).length;
-        const value = answers.length ? `${wrong} wrong` : "Not taken";
-        const status = answers.length && wrong === 0 ? " perfect" : "";
-        return `<div class="round-record${status}"><span>Round ${round}</span><strong>${value}</strong><small>${answers.length ? `${answers.length} tested` : "Only prior misses"}</small></div>`;
-      }).join("");
-      return `<article class="session-progress"><div class="session-progress-head"><div><b>SESSION ${number}</b><strong>${sessionKnownCount(number)} / ${total} mastered</strong></div><small>${formatDate(stored.lastStudiedAt)}</small></div><div class="round-records">${rounds}</div></article>`;
-    }).join("");
-    recordContent.innerHTML = `${stats}<div class="session-progress-list">${sessions}</div>`;
-  }
-
-  function setView(view, updateHash = true) {
-    const showProgress = view === "progress";
-    learnPanel.hidden = showProgress;
-    progressPanel.hidden = !showProgress;
-    viewTabs.querySelectorAll("[data-view]").forEach((button) => {
-      const active = button.dataset.view === (showProgress ? "progress" : "learn");
-      button.classList.toggle("active", active);
-      button.setAttribute("aria-selected", String(active));
-      button.tabIndex = active ? 0 : -1;
-    });
-    if (showProgress) renderRecord();
-    if (updateHash) history.replaceState(null, "", showProgress ? "#progress" : location.pathname + location.search);
-  }
-
-  function wordCard(item) {
-    const known = state.reviewKnown.has(item.id);
-    const sourceNote = item.sourceRecordId
-      ? `MARCO R2 · SOURCE #${item.sourceRecordId}`
-      : `SOURCE S${item.originSession} · R${item.originRound}`;
-    return `<article class="word-card ${known ? "is-known" : ""}" data-card="${escapeHtml(item.id)}">
-      ${illustrationMarkup(item)}
-      <div class="word-copy">
-        <div class="word-title"><h3>${escapeHtml(item.word)}</h3><button class="speak" data-speak="${escapeHtml(item.id)}" type="button" aria-label="Hear ${escapeHtml(item.word)} pronounced">🔊</button></div>
-        <p class="meaning"><strong>${escapeHtml(item.partOfSpeech)}</strong> · ${escapeHtml(item.meaning)}</p>
-        <p class="example">“${escapeHtml(item.example)}”</p>
-        <div class="word-meta"><small>${escapeHtml(sourceNote)}</small><button class="known-toggle" data-known="${escapeHtml(item.id)}" aria-pressed="${known}" type="button">${known ? "✓ Known" : "Unknown · keep"}</button></div>
-      </div>
-    </article>`;
-  }
-
-  function renderReview() {
-    const items = currentWords();
-    const reviewUnknown = items.length - state.reviewKnown.size;
-    const testCount = state.round === 1 ? items.length : items.length - state.known.size;
-    const roundNote = state.round === 1
-      ? `Round 1 tests all ${items.length} words, including words marked Known during review.`
-      : `Round ${state.round} tests only the ${testCount} word${testCount === 1 ? "" : "s"} missed in Round ${state.round - 1}.`;
-    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · REVIEW</p><h2>See all ${items.length} words before testing.</h2><p>${roundNote}</p></div><div class="review-actions"><span class="review-count">${reviewUnknown} marked unknown</span><button class="primary compact" id="review-test" type="button" ${testCount ? "" : "disabled"}>Start Round ${state.round}</button></div></div>
-      <div class="review-grid">${items.map(wordCard).join("")}</div>
-      <div class="review-footer"><button class="primary" id="review-test-bottom" type="button" ${testCount ? "" : "disabled"}>Start Round ${state.round} · ${testCount} word${testCount === 1 ? "" : "s"}</button></div>`;
-    document.querySelectorAll("[data-speak]").forEach((button) => button.addEventListener("click", () => speak(WORD_BY_ID.get(button.dataset.speak).word)));
-    document.querySelectorAll("[data-known]").forEach((button) => button.addEventListener("click", () => toggleKnown(button.dataset.known)));
-    document.querySelector("#review-test").addEventListener("click", beginRound);
-    document.querySelector("#review-test-bottom").addEventListener("click", beginRound);
-    markLoadedImages();
-  }
-
-  function toggleKnown(wordId) {
-    if (state.reviewKnown.has(wordId)) state.reviewKnown.delete(wordId);
-    else state.reviewKnown.add(wordId);
-    persist();
-    render();
-  }
-
-  function speak(word) {
-    if (!("speechSynthesis" in window)) return showToast("Pronunciation is not available in this browser.");
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.lang = "en-US";
-    utterance.rate = .82;
-    window.speechSynthesis.speak(utterance);
-  }
-
-  function showToast(message) {
-    toast.textContent = message;
-    toast.hidden = false;
-    window.clearTimeout(showToast.timer);
-    showToast.timer = window.setTimeout(() => { toast.hidden = true; }, 2600);
-  }
-
-  function makeQuestion(wordId) {
-    const answer = WORD_BY_ID.get(wordId);
-    const sameType = currentWords().filter((item) => item.id !== wordId && item.partOfSpeech === answer.partOfSpeech);
-    const pool = sameType.length >= 3 ? sameType : currentWords().filter((item) => item.id !== wordId);
-    return { wordId, options: shuffle([wordId, ...shuffle(pool).slice(0, 3).map((item) => item.id)]) };
-  }
-
-  function beginRound() {
-    const remaining = (state.round === 1
-      ? currentWords()
-      : currentWords().filter((item) => !state.known.has(item.id)))
-      .map((item) => item.id);
-    if (!remaining.length) {
-      state.phase = "complete";
-      persist();
-      return render();
-    }
-    state.phase = "test";
-    state.summaryRound = null;
-    state.questions = shuffle(remaining).map(makeQuestion);
-    state.answers = {};
-    persist();
-    render();
-    window.scrollTo({ top: workspace.offsetTop - 80, behavior: "smooth" });
-  }
-
-  function blankSentence(item) {
-    const candidates = [item.word, item.word.split("/")[0], item.word.replace(/\s*\([^)]*\)/g, "")]
-      .map((value) => value.trim()).sort((a, b) => b.length - a.length);
-    let sentence = escapeHtml(item.example);
-    for (const candidate of candidates) {
-      const pattern = new RegExp(escapeRegExp(candidate), "i");
-      if (pattern.test(sentence)) return sentence.replace(pattern, '<span class="blank">_____</span>');
-    }
-    return `${sentence} <span class="blank">_____</span>`;
-  }
-
-  function choose(questionIndex, optionId) {
-    if (Object.hasOwn(state.answers, questionIndex)) return;
-    const question = state.questions[questionIndex];
-    const target = WORD_BY_ID.get(question.wordId);
-    const selected = WORD_BY_ID.get(optionId);
-    const correct = optionId === question.wordId;
-    state.answers[questionIndex] = optionId;
-    state.progress.activity.push({
-      id: window.crypto?.randomUUID?.() || `${Date.now()}-${Math.random()}`,
-      session: state.session,
-      round: state.round,
-      wordId: target.id,
-      word: target.word,
-      selectedWord: selected.word,
-      correct,
-      answeredAt: new Date().toISOString(),
-    });
-    if (correct) {
-      state.known.add(target.id);
-      state.reviewKnown.add(target.id);
-    } else {
-      state.known.delete(target.id);
-      state.reviewKnown.delete(target.id);
-    }
-    persist();
-    render();
-  }
-
-  function finishRound() {
-    if (Object.keys(state.answers).length !== state.questions.length) return;
-    if (state.known.size === currentWords().length) {
-      state.phase = "complete";
-    } else {
-      state.summaryRound = state.round;
-      state.round += 1;
-      state.phase = "summary";
-    }
-    persist();
-    render();
-  }
-
-  function renderTest() {
-    const answeredCount = Object.keys(state.answers).length;
-    const questions = state.questions.map((question, questionIndex) => {
-      const item = WORD_BY_ID.get(question.wordId);
-      const answer = state.answers[questionIndex];
-      const answered = answer !== undefined;
-      const correct = answer === question.wordId;
-      const choices = question.options.map((id, optionIndex) => {
-        const option = WORD_BY_ID.get(id);
-        const classes = ["choice"];
-        if (answered && id === question.wordId) classes.push("correct");
-        if (answered && id === answer && !correct) classes.push("wrong");
-        return `<button class="${classes.join(" ")}" data-question-index="${questionIndex}" data-option="${escapeHtml(id)}" type="button" ${answered ? "disabled" : ""}><small>${optionIndex + 1}</small>${escapeHtml(option.word)}</button>`;
-      }).join("");
-      return `<section class="test-question" data-test-question="${questionIndex + 1}"><div class="question-number">Question ${questionIndex + 1}</div><div class="test-copy"><p class="mini-label">SIMPLE MEANING</p><p class="test-meaning">${escapeHtml(item.meaning)}</p><p class="sentence">${blankSentence(item)}</p><div class="choices">${choices}</div><div class="feedback ${answered ? (correct ? "good" : "try") : ""}" role="status">${answered ? (correct ? `✓ Correct — <strong>${escapeHtml(item.word)}</strong> is now known.` : `Not yet. The answer is <strong>${escapeHtml(item.word)}</strong>. It will return next round.`) : ""}</div></div></section>`;
-    }).join("");
-    workspace.innerHTML = `<div class="workspace-head"><div><p class="mini-label">SESSION ${state.session} · ROUND ${state.round}</p><h2>Answer all ${state.questions.length} questions on this page.</h2></div><span class="review-count">${answeredCount} of ${state.questions.length} answered</span></div>
-      <div class="test-list">${questions}</div>
-      <div class="test-actions"><button class="secondary" id="back-review" type="button">Review all words</button><button class="primary" id="finish-round" type="button" ${answeredCount === state.questions.length ? "" : "disabled"}>Finish round · ${answeredCount}/${state.questions.length}</button></div>`;
-    document.querySelectorAll("[data-option]").forEach((button) => button.addEventListener("click", () => choose(Number(button.dataset.questionIndex), button.dataset.option)));
-    document.querySelector("#back-review").addEventListener("click", () => { state.phase = "review"; render(); });
-    document.querySelector("#finish-round").addEventListener("click", finishRound);
-  }
-
-  function renderSummary() {
-    const completedRound = state.summaryRound || Math.max(1, state.round - 1);
-    const correct = state.questions.filter((question, index) => state.answers[index] === question.wordId).length;
-    const missed = state.questions.length - correct;
-    const remaining = currentWords().length - state.known.size;
-    workspace.innerHTML = `<div class="center"><div><div class="seal">${completedRound}</div><h2>Round ${completedRound} complete.</h2><div class="score-row"><span>${correct} correct</span><span>${missed} wrong</span><span>${state.known.size} of ${currentWords().length} mastered</span></div><p>${remaining} word${remaining === 1 ? "" : "s"} will return in Round ${state.round}.</p><div class="center-actions"><button class="secondary" id="summary-review" type="button">Review all words</button><button class="primary" id="next-round" type="button">Start Round ${state.round}</button></div></div></div>`;
-    document.querySelector("#summary-review").addEventListener("click", () => { state.phase = "review"; state.summaryRound = null; persist(); render(); });
-    document.querySelector("#next-round").addEventListener("click", beginRound);
-  }
-
-  function renderComplete() {
-    const allDone = totalKnownCount() === WORDS.length;
-    const next = state.session < SESSION_COUNT ? `<button class="primary" id="next-session" type="button">Go to session ${state.session + 1}</button>` : "";
-    workspace.innerHTML = `<div class="center"><div><div class="seal">✓</div><h2>${allDone ? `All ${WORDS.length} words mastered!` : `Session ${state.session} mastered!`}</h2><p>Marco answered every word in this ${currentWords().length}-word session correctly. Review it again anytime or continue forward.</p><div class="center-actions"><button class="secondary" id="review-complete" type="button">Review session</button>${next}</div></div></div>`;
-    document.querySelector("#review-complete").addEventListener("click", () => { state.phase = "review"; render(); });
-    document.querySelector("#next-session")?.addEventListener("click", () => changeSession(state.session + 1));
-  }
-
-  function changeSession(number) {
-    persist();
-    loadSession(number);
-    persist();
-    render();
-    window.scrollTo({ top: sessionsEl.offsetTop - 80, behavior: "smooth" });
-  }
-
-  function render() {
-    updateChrome();
-    renderRecord();
-    if (state.phase === "review") renderReview();
-    else if (state.phase === "test") renderTest();
-    else if (state.phase === "summary") renderSummary();
-    else renderComplete();
-  }
-
-  startTest.addEventListener("click", beginRound);
-  viewTabs.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-view]");
-    if (button) setView(button.dataset.view);
   });
-  viewTabs.addEventListener("keydown", (event) => {
-    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
-    event.preventDefault();
-    const view = event.key === "ArrowRight" ? "progress" : "learn";
-    setView(view);
-    viewTabs.querySelector(`[data-view="${view}"]`).focus();
-  });
-  window.addEventListener("hashchange", () => setView(location.hash === "#progress" ? "progress" : "learn", false));
-  sessionsEl.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-session]");
-    if (button) changeSession(Number(button.dataset.session));
-  });
-  document.addEventListener("keydown", (event) => {
-    if (state.phase !== "test") return;
-    const number = Number(event.key);
-    const nextIndex = state.questions.findIndex((_, index) => !Object.hasOwn(state.answers, index));
-    if (nextIndex >= 0 && number >= 1 && number <= 4) choose(nextIndex, state.questions[nextIndex].options[number - 1]);
-  });
-
-  function initialize() {
-    const expectedSizes = [
-      ...Array.from({ length: 17 }, () => 50),
-      24,
-    ];
-    const uniqueWordIds = new Set(WORDS.map((item) => item.id));
-    const uniqueArtIds = new Set(ART.images.map((item) => item.id));
-    const completeCoverage = WORDS.every((item) => ART_BY_ID.has(item.id))
-      && ART.images.every((item) => WORD_BY_ID.has(item.id));
-    const validSessions = SESSION_NUMBERS.every((number, index) => {
-      return number === index + 1
-        && wordsForSession(number).length === expectedSizes[index];
+  window.addEventListener('hashchange', () => { view = location.hash === '#results' ? 'results' : 'practice'; render(); });
+  startSession(selected);
+  render();
+  if (!local && window.MarcoOnlineSync) {
+    sync = window.MarcoOnlineSync.create({
+      appId: APP_ID, studentName: 'Marco', validate: envelopeValid,
+      score: value => Object.values(value.sessions).reduce((sum, session) => sum + (session.testedKnown?.length || 0), 0) + Core.score(value.vocabularyTests),
+      onRemote(remote) {
+        const merged = Core.merge(progress, remote.vocabularyTests);
+        const differs = JSON.stringify(merged) !== JSON.stringify(remote.vocabularyTests);
+        envelope = remote;
+        progress = merged;
+        envelope.vocabularyTests = progress;
+        write(STORAGE_KEY, envelope); write(TEST_KEY, progress);
+        render();
+        if (differs) sync?.push(envelope);
+      },
     });
-    const validViewports = ART.images.every((item) => {
-      const atlas = ATLAS_BY_FILE.get(item.atlas);
-      const viewport = Array.isArray(item.viewport) ? item.viewport.map(Number) : [];
-      if (!atlas || viewport.length !== 4 || viewport.some((value) => !Number.isFinite(value))) return false;
-      const [left, top, width, height] = viewport;
-      return left >= 0 && top >= 0 && width > 0 && height > 0
-        && left + width <= Number(atlas.width)
-        && top + height <= Number(atlas.height);
-    });
-    if (
-      WORDS.length !== 874
-      || ART.images.length !== 874
-      || SESSION_COUNT !== 18
-      || uniqueWordIds.size !== WORDS.length
-      || uniqueArtIds.size !== ART.images.length
-      || expectedSizes.length !== SESSION_COUNT
-      || !completeCoverage
-      || !validSessions
-      || !validViewports
-    ) throw new Error("The 874-word illustrated snapshot is incomplete.");
-    restoreProgress();
-    render();
-    setView(location.hash === "#progress" ? "progress" : "learn", false);
-    if (window.MarcoOnlineSync) {
-      onlineSync = window.MarcoOnlineSync.create({
-        appId: SYNC_APP_ID,
-        studentName: "Marco",
-        validate: validateProgress,
-        score: (progress) => SESSION_NUMBERS.reduce((sum, number) => {
-          const stored = progress.sessions?.[String(number)] || {};
-          const known = Array.isArray(stored.testedKnown)
-            ? validKnown(number, stored.testedKnown)
-            : testedKnownFromActivity(progress, number);
-          return sum + known.length;
-        }, 0),
-        onRemote: (remote) => {
-          state.progress = migrateProgressLayout(remote);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.progress));
-          loadSession(state.progress.activeSession || state.session);
-          render();
-        },
-      });
-      void onlineSync.start(state.progress);
-    }
-  }
-
-  try {
-    initialize();
-  } catch (error) {
-    console.error(error);
-    startTest.hidden = true;
-    sessionsEl.hidden = true;
-    roundsEl.hidden = true;
-    workspace.innerHTML = '<div class="center"><div><div class="seal">!</div><h2>Words could not load</h2><p>Please refresh and try again.</p></div></div>';
+    void sync.start(envelope);
+    const tracker = document.createElement('script');
+    tracker.src = '../shared-activity-tracker.js?v=1';
+    tracker.dataset.appId = APP_ID;
+    tracker.dataset.course = 'Vocabulary Practice';
+    document.body.append(tracker);
   }
 })();
