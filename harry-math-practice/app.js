@@ -685,6 +685,10 @@ function isCorrectAnswer(typed, question) {
   if (question.response?.kind === "fraction") {
     const actual = typed.replace(/\s/g, "").match(/^(-?\d+)\/(\d+)$/);
     const expected = question.answer.split("/").map(Number);
+    if (question.response.requireSimplest) {
+      return Boolean(actual && Number(actual[2]) > 0 &&
+        Number(actual[1]) === expected[0] && Number(actual[2]) === expected[1]);
+    }
     return Boolean(actual && Number(actual[2]) > 0 &&
       Number(actual[1]) * expected[1] === expected[0] * Number(actual[2]));
   }

@@ -1163,6 +1163,28 @@
       [5, 7, 1, 14], [11, 15, 1, 6], [7, 9, 5, 12], [13, 16, 1, 6], [5, 6, 7, 18],
     ].map((parts, i) => ({...fractionCalculation(...parts, "−"), id:`daily-fraction-subtract-q33-extra-${i + 1}`})),
   });
+  function simplifyFractionQuestion(numerator, denominator) {
+    const divisor = greatestCommonFactor(numerator, denominator);
+    const answer = `${numerator / divisor}/${denominator / divisor}`;
+    return {
+      skill:"Write a fraction in simplest form",
+      promptHtml:`Write this fraction in <strong>simplest form</strong>.<div class="star-equation">${fraction(numerator, denominator)} = ?</div>`,
+      answer,
+      response:{kind:"fraction", requireSimplest:true},
+      explanation:`The greatest common factor of ${numerator} and ${denominator} is ${divisor}. Divide both numbers by ${divisor}: ${numerator} ÷ ${divisor} = ${numerator / divisor} and ${denominator} ÷ ${divisor} = ${denominator / divisor}. The simplest form is ${answer}.`,
+      math:{type:"simplifyFraction", numerator, denominator},
+    };
+  }
+  entries.push({
+    question: {...simplifyFractionQuestion(15, 45), id:"daily-simplify-q34", sourceLabel:"Daily math · Simplest form"},
+    followUps: [[6, 18], [10, 25], [12, 20], [14, 49], [18, 30], [21, 28], [24, 36], [20, 50], [27, 45], [35, 49]]
+      .map((parts, i) => ({...simplifyFractionQuestion(...parts), id:`daily-simplify-q34-extra-${i + 1}`})),
+  });
+  entries.push({
+    question: {...simplifyFractionQuestion(16, 24), id:"daily-simplify-q35", sourceLabel:"Daily math · Simplest form"},
+    followUps: [[8, 12], [15, 20], [18, 24], [20, 28], [21, 35], [24, 32], [28, 42], [30, 48], [36, 60], [42, 56]]
+      .map((parts, i) => ({...simplifyFractionQuestion(...parts), id:`daily-simplify-q35-extra-${i + 1}`})),
+  });
   // Keep the original answer keys and choices so saved attempts still match.
   // These questions now ask Harry to enter numbers, including every follow-up.
   const numberEntryUnits = {
