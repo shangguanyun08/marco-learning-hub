@@ -231,7 +231,7 @@
     ],
     "answer": "5/6",
     "explanation": "Only a small part at the top is unshaded, so about 5/6 of the cylinder is shaded.",
-    "visualHtml": "<div class=\"question-visual cylinder-visual\" aria-label=\"A cylinder shaded about five sixths\"><div class=\"cylinder-fill fill-five-sixths\"></div></div>",
+    "visualHtml": "<div class=\"question-visual cylinder-visual\" role=\"img\" aria-label=\"Cylinder with a shaded lower portion\"><div class=\"cylinder-fill fill-five-sixths\"></div></div>",
     "sourceLabel": "STAR Math · Aug 30 · Question 27"
   },
   {
@@ -527,7 +527,7 @@
     ],
     "answer": "3/4",
     "explanation": "About one fourth is unshaded, so about three fourths of the cylinder is shaded.",
-    "visualHtml": "<div class=\"question-visual cylinder-visual\" aria-label=\"A cylinder shaded about three fourths\"><div class=\"cylinder-fill fill-three-fourths\"></div></div>",
+    "visualHtml": "<div class=\"question-visual cylinder-visual\" role=\"img\" aria-label=\"Cylinder with a shaded lower portion\"><div class=\"cylinder-fill fill-three-fourths\"></div></div>",
     "sourceLabel": "STAR Math · Aug 30 · Question 27"
   },
   {

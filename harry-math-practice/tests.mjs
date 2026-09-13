@@ -1354,3 +1354,11 @@ test("all 374 active main and practice misses can be corrected without revealing
     assert.deepEqual(page.errors,[]);
   } finally {page.close();}
 });
+
+test("shaded-fraction diagrams do not state the fraction answer in their accessible description", () => {
+  const data = boot(), index = data.day3Indexes()[16];
+  for (const q of [data.questionSets[6][index], ...data.day3Banks[index]]) {
+    assert.match(q.visualHtml, /aria-label="Cylinder with a shaded lower portion"/);
+    assert.doesNotMatch(q.visualHtml, /shaded about/);
+  }
+});
