@@ -36,13 +36,13 @@ function submit(api, result, bank, correct) {
   assert.equal(api.mastery.submit(result,String(answer),bank,api.isCorrectAnswer),true);
 }
 
-test("29 main questions retain all existing slots and append daily prime-number practice", () => {
+test("30 main questions retain all existing slots and append common-denominator practice", () => {
   const api=boot();
-  assert.equal(api.questionSets[6].length,37);
-  assert.equal(api.questionCount(6),29);
+  assert.equal(api.questionSets[6].length,38);
+  assert.equal(api.questionCount(6),30);
   assert.deepEqual(clone(api.day3Indexes().slice(0,6)),[0,3,5,6,8,12]);
   assert.deepEqual(clone(api.questionSets[6].slice(14,28).map(q=>q.id)),[2,5,7,15,16,18,21,23,24,26,27,29,30,34].map(n=>`2026-08-30-q${n}`));
-  assert.equal(api.day3Banks.length,37);
+  assert.equal(api.day3Banks.length,38);
   assert.ok(api.day3Banks.every(bank=>bank.length===10));
   for (const [set,count] of [[4,14],[5,14],[7,10],[8,10]]) assert.equal(api.questionCount(set),count);
 });
@@ -141,7 +141,58 @@ for (const number of [28, 29]) test(`Q${number} saves choice answers, earns mast
   } finally { page.close(); }
 });
 
-test("230 added follow-ups are distinct, skill-matched, with exactly one correct choice", () => {
+test("Q30 asks for the least common denominator and every fill-in key is the smallest common multiple", () => {
+  const data = boot(), entry = data.entries.find(e => e.question.id === "daily-common-denominator-q30");
+  const questions = [entry.question, ...entry.followUps];
+  assert.deepEqual(clone(questions.map(q => Number(q.answer))), [12, 12, 30, 9, 24, 20, 24, 35, 30, 36, 70]);
+  for (const q of questions) {
+    const {a, b, c, d} = q.math, answer = Number(q.answer);
+    assert.equal(q.choices, undefined);
+    assert.equal(q.response.kind, "number");
+    assert.match(q.promptHtml, /least common denominator/);
+    assert.ok(q.promptHtml.includes(`aria-label="${a} over ${b}"`));
+    assert.ok(q.promptHtml.includes(`aria-label="${c} over ${d}"`));
+    assert.equal(answer % b, 0);
+    assert.equal(answer % d, 0);
+    for (let smaller = 1; smaller < answer; smaller++) assert.ok(smaller % b !== 0 || smaller % d !== 0);
+    for (const wrong of ["", "0", "-1", "1/12", String(answer * 2), String(answer + 0.5)]) {
+      assert.equal(data.isCorrectAnswer(wrong, q), false);
+    }
+  }
+});
+
+test("Q30 ignores blanks, saves an incorrect fill-in and follow-up mastery without changing Q1–Q29", () => {
+  const data = boot(), index = 37;
+  finishBefore(data, 30);
+  const legacy = clone(data.records);
+  legacy[6].questions.length = index;
+  const page = bootHistoryPage(legacy);
+  try {
+    const previous = clone(page.api.records[6].questions.slice(0, index));
+    page.api.openDay3Question(index);
+    const card = page.document.querySelector('[data-question="38"]'), form = card.querySelector("form");
+    assert.equal(card.querySelectorAll(".math-fraction").length, 2);
+    assert.equal(card.querySelector(".choice-grid"), null);
+    assert.equal(form.querySelector("input").type, "number");
+    form.requestSubmit();
+    assert.equal(page.api.records[6].questions[index].firstTry, null);
+    form.querySelector("input").value = "6";
+    form.requestSubmit();
+    assert.equal(page.api.records[6].questions[index].firstTry, false);
+    for (let i = 0; i < 3; i++) checkFollowUp(page, data, index, true);
+    assert.equal(data.mastery.progress(page.api.records[6].questions[index]).status, "mastered");
+    assert.deepEqual(clone(page.api.records[6].questions.slice(0, index)), previous);
+    const reloaded = bootHistoryPage(JSON.parse(page.win.localStorage.getItem("harry-math-practice-record-v1")));
+    try {
+      assert.deepEqual(clone(reloaded.api.records), clone(page.api.records));
+      assert.equal(reloaded.api.records[6].questions[index].firstTry, false);
+      assert.deepEqual(reloaded.errors, []);
+    } finally { reloaded.close(); }
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+test("240 added follow-ups are distinct and skill-matched, with valid answer formats", () => {
   const api=boot();
   let count=0;
   for (const entry of api.entries) {
@@ -149,9 +200,15 @@ test("230 added follow-ups are distinct, skill-matched, with exactly one correct
     const signatures=new Set([signatureOf(entry.question)]);
     for (const q of entry.followUps) {
       assert.equal(q.skill,entry.question.skill);
-      assert.equal(q.choices.length,4);
-      assert.equal(new Set(q.choices).size,4);
-      assert.equal(q.choices.filter(v=>api.isCorrectAnswer(String(v),q)).length,1);
+      if (q.choices) {
+        assert.equal(q.choices.length,4);
+        assert.equal(new Set(q.choices).size,4);
+        assert.equal(q.choices.filter(v=>api.isCorrectAnswer(String(v),q)).length,1);
+      } else {
+        assert.equal(q.response.kind,"number");
+        assert.equal(api.isCorrectAnswer(q.answer,q),true);
+        assert.equal(api.isCorrectAnswer("",q),false);
+      }
       const signature=signatureOf(q);
       assert.equal(signatures.has(signature),false);
       signatures.add(signature);
@@ -160,7 +217,7 @@ test("230 added follow-ups are distinct, skill-matched, with exactly one correct
       count++;
     }
   }
-  assert.equal(count,230);
+  assert.equal(count,240);
 });
 
 test("new follow-up arithmetic, ratios, remainders, rounding and visual data have valid keys", () => {
@@ -234,7 +291,7 @@ test("adding STAR questions preserves all old answer slots, first tries and foll
   const old={4:{questions:Array.from({length:16},()=>({firstTry:true,attempts:1,solved:true,lastAnswer:"5"})),completedAt:"2026-08-28T23:48:41.249Z"},6:{questions:Array.from({length:14},(_,i)=>({firstTry:i%2===0,attempts:2,solved:true,lastAnswer:String(i)})),completedAt:null}};
   old[6].questions[12]=existing;
   const restored=boot(old);
-  assert.equal(restored.records[6].questions.length,37);
+  assert.equal(restored.records[6].questions.length,38);
   for(let i=0;i<14;i++) {
     assert.equal(restored.records[6].questions[i].lastAnswer,old[6].questions[i].lastAnswer);
     assert.equal(restored.records[6].questions[i].firstTry,old[6].questions[i].firstTry);
@@ -305,11 +362,11 @@ test("out-of-order STAR progress restores independently and cannot invent master
   assert.ok(normalized.attempts.every(a=>a.correct===false));
 });
 
-test("all 29 questions can be opened without changing answers or losing a draft", () => {
+test("all 30 questions can be opened without changing answers or losing a draft", () => {
   const page=bootHistoryPage(boot().records);
   try {
     const jumps=[...page.document.querySelectorAll(".question-jump")];
-    assert.equal(jumps.length,29);assert.ok(jumps.every(button=>!button.disabled));
+    assert.equal(jumps.length,30);assert.ok(jumps.every(button=>!button.disabled));
     const card=page.document.querySelector('[data-question="6"]');
     card.querySelector("input").value="79";
     const before=JSON.stringify(page.api.records), storage=page.win.localStorage.getItem("harry-math-practice-record-v1");
@@ -319,7 +376,7 @@ test("all 29 questions can be opened without changing answers or losing a draft"
     }
     assert.equal(page.document.querySelector("#day3-next").disabled,true);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="37"]').hidden,false);
+    assert.equal(page.document.querySelector('[data-question="38"]').hidden,false);
     page.document.querySelector('[data-question-index="0"]').click();
     assert.equal(page.document.querySelector("#day3-previous").disabled,true);
     assert.equal(page.document.querySelector("#day3-next").disabled,false);
@@ -334,7 +391,7 @@ test("all 29 questions can be opened without changing answers or losing a draft"
 test("session markup and assets match the expanded question set without day tabs", () => {
   assert.equal((html.match(/id="day3-total-track"/g)||[]).length,1);
   assert.equal(html.includes('data-set='),false);
-  assert.ok(html.includes("Q1–Q29"));
+  assert.ok(html.includes("Q1–Q30"));
   assert.doesNotMatch(html, /id="day3-guide"|id="day3-progress"/);
   assert.ok(html.indexOf('star-mastery.js?')<html.indexOf('app.js?'));
   for(const asset of ["./styles.css?", "./day3-mastery.js?", "./star-mastery.js?", "./app.js?"]) assert.ok(html.includes(asset));
@@ -603,14 +660,14 @@ test("finishing the ten-follow-up limit preserves free navigation and the last q
     assert.equal(data.mastery.progress(page.api.records[6].questions[12]).status, "unmastered");
     assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, false);
     const allDone = boot(page.api.records);
-    finishBefore(allDone, 30);
+    finishBefore(allDone, 31);
     page.remote(allDone.records);
-    page.document.querySelector('[data-question-index="36"]').click();
+    page.document.querySelector('[data-question-index="37"]').click();
     assert.equal(page.document.querySelector("#day3-next").disabled, true);
     assert.equal(page.document.querySelectorAll(".question-jump:disabled").length, 0);
     const saved = JSON.stringify(page.api.records);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="37"]').hidden, false);
+    assert.equal(page.document.querySelector('[data-question="38"]').hidden, false);
     assert.equal(JSON.stringify(page.api.records), saved);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
@@ -728,7 +785,7 @@ test("legacy correct marks remain reviewable without inventing a missing first a
 
 test("Q16 onward changes ten question families to numeric entry and preserves Q17 and Q25 choices", () => {
   const data = boot(), indexes = data.day3Indexes();
-  for (const [position, index] of indexes.entries()) {
+  for (const [position, index] of indexes.slice(0, 29).entries()) {
     const q = data.questionSets[6][index];
     const converted = position >= 15 && position <= 26 && ![16, 24].includes(position);
     assert.equal(Boolean(q.response), converted, `Q${position + 1}`);
@@ -749,7 +806,7 @@ test("Q16 onward changes ten question families to numeric entry and preserves Q1
   }
 });
 
-test("all nine numeric question families accept numbers with printed units through mastery and reload", () => {
+test("all numeric question families accept numbers with their units through mastery and reload", () => {
   const data = boot(), page = bootHistoryPage(data.records);
   try {
     for (const index of data.day3Indexes().filter(i => data.questionSets[6][i].response?.kind === "number")) {

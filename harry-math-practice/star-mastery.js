@@ -1086,6 +1086,32 @@
       })),
     ],
   });
+  function commonDenominatorQuestion(a, b, c, d) {
+    let denominator = Math.max(b, d);
+    while (denominator % b !== 0 || denominator % d !== 0) denominator++;
+    return {
+      skill:"Find the least common denominator",
+      promptHtml:`What is the <strong>least common denominator</strong> of these two fractions?<div class="star-equation">${fraction(a, b)} and ${fraction(c, d)}</div>`,
+      answer:String(denominator),
+      response:{kind:"number", unit:""},
+      explanation:`The smallest number divisible by both ${b} and ${d} is ${denominator}. With this denominator, ${a}/${b} = ${a * denominator / b}/${denominator} and ${c}/${d} = ${c * denominator / d}/${denominator}.`,
+      math:{type:"commonDenominator", a, b, c, d},
+    };
+  }
+  entries.push({
+    question: {
+      ...commonDenominatorQuestion(1, 4, 1, 6),
+      id:"daily-common-denominator-q30",
+      sourceLabel:"Daily math · Common denominators",
+    },
+    followUps: [
+      [2, 3, 3, 4], [3, 5, 5, 6], [1, 3, 5, 9], [5, 8, 1, 6], [3, 10, 1, 4],
+      [5, 12, 3, 8], [2, 5, 3, 7], [1, 6, 7, 15], [5, 9, 1, 12], [7, 10, 5, 14],
+    ].map((parts, i) => ({
+      ...commonDenominatorQuestion(...parts),
+      id:`daily-common-denominator-q30-extra-${i + 1}`,
+    })),
+  });
   // Keep the original answer keys and choices so saved attempts still match.
   // These questions now ask Harry to enter numbers, including every follow-up.
   const numberEntryUnits = {
