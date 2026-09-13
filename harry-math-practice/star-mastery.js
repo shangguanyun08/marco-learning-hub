@@ -1112,6 +1112,57 @@
       id:`daily-common-denominator-q30-extra-${i + 1}`,
     })),
   });
+  function powerOfTenQuestion(exponent, turn) {
+    const number = 10 ** exponent;
+    const question = choiceQuestion(`Which of the following is equal to <strong>${format(number)}</strong>?`,
+      `10^${exponent}`, [exponent - 1, exponent + 1, exponent + 2].map(n => `10^${n}`),
+      `${format(number)} is 1 followed by ${exponent} ${exponent === 1 ? "zero" : "zeros"}, so it equals 10 to the power of ${exponent}.`, turn,
+      {skill:"Recognize powers of ten", math:{type:"powerOfTen", exponent, number}});
+    question.choicesHtml = question.choices.map(choice => {
+      const power = choice.split("^")[1];
+      return `<span aria-label="10 to the power of ${power}">10<sup>${power}</sup></span>`;
+    });
+    return question;
+  }
+  entries.push({
+    question: {...powerOfTenQuestion(7, 2), id:"daily-powers-q31", sourceLabel:"Daily math · Powers of ten"},
+    followUps: [6, 5, 8, 4, 9, 3, 2, 1, 10, 11].map((exponent, i) => ({
+      ...powerOfTenQuestion(exponent, i), id:`daily-powers-q31-extra-${i + 1}`,
+    })),
+  });
+  function greatestCommonFactor(a, b) {
+    while (b) [a, b] = [b, a % b];
+    return a;
+  }
+  function fractionCalculation(a, b, c, d, operator) {
+    const denominator = b * d / greatestCommonFactor(b, d);
+    const left = a * denominator / b, right = c * denominator / d;
+    const numerator = operator === "+" ? left + right : left - right;
+    const divisor = greatestCommonFactor(numerator, denominator);
+    const answer = `${numerator / divisor}/${denominator / divisor}`;
+    return {
+      skill:operator === "+" ? "Add fractions" : "Subtract fractions",
+      promptHtml:`Calculate. Enter your answer as a fraction.<div class="star-equation">${fraction(a, b)} ${operator} ${fraction(c, d)} = ?</div>`,
+      answer,
+      response:{kind:"fraction"},
+      explanation:`Using ${denominator} as the common denominator gives ${left}/${denominator} ${operator} ${right}/${denominator} = ${numerator}/${denominator}. In simplest form, the answer is ${answer}.`,
+      math:{type:"fractionCalculation", a, b, c, d, operator},
+    };
+  }
+  entries.push({
+    question: {...fractionCalculation(3, 10, 4, 15, "+"), id:"daily-fraction-add-q32", sourceLabel:"Daily math · Add fractions"},
+    followUps: [
+      [1, 6, 3, 8], [2, 9, 1, 6], [3, 8, 1, 12], [2, 5, 1, 6], [1, 4, 2, 7],
+      [5, 12, 1, 8], [3, 7, 1, 14], [7, 15, 1, 10], [5, 18, 1, 12], [5, 16, 1, 6],
+    ].map((parts, i) => ({...fractionCalculation(...parts, "+"), id:`daily-fraction-add-q32-extra-${i + 1}`})),
+  });
+  entries.push({
+    question: {...fractionCalculation(5, 8, 5, 12, "−"), id:"daily-fraction-subtract-q33", sourceLabel:"Daily math · Subtract fractions"},
+    followUps: [
+      [7, 10, 1, 6], [3, 4, 2, 9], [5, 6, 3, 8], [7, 12, 1, 8], [4, 5, 3, 10],
+      [5, 7, 1, 14], [11, 15, 1, 6], [7, 9, 5, 12], [13, 16, 1, 6], [5, 6, 7, 18],
+    ].map((parts, i) => ({...fractionCalculation(...parts, "−"), id:`daily-fraction-subtract-q33-extra-${i + 1}`})),
+  });
   // Keep the original answer keys and choices so saved attempts still match.
   // These questions now ask Harry to enter numbers, including every follow-up.
   const numberEntryUnits = {

@@ -36,13 +36,13 @@ function submit(api, result, bank, correct) {
   assert.equal(api.mastery.submit(result,String(answer),bank,api.isCorrectAnswer),true);
 }
 
-test("30 main questions retain all existing slots and append common-denominator practice", () => {
+test("33 main questions retain all existing slots and append powers and fraction calculations", () => {
   const api=boot();
-  assert.equal(api.questionSets[6].length,38);
-  assert.equal(api.questionCount(6),30);
+  assert.equal(api.questionSets[6].length,41);
+  assert.equal(api.questionCount(6),33);
   assert.deepEqual(clone(api.day3Indexes().slice(0,6)),[0,3,5,6,8,12]);
   assert.deepEqual(clone(api.questionSets[6].slice(14,28).map(q=>q.id)),[2,5,7,15,16,18,21,23,24,26,27,29,30,34].map(n=>`2026-08-30-q${n}`));
-  assert.equal(api.day3Banks.length,38);
+  assert.equal(api.day3Banks.length,41);
   assert.ok(api.day3Banks.every(bank=>bank.length===10));
   for (const [set,count] of [[4,14],[5,14],[7,10],[8,10]]) assert.equal(api.questionCount(set),count);
 });
@@ -110,7 +110,7 @@ test("Q29 matches the supplied lists and has exactly one all-prime answer in eve
   }
 });
 
-for (const number of [28, 29]) test(`Q${number} saves choice answers, earns mastery and reloads without changing earlier questions`, () => {
+for (const number of [28, 29, 31]) test(`Q${number} saves choice answers, earns mastery and reloads without changing earlier questions`, () => {
   const data = boot();
   const index = data.day3Indexes()[number - 1];
   finishBefore(data, number);
@@ -121,7 +121,7 @@ for (const number of [28, 29]) test(`Q${number} saves choice answers, earns mast
     const previous = clone(page.api.records[6].questions.slice(0, index));
     page.document.querySelector(`[data-question-index="${index}"]`).click();
     const card = page.document.querySelector(`[data-question="${index + 1}"]`);
-    assert.match(card.querySelector(".expression").textContent, number === 28 ? /all the factors of 12/ : /only prime numbers/);
+    assert.match(card.querySelector(".expression").textContent, number === 28 ? /all the factors of 12/ : number === 29 ? /only prime numbers/ : /equal to 10,000,000/);
     for (const question of [data.questionSets[6][index], ...data.day3Banks[index].slice(0, 2)]) {
       card.querySelector(".next-practice")?.click();
       [...card.querySelectorAll(".choice-option:not(:disabled)")].find(button => button.dataset.value === question.answer).click();
@@ -192,7 +192,90 @@ test("Q30 ignores blanks, saves an incorrect fill-in and follow-up mastery witho
   } finally { page.close(); }
 });
 
-test("240 added follow-ups are distinct and skill-matched, with valid answer formats", () => {
+test("Q31 has one equivalent power of ten per question, displayed with superscripts", () => {
+  const entry = boot().entries.find(e => e.question.id === "daily-powers-q31");
+  assert.equal(entry.question.math.number, 10000000);
+  assert.equal(entry.question.answer, "10^7");
+  for (const q of [entry.question, ...entry.followUps]) {
+    assert.equal(q.response, undefined);
+    assert.equal(q.choices.filter(choice => 10 ** Number(choice.split("^")[1]) === q.math.number).length, 1);
+    assert.equal(10 ** Number(q.answer.split("^")[1]), q.math.number);
+    q.choices.forEach((choice, index) => assert.ok(q.choicesHtml[index].includes(`<sup>${choice.split("^")[1]}</sup>`)));
+  }
+});
+
+test("Q32 and Q33 use the requested fractions and all calculations have reduced, equivalent answer keys", () => {
+  const data = boot();
+  for (const [id, parts, expected] of [
+    ["daily-fraction-add-q32", [3, 10, 4, 15], "17/30"],
+    ["daily-fraction-subtract-q33", [5, 8, 5, 12], "5/24"],
+  ]) {
+    const entry = data.entries.find(e => e.question.id === id);
+    assert.equal(entry.question.answer, expected);
+    assert.deepEqual(clone([entry.question.math.a, entry.question.math.b, entry.question.math.c, entry.question.math.d]), parts);
+    for (const q of [entry.question, ...entry.followUps]) {
+      const {a, b, c, d, operator} = q.math, [n, denominator] = q.answer.split("/").map(Number);
+      const crossNumerator = a * d + (operator === "+" ? c * b : -c * b);
+      assert.equal(n * b * d, crossNumerator * denominator);
+      assert.ok(n > 0 && n < denominator);
+      for (let f = 2; f <= n; f++) assert.ok(n % f !== 0 || denominator % f !== 0);
+      assert.equal(q.response.kind, "fraction");
+      assert.equal(q.choices, undefined);
+      assert.equal(data.isCorrectAnswer(`${n * 2}/${denominator * 2}`, q), true);
+      assert.equal(data.isCorrectAnswer(`${n + 1}/${denominator}`, q), false);
+      assert.equal(data.isCorrectAnswer(`${n}/0`, q), false);
+    }
+  }
+});
+
+for (const number of [32, 33]) test(`Q${number} uses two fraction boxes and preserves earlier progress through mastery and reload`, () => {
+  const data = boot(), index = data.day3Indexes()[number - 1];
+  finishBefore(data, number);
+  const legacy = clone(data.records);
+  legacy[6].questions.length = index;
+  const page = bootHistoryPage(legacy);
+  try {
+    const previous = clone(page.api.records[6].questions.slice(0, index));
+    page.api.openDay3Question(index);
+    const card = page.document.querySelector(`[data-question="${index + 1}"]`);
+    for (let position = 0; position < 3; position++) {
+      card.querySelector(".next-practice")?.click();
+      let form = position ? card.querySelector(".mastery-practice form") : card.querySelector("form");
+      assert.equal(form.querySelector(".choice-grid"), null);
+      assert.equal(form.querySelectorAll("input:not([hidden])").length, 2);
+      const question = position ? data.day3Banks[index][position - 1] : data.questionSets[6][index];
+      const [n, d] = question.answer.split("/").map(Number);
+      let fields = form.querySelectorAll(".fraction-input input");
+      assert.match(fields[0].getAttribute("aria-label"), /Numerator/);
+      assert.match(fields[1].getAttribute("aria-label"), /Denominator/);
+      fields[0].value = String(n * 2);
+      form.requestSubmit();
+      assert.match((position ? card.querySelector(".practice-feedback") : card.querySelector(".feedback"))?.textContent || form.parentElement.textContent, /both fraction boxes/);
+      page.api.openDay3Question(0);page.api.openDay3Question(index);
+      form = position ? card.querySelector(".mastery-practice form") : card.querySelector("form");
+      fields = form.querySelectorAll(".fraction-input input");
+      assert.equal(fields[0].value, String(n * 2));
+      assert.equal(fields[1].value, "");
+      fields[1].value = "0";form.requestSubmit();
+      assert.equal(position ? page.api.records[6].questions[index].review.attempts.length : page.api.records[6].questions[index].firstTry, position ? position - 1 : null);
+      fields[1].value = String(d * 2);form.requestSubmit();
+      assert.equal(position ? page.api.records[6].questions[index].review.attempts[position - 1].correct : page.api.records[6].questions[index].firstTry, true);
+    }
+    assert.equal(data.mastery.progress(page.api.records[6].questions[index]).status, "mastered");
+    assert.deepEqual(clone(page.api.records[6].questions.slice(0, index)), previous);
+    const reloaded = bootHistoryPage(JSON.parse(page.win.localStorage.getItem("harry-math-practice-record-v1")));
+    try {
+      assert.deepEqual(clone(reloaded.api.records), clone(page.api.records));
+      reloaded.api.openDay3Question(index);
+      reloaded.document.querySelector(`[data-question="${index + 1}"] [data-review-position="0"]`).click();
+      assert.match(reloaded.document.querySelector("dialog .saved-answer.correct").textContent, /Correct/);
+      assert.deepEqual(reloaded.errors, []);
+    } finally { reloaded.close(); }
+    assert.deepEqual(page.errors, []);
+  } finally { page.close(); }
+});
+
+test("270 added follow-ups are distinct and skill-matched, with valid answer formats", () => {
   const api=boot();
   let count=0;
   for (const entry of api.entries) {
@@ -205,7 +288,7 @@ test("240 added follow-ups are distinct and skill-matched, with valid answer for
         assert.equal(new Set(q.choices).size,4);
         assert.equal(q.choices.filter(v=>api.isCorrectAnswer(String(v),q)).length,1);
       } else {
-        assert.equal(q.response.kind,"number");
+        assert.ok(["number", "fraction"].includes(q.response.kind));
         assert.equal(api.isCorrectAnswer(q.answer,q),true);
         assert.equal(api.isCorrectAnswer("",q),false);
       }
@@ -217,7 +300,7 @@ test("240 added follow-ups are distinct and skill-matched, with valid answer for
       count++;
     }
   }
-  assert.equal(count,240);
+  assert.equal(count,270);
 });
 
 test("new follow-up arithmetic, ratios, remainders, rounding and visual data have valid keys", () => {
@@ -291,7 +374,7 @@ test("adding STAR questions preserves all old answer slots, first tries and foll
   const old={4:{questions:Array.from({length:16},()=>({firstTry:true,attempts:1,solved:true,lastAnswer:"5"})),completedAt:"2026-08-28T23:48:41.249Z"},6:{questions:Array.from({length:14},(_,i)=>({firstTry:i%2===0,attempts:2,solved:true,lastAnswer:String(i)})),completedAt:null}};
   old[6].questions[12]=existing;
   const restored=boot(old);
-  assert.equal(restored.records[6].questions.length,38);
+  assert.equal(restored.records[6].questions.length,41);
   for(let i=0;i<14;i++) {
     assert.equal(restored.records[6].questions[i].lastAnswer,old[6].questions[i].lastAnswer);
     assert.equal(restored.records[6].questions[i].firstTry,old[6].questions[i].firstTry);
@@ -362,11 +445,11 @@ test("out-of-order STAR progress restores independently and cannot invent master
   assert.ok(normalized.attempts.every(a=>a.correct===false));
 });
 
-test("all 30 questions can be opened without changing answers or losing a draft", () => {
+test("all 33 questions can be opened without changing answers or losing a draft", () => {
   const page=bootHistoryPage(boot().records);
   try {
     const jumps=[...page.document.querySelectorAll(".question-jump")];
-    assert.equal(jumps.length,30);assert.ok(jumps.every(button=>!button.disabled));
+    assert.equal(jumps.length,33);assert.ok(jumps.every(button=>!button.disabled));
     const card=page.document.querySelector('[data-question="6"]');
     card.querySelector("input").value="79";
     const before=JSON.stringify(page.api.records), storage=page.win.localStorage.getItem("harry-math-practice-record-v1");
@@ -376,7 +459,7 @@ test("all 30 questions can be opened without changing answers or losing a draft"
     }
     assert.equal(page.document.querySelector("#day3-next").disabled,true);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="38"]').hidden,false);
+    assert.equal(page.document.querySelector('[data-question="41"]').hidden,false);
     page.document.querySelector('[data-question-index="0"]').click();
     assert.equal(page.document.querySelector("#day3-previous").disabled,true);
     assert.equal(page.document.querySelector("#day3-next").disabled,false);
@@ -391,7 +474,7 @@ test("all 30 questions can be opened without changing answers or losing a draft"
 test("session markup and assets match the expanded question set without day tabs", () => {
   assert.equal((html.match(/id="day3-total-track"/g)||[]).length,1);
   assert.equal(html.includes('data-set='),false);
-  assert.ok(html.includes("Q1–Q30"));
+  assert.ok(html.includes("Q1–Q33"));
   assert.doesNotMatch(html, /id="day3-guide"|id="day3-progress"/);
   assert.ok(html.indexOf('star-mastery.js?')<html.indexOf('app.js?'));
   for(const asset of ["./styles.css?", "./day3-mastery.js?", "./star-mastery.js?", "./app.js?"]) assert.ok(html.includes(asset));
@@ -660,14 +743,14 @@ test("finishing the ten-follow-up limit preserves free navigation and the last q
     assert.equal(data.mastery.progress(page.api.records[6].questions[12]).status, "unmastered");
     assert.equal(page.document.querySelector('[data-question-index="14"]').disabled, false);
     const allDone = boot(page.api.records);
-    finishBefore(allDone, 31);
+    finishBefore(allDone, 34);
     page.remote(allDone.records);
-    page.document.querySelector('[data-question-index="37"]').click();
+    page.document.querySelector('[data-question-index="40"]').click();
     assert.equal(page.document.querySelector("#day3-next").disabled, true);
     assert.equal(page.document.querySelectorAll(".question-jump:disabled").length, 0);
     const saved = JSON.stringify(page.api.records);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="38"]').hidden, false);
+    assert.equal(page.document.querySelector('[data-question="41"]').hidden, false);
     assert.equal(JSON.stringify(page.api.records), saved);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
