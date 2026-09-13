@@ -1177,11 +1177,12 @@
   }
   entries.push({
     question: {...simplifyFractionQuestion(15, 45), id:"daily-simplify-q34", sourceLabel:"Daily math · Simplest form"},
-    followUps: [[6, 18], [10, 25], [12, 20], [14, 49], [18, 30], [21, 28], [24, 36], [20, 50], [27, 45], [35, 49]]
+    followUps: [[16, 24], [10, 25], [12, 20], [14, 49], [18, 30], [21, 28], [24, 36], [20, 50], [27, 45], [35, 49]]
       .map((parts, i) => ({...simplifyFractionQuestion(...parts), id:`daily-simplify-q34-extra-${i + 1}`})),
   });
   entries.push({
-    question: {...simplifyFractionQuestion(16, 24), id:"daily-simplify-q35", sourceLabel:"Daily math · Simplest form"},
+    // Keep the retired slot and its bank aligned with any saved records.
+    question: {...simplifyFractionQuestion(16, 24), id:"daily-simplify-q35", sourceLabel:"Daily math · Simplest form", removed:true},
     followUps: [[8, 12], [15, 20], [18, 24], [20, 28], [21, 35], [24, 32], [28, 42], [30, 48], [36, 60], [42, 56]]
       .map((parts, i) => ({...simplifyFractionQuestion(...parts), id:`daily-simplify-q35-extra-${i + 1}`})),
   });
