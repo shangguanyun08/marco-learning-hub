@@ -1055,6 +1055,37 @@
       id:`daily-factors-q28-extra-${i + 1}`,
     })),
   });
+  function primeListQuestion(primes, distractors, turn, prompt = "Which list contains only prime numbers?") {
+    const answer = primes.join(", ");
+    return choiceQuestion(prompt, answer, distractors.map(list => list.join(", ")),
+      `A prime number is greater than 1 and has exactly two factors: 1 and itself. The numbers ${answer} are all prime. Each other list includes a number that is not prime.`, turn,
+      {skill:"Identify prime numbers"});
+  }
+  entries.push({
+    question: {
+      ...primeListQuestion([23, 37, 43, 17], [[39, 31, 71, 29], [18, 65, 1, 47], [2, 9, 11, 29]], 1),
+      id:"daily-primes-q29",
+      sourceLabel:"Daily math · Prime numbers",
+    },
+    followUps: [
+      {...primeListQuestion([17, 19, 23, 29], [[13, 21, 31, 41], [2, 7, 15, 37], [11, 25, 43, 47]], 0,
+        "Which new list contains only prime numbers?"), id:"daily-primes-q29-extra-1"},
+      ...[
+        [[2, 3, 5, 7], [1, 9, 15]],
+        [[11, 13, 17, 19], [21, 25, 27]],
+        [[7, 23, 31, 43], [35, 39, 49]],
+        [[5, 29, 41, 47], [45, 51, 57]],
+        [[3, 37, 53, 61], [33, 55, 63]],
+        [[2, 11, 59, 67], [1, 65, 77]],
+        [[13, 31, 71, 79], [49, 81, 87]],
+        [[17, 43, 73, 83], [69, 85, 91]],
+        [[19, 47, 89, 97], [77, 93, 95]],
+      ].map(([primes, nonPrimes], i) => ({
+        ...primeListQuestion(primes, nonPrimes.map((number, j) => primes.map((prime, k) => k === (i + j) % 4 ? number : prime)), i + 1),
+        id:`daily-primes-q29-extra-${i + 2}`,
+      })),
+    ],
+  });
   // Keep the original answer keys and choices so saved attempts still match.
   // These questions now ask Harry to enter numbers, including every follow-up.
   const numberEntryUnits = {
