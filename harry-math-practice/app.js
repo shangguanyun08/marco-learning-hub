@@ -153,9 +153,22 @@ function lightStep(status, label, description) {
 
 function correctionQuestion(questionIndex, position) {
   const number = day3Indexes().indexOf(questionIndex) + 1;
-  if (number < 3 || number > 15 || !Number.isInteger(position) || position < 0) return null;
+  if (number < 1 || !Number.isInteger(position) || position < 0) return null;
   const original = position === 0 ? questionSets[DAY3_SET][questionIndex] : day3Banks[questionIndex]?.[position - 1];
   if (!original) return null;
+  // Every active question can be corrected. Keep existing entry formats and
+  // choice-based concepts; the earlier Q3–Q15 write-in adaptations stay below.
+  if (number < 3 || number > 15) {
+    const question = {...original};
+    if (original.response) question.response = {...original.response};
+    else if (/^-?\d+\/[1-9]\d*$/.test(String(original.answer))) question.response = {kind: "fraction"};
+    else if (typeof original.answer === "number") question.response = {kind: "number", unit: ""};
+    if (question.response) {
+      delete question.choices;
+      delete question.choicesHtml;
+    }
+    return question;
+  }
   const question = {...original, response: {kind: "number", unit: ""}};
   delete question.choices;
   delete question.choicesHtml;
@@ -260,7 +273,42 @@ function renderSavedAnswerContent(content, details, questionIndex, position) {
     form.className = "correction-form";
     form.innerHTML = `<label id="correction-label" for="correction-answer">Your answer</label>
       <div class="answer-row"><input id="correction-answer" autocomplete="off" aria-describedby="correction-feedback" /><button type="submit">Check</button></div>`;
-    renderNumberEntry(form, details.retryQuestion, correctionDrafts.get(`${questionIndex}:${position}`) || "");
+    const draft = correctionDrafts.get(`${questionIndex}:${position}`) || "";
+    if (details.retryQuestion.choices && !details.retryQuestion.response) {
+      const input = form.querySelector("input");
+      input.type = "hidden";
+      input.hidden = true;
+      input.value = draft;
+      form.querySelector(".answer-row").hidden = true;
+      form.querySelector("label").textContent = "Your answer · Choose one option";
+      const choices = document.createElement("div");
+      choices.className = "choice-grid";
+      choices.setAttribute("role", "group");
+      choices.setAttribute("aria-labelledby", "correction-label");
+      details.retryQuestion.choices.forEach((choice, index) => {
+        const value = String(choice);
+        const option = document.createElement("button");
+        option.type = "button";
+        option.className = "choice-option";
+        option.dataset.value = value;
+        if (details.retryQuestion.choicesHtml) option.innerHTML = details.retryQuestion.choicesHtml[index];
+        else option.textContent = value;
+        option.classList.toggle("selected", draft === value);
+        option.setAttribute("aria-pressed", String(draft === value));
+        option.addEventListener("click", () => {
+          input.value = value;
+          choices.querySelectorAll("button").forEach(button => {
+            button.classList.toggle("selected", button === option);
+            button.setAttribute("aria-pressed", String(button === option));
+          });
+          form.requestSubmit();
+        });
+        choices.append(option);
+      });
+      form.append(choices);
+    } else {
+      renderNumberEntry(form, details.retryQuestion, draft);
+    }
     const feedback = document.createElement("p");
     feedback.id = "correction-feedback";
     feedback.className = "correction-feedback";
@@ -369,9 +417,7 @@ function renderAnswerTrack(record, questionIndex) {
   });
   const legend = document.createElement("p");
   legend.className = "light-legend";
-  legend.textContent = correctionQuestion(questionIndex, 0)
-    ? "Green: correct · Red: try again · Yellow: corrected later. Tap a mark."
-    : "Tap any green or red answer to see the question and Harry’s answer.";
+  legend.textContent = "Green: correct · Red: try again · Yellow: corrected later. Tap a mark.";
   track.append(heading);
   if (results.length) track.append(list, legend);
   return track;

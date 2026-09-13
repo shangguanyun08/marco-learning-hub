@@ -743,7 +743,8 @@ test("mastered questions retain their misses without inventing unavailable first
     }
     page.document.querySelector('[data-question-index="0"]').click();
     page.document.querySelector('[data-question="1"] [data-review-position="0"]').click();
-    assert.match(page.document.querySelector("dialog .saved-answer").textContent, /123/);
+    assert.equal(page.document.querySelector("dialog .saved-answer, dialog .correct-answer"), null);
+    assert.equal(page.document.querySelector("dialog .correction-form input").value, "");
     assert.equal(page.pushed.length, 0);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
@@ -1075,7 +1076,9 @@ test("numeric blanks do not count as misses; wrong numbers and drafts remain rev
     form.requestSubmit();
     assert.equal(page.api.records[6].questions[23].firstTry, false);
     card.querySelector('[data-review-position="0"]').click();
-    assert.match(page.document.querySelector("dialog .saved-answer.incorrect").textContent, /13 children/);
+    assert.equal(page.document.querySelector("dialog .saved-answer, dialog .correct-answer"), null);
+    assert.equal(page.document.querySelector("dialog .correction-form input").value, "");
+    assert.equal(page.document.querySelector("dialog .answer-unit").textContent, "children");
     page.document.querySelector("dialog").close();
     form = card.querySelector(".mastery-practice form");form.requestSubmit();
     assert.equal(page.api.records[6].questions[23].review.attempts.length, 0);
@@ -1091,13 +1094,17 @@ test("numeric blanks do not count as misses; wrong numbers and drafts remain rev
     assert.ok(card.querySelector(".mastery-practice form"));
     assert.equal(card.querySelector(".correct-answer"), null);
     card.querySelector('[data-review-position="1"]').click();
-    assert.match(page.document.querySelector("dialog .saved-answer.incorrect").textContent, /9 children/);
-    assert.equal(page.document.querySelector("dialog .correct-answer strong").textContent, "10 children");
+    assert.equal(page.document.querySelector("dialog .saved-answer, dialog .correct-answer"), null);
+    assert.equal(page.document.querySelector("dialog .correction-form input").value, "");
     assert.deepEqual(page.errors, []);
   } finally {page.close();}
 });
 
 function enterCorrection(form, question, answer = String(question.answer)) {
+  if (!question.response && question.choices) {
+    [...form.querySelectorAll(".choice-option")].find(option => option.dataset.value === answer).click();
+    return;
+  }
   if (question.response.kind === "fraction") {
     const fields = form.querySelectorAll(".fraction-input input");
     answer.split("/").forEach((value, index) => { fields[index].value = value; });
@@ -1133,7 +1140,7 @@ test("all 143 Q3–Q15 correction questions accept only numeric parts without al
   }
   assert.equal(count, 143);
   assert.equal(JSON.stringify([data.questionSets, data.day3Banks]), original);
-  for (const index of [0, 3, 23, 28, 34]) assert.equal(data.correctionQuestion(index, 0), null);
+  for (const index of [1, 2, 4, 7, 42, -1, 99]) assert.equal(data.correctionQuestion(index, 0), null);
   assert.equal(data.correctionQuestion(5, 11), null);
   const fraction = data.correctionQuestion(8, 1);
   assert.equal(data.isCorrectAnswer("2/10", fraction), true);
@@ -1278,9 +1285,72 @@ test("normalization rejects correction marks for right, unanswered, out-of-scope
   Object.assign(saved[6].questions[8], {firstTry: true, attempts: 1, corrections: {0: {answer: "2/5", createdAt: valid.createdAt}}});
   Object.assign(saved[6].questions[12], {firstTry: false, attempts: 1, corrections: {0: {answer: "1.06", createdAt: valid.createdAt}}});
   Object.assign(saved[6].questions[23], {firstTry: false, attempts: 1, corrections: {0: {answer: "14 children", createdAt: valid.createdAt}}});
+  Object.assign(saved[6].questions[42], {firstTry: false, attempts: 1, corrections: {0: {answer: "2/3", createdAt: valid.createdAt}}});
   const normalized = data.normalizeRecords(saved);
   assert.deepEqual(clone(normalized[6].questions[5].corrections), {0: valid});
-  for (const index of [6, 8, 12, 23]) assert.equal(normalized[6].questions[index].corrections, undefined);
+  for (const index of [6, 8, 12, 42]) assert.equal(normalized[6].questions[index].corrections, undefined);
+  assert.equal(normalized[6].questions[23].corrections[0].answer, "14 children");
   normalized[6].questions[5].corrections[0].createdAt = "invalid";
   assert.equal(data.normalizeRecords(normalized)[6].questions[5].corrections, undefined);
+});
+
+test("all 374 active main and practice misses can be corrected without revealing answers or changing original scores", () => {
+  const data = boot(), indexes = data.day3Indexes();
+  const wrongAnswer = q => String(q.choices?.find(choice => !data.isCorrectAnswer(String(choice), q)) ?? "-999");
+  for (const index of indexes) {
+    Object.assign(data.records[6].questions[index], {firstTry:false, attempts:1, solved:false,
+      lastAnswer:wrongAnswer(data.questionSets[6][index]),
+      review:{ready:false, attempts:data.day3Banks[index].map(q => ({answer:wrongAnswer(q),correct:false,createdAt:"2026-09-13T12:00:00.000Z"}))}});
+  }
+  const originals = JSON.stringify([data.questionSets, data.day3Banks]);
+  const page = bootHistoryPage(data.records), before = clone(page.api.records);
+  const originalStats = boot(before).recordStats(6);
+  let count = 0;
+  try {
+    for (const index of indexes) {
+      page.api.openDay3Question(index);
+      const card = page.document.querySelector(`[data-question="${index + 1}"]`);
+      assert.equal(card.querySelectorAll(".light-step.incorrect").length,11);
+      for (let position = 0; position <= 10; position++) {
+        const q = data.correctionQuestion(index, position);
+        assert.ok(q, `Question ${indexes.indexOf(index) + 1}, attempt ${position}`);
+        assert.equal(data.isCorrectAnswer(String(q.answer), q),true);
+        card.querySelector(`[data-review-position="${position}"]`).click();
+        const dialog = page.document.querySelector("dialog[open]"), form = dialog.querySelector(".correction-form");
+        assert.ok(form);
+        assert.equal(dialog.querySelector(".correct-answer, .saved-answer, .saved-review-choice, .choice-option.correct, .choice-option.incorrect"),null);
+        assert.ok([...form.querySelectorAll("input")].every(input => input.value === ""));
+        if (q.explanation) assert.equal(dialog.textContent.includes(q.explanation),false);
+        if (q.choices) {
+          assert.equal(form.querySelectorAll(".choice-option").length,4);
+          enterCorrection(form,q,wrongAnswer(q));
+        } else {
+          assert.ok([...form.querySelectorAll("input:not([hidden])")].every(input => input.type === "number"));
+          enterCorrection(form,q,q.response.kind === "fraction" ? "0/1" : q.response.kind === "ratio" ? "0:1" : q.response.kind === "remainder" ? "0 R0" : "-999");
+        }
+        assert.match(dialog.querySelector(".correction-feedback").textContent,/Incorrect/);
+        assert.equal(dialog.querySelector(".correct-answer, .saved-answer, .choice-option.correct"),null);
+        assert.equal(page.api.records[6].questions[index].corrections?.[position],undefined);
+        assert.ok(card.querySelector(`[data-review-position="${position}"]`).closest(".incorrect"));
+        enterCorrection(form,q);
+        assert.match(dialog.querySelector(".correction-status").textContent,/now yellow/);
+        assert.equal(dialog.querySelector("form, .correct-answer, .saved-answer"),null);
+        assert.ok(card.querySelector(`[data-review-position="${position}"]`).closest(".corrected"));
+        dialog.close();
+        count++;
+      }
+      assert.equal(card.querySelectorAll(".light-step.corrected").length,11);
+      assert.equal(data.mastery.progress(page.api.records[6].questions[index]).status,data.mastery.progress(before[6].questions[index]).status);
+    }
+    assert.equal(count,374);
+    const corrected = clone(page.api.records), withoutCorrections = clone(corrected);
+    for (const index of indexes) delete withoutCorrections[6].questions[index].corrections;
+    assert.deepEqual(withoutCorrections,before);
+    assert.deepEqual(clone(boot(corrected).recordStats(6)),clone(originalStats));
+    assert.equal(data.syncScore(corrected),data.syncScore(before)+374);
+    assert.deepEqual(clone(boot(corrected).records),corrected,"All yellow marks survive normalization and reload");
+    assert.equal(JSON.stringify([data.questionSets,data.day3Banks]),originals);
+    assert.equal(page.pushed.length,374,"Only successful corrections save online");
+    assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
 });
