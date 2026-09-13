@@ -20,6 +20,8 @@
     21: ['number', 'goals'],
   };
   const units = {
+    hours: /\s*(?:hours?|hrs?)$/i,
+    '%': /\s*(?:%|percent)$/i,
     degrees: /\s*(?:°|degrees?|deg)$/i,
     'square feet': /\s*(?:square (?:feet|foot)|sq\.?\s*ft\.?|ft(?:²|\^?2))$/i,
     feet: /\s*(?:feet|foot|ft\.?)$/i,
@@ -35,6 +37,7 @@
 
   function spec(question) {
     const id = question.parentQuestionId || question.id;
+    if (question.day === 32 && /^review3-sessions-q\d+$/.test(id)) return question.input || null;
     const match = /^(review1-q|review2-sessions-q)(\d+)$/.exec(id);
     if (!match) return null;
     const position = Number(match[2]);
@@ -97,6 +100,12 @@
     if (input.kind === 'number') { actual = number(value, input.unit); target = number(expected, input.unit); }
     else if (input.kind === 'ratio') { actual = ratio(value); target = ratio(expected); }
     else if (input.kind === 'prime') { actual = primeProduct(value); target = primeProduct(expected); }
+    else if (input.kind === 'list') {
+      const parse = text => clean(text).replace(/^\((.*)\)$/, '$1').split(',').map(part => number(part.trim()));
+      const actual = parse(value), target = parse(expected);
+      return { valid: actual.length === target.length && actual.every(n => n !== null),
+        correct: actual.length === target.length && actual.every((n, i) => n !== null && Math.abs(n - target[i]) < 1e-9) };
+    }
     else {
       const text = value.toLowerCase().trim().replace(/[.!]$/g, '').trim();
       const correct = input.kind === 'shape' ? /^(?:a |the )?squares?$/.test(text)

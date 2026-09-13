@@ -1,5 +1,5 @@
 {
-  "version": 4,
+  "version": 5,
   "targetScore": 90,
   "sourceDays": [
     1,
@@ -2377,6 +2377,1346 @@
           "correctAnswer": "The relationship cannot be determined.",
           "correctHtml": "The relationship cannot be determined.",
           "explanation": "If Nora is oldest, the range is 40. If someone is older than Nora, the range is larger. Quantity A could equal Quantity B or be greater, so the relationship cannot be determined."
+        }
+      ]
+    },
+    {
+      "day": 32,
+      "label": "Review 3",
+      "sourceSessionDays": [
+        18,
+        19,
+        20,
+        21,
+        22,
+        25
+      ],
+      "sourceQuestionIds": [
+        "d05-q04",
+        "d05-q06",
+        "d05-q08",
+        "d05-q09",
+        "d05-q13",
+        "d06-q02",
+        "d06-q03",
+        "d06-q04",
+        "d06-q05",
+        "d06-q06",
+        "d06-q07",
+        "d06-q08",
+        "d06-q09",
+        "d06-q12",
+        "d06-q13",
+        "d06-q17",
+        "d10-q04",
+        "d10-q06",
+        "d10-q12",
+        "d10-q16",
+        "d10-q17",
+        "d10-q18",
+        "d10-q19",
+        "d11-q01",
+        "d11-q02",
+        "d11-q03",
+        "d13-q04",
+        "d13-q07",
+        "d13-q08"
+      ],
+      "description": "20 first-try misses and 9 unanswered questions from Sessions 4, 5, 6, 7, 8, and 11. Session 12 is not included.",
+      "selectionAsOf": "2026-09-13",
+      "questions": [
+        {
+          "id": "review3-sessions-q01",
+          "day": 32,
+          "position": 1,
+          "sourceQuestionId": "d05-q04",
+          "sourceDay": 5,
+          "sourceNumber": "5",
+          "sourceSessionDay": 18,
+          "sourceSessionLabel": "Session 4",
+          "sourceSessionPosition": 2,
+          "selectionReason": "first-try miss",
+          "skill": "Travel time",
+          "questionText": "Train A travels 210 miles at 70 mph. Train B travels three times as far at twice Train A's speed. How many more hours does Train B travel?",
+          "questionHtml": "<p>Train A travels 210 miles at 70 mph. Train B travels three times as far at twice Train A's speed. How many more hours does Train B travel?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "2.5",
+              "html": "2.5"
+            },
+            {
+              "label": "B",
+              "text": "3.5",
+              "html": "3.5"
+            },
+            {
+              "label": "C",
+              "text": "0.5",
+              "html": "0.5"
+            },
+            {
+              "label": "D",
+              "text": "1.5",
+              "html": "1.5"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "1.5",
+          "correctHtml": "1.5",
+          "explanation": "Train A takes 210 ÷ 70 = 3 hours. Train B takes 630 ÷ 140 = 4.5 hours. The difference is 4.5 − 3 = 1.5 hours.",
+          "input": {
+            "kind": "number",
+            "unit": "hours",
+            "hint": "Enter your answer."
+          }
+        },
+        {
+          "id": "review3-sessions-q02",
+          "day": 32,
+          "position": 2,
+          "sourceQuestionId": "d05-q06",
+          "sourceDay": 5,
+          "sourceNumber": "1",
+          "sourceSessionDay": 18,
+          "sourceSessionLabel": "Session 4",
+          "sourceSessionPosition": 4,
+          "selectionReason": "first-try miss",
+          "skill": "Comparing solutions",
+          "questionText": "a/2 + 2b = 10. Quantity A: the value of b when a = 12. Quantity B: the value of a when b = 3. Compare the quantities.",
+          "questionHtml": "<p><math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>a</mtext><mtext>2</mtext></mfrac></math> + 2b = 10.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>the value of b when a = 12</td><td>the value of a when b = 3</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "Quantity B is greater.",
+          "correctHtml": "Quantity B is greater.",
+          "explanation": "For Quantity A, b = (10 − 12/2)/2 = 2. For Quantity B, a = 2(10 − 2 × 3) = 8. Compare 2 with 8."
+        },
+        {
+          "id": "review3-sessions-q03",
+          "day": 32,
+          "position": 3,
+          "sourceQuestionId": "d05-q08",
+          "sourceDay": 5,
+          "sourceNumber": "3",
+          "sourceSessionDay": 18,
+          "sourceSessionLabel": "Session 4",
+          "sourceSessionPosition": 6,
+          "selectionReason": "first-try miss",
+          "skill": "Even powers",
+          "questionText": "Define F(x) = x⁴ + x². Quantity A: F(−3). Quantity B: F(3). Compare the quantities.",
+          "questionHtml": "<p>Define F(x) = x⁴ + x².</p><div class=\"review-data-wrap\"><table class=\"review-data\"><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>F(−3)</td><td>F(3)</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "The two quantities are equal.",
+          "correctHtml": "The two quantities are equal.",
+          "explanation": "Even powers have the same value for a number and its opposite. Both quantities equal 3⁴ + 3² = 90."
+        },
+        {
+          "id": "review3-sessions-q04",
+          "day": 32,
+          "position": 4,
+          "sourceQuestionId": "d05-q09",
+          "sourceDay": 5,
+          "sourceNumber": "6",
+          "sourceSessionDay": 18,
+          "sourceSessionLabel": "Session 4",
+          "sourceSessionPosition": 7,
+          "selectionReason": "first-try miss",
+          "skill": "Comparing race times",
+          "questionText": "Jack finishes a race 10 minutes slower than Jill. Jill's time is j minutes, with j > 10. Quantity A: the time Jack takes, in minutes. Quantity B: j − 10. Compare the quantities.",
+          "questionHtml": "<p>Jack finishes a race 10 minutes slower than Jill. Jill's time is j minutes, with j &gt; 10.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>the time Jack takes, in minutes</td><td>j − 10</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "Quantity A is greater.",
+          "correctHtml": "Quantity A is greater.",
+          "explanation": "A slower finish means more time, so Jack takes j + 10 minutes. This exceeds j − 10 by 20 minutes for every permitted j."
+        },
+        {
+          "id": "review3-sessions-q05",
+          "day": 32,
+          "position": 5,
+          "sourceQuestionId": "d05-q13",
+          "sourceDay": 5,
+          "sourceNumber": "18",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 1,
+          "selectionReason": "first-try miss",
+          "skill": "Comparing expressions",
+          "questionText": "j can be any real number. Quantity A: 5(3 − j). Quantity B: 15 − j. Compare the quantities.",
+          "questionHtml": "<p>j can be any real number.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>5(3 − j)</td><td>15 − j</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "The relationship cannot be determined.",
+          "correctHtml": "The relationship cannot be determined.",
+          "explanation": "Quantity A is 15 − 5j. A minus B equals −4j. It is positive for negative j, zero when j = 0, and negative for positive j. No single relationship is determined."
+        },
+        {
+          "id": "review3-sessions-q06",
+          "day": 32,
+          "position": 6,
+          "sourceQuestionId": "d06-q02",
+          "sourceDay": 6,
+          "sourceNumber": "2",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 3,
+          "selectionReason": "first-try miss",
+          "skill": "Intervals on a number line",
+          "questionText": "Which description matches the blue part of the number line?",
+          "questionHtml": "<p>Which description matches the blue part of the number line?</p><svg class=\"review-diagram review3-number-line\" viewBox=\"0 0 500 110\" role=\"img\" aria-label=\"Number line: -10, -1 are labeled; equal tick spacing. . The entire interval from -10 to -1 is shaded, including both endpoints.\"><path d=\"M18 54H483 M18 54l10 -5v10z M483 54l-10 -5v10z\" fill=\"#173957\" stroke=\"#173957\"/><path d=\"M35 47v14\" stroke=\"#173957\"/><path d=\"M74.0909090909091 47v14\" stroke=\"#173957\"/><path d=\"M113.18181818181819 47v14\" stroke=\"#173957\"/><path d=\"M152.27272727272725 47v14\" stroke=\"#173957\"/><path d=\"M191.36363636363637 47v14\" stroke=\"#173957\"/><path d=\"M230.45454545454544 47v14\" stroke=\"#173957\"/><path d=\"M269.5454545454545 47v14\" stroke=\"#173957\"/><path d=\"M308.6363636363636 47v14\" stroke=\"#173957\"/><path d=\"M347.72727272727275 47v14\" stroke=\"#173957\"/><path d=\"M386.8181818181818 47v14\" stroke=\"#173957\"/><path d=\"M425.9090909090909 47v14\" stroke=\"#173957\"/><path d=\"M465 47v14\" stroke=\"#173957\"/><path d=\"M74.0909090909091 54H425.9090909090909\" stroke=\"#2468e5\" stroke-width=\"6\"/><circle cx=\"74.0909090909091\" cy=\"54\" r=\"6\" fill=\"#2468e5\"/><circle cx=\"425.9090909090909\" cy=\"54\" r=\"6\" fill=\"#2468e5\"/><text x=\"74.0909090909091\" y=\"86\" text-anchor=\"middle\">-10</text><text x=\"425.9090909090909\" y=\"86\" text-anchor=\"middle\">-1</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "All real numbers greater than or equal to -10.",
+              "html": "All real numbers greater than or equal to -10."
+            },
+            {
+              "label": "B",
+              "text": "All real numbers strictly between -10 and -1, excluding both endpoints.",
+              "html": "All real numbers strictly between -10 and -1, excluding both endpoints."
+            },
+            {
+              "label": "C",
+              "text": "All real numbers from -10 to -1, including both endpoints.",
+              "html": "All real numbers from -10 to -1, including both endpoints."
+            },
+            {
+              "label": "D",
+              "text": "Only the integers from -10 to -1, including both endpoints.",
+              "html": "Only the integers from -10 to -1, including both endpoints."
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "All real numbers from -10 to -1, including both endpoints.",
+          "correctHtml": "All real numbers from -10 to -1, including both endpoints.",
+          "explanation": "The solid segment includes every real value between -10 and -1, including decimals and fractions. The filled endpoint dots include -10 and -1."
+        },
+        {
+          "id": "review3-sessions-q07",
+          "day": 32,
+          "position": 7,
+          "sourceQuestionId": "d06-q03",
+          "sourceDay": 6,
+          "sourceNumber": "3",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 4,
+          "selectionReason": "first-try miss",
+          "skill": "Reading decimal number lines",
+          "questionText": "What numbers are represented by A, B, and C, in that order?",
+          "questionHtml": "<p>What numbers are represented by A, B, and C, in that order?</p><svg class=\"review-diagram review3-number-line\" viewBox=\"0 0 500 110\" role=\"img\" aria-label=\"Number line: -1.3, 0.7 are labeled; equal tick spacing. A is at -0.5; B is at 0.3; C is at 2.3\"><path d=\"M18 54H483 M18 54l10 -5v10z M483 54l-10 -5v10z\" fill=\"#173957\" stroke=\"#173957\"/><path d=\"M35 47v14\" stroke=\"#173957\"/><path d=\"M74.09090909090908 47v14\" stroke=\"#173957\"/><path d=\"M113.18181818181817 47v14\" stroke=\"#173957\"/><path d=\"M152.27272727272725 47v14\" stroke=\"#173957\"/><path d=\"M191.36363636363635 47v14\" stroke=\"#173957\"/><path d=\"M230.45454545454544 47v14\" stroke=\"#173957\"/><path d=\"M269.5454545454545 47v14\" stroke=\"#173957\"/><path d=\"M308.63636363636357 47v14\" stroke=\"#173957\"/><path d=\"M347.72727272727275 47v14\" stroke=\"#173957\"/><path d=\"M386.81818181818176 47v14\" stroke=\"#173957\"/><path d=\"M425.9090909090909 47v14\" stroke=\"#173957\"/><path d=\"M465 47v14\" stroke=\"#173957\"/><text x=\"74.09090909090908\" y=\"86\" text-anchor=\"middle\">-1.3</text><text x=\"269.5454545454545\" y=\"86\" text-anchor=\"middle\">0.7</text><circle cx=\"152.27272727272725\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"152.27272727272725\" y=\"31\" text-anchor=\"middle\">A</text><circle cx=\"230.45454545454544\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"230.45454545454544\" y=\"31\" text-anchor=\"middle\">B</text><circle cx=\"425.9090909090909\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"425.9090909090909\" y=\"31\" text-anchor=\"middle\">C</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "-0.5, 0.3, 2.7",
+              "html": "-0.5, 0.3, 2.7"
+            },
+            {
+              "label": "B",
+              "text": "-0.5, 0.7, 2.3",
+              "html": "-0.5, 0.7, 2.3"
+            },
+            {
+              "label": "C",
+              "text": "-0.5, 0.3, 2.3",
+              "html": "-0.5, 0.3, 2.3"
+            },
+            {
+              "label": "D",
+              "text": "-0.9, 0.3, 2.3",
+              "html": "-0.9, 0.3, 2.3"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "-0.5, 0.3, 2.3",
+          "correctHtml": "-0.5, 0.3, 2.3",
+          "explanation": "The labeled values are 5 tick intervals apart, so each step is 2 ÷ 5 = 0.4. Counting along the line gives A = -0.5, B = 0.3, and C = 2.3.",
+          "input": {
+            "kind": "list",
+            "hint": "Enter A, B, C, separated by commas."
+          }
+        },
+        {
+          "id": "review3-sessions-q08",
+          "day": 32,
+          "position": 8,
+          "sourceQuestionId": "d06-q04",
+          "sourceDay": 6,
+          "sourceNumber": "4",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 5,
+          "selectionReason": "first-try miss",
+          "skill": "Average on a number line",
+          "questionText": "What is the average of Q and R on the number line?",
+          "questionHtml": "<p>What is the average of Q and R on the number line?</p><svg class=\"review-diagram review3-number-line\" viewBox=\"0 0 500 110\" role=\"img\" aria-label=\"Number line: 8, 11 are labeled; equal tick spacing. Q is at 7.5; R is at 10.5\"><path d=\"M18 54H483 M18 54l10 -5v10z M483 54l-10 -5v10z\" fill=\"#173957\" stroke=\"#173957\"/><path d=\"M35 47v14\" stroke=\"#173957\"/><path d=\"M74.0909090909091 47v14\" stroke=\"#173957\"/><path d=\"M113.18181818181819 47v14\" stroke=\"#173957\"/><path d=\"M152.27272727272725 47v14\" stroke=\"#173957\"/><path d=\"M191.36363636363637 47v14\" stroke=\"#173957\"/><path d=\"M230.45454545454544 47v14\" stroke=\"#173957\"/><path d=\"M269.5454545454545 47v14\" stroke=\"#173957\"/><path d=\"M308.6363636363636 47v14\" stroke=\"#173957\"/><path d=\"M347.72727272727275 47v14\" stroke=\"#173957\"/><path d=\"M386.8181818181818 47v14\" stroke=\"#173957\"/><path d=\"M425.9090909090909 47v14\" stroke=\"#173957\"/><path d=\"M465 47v14\" stroke=\"#173957\"/><text x=\"113.18181818181819\" y=\"86\" text-anchor=\"middle\">8</text><text x=\"347.72727272727275\" y=\"86\" text-anchor=\"middle\">11</text><circle cx=\"74.0909090909091\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"74.0909090909091\" y=\"31\" text-anchor=\"middle\">Q</text><circle cx=\"308.6363636363636\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"308.6363636363636\" y=\"31\" text-anchor=\"middle\">R</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "8",
+              "html": "8"
+            },
+            {
+              "label": "B",
+              "text": "10",
+              "html": "10"
+            },
+            {
+              "label": "C",
+              "text": "9",
+              "html": "9"
+            },
+            {
+              "label": "D",
+              "text": "11",
+              "html": "11"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "9",
+          "correctHtml": "9",
+          "explanation": "Each tick is 0.5. Q = 7.5 and R = 10.5. Their average is (7.5 + 10.5) ÷ 2 = 9.",
+          "input": {
+            "kind": "number",
+            "unit": "",
+            "hint": "Enter your answer."
+          }
+        },
+        {
+          "id": "review3-sessions-q09",
+          "day": 32,
+          "position": 9,
+          "sourceQuestionId": "d06-q05",
+          "sourceDay": 6,
+          "sourceNumber": "6",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 6,
+          "selectionReason": "unfinished",
+          "skill": "Adding signed decimals",
+          "questionText": "What is the sum of J, K, and L on the number line?",
+          "questionHtml": "<p>What is the sum of J, K, and L on the number line?</p><svg class=\"review-diagram review3-number-line\" viewBox=\"0 0 500 110\" role=\"img\" aria-label=\"Number line: -3, -2, -1, 0, 1, 2 are labeled; equal tick spacing. J is at -2.75; K is at -0.25; L is at 1.5\"><path d=\"M18 54H483 M18 54l10 -5v10z M483 54l-10 -5v10z\" fill=\"#173957\" stroke=\"#173957\"/><path d=\"M35 47v14\" stroke=\"#173957\"/><path d=\"M53.69565217391305 47v14\" stroke=\"#173957\"/><path d=\"M72.3913043478261 47v14\" stroke=\"#173957\"/><path d=\"M91.08695652173913 47v14\" stroke=\"#173957\"/><path d=\"M109.78260869565217 47v14\" stroke=\"#173957\"/><path d=\"M128.47826086956522 47v14\" stroke=\"#173957\"/><path d=\"M147.17391304347825 47v14\" stroke=\"#173957\"/><path d=\"M165.8695652173913 47v14\" stroke=\"#173957\"/><path d=\"M184.56521739130434 47v14\" stroke=\"#173957\"/><path d=\"M203.2608695652174 47v14\" stroke=\"#173957\"/><path d=\"M221.95652173913044 47v14\" stroke=\"#173957\"/><path d=\"M240.6521739130435 47v14\" stroke=\"#173957\"/><path d=\"M259.3478260869565 47v14\" stroke=\"#173957\"/><path d=\"M278.0434782608695 47v14\" stroke=\"#173957\"/><path d=\"M296.7391304347826 47v14\" stroke=\"#173957\"/><path d=\"M315.4347826086957 47v14\" stroke=\"#173957\"/><path d=\"M334.1304347826087 47v14\" stroke=\"#173957\"/><path d=\"M352.8260869565217 47v14\" stroke=\"#173957\"/><path d=\"M371.5217391304348 47v14\" stroke=\"#173957\"/><path d=\"M390.2173913043478 47v14\" stroke=\"#173957\"/><path d=\"M408.9130434782609 47v14\" stroke=\"#173957\"/><path d=\"M427.6086956521739 47v14\" stroke=\"#173957\"/><path d=\"M446.304347826087 47v14\" stroke=\"#173957\"/><path d=\"M465 47v14\" stroke=\"#173957\"/><text x=\"35\" y=\"86\" text-anchor=\"middle\">-3</text><text x=\"109.78260869565217\" y=\"86\" text-anchor=\"middle\">-2</text><text x=\"184.56521739130434\" y=\"86\" text-anchor=\"middle\">-1</text><text x=\"259.3478260869565\" y=\"86\" text-anchor=\"middle\">0</text><text x=\"334.1304347826087\" y=\"86\" text-anchor=\"middle\">1</text><text x=\"408.9130434782609\" y=\"86\" text-anchor=\"middle\">2</text><circle cx=\"53.69565217391305\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"53.69565217391305\" y=\"31\" text-anchor=\"middle\">J</text><circle cx=\"240.6521739130435\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"240.6521739130435\" y=\"31\" text-anchor=\"middle\">K</text><circle cx=\"371.5217391304348\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"371.5217391304348\" y=\"31\" text-anchor=\"middle\">L</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "-2.5",
+              "html": "-2.5"
+            },
+            {
+              "label": "B",
+              "text": "0.5",
+              "html": "0.5"
+            },
+            {
+              "label": "C",
+              "text": "-0.5",
+              "html": "-0.5"
+            },
+            {
+              "label": "D",
+              "text": "-1.5",
+              "html": "-1.5"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "-1.5",
+          "correctHtml": "-1.5",
+          "explanation": "Each tick is 0.25. J = -2.75, K = -0.25, and L = 1.5. Their sum is -2.75 + (-0.25) + 1.5 = -1.5.",
+          "input": {
+            "kind": "number",
+            "unit": "",
+            "hint": "Enter your answer."
+          }
+        },
+        {
+          "id": "review3-sessions-q10",
+          "day": 32,
+          "position": 10,
+          "sourceQuestionId": "d06-q06",
+          "sourceDay": 6,
+          "sourceNumber": "8",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 7,
+          "selectionReason": "unfinished",
+          "skill": "Finding a missing average value",
+          "questionText": "X is the average of Y and another number. What is the other number?",
+          "questionHtml": "<p>X is the average of Y and another number. What is the other number?</p><svg class=\"review-diagram review3-number-line\" viewBox=\"0 0 500 110\" role=\"img\" aria-label=\"Number line: -6, 4 are labeled; equal tick spacing. Y is at -10; X is at -2\"><path d=\"M18 54H483 M18 54l10 -5v10z M483 54l-10 -5v10z\" fill=\"#173957\" stroke=\"#173957\"/><path d=\"M35 47v14\" stroke=\"#173957\"/><path d=\"M74.0909090909091 47v14\" stroke=\"#173957\"/><path d=\"M113.18181818181819 47v14\" stroke=\"#173957\"/><path d=\"M152.27272727272725 47v14\" stroke=\"#173957\"/><path d=\"M191.36363636363637 47v14\" stroke=\"#173957\"/><path d=\"M230.45454545454544 47v14\" stroke=\"#173957\"/><path d=\"M269.5454545454545 47v14\" stroke=\"#173957\"/><path d=\"M308.6363636363636 47v14\" stroke=\"#173957\"/><path d=\"M347.72727272727275 47v14\" stroke=\"#173957\"/><path d=\"M386.8181818181818 47v14\" stroke=\"#173957\"/><path d=\"M425.9090909090909 47v14\" stroke=\"#173957\"/><path d=\"M465 47v14\" stroke=\"#173957\"/><text x=\"152.27272727272725\" y=\"86\" text-anchor=\"middle\">-6</text><text x=\"347.72727272727275\" y=\"86\" text-anchor=\"middle\">4</text><circle cx=\"74.0909090909091\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"74.0909090909091\" y=\"31\" text-anchor=\"middle\">Y</text><circle cx=\"230.45454545454544\" cy=\"54\" r=\"4\" fill=\"#173957\"/><text x=\"230.45454545454544\" y=\"31\" text-anchor=\"middle\">X</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "6",
+              "html": "6"
+            },
+            {
+              "label": "B",
+              "text": "5",
+              "html": "5"
+            },
+            {
+              "label": "C",
+              "text": "8",
+              "html": "8"
+            },
+            {
+              "label": "D",
+              "text": "7",
+              "html": "7"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "6",
+          "correctHtml": "6",
+          "explanation": "Each tick is 2. X = -2 and Y = -10. The two numbers must total 2 × -2 = -4. The missing number is -4 − (-10) = 6.",
+          "input": {
+            "kind": "number",
+            "unit": "",
+            "hint": "Enter your answer."
+          }
+        },
+        {
+          "id": "review3-sessions-q11",
+          "day": 32,
+          "position": 11,
+          "sourceQuestionId": "d06-q07",
+          "sourceDay": 6,
+          "sourceNumber": "9",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 8,
+          "selectionReason": "unfinished",
+          "skill": "Integers on a number line",
+          "questionText": "Which description matches only the blue dots on this number line?",
+          "questionHtml": "<p>Which description matches only the blue dots on this number line?</p><svg class=\"review-diagram review3-number-line\" viewBox=\"0 0 500 110\" role=\"img\" aria-label=\"Number line: 0, 6 are labeled; equal tick spacing. . Only individual dots at 0, 1, 2, 3, 4, 5, 6 are marked.\"><path d=\"M18 54H483 M18 54l10 -5v10z M483 54l-10 -5v10z\" fill=\"#173957\" stroke=\"#173957\"/><path d=\"M35 47v14\" stroke=\"#173957\"/><path d=\"M88.75 47v14\" stroke=\"#173957\"/><path d=\"M142.5 47v14\" stroke=\"#173957\"/><path d=\"M196.25 47v14\" stroke=\"#173957\"/><path d=\"M250 47v14\" stroke=\"#173957\"/><path d=\"M303.75 47v14\" stroke=\"#173957\"/><path d=\"M357.5 47v14\" stroke=\"#173957\"/><path d=\"M411.25 47v14\" stroke=\"#173957\"/><path d=\"M465 47v14\" stroke=\"#173957\"/><circle cx=\"88.75\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><circle cx=\"142.5\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><circle cx=\"196.25\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><circle cx=\"250\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><circle cx=\"303.75\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><circle cx=\"357.5\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><circle cx=\"411.25\" cy=\"54\" r=\"5\" fill=\"#2468e5\"/><text x=\"88.75\" y=\"86\" text-anchor=\"middle\">0</text><text x=\"411.25\" y=\"86\" text-anchor=\"middle\">6</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "All real numbers from 0 to 6, including both endpoints.",
+              "html": "All real numbers from 0 to 6, including both endpoints."
+            },
+            {
+              "label": "B",
+              "text": "All integers from 0 to 6, including both endpoints.",
+              "html": "All integers from 0 to 6, including both endpoints."
+            },
+            {
+              "label": "C",
+              "text": "All positive integers less than 7.",
+              "html": "All positive integers less than 7."
+            },
+            {
+              "label": "D",
+              "text": "All integers less than 7.",
+              "html": "All integers less than 7."
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "All integers from 0 to 6, including both endpoints.",
+          "correctHtml": "All integers from 0 to 6, including both endpoints.",
+          "explanation": "The separate dots mark exactly 0, 1, …, 6. Zero is included, negative integers are excluded, and the spaces between the dots are not marked."
+        },
+        {
+          "id": "review3-sessions-q12",
+          "day": 32,
+          "position": 12,
+          "sourceQuestionId": "d06-q08",
+          "sourceDay": 6,
+          "sourceNumber": "1",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 9,
+          "selectionReason": "unfinished",
+          "skill": "Estimating quotients",
+          "questionText": "Estimate 63,018 ÷ (83 × 39) by rounding each number to one significant figure. Give the resulting quotient rounded to the nearest whole number.",
+          "questionHtml": "<p>Estimate 63,018 ÷ (83 × 39) by rounding each number to one significant figure. Give the resulting quotient rounded to the nearest whole number.</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "19",
+              "html": "19"
+            },
+            {
+              "label": "B",
+              "text": "18",
+              "html": "18"
+            },
+            {
+              "label": "C",
+              "text": "20",
+              "html": "20"
+            },
+            {
+              "label": "D",
+              "text": "21",
+              "html": "21"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "19",
+          "correctHtml": "19",
+          "explanation": "Round to 60000, 80, and 40. Then 60000 ÷ (80 × 40) = 60000 ÷ 3200. Rounded to the nearest whole number, this is 19.",
+          "input": {
+            "kind": "number",
+            "unit": "",
+            "hint": "Enter your answer."
+          }
+        },
+        {
+          "id": "review3-sessions-q13",
+          "day": 32,
+          "position": 13,
+          "sourceQuestionId": "d06-q09",
+          "sourceDay": 6,
+          "sourceNumber": "3",
+          "sourceSessionDay": 19,
+          "sourceSessionLabel": "Session 5",
+          "sourceSessionPosition": 10,
+          "selectionReason": "unfinished",
+          "skill": "Estimating fractions",
+          "questionText": "Estimate 412/(58 × 813) by rounding each number to one significant figure. Enter your estimate as a fraction.",
+          "questionHtml": "<p>Estimate <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>412</mtext><mtext>58 × 813</mtext></mfrac></math> by rounding each number to one significant figure. Enter your estimate as a fraction.</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "1/3",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>1</mtext><mtext>3</mtext></mfrac></math>"
+            },
+            {
+              "label": "B",
+              "text": "1/4",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>1</mtext><mtext>4</mtext></mfrac></math>"
+            },
+            {
+              "label": "C",
+              "text": "1/2",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>1</mtext><mtext>2</mtext></mfrac></math>"
+            },
+            {
+              "label": "D",
+              "text": "1/120",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>1</mtext><mtext>120</mtext></mfrac></math>"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "1/120",
+          "correctHtml": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>1</mtext><mtext>120</mtext></mfrac></math>",
+          "explanation": "Rounding gives 400/(60 × 800) = 400/48000 = 1/120.",
+          "input": {
+            "kind": "number",
+            "hint": "Enter a fraction or decimal."
+          }
+        },
+        {
+          "id": "review3-sessions-q14",
+          "day": 32,
+          "position": 14,
+          "sourceQuestionId": "d06-q12",
+          "sourceDay": 6,
+          "sourceNumber": "7",
+          "sourceSessionDay": 20,
+          "sourceSessionLabel": "Session 6",
+          "sourceSessionPosition": 3,
+          "selectionReason": "first-try miss",
+          "skill": "Decimals and percents",
+          "questionText": "Write 0.07 as a percent.",
+          "questionHtml": "<p>Write 0.07 as a percent.</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "7",
+              "html": "7"
+            },
+            {
+              "label": "B",
+              "text": "6",
+              "html": "6"
+            },
+            {
+              "label": "C",
+              "text": "9",
+              "html": "9"
+            },
+            {
+              "label": "D",
+              "text": "8",
+              "html": "8"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "7",
+          "correctHtml": "7",
+          "explanation": "To convert a decimal to a percent, multiply by 100: 0.07 × 100 = 7. Therefore 0.07 = 7%.",
+          "input": {
+            "kind": "number",
+            "unit": "%",
+            "hint": "Enter the number before the percent sign."
+          }
+        },
+        {
+          "id": "review3-sessions-q15",
+          "day": 32,
+          "position": 15,
+          "sourceQuestionId": "d06-q13",
+          "sourceDay": 6,
+          "sourceNumber": "4",
+          "sourceSessionDay": 20,
+          "sourceSessionLabel": "Session 6",
+          "sourceSessionPosition": 4,
+          "selectionReason": "first-try miss",
+          "skill": "Multiplying powers of ten",
+          "questionText": "Compare the products. Quantity A: (2 × 10^3)(9 × 10^5). Quantity B: (3 × 10^6)(6 × 10^2). Compare the quantities.",
+          "questionHtml": "<p>Compare the products.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>(2 × 10<sup>3</sup>)(9 × 10<sup>5</sup>)</td><td>(3 × 10<sup>6</sup>)(6 × 10<sup>2</sup>)</td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "The two quantities are equal.",
+          "correctHtml": "The two quantities are equal.",
+          "explanation": "Both coefficient products are 18. The exponents on each side add to 8. Both quantities equal 18 × 10^8."
+        },
+        {
+          "id": "review3-sessions-q16",
+          "day": 32,
+          "position": 16,
+          "sourceQuestionId": "d06-q17",
+          "sourceDay": 6,
+          "sourceNumber": "10",
+          "sourceSessionDay": 20,
+          "sourceSessionLabel": "Session 6",
+          "sourceSessionPosition": 8,
+          "selectionReason": "first-try miss",
+          "skill": "Comparing scientific notation",
+          "questionText": "Compare these values. Quantity A: 4.1 × 10^7. Quantity B: 5.4 × 10^11 − 1.3 × 10^4. Compare the quantities.",
+          "questionHtml": "<p>Compare these values.</p><div class=\"review-data-wrap\"><table class=\"review-data\"><thead><tr><th scope=\"col\">Quantity A</th><th scope=\"col\">Quantity B</th></tr></thead><tbody><tr><td>4.1 × 10<sup>7</sup></td><td>5.4 × 10<sup>11</sup> − 1.3 × 10<sup>4</sup></td></tr></tbody></table></div>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Quantity A is greater.",
+              "html": "Quantity A is greater."
+            },
+            {
+              "label": "B",
+              "text": "Quantity B is greater.",
+              "html": "Quantity B is greater."
+            },
+            {
+              "label": "C",
+              "text": "The two quantities are equal.",
+              "html": "The two quantities are equal."
+            },
+            {
+              "label": "D",
+              "text": "The relationship cannot be determined.",
+              "html": "The relationship cannot be determined."
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "Quantity B is greater.",
+          "correctHtml": "Quantity B is greater.",
+          "explanation": "In units of 10^7, A is 4.1 and B is 54,000 − 0.0013 = 53,999.9987. Thus Quantity B is greater."
+        },
+        {
+          "id": "review3-sessions-q17",
+          "day": 32,
+          "position": 17,
+          "sourceQuestionId": "d10-q04",
+          "sourceDay": 10,
+          "sourceNumber": "8",
+          "sourceSessionDay": 21,
+          "sourceSessionLabel": "Session 7",
+          "sourceSessionPosition": 2,
+          "selectionReason": "first-try miss",
+          "skill": "Rotating coordinates",
+          "questionText": "Point M is (-4, 3). Rotate M 90° clockwise about the origin. What are the new coordinates?",
+          "questionHtml": "<p>Point M is (-4, 3). Rotate M 90° clockwise about the origin. What are the new coordinates?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "3, -4",
+              "html": "3, -4"
+            },
+            {
+              "label": "B",
+              "text": "-3, -4",
+              "html": "-3, -4"
+            },
+            {
+              "label": "C",
+              "text": "-3, 4",
+              "html": "-3, 4"
+            },
+            {
+              "label": "D",
+              "text": "3, 4",
+              "html": "3, 4"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "3, 4",
+          "correctHtml": "3, 4",
+          "explanation": "A clockwise quarter-turn maps (x, y) to (y, −x). Thus (-4, 3) becomes (3, 4).",
+          "input": {
+            "kind": "list",
+            "hint": "Enter x, y, separated by a comma."
+          }
+        },
+        {
+          "id": "review3-sessions-q18",
+          "day": 32,
+          "position": 18,
+          "sourceQuestionId": "d10-q06",
+          "sourceDay": 10,
+          "sourceNumber": "10",
+          "sourceSessionDay": 21,
+          "sourceSessionLabel": "Session 7",
+          "sourceSessionPosition": 4,
+          "selectionReason": "first-try miss",
+          "skill": "Trapezoid vertices",
+          "questionText": "Three trapezoid vertices are A(-3, 4), B(3, 2), and C(3, -2). The vertices are named in order A, B, C, D. Which point could NOT be D?",
+          "questionHtml": "<p>Three trapezoid vertices are A(-3, 4), B(3, 2), and C(3, -2). The vertices are named in order A, B, C, D. Which point could NOT be D?</p><svg class=\"review-diagram\" viewBox=\"0 0 410 395\" role=\"img\" aria-label=\"Coordinate grid. A: (-3, 4); B: (3, 2); C: (3, -2)\"><path d=\"M40 40V360 M40 360H360\" stroke=\"#d9e3ed\"/><text x=\"40\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-6</text><text x=\"187\" y=\"364\" text-anchor=\"end\" style=\"font-size:13px\">-6</text><path d=\"M66.66666666666666 40V360 M40 333.33333333333337H360\" stroke=\"#d9e3ed\"/><text x=\"66.66666666666666\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-5</text><text x=\"187\" y=\"337.33333333333337\" text-anchor=\"end\" style=\"font-size:13px\">-5</text><path d=\"M93.33333333333333 40V360 M40 306.6666666666667H360\" stroke=\"#d9e3ed\"/><text x=\"93.33333333333333\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-4</text><text x=\"187\" y=\"310.6666666666667\" text-anchor=\"end\" style=\"font-size:13px\">-4</text><path d=\"M120 40V360 M40 280H360\" stroke=\"#d9e3ed\"/><text x=\"120\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-3</text><text x=\"187\" y=\"284\" text-anchor=\"end\" style=\"font-size:13px\">-3</text><path d=\"M146.66666666666666 40V360 M40 253.33333333333334H360\" stroke=\"#d9e3ed\"/><text x=\"146.66666666666666\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-2</text><text x=\"187\" y=\"257.33333333333337\" text-anchor=\"end\" style=\"font-size:13px\">-2</text><path d=\"M173.33333333333334 40V360 M40 226.66666666666666H360\" stroke=\"#d9e3ed\"/><text x=\"173.33333333333334\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-1</text><text x=\"187\" y=\"230.66666666666666\" text-anchor=\"end\" style=\"font-size:13px\">-1</text><path d=\"M200 40V360 M40 200H360\" stroke=\"#d9e3ed\"/><path d=\"M226.66666666666666 40V360 M40 173.33333333333334H360\" stroke=\"#d9e3ed\"/><text x=\"226.66666666666666\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">1</text><text x=\"187\" y=\"177.33333333333334\" text-anchor=\"end\" style=\"font-size:13px\">1</text><path d=\"M253.33333333333334 40V360 M40 146.66666666666666H360\" stroke=\"#d9e3ed\"/><text x=\"253.33333333333334\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">2</text><text x=\"187\" y=\"150.66666666666666\" text-anchor=\"end\" style=\"font-size:13px\">2</text><path d=\"M280 40V360 M40 120H360\" stroke=\"#d9e3ed\"/><text x=\"280\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">3</text><text x=\"187\" y=\"124\" text-anchor=\"end\" style=\"font-size:13px\">3</text><path d=\"M306.6666666666667 40V360 M40 93.33333333333333H360\" stroke=\"#d9e3ed\"/><text x=\"306.6666666666667\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">4</text><text x=\"187\" y=\"97.33333333333333\" text-anchor=\"end\" style=\"font-size:13px\">4</text><path d=\"M333.33333333333337 40V360 M40 66.66666666666666H360\" stroke=\"#d9e3ed\"/><text x=\"333.33333333333337\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">5</text><text x=\"187\" y=\"70.66666666666666\" text-anchor=\"end\" style=\"font-size:13px\">5</text><path d=\"M360 40V360 M40 40H360\" stroke=\"#d9e3ed\"/><text x=\"360\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">6</text><text x=\"187\" y=\"44\" text-anchor=\"end\" style=\"font-size:13px\">6</text><path d=\"M30 200H373 M200 373V27\" stroke=\"#173957\" stroke-width=\"2\"/><text x=\"379\" y=\"207\">x</text><text x=\"196\" y=\"22\">y</text><circle cx=\"120\" cy=\"93.33333333333333\" r=\"5\" fill=\"#173957\"/><text x=\"130\" y=\"83.33333333333333\" style=\"font-size:14px\">A</text><circle cx=\"280\" cy=\"146.66666666666666\" r=\"5\" fill=\"#173957\"/><text x=\"290\" y=\"136.66666666666666\" style=\"font-size:14px\">B</text><circle cx=\"280\" cy=\"253.33333333333334\" r=\"5\" fill=\"#173957\"/><text x=\"290\" y=\"243.33333333333334\" style=\"font-size:14px\">C</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "(-2, -3)",
+              "html": "(-2, -3)"
+            },
+            {
+              "label": "B",
+              "text": "(-3, -6)",
+              "html": "(-3, -6)"
+            },
+            {
+              "label": "C",
+              "text": "(-3, -4)",
+              "html": "(-3, -4)"
+            },
+            {
+              "label": "D",
+              "text": "(-3, -2)",
+              "html": "(-3, -2)"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "(-2, -3)",
+          "correctHtml": "(-2, -3)",
+          "explanation": "BC is vertical. Each choice with x = -3 makes AD vertical too, giving parallel opposite sides. For D = (-2, -3), AD is not vertical and CD has positive slope while AB has negative slope, so neither pair of opposite sides is parallel."
+        },
+        {
+          "id": "review3-sessions-q19",
+          "day": 32,
+          "position": 19,
+          "sourceQuestionId": "d10-q12",
+          "sourceDay": 10,
+          "sourceNumber": "8",
+          "sourceSessionDay": 21,
+          "sourceSessionLabel": "Session 7",
+          "sourceSessionPosition": 10,
+          "selectionReason": "first-try miss",
+          "skill": "Slope and points",
+          "questionText": "A line has slope -2 and passes through (4, 5). Which other point is on the line?",
+          "questionHtml": "<p>A line has slope -2 and passes through (4, 5). Which other point is on the line?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "(5, 7)",
+              "html": "(5, 7)"
+            },
+            {
+              "label": "B",
+              "text": "(5, 3)",
+              "html": "(5, 3)"
+            },
+            {
+              "label": "C",
+              "text": "(6, 3)",
+              "html": "(6, 3)"
+            },
+            {
+              "label": "D",
+              "text": "(3, 3)",
+              "html": "(3, 3)"
+            }
+          ],
+          "correctIndexes": [
+            1
+          ],
+          "correctAnswer": "(5, 3)",
+          "correctHtml": "(5, 3)",
+          "explanation": "Slope is the change in y divided by the change in x. Increasing x by 1 changes y by -2, giving (5, 3)."
+        },
+        {
+          "id": "review3-sessions-q20",
+          "day": 32,
+          "position": 20,
+          "sourceQuestionId": "d10-q16",
+          "sourceDay": 10,
+          "sourceNumber": "2",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 4,
+          "selectionReason": "first-try miss",
+          "skill": "Slope and an x-intercept",
+          "questionText": "A line has slope -3 and crosses the x-axis at x = 1. What is its equation?",
+          "questionHtml": "<p>A line has slope -3 and crosses the x-axis at x = 1. What is its equation?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = -3x + 3",
+              "html": "y = -3x + 3"
+            },
+            {
+              "label": "B",
+              "text": "y = 3x + 3",
+              "html": "y = 3x + 3"
+            },
+            {
+              "label": "C",
+              "text": "y = -3x + 5",
+              "html": "y = -3x + 5"
+            },
+            {
+              "label": "D",
+              "text": "y = -3x + 1",
+              "html": "y = -3x + 1"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "y = -3x + 3",
+          "correctHtml": "y = -3x + 3",
+          "explanation": "The point (1, 0) lies on the line. In y = -3x + b, substitute this point: 0 = -3 + b, so b = 3. The equation is y = -3x + 3."
+        },
+        {
+          "id": "review3-sessions-q21",
+          "day": 32,
+          "position": 21,
+          "sourceQuestionId": "d10-q17",
+          "sourceDay": 10,
+          "sourceNumber": "3",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 5,
+          "selectionReason": "first-try miss",
+          "skill": "Slope and a point",
+          "questionText": "A line has slope −5/3 and passes through (-3, 7). What is its equation?",
+          "questionHtml": "<p>A line has slope −<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>5</mtext><mtext>3</mtext></mfrac></math> and passes through (-3, 7). What is its equation?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = 5/3x + 2",
+              "html": "y = <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>5</mtext><mtext>3</mtext></mfrac></math>x + 2"
+            },
+            {
+              "label": "B",
+              "text": "y = −5/3x − 12",
+              "html": "y = <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>−5</mtext><mtext>3</mtext></mfrac></math>x − 12"
+            },
+            {
+              "label": "C",
+              "text": "y = −5/3x + 7",
+              "html": "y = <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>−5</mtext><mtext>3</mtext></mfrac></math>x + 7"
+            },
+            {
+              "label": "D",
+              "text": "y = −5/3x + 2",
+              "html": "y = <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>−5</mtext><mtext>3</mtext></mfrac></math>x + 2"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "y = −5/3x + 2",
+          "correctHtml": "y = <math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>−5</mtext><mtext>3</mtext></mfrac></math>x + 2",
+          "explanation": "Substitute (-3, 7) into y = mx + b: 7 = (−5/3)(−3) + b = 5 + b. Therefore b = 2 and y = −5/3x + 2."
+        },
+        {
+          "id": "review3-sessions-q22",
+          "day": 32,
+          "position": 22,
+          "sourceQuestionId": "d10-q18",
+          "sourceDay": 10,
+          "sourceNumber": "4",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 6,
+          "selectionReason": "unfinished",
+          "skill": "Equation through two points",
+          "questionText": "A line passes through (2, 7) and (4, -1). What is its equation?",
+          "questionHtml": "<p>A line passes through (2, 7) and (4, -1). What is its equation?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = -4x + 15",
+              "html": "y = -4x + 15"
+            },
+            {
+              "label": "B",
+              "text": "y = -4x + 13",
+              "html": "y = -4x + 13"
+            },
+            {
+              "label": "C",
+              "text": "y = -4x + 17",
+              "html": "y = -4x + 17"
+            },
+            {
+              "label": "D",
+              "text": "y = 4x + 15",
+              "html": "y = 4x + 15"
+            }
+          ],
+          "correctIndexes": [
+            0
+          ],
+          "correctAnswer": "y = -4x + 15",
+          "correctHtml": "y = -4x + 15",
+          "explanation": "Slope = (-1 − 7)/(4 − 2) = -4. Substitute the first point: b = 7 − (-4) × 2 = 15. Hence y = -4x + 15."
+        },
+        {
+          "id": "review3-sessions-q23",
+          "day": 32,
+          "position": 23,
+          "sourceQuestionId": "d10-q19",
+          "sourceDay": 10,
+          "sourceNumber": "5",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 7,
+          "selectionReason": "unfinished",
+          "skill": "Fractional slope",
+          "questionText": "A line passes through (3, 1) and (-3, -2). What is its equation?",
+          "questionHtml": "<p>A line passes through (3, 1) and (-3, -2). What is its equation?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = -0.5x − 0.5",
+              "html": "y = -0.5x − 0.5"
+            },
+            {
+              "label": "B",
+              "text": "y = 0.5x − 2.5",
+              "html": "y = 0.5x − 2.5"
+            },
+            {
+              "label": "C",
+              "text": "y = 0.5x − 0.5",
+              "html": "y = 0.5x − 0.5"
+            },
+            {
+              "label": "D",
+              "text": "y = 0.5x + 1.5",
+              "html": "y = 0.5x + 1.5"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "y = 0.5x − 0.5",
+          "correctHtml": "y = 0.5x − 0.5",
+          "explanation": "Slope = (1 − (-2))/(3 − (-3)) = 3/6 = 0.5. Then b = 1 − 0.5 × 3 = -0.5. The equation is y = 0.5x − 0.5."
+        },
+        {
+          "id": "review3-sessions-q24",
+          "day": 32,
+          "position": 24,
+          "sourceQuestionId": "d11-q01",
+          "sourceDay": 11,
+          "sourceNumber": "6",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 8,
+          "selectionReason": "unfinished",
+          "skill": "Parallel lines",
+          "questionText": "Line p has equation y = 4x + 2. Line q is parallel to p and passes through (3, 5). What is the equation of q?",
+          "questionHtml": "<p>Line p has equation y = 4x + 2. Line q is parallel to p and passes through (3, 5). What is the equation of q?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = 4x − 5",
+              "html": "y = 4x − 5"
+            },
+            {
+              "label": "B",
+              "text": "y = -4x − 7",
+              "html": "y = -4x − 7"
+            },
+            {
+              "label": "C",
+              "text": "y = 4x − 7",
+              "html": "y = 4x − 7"
+            },
+            {
+              "label": "D",
+              "text": "y = 4x − 9",
+              "html": "y = 4x − 9"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "y = 4x − 7",
+          "correctHtml": "y = 4x − 7",
+          "explanation": "Parallel lines have equal slopes, so q has slope 4. Substitute (3, 5): b = 5 − 4 × 3 = -7. Thus y = 4x − 7."
+        },
+        {
+          "id": "review3-sessions-q25",
+          "day": 32,
+          "position": 25,
+          "sourceQuestionId": "d11-q02",
+          "sourceDay": 11,
+          "sourceNumber": "8",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 9,
+          "selectionReason": "unfinished",
+          "skill": "Axis intercepts",
+          "questionText": "A line crosses the x-axis at (3, 0) and the y-axis at (0, -9). What is its equation?",
+          "questionHtml": "<p>A line crosses the x-axis at (3, 0) and the y-axis at (0, -9). What is its equation?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = -3x − 9",
+              "html": "y = -3x − 9"
+            },
+            {
+              "label": "B",
+              "text": "y = 3x − 7",
+              "html": "y = 3x − 7"
+            },
+            {
+              "label": "C",
+              "text": "y = 3x − 11",
+              "html": "y = 3x − 11"
+            },
+            {
+              "label": "D",
+              "text": "y = 3x − 9",
+              "html": "y = 3x − 9"
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "y = 3x − 9",
+          "correctHtml": "y = 3x − 9",
+          "explanation": "The y-intercept is -9. The slope is (0 − (-9))/(3 − 0) = 3. Therefore the equation is y = 3x − 9."
+        },
+        {
+          "id": "review3-sessions-q26",
+          "day": 32,
+          "position": 26,
+          "sourceQuestionId": "d11-q03",
+          "sourceDay": 11,
+          "sourceNumber": "9",
+          "sourceSessionDay": 22,
+          "sourceSessionLabel": "Session 8",
+          "sourceSessionPosition": 10,
+          "selectionReason": "first-try miss",
+          "skill": "Reading a line graph",
+          "questionText": "The graph shows line k. What is its equation?",
+          "questionHtml": "<p>The graph shows line k. What is its equation?</p><svg class=\"review-diagram\" viewBox=\"0 0 410 395\" role=\"img\" aria-label=\"Coordinate grid. P: (0, 1); Q: (2, -2). A straight line passes through the marked points.\"><path d=\"M40 40V360 M40 360H360\" stroke=\"#d9e3ed\"/><text x=\"40\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-6</text><text x=\"187\" y=\"364\" text-anchor=\"end\" style=\"font-size:13px\">-6</text><path d=\"M66.66666666666666 40V360 M40 333.33333333333337H360\" stroke=\"#d9e3ed\"/><text x=\"66.66666666666666\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-5</text><text x=\"187\" y=\"337.33333333333337\" text-anchor=\"end\" style=\"font-size:13px\">-5</text><path d=\"M93.33333333333333 40V360 M40 306.6666666666667H360\" stroke=\"#d9e3ed\"/><text x=\"93.33333333333333\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-4</text><text x=\"187\" y=\"310.6666666666667\" text-anchor=\"end\" style=\"font-size:13px\">-4</text><path d=\"M120 40V360 M40 280H360\" stroke=\"#d9e3ed\"/><text x=\"120\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-3</text><text x=\"187\" y=\"284\" text-anchor=\"end\" style=\"font-size:13px\">-3</text><path d=\"M146.66666666666666 40V360 M40 253.33333333333334H360\" stroke=\"#d9e3ed\"/><text x=\"146.66666666666666\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-2</text><text x=\"187\" y=\"257.33333333333337\" text-anchor=\"end\" style=\"font-size:13px\">-2</text><path d=\"M173.33333333333334 40V360 M40 226.66666666666666H360\" stroke=\"#d9e3ed\"/><text x=\"173.33333333333334\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">-1</text><text x=\"187\" y=\"230.66666666666666\" text-anchor=\"end\" style=\"font-size:13px\">-1</text><path d=\"M200 40V360 M40 200H360\" stroke=\"#d9e3ed\"/><path d=\"M226.66666666666666 40V360 M40 173.33333333333334H360\" stroke=\"#d9e3ed\"/><text x=\"226.66666666666666\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">1</text><text x=\"187\" y=\"177.33333333333334\" text-anchor=\"end\" style=\"font-size:13px\">1</text><path d=\"M253.33333333333334 40V360 M40 146.66666666666666H360\" stroke=\"#d9e3ed\"/><text x=\"253.33333333333334\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">2</text><text x=\"187\" y=\"150.66666666666666\" text-anchor=\"end\" style=\"font-size:13px\">2</text><path d=\"M280 40V360 M40 120H360\" stroke=\"#d9e3ed\"/><text x=\"280\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">3</text><text x=\"187\" y=\"124\" text-anchor=\"end\" style=\"font-size:13px\">3</text><path d=\"M306.6666666666667 40V360 M40 93.33333333333333H360\" stroke=\"#d9e3ed\"/><text x=\"306.6666666666667\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">4</text><text x=\"187\" y=\"97.33333333333333\" text-anchor=\"end\" style=\"font-size:13px\">4</text><path d=\"M333.33333333333337 40V360 M40 66.66666666666666H360\" stroke=\"#d9e3ed\"/><text x=\"333.33333333333337\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">5</text><text x=\"187\" y=\"70.66666666666666\" text-anchor=\"end\" style=\"font-size:13px\">5</text><path d=\"M360 40V360 M40 40H360\" stroke=\"#d9e3ed\"/><text x=\"360\" y=\"219\" text-anchor=\"middle\" style=\"font-size:13px\">6</text><text x=\"187\" y=\"44\" text-anchor=\"end\" style=\"font-size:13px\">6</text><path d=\"M30 200H373 M200 373V27\" stroke=\"#173957\" stroke-width=\"2\"/><text x=\"379\" y=\"207\">x</text><text x=\"196\" y=\"22\">y</text><path d=\"M324.44444444444446 360L111.1111111111111 40\" stroke=\"#2468e5\" stroke-width=\"3\"/><circle cx=\"200\" cy=\"173.33333333333334\" r=\"5\" fill=\"#173957\"/><text x=\"210\" y=\"163.33333333333334\" style=\"font-size:14px\">P</text><circle cx=\"253.33333333333334\" cy=\"253.33333333333334\" r=\"5\" fill=\"#173957\"/><text x=\"263.33333333333337\" y=\"243.33333333333334\" style=\"font-size:14px\">Q</text></svg>",
+          "options": [
+            {
+              "label": "A",
+              "text": "y = -1.5x + 3",
+              "html": "y = -1.5x + 3"
+            },
+            {
+              "label": "B",
+              "text": "y = -1.5x − 1",
+              "html": "y = -1.5x − 1"
+            },
+            {
+              "label": "C",
+              "text": "y = -1.5x + 1",
+              "html": "y = -1.5x + 1"
+            },
+            {
+              "label": "D",
+              "text": "y = 1.5x + 1",
+              "html": "y = 1.5x + 1"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "y = -1.5x + 1",
+          "correctHtml": "y = -1.5x + 1",
+          "explanation": "The graph crosses the y-axis at 1. From (0, 1) to (2, -2), y changes by −3 and x by 2. The slope is −3/2 = −1.5, giving y = -1.5x + 1."
+        },
+        {
+          "id": "review3-sessions-q27",
+          "day": 32,
+          "position": 27,
+          "sourceQuestionId": "d13-q04",
+          "sourceDay": 13,
+          "sourceNumber": "11",
+          "sourceSessionDay": 25,
+          "sourceSessionLabel": "Session 11",
+          "sourceSessionPosition": 6,
+          "selectionReason": "first-try miss",
+          "skill": "Comparing probabilities",
+          "questionText": "A bag contains 12 orange, 4 pink, and 6 purple marbles. Two marbles are chosen at random without replacement. Which event is most likely?",
+          "questionHtml": "<p>A bag contains 12 orange, 4 pink, and 6 purple marbles. Two marbles are chosen at random without replacement. Which event is most likely?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "Both marbles are pink or purple.",
+              "html": "Both marbles are pink or purple."
+            },
+            {
+              "label": "B",
+              "text": "Both marbles are orange.",
+              "html": "Both marbles are orange."
+            },
+            {
+              "label": "C",
+              "text": "Neither marble is purple.",
+              "html": "Neither marble is purple."
+            },
+            {
+              "label": "D",
+              "text": "The first marble is orange and the second is purple.",
+              "html": "The first marble is orange and the second is purple."
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "Neither marble is purple.",
+          "correctHtml": "Neither marble is purple.",
+          "explanation": "All four probabilities have denominator 22 × 21. Their numerators are 90 for both pink or purple, 240 for neither purple, 72 for orange then purple, and 132 for both orange. The largest is 240, so neither purple is most likely."
+        },
+        {
+          "id": "review3-sessions-q28",
+          "day": 32,
+          "position": 28,
+          "sourceQuestionId": "d13-q07",
+          "sourceDay": 13,
+          "sourceNumber": "17",
+          "sourceSessionDay": 25,
+          "sourceSessionLabel": "Session 11",
+          "sourceSessionPosition": 9,
+          "selectionReason": "first-try miss",
+          "skill": "Independent events",
+          "questionText": "Beth and Jane each independently choose a random letter position in ACRONYM. They may choose the same position. Beth chooses a vowel. What is the probability that Jane also chooses a vowel (A, E, I, O, U)?",
+          "questionHtml": "<p>Beth and Jane each independently choose a random letter position in ACRONYM. They may choose the same position. Beth chooses a vowel. What is the probability that Jane also chooses a vowel (A, E, I, O, U)?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "0",
+              "html": "0"
+            },
+            {
+              "label": "B",
+              "text": "4/49",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>4</mtext><mtext>49</mtext></mfrac></math>"
+            },
+            {
+              "label": "C",
+              "text": "2/7",
+              "html": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>2</mtext><mtext>7</mtext></mfrac></math>"
+            },
+            {
+              "label": "D",
+              "text": "1",
+              "html": "1"
+            }
+          ],
+          "correctIndexes": [
+            2
+          ],
+          "correctAnswer": "2/7",
+          "correctHtml": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\"><mfrac><mtext>2</mtext><mtext>7</mtext></mfrac></math>",
+          "explanation": "Jane's choice is independent of Beth's. There are 2 vowel positions among 7 letter positions in ACRONYM, so Jane's probability is 2/7.",
+          "input": {
+            "kind": "number",
+            "hint": "Enter a fraction or decimal."
+          }
+        },
+        {
+          "id": "review3-sessions-q29",
+          "day": 32,
+          "position": 29,
+          "sourceQuestionId": "d13-q08",
+          "sourceDay": 13,
+          "sourceNumber": "20",
+          "sourceSessionDay": 25,
+          "sourceSessionLabel": "Session 11",
+          "sourceSessionPosition": 10,
+          "selectionReason": "first-try miss",
+          "skill": "Probability and counts",
+          "questionText": "The probability of choosing a milk chocolate from a box is 2 out of 5. Every chocolate is equally likely to be chosen. Which counts could be in the box?",
+          "questionHtml": "<p>The probability of choosing a milk chocolate from a box is 2 out of 5. Every chocolate is equally likely to be chosen. Which counts could be in the box?</p>",
+          "options": [
+            {
+              "label": "A",
+              "text": "6 milk chocolates and 15 other chocolates.",
+              "html": "6 milk chocolates and 15 other chocolates."
+            },
+            {
+              "label": "B",
+              "text": "9 milk chocolates and 6 other chocolates.",
+              "html": "9 milk chocolates and 6 other chocolates."
+            },
+            {
+              "label": "C",
+              "text": "15 milk chocolates and 15 other chocolates.",
+              "html": "15 milk chocolates and 15 other chocolates."
+            },
+            {
+              "label": "D",
+              "text": "6 milk chocolates and 9 other chocolates.",
+              "html": "6 milk chocolates and 9 other chocolates."
+            }
+          ],
+          "correctIndexes": [
+            3
+          ],
+          "correctAnswer": "6 milk chocolates and 9 other chocolates.",
+          "correctHtml": "6 milk chocolates and 9 other chocolates.",
+          "explanation": "Probability uses the total count: 6/(6 + 9) = 6/15 = 2/5. The other choices give different proportions of milk chocolates."
         }
       ]
     }

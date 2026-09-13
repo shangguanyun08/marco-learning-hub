@@ -104,14 +104,14 @@
       };
     });
     const activeReviews = reviewDays.filter((day) => !day.archived);
-    const sessionReview = activeReviews.find((day) => day.sourceSessionDays?.length);
+    const sessionReviews = activeReviews.filter((day) => day.sourceSessionDays?.length);
     // Keep stable question/session IDs; only change their presentation order.
-    const days = sessionReview ? [
-      ...sessionReview.sourceSessionDays.map((id) => practiceDays.find((day) => day.day === id)),
-      sessionReview,
-      ...practiceDays.filter((day) => !sessionReview.sourceSessionDays.includes(day.day)),
+    const reviewedSessionIds = new Set(sessionReviews.flatMap(day => day.sourceSessionDays));
+    const days = sessionReviews.length ? [
+      ...sessionReviews.flatMap(review => [...review.sourceSessionDays.map(id => practiceDays.find(day => day.day === id)), review]),
+      ...practiceDays.filter((day) => !reviewedSessionIds.has(day.day)),
       ...previousDays,
-      ...activeReviews.filter((day) => day !== sessionReview),
+      ...activeReviews.filter((day) => !sessionReviews.includes(day)),
     ] : [...previousDays, ...activeReviews, ...practiceDays];
     bank = { ...questionBank, totalQuestions: days.reduce((total, day) => total + day.questionCount, 0), days,
       archivedDays: reviewDays.filter((day) => day.archived) };
@@ -333,7 +333,7 @@
   function correctReviewAnswer(attemptId, value) {
     const attempt = state.attempts.find((item) => item.id === attemptId);
     const details = attempt && attemptDetails(attempt);
-    if (!details || ![29, 31].includes(details.session?.day ?? attempt.day) || attempt.correct || correctionFor(attempt)?.correct) return;
+    if (!details || !bank.days.some(day => day.mastery && day.day === (details.session?.day ?? attempt.day)) || attempt.correct || correctionFor(attempt)?.correct) return;
     const question = details.question;
     const input = window.MarcoReviewInputs.spec(question);
     const result = input ? window.MarcoReviewInputs.check(question, value)
@@ -613,6 +613,7 @@
       </section>`;
     return `<section class="question-card" id="question-${esc(question.id)}">
       <div class="question-meta"><div><span>${esc(day.label)}</span><strong>Question ${question.position}</strong></div><span class="mastery-badge ${statusClass}">${progress.status}</span><small>${esc(question.skill)}</small></div>
+      ${day.day === 32 ? `<p class="practice-number">From ${esc(question.sourceSessionLabel)} · Question ${question.sourceSessionPosition} · ${question.selectionReason === 'unfinished' ? 'Previously unanswered' : 'First-try miss'}</p>` : ''}
       ${answerTrackHtml(day, question, progress, false, current.id)}
       ${panel}
       ${saved.length && !progress.done ? `<div class="mastery-check"><button class="primary-action" data-action="next-practice" data-question-id="${esc(question.id)}" type="button">${isMain ? (progress.practice.length ? 'Continue extra practice' : 'Start extra practice') : 'Next practice question'}</button></div>` : ''}
@@ -668,6 +669,7 @@
     return `<main class="question-list review-one-at-a-time">
       <section class="session-overview">
         <div><p class="eyebrow">${esc(day.label)}</p><h2>Choose a question</h2>
+          ${day.description ? `<p>${esc(day.description)}</p>` : ''}
           ${row.firstTryScore !== null ? `<p class="mastery-overview">First try: ${row.firstTryScore}/100</p>` : ''}
         </div>
         ${totalMasteryTrackHtml(day, question)}
@@ -736,7 +738,7 @@
     const details = attempt && attemptDetails(attempt);
     if (!details) return `<main class="progress-page"><div class="empty-record">This answer is no longer in the saved record.</div><button class="secondary-action" data-action="close-review" type="button">Go back</button></main>`;
     const { question, parentId, parent, session, label, heading } = details;
-    const correctionReview = [29, 31].includes(session?.day ?? attempt.day);
+    const correctionReview = bank.days.some(day => day.mastery && day.day === (session?.day ?? attempt.day));
     const questions = allRecordedQuestions();
     const sequence = state.attempts.filter((item) => item.sessionId === attempt.sessionId
       && attemptDetails(item, questions)?.parentId === parentId)
@@ -773,7 +775,7 @@
       groups.get(item.details.parentId).push(item);
     }
     return `<main class="progress-page wrong-answers-page">
-      <div class="progress-heading"><div><p class="eyebrow">All saved rounds</p><h2>Wrong answers</h2><p>${wrong.length} originally wrong ${wrong.length === 1 ? 'answer' : 'answers'}. Open a Review 1 or Review 2 question to correct it. Yellow marks show saved corrections.</p></div><div class="complete-actions">${wrongQuestionId ? '<button class="secondary-action" data-action="view" data-view="wrong" type="button">Show all wrong answers</button>' : ''}<button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button></div></div>
+      <div class="progress-heading"><div><p class="eyebrow">All saved rounds</p><h2>Wrong answers</h2><p>${wrong.length} originally wrong ${wrong.length === 1 ? 'answer' : 'answers'}. Open a review question to correct it. Yellow marks show saved corrections.</p></div><div class="complete-actions">${wrongQuestionId ? '<button class="secondary-action" data-action="view" data-view="wrong" type="button">Show all wrong answers</button>' : ''}<button class="secondary-action" data-action="view" data-view="practice" type="button">Return to practice</button></div></div>
       ${wrong.length ? [...groups.values()].map((items) => {
         const { parent, heading } = items[0].details;
         return `<section class="miss-record"><div class="record-heading"><h3>${esc(heading)}${parent.skill ? ` · ${esc(parent.skill)}` : ''}</h3><span>${items.length} wrong</span></div><ul class="wrong-answer-list">${items.map(({ attempt, details }) => `<li><div><strong>${esc(details.label)} · Round ${details.session?.runNumber || 1}</strong>${correctionFor(attempt)?.correct ? '<span class="correction-badge">✓ Corrected</span>' : ''}<time datetime="${esc(attempt.createdAt)}">${esc(formatFinishedAt(attempt.createdAt))}</time></div><button class="secondary-action" data-action="review-answer" data-attempt-id="${esc(attempt.id)}" type="button" aria-label="Review ${esc(details.heading)}, ${esc(details.label)}, round ${details.session?.runNumber || 1}">Review answer</button></li>`).join('')}</ul></section>`;
@@ -924,7 +926,7 @@
     submitWrittenAnswer(form.dataset.questionId, form.dataset.attemptId || null);
   });
 
-  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=4', 'review1-practice-bank.json?v=1', 'review2-practice-bank.json?v=1'].map(async (url) => {
+  Promise.all(['question-bank.json', 'session-plan.json?v=1', 'review-bank.json?v=5', 'review1-practice-bank.json?v=1', 'review2-practice-bank.json?v=1', 'review3-practice-bank.json?v=1'].map(async (url) => {
     const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) throw new Error('The practice sessions could not be loaded. Please refresh.');
     return response.json();

@@ -10,9 +10,10 @@ const originalBank = JSON.parse(await readFile(new URL('./question-bank.json', i
 const plan = JSON.parse(await readFile(new URL('./session-plan.json', import.meta.url), 'utf8'));
 const reviews = JSON.parse(await readFile(new URL('./review-bank.json', import.meta.url), 'utf8'));
 const practiceBank = JSON.parse(await readFile(new URL('./review1-practice-bank.json', import.meta.url), 'utf8'));
+const review3PracticeBank = JSON.parse(await readFile(new URL('./review3-practice-bank.json', import.meta.url), 'utf8'));
 const sessionPracticeBank = JSON.parse(await readFile(new URL('./review2-practice-bank.json', import.meta.url), 'utf8'));
 // Exercise the previous catalog as a compatibility fixture; new-review tests below use the full production catalog.
-const legacyReviews = { ...reviews, sessions: reviews.sessions.filter(day => day.day !== 31) };
+const legacyReviews = { ...reviews, sessions: reviews.sessions.filter(day => ![31, 32].includes(day.day)) };
 const clone = value => JSON.parse(JSON.stringify(value));
 const fresh = () => ({ schemaVersion: 1, learner: 'Marco', sessions: [], attempts: [], updatedAt: null });
 const click = (app, dataset) => app.click({ target: { closest: () => ({ dataset }) } });
@@ -42,7 +43,7 @@ async function boot(initial = completedOriginalDays(), remote = initial, catalog
     crypto: { randomUUID },
     localStorage: { getItem: key => storage.get(key), setItem: (key, value) => storage.set(key, value) },
     window: { MarcoOnlineSync: { create(value) { options = value; return { start() { if (remote) value.onRemote(clone(remote)); }, push(state) { pushed.push(clone(state)); } }; } } },
-    fetch: async url => ({ ok: true, json: async () => clone(url.startsWith('question-bank') ? originalBank : url.startsWith('review-bank') ? catalog : url.startsWith('review1-practice-bank') ? practiceBank : url.startsWith('review2-practice-bank') ? sessionPracticeBank : plan) }),
+    fetch: async url => ({ ok: true, json: async () => clone(url.startsWith('question-bank') ? originalBank : url.startsWith('review-bank') ? catalog : url.startsWith('review1-practice-bank') ? practiceBank : url.startsWith('review2-practice-bank') ? sessionPracticeBank : url.startsWith('review3-practice-bank') ? review3PracticeBank : plan) }),
   });
   const instrumented = source.replace('  Promise.all(', `  globalThis.redo = { metrics, savedAttempts, chooseDay, selectAnswer, answer, startAgain, summary, progressHtml, nextPracticeDay, masteryProgress, nextPracticeQuestion, nextMainQuestion, currentReviewQuestion, get state() { return state; }, get bank() { return bank; }, get selectedDay() { return selectedDay; } };\n  Promise.all(`);
   vm.runInContext(inputSource, context);
@@ -58,9 +59,9 @@ function finishPractice(api, question) {
   }
 }
 
-test('the reviewed fill-in families have unambiguous answers across all 253 main and extra questions', async () => {
+test('the reviewed fill-in families have unambiguous answers across all 363 main and extra questions', async () => {
   const { api, inputs } = await boot(fresh(), null, reviews);
-  const expected = { 29: [2,3,4,6,8,9,10,11,12,13,15,16], 31: [1,2,3,9,10,15,16,17,18,19,21] };
+  const expected = { 29: [2,3,4,6,8,9,10,11,12,13,15,16], 31: [1,2,3,9,10,15,16,17,18,19,21], 32: [1,7,8,9,10,12,13,14,17,28] };
   let total = 0;
   for (const day of api.bank.days.filter(day => day.mastery)) {
     assert.deepEqual(day.questions.filter(q => inputs.spec(q)).map(q => q.position), expected[day.day]);
@@ -76,7 +77,7 @@ test('the reviewed fill-in families have unambiguous answers across all 253 main
       }
     }
   }
-  assert.equal(total, 253);
+  assert.equal(total, 363);
   assert.equal(inputs.spec(api.bank.archivedDays[0].questions[0]), null);
 });
 
@@ -99,11 +100,11 @@ test('fill-in checking accepts equivalent math and appropriate units without acc
 });
 
 test('red numeric questions accept corrections, turn yellow only after success, and preserve original scores across devices', async () => {
-  for (const dayNumber of [29, 31]) {
+  for (const dayNumber of [29, 31, 32]) {
     const { api, app, pushed, remote } = await boot(fresh(), null, reviews);
     api.chooseDay(dayNumber);
     const day = api.bank.days.find(day => day.day === dayNumber);
-    const main = day.questions[dayNumber === 29 ? 3 : 1];
+    const main = day.questions[dayNumber === 29 ? 3 : dayNumber === 31 ? 1 : 0];
     click(app, {action: 'choose-main', questionId: main.id});
     const firstWrong = main.options.find((_, i) => !main.correctIndexes.includes(i)).text;
     submitWritten(app, main.id, firstWrong);
@@ -182,6 +183,58 @@ test('choice corrections work for exhausted extras and earlier rounds without re
   assert.equal(restored.api.metrics(day).attempts.length, 0, 'Earlier corrections do not answer the new round');
 });
 
+test('Review 3 choice corrections survive exhausted practice and new rounds without changing either round score', async () => {
+  const {api,app}=await boot(fresh(),null,reviews);
+  api.chooseDay(32);
+  const day=api.bank.days.find(d=>d.day===32),main=day.questions[25];
+  for(const q of [main,...main.practiceQuestions])api.answer(q.id,wrongIndex(q));
+  assert.equal(api.masteryProgress(day,main).unmastered,true);
+  const original=clone(api.state.attempts.at(-1)),q=main.practiceQuestions.at(-1);
+  for(const other of day.questions.filter(item=>item!==main))for(const item of [other,...other.practiceQuestions.slice(0,2)])api.answer(item.id,item.correctIndexes[0]);
+  const saved=clone(api.state);
+  api.startAgain();
+  assert.equal(api.state.sessions.filter(s=>s.day===32).length,2);
+  const sessions=clone(api.state.sessions);
+  click(app,{action:'review-answer',attemptId:original.id});
+  assert.ok(app.innerHTML.includes(q.questionHtml));
+  assert.doesNotMatch(app.innerHTML,/class="reveal"|Quick explanation|Correct answer/);
+  click(app,{action:'select-correction',attemptId:original.id,index:q.correctIndexes[0]});
+  click(app,{action:'check-correction',attemptId:original.id});
+  assert.match(app.innerHTML,/Corrected! Yellow/);
+  assert.deepEqual(clone(api.state.attempts),saved.attempts);
+  assert.deepEqual(clone(api.state.sessions),sessions);
+  assert.equal(api.metrics(day).attempts.length,0);
+  const remote=await boot(fresh(),clone(api.state),reviews);
+  click(remote.app,{action:'review-answer',attemptId:original.id});
+  assert.match(remote.app.innerHTML,/Corrected! Yellow/);
+  assert.equal(remote.pushed.length,0);
+});
+
+test('Review 3 records all 29 main scores and mastery, preserves previous history, and starts a separate saved round',async()=>{
+  const initial=completedReviewSourceSessions(),{api,app}=await boot(initial,initial,reviews);
+  api.chooseDay(32);
+  const day=api.bank.days.find(d=>d.day===32);
+  for(const [index,q] of day.questions.entries()){
+    check(api,q,index>=2);
+    for(const p of q.practiceQuestions.slice(0,index>=2?2:3))check(api,p,true);
+  }
+  const stats=api.metrics(day);
+  assert.equal(stats.completed,true);assert.equal(stats.firstTryScore,93);
+  assert.equal(stats.mastered,29);assert.equal(stats.firstWrong,2);
+  assert.deepEqual(clone(api.state.attempts.slice(0,initial.attempts.length)),initial.attempts);
+  assert.deepEqual(clone(api.state.sessions.slice(0,initial.sessions.length)),initial.sessions);
+  const saved=clone(api.state),restored=await boot(fresh(),saved,reviews);
+  restored.api.chooseDay(32);
+  assert.equal(restored.api.metrics(day).firstTryScore,93);
+  assert.equal(restored.api.metrics(day).mastered,29);
+  restored.api.startAgain();
+  assert.deepEqual(clone(restored.api.state.attempts),saved.attempts);
+  assert.equal(restored.api.metrics(day).attempts.length,0);
+  assert.equal(restored.api.state.sessions.filter(s=>s.day===32).length,2);
+  click(restored.app,{action:'view',view:'progress'});
+  assert.match(restored.app.innerHTML,/93\/100/);
+});
+
 test('reviewing track answers preserves the streak, saved state and unfinished answer selection', async () => {
   const { api, app, storage, pushed } = await boot();
   const day = api.bank.days.find(day => day.day === 29);
@@ -225,8 +278,8 @@ test('reviewing track answers preserves the streak, saved state and unfinished a
   assert.ok(app.innerHTML.includes(current.questionHtml), 'Only saved attempts can be reviewed');
 });
 
-test('both reviews show only the selected circle question, default to main and preserve saved progress', async () => {
-  for (const dayNumber of [29, 31]) {
+test('all reviews show only the selected circle question, default to main and preserve saved progress', async () => {
+  for (const dayNumber of [29, 31, 32]) {
     const { api, app, pushed, remote, storage, inputs } = await boot(fresh(), null, reviews);
     api.chooseDay(dayNumber);
     const day = api.bank.days.find(item => item.day === dayNumber);
@@ -695,15 +748,15 @@ function completedReviewSourceSessions() {
 test('the production catalog puts the seven completed sessions, Review 2 and unfinished sessions first',async()=>{
   const initial=completedReviewSourceSessions();
   const {api,app,pushed}=await boot(initial,initial,reviews);
-  assert.deepEqual(clone(api.bank.days.map(d=>d.day)),[15,16,17,23,24,27,28,31,18,19,20,21,22,25,26,1,2,7,8,9,29]);
-  assert.equal(api.bank.days.length,21);
-  assert.equal(api.bank.totalQuestions,237);
+  assert.deepEqual(clone(api.bank.days.map(d=>d.day)),[15,16,17,23,24,27,28,31,18,19,20,21,22,25,32,26,1,2,7,8,9,29]);
+  assert.equal(api.bank.days.length,22);
+  assert.equal(api.bank.totalQuestions,266);
   assert.equal(api.selectedDay,31);
   assert.deepEqual([15,16,17,23,24,27,28].map(id=>api.metrics(api.bank.days.find(d=>d.day===id)).firstTryScore),[70,90,40,60,70,30,75]);
   assert.ok([15,16,17,23,24,27,28].every(id=>api.metrics(api.bank.days.find(d=>d.day===id)).completed));
   const rail=app.innerHTML.match(/<aside class="day-rail"[\s\S]*?<\/aside>/)[0];
-  assert.equal((rail.match(/data-action="day"/g)||[]).length,21);
-  assert.match(rail,/12 of 21 finished/);
+  assert.equal((rail.match(/data-action="day"/g)||[]).length,22);
+  assert.match(rail,/12 of 22 finished/);
   assert.match(rail,/First try: 70\/100/);
   assert.match(rail,/Goal: 90\/100/);
   assert.doesNotMatch(rail,/data-day="30"|<details/);
