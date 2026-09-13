@@ -179,3 +179,42 @@ button:disabled{cursor:not-allowed;opacity:.45}
 
 /* Small adaptations for the 18-session collection and hub navigation. */
 .site-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-top:24px;font-size:13px;font-weight:750}.site-footer a{color:var(--muted);text-decoration:none}.site-footer a:hover{color:var(--blue-dark);text-decoration:underline}.instant-feedback.correct .feedback-mark{background:var(--green-dark)}.instant-feedback.wrong .feedback-mark{background:var(--red)}.options button b{overflow-wrap:anywhere}.round-heading>span{font-size:14px}.sync-note{max-width:100%}.week-menu{gap:2px}.question-panel h2:focus{outline:none}
+
+/* All eighteen sessions are directly accessible; a round fills one page. */
+.topbar nav{margin-left:auto}
+.session-picker{grid-template-columns:repeat(6,minmax(0,1fr))}
+.session-picker button{min-height:78px;padding:11px 13px}
+.session-picker strong{font-size:15px}
+.session-summary{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:24px;margin-bottom:20px;scroll-margin-top:16px}
+.session-summary-heading{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:18px}
+.session-summary .round-heading{justify-content:flex-start;gap:15px}
+.session-summary .round-subheading{margin-top:12px;gap:15px}
+.session-summary h2{font:700 28px/1.1 Georgia,serif;margin:0}
+.session-summary .stats{margin:0;min-width:190px}
+.session-summary .grid-label{margin-top:18px}
+.session-summary .number-grid{grid-template-columns:repeat(25,minmax(0,1fr));gap:6px;max-width:980px}
+.number-grid>button{aspect-ratio:1;min-width:0;padding:0;color:#657087;background:#edf0f4;border:1px solid #d8dee7;border-radius:50%;font-size:12px;font-weight:900;cursor:pointer}
+.number-grid>button.answered-correct{border-color:var(--green);background:var(--green);color:#fff}
+.number-grid>button.answered-wrong{border-color:var(--red);background:var(--red);color:#fff}
+.number-grid>button:hover{outline:2px solid var(--blue);outline-offset:2px}
+.session-questions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;align-items:start}
+.question-item{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:26px;box-shadow:0 8px 25px #1e2a480a;scroll-margin-top:20px;min-width:0}
+.question-item-topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.question-item-topline>span{background:var(--blue-soft);color:var(--blue-dark);padding:7px 11px;border-radius:99px;font-size:13px;font-weight:850}
+.question-item-topline small{color:var(--muted);font-weight:750}
+.question-item h3{font:700 clamp(22px,2.1vw,29px)/1.25 Georgia,serif;letter-spacing:-.015em;margin:0;overflow-wrap:anywhere}
+.question-item h3:focus{outline:none}
+.question-item .options{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:23px 0 0}
+.question-item .options button{grid-template-columns:32px minmax(0,1fr);gap:9px;min-height:60px;padding:9px 10px;border-radius:12px}
+.question-item .options button span{width:30px;height:30px;font-size:16px}
+.question-item .options button b{font-size:17px}
+.question-item .instant-feedback{margin:18px 0 0;padding:12px;gap:10px;font-size:14px}
+.question-item .instant-feedback strong{font-size:16px}
+.question-item .feedback-mark{width:32px;height:32px;font-size:22px}
+.finish-round{border:0;border-radius:11px;padding:12px 18px;min-height:46px;background:var(--coral);color:white;font-weight:850;cursor:pointer;white-space:nowrap}
+.finish-round:hover:not(:disabled){background:var(--coral-dark)}
+.round-footer{margin-top:20px;padding:20px 24px;background:var(--paper);border:1px solid var(--line);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.round-footer>span{color:var(--muted);font-size:14px;font-weight:750}
+@media(max-width:1000px){.session-picker{grid-template-columns:repeat(4,minmax(0,1fr))}.session-summary-heading{flex-wrap:wrap}.session-summary .number-grid{grid-template-columns:repeat(20,minmax(0,1fr))}}
+@media(max-width:700px){.session-questions{grid-template-columns:1fr}.session-picker{grid-template-columns:repeat(3,minmax(0,1fr))}.session-summary{padding:18px}.session-summary .number-grid{grid-template-columns:repeat(10,minmax(0,1fr))}.session-summary-heading{gap:15px}.session-summary .stats{flex:1;min-width:130px}.session-summary .finish-round{width:100%}.question-item{padding:22px}.question-item h3{font-size:25px}}
+@media(max-width:560px){.topbar nav{margin-left:0}.session-picker button{padding:9px;min-height:76px}.session-picker strong{font-size:12px}.session-picker small{font-size:11px}.session-picker span{font-size:11px}.round-footer{align-items:stretch;flex-direction:column}.session-summary .round-subheading{flex-wrap:wrap}.question-item .options{grid-template-columns:1fr}}

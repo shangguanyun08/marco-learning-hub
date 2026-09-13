@@ -50,11 +50,12 @@
     return true;
   }
   const current = session => session?.rounds?.at(-1);
-  function answer(progress, session, choice, words, at) {
+  function answer(progress, session, choice, words, at, questionId) {
     const record = progress.sessions[session];
     const active = current(record);
     if (!active || record.completedAt || active.finishedAt) return false;
-    const id = active.ids[active.position];
+    const id = questionId ?? active.ids[active.position];
+    if (!active.ids.includes(id)) return false;
     const word = words.find(item => item.id === id);
     if (!word || active.answers[id] || !options(word, active.number, words).includes(choice)) return false;
     active.answers[id] = {choice, correct: choice === id, at};
@@ -68,7 +69,13 @@
       active.position++;
       return 'next';
     }
-    if (!active.ids.every(id => active.answers[id])) return false;
+    return finishRound(progress, session, at);
+  }
+  function finishRound(progress, session, at) {
+    const record = progress.sessions[session];
+    const active = current(record);
+    if (!active || record.completedAt || active.finishedAt || !active.ids.every(id => active.answers[id])) return false;
+    active.position = active.ids.length - 1;
     active.finishedAt = at;
     const missed = active.ids.filter(id => !active.answers[id].correct);
     if (missed.length) record.rounds.push(round(active.number + 1, missed, at));
@@ -118,5 +125,5 @@
     }
     return result;
   }
-  return {blank, valid, options, start, current, answer, advance, score, merge};
+  return {blank, valid, options, start, current, answer, advance, finishRound, score, merge};
 });

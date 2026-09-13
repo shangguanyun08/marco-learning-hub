@@ -98,18 +98,22 @@ test('local preview never syncs, old records remain intact, and no artwork loads
   assert.deepEqual(saved.sessions,legacy.sessions);assert.deepEqual(saved.activity,legacy.activity);assert.equal(saved.activeSession,7);
   b.dom.window.close();
 });
-test('answer feedback and position survive reload; final session has 24 words',()=>{
+test('all 18 sessions are directly available and all questions and locked answers survive reload',()=>{
   let b=browser();
+  assert.equal(b.d.querySelectorAll('.session-picker [data-session]').length,18);
+  assert.equal(b.d.querySelectorAll('[data-set],.week-menu,[data-next]').length,0);
+  assert.equal(b.d.querySelectorAll('.question-item').length,50);
+  assert.equal(b.d.querySelectorAll('[data-answer]').length,200);
   b.d.querySelector('[data-answer="fiscal"]').click();
   assert.equal(b.d.querySelectorAll('[data-answer]:disabled').length,4);
   assert.match(b.d.querySelector('.instant-feedback').textContent,/Correct!/);
   const saved=Object.fromEntries(Object.keys(b.w.localStorage).map(k=>[k,JSON.parse(b.w.localStorage.getItem(k))]));
   b.w.close();b=browser(saved);
   assert.equal(b.d.querySelectorAll('[data-answer]:disabled').length,4);
-  b.d.querySelector('[data-next]').click();
-  assert.equal(b.d.querySelector('.question-topline b').textContent,'2');
-  b.d.querySelector('[data-set="5"]').click();b.d.querySelector('[data-session="18"]').click();
-  assert.equal(b.d.querySelectorAll('.number-grid>span').length,24);
+  assert.equal(b.d.querySelectorAll('.question-item').length,50);
+  b.d.querySelector('[data-session="18"]').click();
+  assert.equal(b.d.querySelectorAll('.question-item').length,24);
+  assert.equal(b.d.querySelectorAll('.number-grid>button').length,24);
   assert.match(b.d.querySelector('.round-heading').textContent,/Words 851–874/);
   b.w.close();
 });
@@ -129,22 +133,67 @@ test('a complete 50-word UI session advances through three rounds and reviews or
   const b=browser();
   function clickAnswer(correct) {
     const stored=JSON.parse(b.w.localStorage.getItem('marco-vocabulary-tests-v1'));
-    const r=Core.current(stored.sessions[1]),id=r.ids[r.position];
-    const button=[...b.d.querySelectorAll('[data-answer]')].find(node=>(node.dataset.answer===id)===correct);
-    button.click();b.d.querySelector('[data-next]').click();
+    const r=Core.current(stored.sessions[1]),id=r.ids.find(id=>!r.answers[id]);
+    const button=[...b.d.querySelectorAll(`[data-word-id="${id}"] [data-answer]`)].find(node=>(node.dataset.answer===id)===correct);
+    button.click();
   }
   for(let i=0;i<50;i++) clickAnswer(i>=2);
+  assert.equal(b.d.querySelectorAll('.question-item').length,50);
+  b.d.querySelector('[data-finish-round]').click();
   assert.match(b.d.querySelector('.round-subheading').textContent,/Round 2/);
-  assert.equal(b.d.querySelectorAll('.number-grid>span').length,2);
+  assert.equal(b.d.querySelectorAll('.question-item').length,2);
   clickAnswer(true);clickAnswer(false);
+  b.d.querySelector('[data-finish-round]').click();
   assert.match(b.d.querySelector('.round-subheading').textContent,/Round 3/);
-  assert.equal(b.d.querySelectorAll('.number-grid>span').length,1);
+  assert.equal(b.d.querySelectorAll('.question-item').length,1);
   clickAnswer(true);
+  b.d.querySelector('[data-finish-round]').click();
   assert.match(b.d.querySelector('.complete-card').textContent,/mastered/);
   b.d.querySelector('[data-view="results"]').click();
   assert.equal(b.d.querySelectorAll('.round-list details').length,3);
   assert.match(b.d.querySelector('.round-list .score').textContent,/48\/50/);
   assert.equal(b.d.querySelectorAll('[data-result="1-1"] .answer-review>.wrong').length,2);
+  b.w.close();
+});
+test('questions may be answered out of order, with no early round completion or cross-session answers',()=>{
+  const p=fixture(), ids=p.sessions[1].rounds[0].ids;
+  assert.equal(Core.answer(p,1,words[50].id,words,at,words[50].id),false);
+  assert.equal(Core.answer(p,1,ids[2],words,at,ids[2]),true);
+  assert.equal(Core.finishRound(p,1,at),false);
+  assert.equal(Core.answer(p,1,ids[0],words,at,ids[0]),true);
+  assert.equal(Core.finishRound(p,1,at),false);
+  assert.equal(Core.answer(p,1,ids[1],words,at,ids[1]),true);
+  assert.equal(Core.finishRound(p,1,at),'complete');
+  assert.equal(Core.finishRound(p,1,at),false);
+  assert.equal(p.sessions[1].rounds.length,1);
+});
+test('one-page UI saves the last question first and preserves earlier one-question progress',()=>{
+  const p=Core.blank(),ids=words.filter(w=>w.session===1).map(w=>w.id);
+  Core.start(p,1,ids,at);
+  for(let i=0;i<3;i++) {Core.answer(p,1,ids[i],words,at);Core.advance(p,1,at);}
+  const b=browser({'marco-vocabulary-tests-v1':p});
+  assert.equal(b.d.querySelectorAll('.question-item').length,50);
+  assert.equal(b.d.querySelectorAll('[data-answer]:disabled').length,12);
+  assert.equal(b.d.querySelector('[data-finish-round]').disabled,true);
+  const last=ids.at(-1);
+  b.d.querySelector(`[data-word-id="${last}"] [data-answer="${last}"]`).click();
+  const saved=JSON.parse(b.w.localStorage.getItem('marco-vocabulary-tests-v1'));
+  const round=saved.sessions[1].rounds[0];
+  for(const id of ids.slice(0,3)) assert.deepEqual(round.answers[id],p.sessions[1].rounds[0].answers[id]);
+  assert.equal(round.answers[last].correct,true);
+  assert.equal(Object.keys(round.answers).length,4);
+  assert.equal(b.d.querySelector('[data-finish-round]').disabled,true);
+  assert.equal(b.d.querySelectorAll('.question-item').length,50);
+  b.w.close();
+});
+test('every session renders its complete word list without paging or filtering',()=>{
+  const b=browser();
+  for(let session=1;session<=18;session++) {
+    b.d.querySelector(`.session-picker [data-session="${session}"]`).click();
+    const expected=words.filter(w=>w.session===session).map(w=>w.id);
+    assert.deepEqual([...b.d.querySelectorAll('.question-item')].map(node=>node.dataset.wordId),expected);
+    assert.equal(b.d.querySelectorAll('.session-picker [data-session]').length,18);
+  }
   b.w.close();
 });
 test('every archived illustration referenced by the original manifest still exists',()=>{
