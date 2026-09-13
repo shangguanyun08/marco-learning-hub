@@ -1,4 +1,4 @@
-/* August 30 and selected earlier STAR Math missed questions. Original prompts, choices and diagrams
+/* August 30 and selected earlier STAR Math missed questions, plus daily practice additions. Original prompts, choices and diagrams
    are preserved from the linked test. Bank order is stable for saved attempts. */
 (function installStarMastery(global) {
   "use strict";
@@ -1034,6 +1034,27 @@
     throw new Error(`Missing earlier-test follow-ups for ${parent.id}`);
   }
   entries.push(...earlierOriginals.map((question,index)=>({question,followUps:[earlierSimilar[index],...Array.from({length:9},(_,i)=>({...earlierExtra(question,i),id:`${question.id}-extra-${i+2}`,skill:question.skill}))]})));
+  // Append new daily questions so every saved question and follow-up keeps its slot.
+  function factorListQuestion(number, turn, distractors) {
+    const factors = Array.from({length:number}, (_, i) => i + 1).filter(f => number % f === 0);
+    const answer = factors.join(", ");
+    const pairs = factors.filter(f => f * f <= number).map(f => `${f} × ${number / f}`);
+    return choiceQuestion(`Which list shows all the factors of <strong>${number}</strong>?`, answer,
+      distractors || [`1, ${number}`, factors.slice(1).join(", "), [...factors, number * 2].join(", ")],
+      `The factor pairs of ${number} are ${pairs.join(", ")}. So all the factors are ${answer}.`, turn,
+      {skill:"Find all the factors", math:{type:"factors",number}});
+  }
+  entries.push({
+    question: {
+      ...factorListQuestion(12, 2, ["1, 12", "2, 3, 4, 6", "12, 24, 36"]),
+      id:"daily-factors-q28",
+      sourceLabel:"Daily math · Factors",
+    },
+    followUps: [18, 16, 20, 24, 28, 30, 36, 40, 42, 48].map((number, i) => ({
+      ...factorListQuestion(number, i + 1),
+      id:`daily-factors-q28-extra-${i + 1}`,
+    })),
+  });
   // Keep the original answer keys and choices so saved attempts still match.
   // These questions now ask Harry to enter numbers, including every follow-up.
   const numberEntryUnits = {
