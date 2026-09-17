@@ -14,6 +14,24 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+
+.fixed-practice h2 { margin: 24px 0 10px; font-size: 24px; }
+.fixed-practice > p { line-height: 1.5; }
+.fixed-summary { font-weight: 800; color: #244775; }
+.fixed-problems { display: grid; gap: 12px; padding: 0; margin: 22px 0 0; list-style: none; }
+.fixed-problems .fixed-problem { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 16px; padding: 18px; border: 1px solid #dce3ef; border-radius: 14px; background: #fff; text-align: left; }
+.fixed-marker { display: grid; justify-items: center; align-content: start; gap: 6px; padding-top: 24px; }
+.fixed-equation.answer-row { display: grid; grid-template-columns: auto auto 76px auto; justify-content: start; align-items: center; gap: 16px; font-size: 28px; font-weight: 800; }
+.fixed-mixed-number { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
+.fixed-answer-fraction input { text-align: center; width: 100%; min-width: 0; padding: 6px; font-size: 24px; }
+.fixed-answer-fraction .fraction-top { padding: 0 0 5px; }
+.fixed-problem .feedback { font-size: 13px; }
+@media (max-width: 520px) {
+  .fixed-problems .fixed-problem { padding: 14px 10px; gap: 10px; grid-template-columns: 28px minmax(0, 1fr); }
+  .fixed-marker .track-lamp { width: 28px; height: 28px; font-size: 18px; }
+  .fixed-equation.answer-row { grid-template-columns: auto auto 64px; gap: 10px; font-size: 26px; }
+  .fixed-equation button { grid-column: 1 / -1; width: 100%; font-size: 15px; }
+}
 html { scroll-behavior: smooth; }
 body {
   margin: 0;

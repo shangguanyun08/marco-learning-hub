@@ -1186,6 +1186,18 @@
     followUps: [[8, 12], [15, 20], [18, 24], [20, 28], [21, 35], [24, 32], [28, 42], [30, 48], [36, 60], [42, 56]]
       .map((parts, i) => ({...simplifyFractionQuestion(...parts), id:`daily-simplify-q35-extra-${i + 1}`})),
   });
+  // Append Q35 after the retired slot so existing saved answers never move.
+  entries.push({
+    question: {
+      id:"daily-mixed-numerators-q35", skill:"Mixed numbers to fractions",
+      prompt:"Fill in the missing numerator in all 10 fractions.",
+      fixedItems: [[3,1,2], [3,2,3], [2,1,2], [4,1,3], [2,3,4],
+        [5,1,2], [1,4,5], [4,2,3], [3,3,4], [2,5,6]]
+        .map(([whole,numerator,denominator]) => ({whole,numerator,denominator,answer:whole*denominator+numerator})),
+      sourceLabel:"Daily math · Complete all 10",
+    },
+    followUps: [],
+  });
   // Keep the original answer keys and choices so saved attempts still match.
   // These questions now ask Harry to enter numbers, including every follow-up.
   const numberEntryUnits = {

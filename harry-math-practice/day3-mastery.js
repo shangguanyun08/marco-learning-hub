@@ -83,6 +83,16 @@
   }
 
   function progress(record) {
+    if (record.practiceItems) {
+      const items = record.practiceItems;
+      const answered = items.filter(item => item.firstTry !== null).length;
+      const solved = items.filter(item => item.firstTry === true || item.correctedAt).length;
+      const status = solved === items.length ? "mastered" : !answered ? "unanswered"
+        : answered === items.length ? "unmastered" : "practicing";
+      return {status, streak:0, credited:false, used:answered, answered, solved,
+        total:items.length, finished:solved === items.length,
+        corrected:items.some(item => item.firstTry === false)};
+    }
     const attempts = record.review?.attempts || [];
     let streak = record.firstTry === true ? 1 : 0;
     for (const attempt of attempts) streak = attempt.correct ? streak + 1 : 0;
@@ -128,6 +138,26 @@
     return true;
   }
 
-  global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next };
+  function normalizeFixedItems(value, questions) {
+    const practiceItems = questions.map((question, index) => {
+      const saved = value?.practiceItems?.[index];
+      const firstAnswer = typeof saved?.firstAnswer === "string" ? saved.firstAnswer.trim() : "";
+      const valid = /^\d+$/.test(firstAnswer);
+      const firstTry = valid ? Number(firstAnswer) === question.answer : null;
+      const lastAnswer = typeof saved?.lastAnswer === "string" ? saved.lastAnswer : firstAnswer;
+      const correctedAt = firstTry === false && /^\d+$/.test(lastAnswer) && Number(lastAnswer) === question.answer
+        && typeof saved?.correctedAt === "string" && Number.isFinite(Date.parse(saved.correctedAt)) ? saved.correctedAt : null;
+      return {firstTry, firstAnswer:valid ? firstAnswer : "", lastAnswer:valid ? lastAnswer : "",
+        attempts:valid ? Math.max(1, Number.isInteger(saved.attempts) ? saved.attempts : 1) : 0,
+        ...(valid && typeof saved.createdAt === "string" && Number.isFinite(Date.parse(saved.createdAt)) ? {createdAt:saved.createdAt} : {}),
+        ...(correctedAt ? {correctedAt} : {})};
+    });
+    const allAnswered = practiceItems.every(item => item.firstTry !== null);
+    return {practiceItems, firstTry:allAnswered ? practiceItems.every(item => item.firstTry) : null,
+      solved:practiceItems.every(item => item.firstTry === true || item.correctedAt),
+      attempts:practiceItems.reduce((sum,item) => sum + item.attempts,0), lastAnswer:"", review:{attempts:[],ready:true}};
+  }
+
+  global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next, normalizeFixedItems };
 })(globalThis);
 

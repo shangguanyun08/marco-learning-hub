@@ -428,9 +428,10 @@ function renderDay3TotalTrack() {
   track.replaceChildren();
   day3Indexes().forEach((index, position) => {
     const state = mastery.progress(records[DAY3_SET].questions[index]);
-    const status = { mastered: "correct", unmastered: "incorrect", practicing: "practicing", unanswered: "pending" }[state.status];
+    const status = state.total && state.finished && state.corrected ? "corrected"
+      : { mastered: "correct", unmastered: "incorrect", practicing: "practicing", unanswered: "pending" }[state.status];
     const statusDescription = { mastered: "mastered", unmastered: "unmastered", practicing: `in practice, ${state.streak} of 3 right in a row`, unanswered: "not started" }[state.status];
-    const description = statusDescription;
+    const description = state.total ? `${state.solved} of ${state.total} correct${state.finished && state.corrected ? ", corrected later" : ""}` : statusDescription;
     const step = lightStep(status, `Q${position + 1}`, `Question ${position + 1}: ${description}`);
     const button = document.createElement("button");
     button.type = "button";
@@ -438,7 +439,7 @@ function renderDay3TotalTrack() {
     button.disabled = false;
     button.dataset.questionIndex = String(index);
     button.setAttribute("aria-label", `Question ${position + 1}: ${questionSets[DAY3_SET][index].skill}, ${description}`);
-    button.setAttribute("aria-controls", `answer-${index + 1}`);
+    button.setAttribute("aria-controls", state.total ? `fixed-${index}-0` : `answer-${index + 1}`);
     button.title = questionSets[DAY3_SET][index].skill;
     button.append(...step.childNodes);
     const skill = document.createElement("span");
@@ -483,6 +484,10 @@ function captureDay3Draft() {
   if (activeSet !== DAY3_SET || activeDay3Index === null) return;
   const card = cards[activeDay3Index];
   const record = records[DAY3_SET].questions[activeDay3Index];
+  if (record.practiceItems) {
+    card.querySelectorAll(".fixed-practice input:not(:disabled)").forEach(input => day3Drafts.set(input.id, input.value));
+    return;
+  }
   if (record.firstTry === null) {
     day3Drafts.set(`${activeDay3Index}:main`, answerDraft(card.querySelector("form"), questionSets[DAY3_SET][activeDay3Index]));
   }
@@ -511,6 +516,12 @@ function normalizeCorrections(value, questionIndex, record) {
 }
 
 function normalizeQuestionRecord(value, setNumber, questionIndex) {
+  const definition = questionSets[setNumber][questionIndex];
+  if (definition.fixedItems) {
+    const record = mastery.normalizeFixedItems(value, definition.fixedItems);
+    if (record.solved && typeof value?.masteredAt === "string" && Number.isFinite(Date.parse(value.masteredAt))) record.masteredAt = value.masteredAt;
+    return record;
+  }
   const confirmed = setNumber === DAY3_SET && PARENT_CONFIRMED_QUESTIONS.has(questionIndex);
   const record = {
     ...(confirmed ? { masteryCredit: "parent-confirmed" } : {}),
@@ -575,7 +586,8 @@ function syncScore(value) {
       normalized[setNumber].questions.reduce(
         (setTotal, question) =>
           setTotal + (question.solved ? 1000 : 0) + (question.firstTry !== null ? 1 : 0)
-            + (question.review?.attempts.length || 0) + Object.keys(question.corrections || {}).length,
+            + (question.review?.attempts.length || 0) + Object.keys(question.corrections || {}).length
+            + (question.practiceItems?.reduce((sum, item) => sum + item.attempts, 0) || 0),
         0,
       ),
     0,
@@ -972,7 +984,127 @@ function renderChoiceOptions(card, index, question, record, locked = record.solv
   answerRow.before(grid);
 }
 
+function renderFixedPractice(card, index) {
+  const definition = activeQuestions()[index];
+  const record = activeRecord().questions[index];
+  const state = mastery.progress(record);
+  for (const selector of [":scope > .expression", ":scope > form", ":scope > .feedback"]) card.querySelector(selector).hidden = true;
+  card.querySelector(":scope > form input").disabled = true;
+  card.querySelectorAll(".answer-track, .mastery-practice, .mastery-badge, .fixed-practice").forEach(element => element.remove());
+  card.classList.remove("retry", "wrong");
+  card.classList.toggle("right", state.finished);
+  const panel = document.createElement("section");
+  panel.className = "fixed-practice";
+  panel.setAttribute("aria-label", "Question 35: 10 mixed-number problems");
+  const heading = document.createElement("h2");
+  heading.textContent = "Fill in all 10 numerators";
+  const instructions = document.createElement("p");
+  instructions.textContent = "Type only the top number. The bottom number is already given. Check each answer, then correct any red circles.";
+  const summary = document.createElement("p");
+  summary.className = "fixed-summary";
+  summary.setAttribute("aria-live", "polite");
+  const firstRight = record.practiceItems.filter(item => item.firstTry === true).length;
+  summary.textContent = `${state.answered}/10 checked · ${state.solved}/10 correct · ${firstRight}/10 correct first try${state.finished ? " · Complete!" : ""}`;
+  const legend = document.createElement("p");
+  legend.className = "light-legend";
+  legend.textContent = "Green: correct first try · Red: try again · Yellow: corrected later";
+  const list = document.createElement("ol");
+  list.className = "fixed-problems";
+  definition.fixedItems.forEach((problem, position) => {
+    const item = record.practiceItems[position];
+    const status = item.firstTry === true ? "correct" : item.correctedAt ? "corrected" : item.firstTry === false ? "incorrect" : "pending";
+    const done = status === "correct" || status === "corrected";
+    const row = lightStep(status, String(position + 1), `Problem ${position + 1}: ${status === "corrected" ? "corrected later" : status}`);
+    row.classList.add("fixed-problem");
+    const marker = document.createElement("div");
+    marker.className = "fixed-marker";
+    marker.append(...row.childNodes);
+    row.append(marker);
+    const form = document.createElement("form");
+    form.noValidate = true;
+    const id = `fixed-${index}-${position}`;
+    const label = document.createElement("label");
+    label.htmlFor = id;
+    label.textContent = `Problem ${position + 1} · Missing numerator`;
+    const equation = document.createElement("div");
+    equation.className = "fixed-equation answer-row";
+    const left = document.createElement("span");
+    left.className = "fixed-mixed-number";
+    left.append(String(problem.whole), makeFraction(problem.numerator, problem.denominator));
+    const equals = document.createElement("span");
+    equals.textContent = "=";
+    const fraction = makeFraction("", problem.denominator);
+    fraction.removeAttribute("aria-label");
+    fraction.classList.add("fixed-answer-fraction");
+    const input = document.createElement("input");
+    input.id = id;
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.pattern = "[0-9]*";
+    input.autocomplete = "off";
+    input.placeholder = "?";
+    input.setAttribute("aria-label", `Problem ${position + 1}: ${problem.whole} and ${problem.numerator} over ${problem.denominator} equals blank over ${problem.denominator}. Missing numerator`);
+    input.setAttribute("aria-describedby", `${id}-feedback`);
+    input.value = done ? item.lastAnswer : day3Drafts.get(id) ?? item.lastAnswer;
+    input.disabled = done;
+    input.addEventListener("input", () => day3Drafts.set(id, input.value));
+    fraction.querySelector(".fraction-top").append(input);
+    const button = document.createElement("button");
+    button.type = "submit";
+    button.textContent = done ? "Correct" : "Check";
+    button.disabled = done;
+    equation.append(left, equals, fraction, button);
+    const feedback = document.createElement("p");
+    feedback.id = `${id}-feedback`;
+    feedback.className = "feedback";
+    feedback.setAttribute("aria-live", "polite");
+    feedback.textContent = status === "corrected" ? "Correct — yellow circle." : status === "correct" ? "Correct first try!"
+      : status === "incorrect" ? "Not yet. Try again." : "";
+    form.append(label, equation, feedback);
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      if (card.hidden || activeSet !== DAY3_SET || activeDay3Index !== index) return;
+      const currentRecord = activeRecord().questions[index];
+      const current = currentRecord.practiceItems[position];
+      if (current.firstTry === true || current.correctedAt) return;
+      const answer = input.value.trim();
+      if (!/^\d+$/.test(answer) || !Number.isSafeInteger(Number(answer))) {
+        feedback.textContent = "Enter one whole number in the top box.";
+        input.focus();
+        return;
+      }
+      captureDay3Draft();
+      const correct = Number(answer) === problem.answer;
+      const now = new Date().toISOString();
+      if (current.firstTry === null) {
+        current.firstTry = correct;
+        current.firstAnswer = answer;
+        current.createdAt = now;
+      } else if (correct) current.correctedAt = now;
+      current.lastAnswer = answer;
+      current.attempts += 1;
+      Object.assign(currentRecord, mastery.normalizeFixedItems(currentRecord, definition.fixedItems));
+      if (currentRecord.solved && !currentRecord.masteredAt) currentRecord.masteredAt = now;
+      day3Drafts.delete(id);
+      saveRecords();
+      renderFixedPractice(card, index);
+      updateProgress();
+      const target = correct ? card.querySelector(".fixed-practice input:not(:disabled)") : document.getElementById(id);
+      target?.focus();
+      if (!correct) target?.select();
+    });
+    row.append(form);
+    list.append(row);
+  });
+  panel.append(heading, instructions, summary, legend, list);
+  card.append(panel);
+}
+
 function renderQuestionState(card, index) {
+  if (activeQuestions()[index].fixedItems) {
+    renderFixedPractice(card, index);
+    return;
+  }
   const question = activeRecord().questions[index];
   const input = card.querySelector("input");
   const button = card.querySelector("button[type='submit']");
@@ -1170,6 +1302,8 @@ function loadSet(setNumber, captureDraft = true) {
 
   let displayNumber = 0;
   cards.forEach((card, index) => {
+    card.querySelector(".fixed-practice")?.remove();
+    for (const selector of [":scope > .expression", ":scope > form", ":scope > .feedback"]) card.querySelector(selector).hidden = false;
     card.querySelector(".mastery-practice")?.remove();
     card.querySelector(".mastery-badge")?.remove();
     card.querySelector(".answer-track")?.remove();
