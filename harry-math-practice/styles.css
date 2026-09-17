@@ -18,6 +18,12 @@
 .fixed-practice h2 { margin: 24px 0 10px; font-size: 24px; }
 .fixed-practice > p { line-height: 1.5; }
 .fixed-summary { font-weight: 800; color: #244775; }
+.fixed-progress-track { margin: 18px 0; padding: 16px 0; border-top: 1px solid #ccd5e4; border-bottom: 1px solid #ccd5e4; }
+.fixed-answer-lights { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: clamp(2px, .7vw, 8px); padding: 4px; margin: 14px 0 0; list-style: none; }
+.fixed-progress-jump { display: flex; flex-direction: column; align-items: center; gap: 7px; width: 100%; min-height: 48px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: inherit; cursor: pointer; }
+.fixed-answer-lights .track-lamp { width: min(calc(100% - 4px), 28px); height: auto; aspect-ratio: 1; font-size: 18px; }
+.fixed-answer-lights .light-caption { font-size: 12px; }
+.fixed-progress-jump:focus-visible { outline: 2px solid #315ecb; outline-offset: 3px; }
 .fixed-problems { display: grid; gap: 12px; padding: 0; margin: 22px 0 0; list-style: none; }
 .fixed-problems .fixed-problem { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 16px; padding: 18px; border: 1px solid #dce3ef; border-radius: 14px; background: #fff; text-align: left; }
 .fixed-marker { display: grid; justify-items: center; align-content: start; gap: 6px; padding-top: 24px; }

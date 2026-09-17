@@ -998,6 +998,33 @@ function renderFixedPractice(card, index) {
   panel.setAttribute("aria-label", "Question 35: 10 mixed-number problems");
   const heading = document.createElement("h2");
   heading.textContent = "Fill in all 10 numerators";
+  const track = document.createElement("section");
+  track.className = "fixed-progress-track";
+  track.setAttribute("aria-label", "Results for all 10 problems");
+  const trackTitle = document.createElement("strong");
+  trackTitle.textContent = "Your answer track";
+  const lights = document.createElement("ol");
+  lights.className = "fixed-answer-lights";
+  record.practiceItems.forEach((item, position) => {
+    const status = item.firstTry === true ? "correct" : item.correctedAt ? "corrected" : item.firstTry === false ? "incorrect" : "pending";
+    const description = `Problem ${position + 1}: ${status === "correct" ? "correct first try" : status === "corrected" ? "corrected later" : status === "incorrect" ? "try again" : "not answered"}`;
+    const step = lightStep(status, String(position + 1), description);
+    const jump = document.createElement("button");
+    jump.type = "button";
+    jump.className = "fixed-progress-jump";
+    jump.setAttribute("aria-label", description);
+    jump.setAttribute("aria-controls", `fixed-problem-${index}-${position}`);
+    jump.append(...step.childNodes);
+    jump.addEventListener("click", () => {
+      const problem = document.getElementById(`fixed-problem-${index}-${position}`);
+      problem?.scrollIntoView({behavior:"smooth", block:"center"});
+      const input = problem?.querySelector("input:not(:disabled)");
+      (input || problem)?.focus({preventScroll:true});
+    });
+    step.append(jump);
+    lights.append(step);
+  });
+  track.append(trackTitle, lights);
   const instructions = document.createElement("p");
   instructions.textContent = "Type only the top number. The bottom number is already given. Check each answer, then correct any red circles.";
   const summary = document.createElement("p");
@@ -1016,6 +1043,8 @@ function renderFixedPractice(card, index) {
     const done = status === "correct" || status === "corrected";
     const row = lightStep(status, String(position + 1), `Problem ${position + 1}: ${status === "corrected" ? "corrected later" : status}`);
     row.classList.add("fixed-problem");
+    row.id = `fixed-problem-${index}-${position}`;
+    row.tabIndex = -1;
     const marker = document.createElement("div");
     marker.className = "fixed-marker";
     marker.append(...row.childNodes);
@@ -1096,7 +1125,7 @@ function renderFixedPractice(card, index) {
     row.append(form);
     list.append(row);
   });
-  panel.append(heading, instructions, summary, legend, list);
+  panel.append(heading, track, summary, legend, instructions, list);
   card.append(panel);
 }
 
