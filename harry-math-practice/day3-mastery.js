@@ -83,6 +83,16 @@
   }
 
   function progress(record) {
+    if (record.guidedItems) {
+      const items = record.guidedItems;
+      const answered = items.filter(item => item.attempts > 0).length;
+      const solved = items.filter(item => item.solved).length;
+      const status = solved === items.length ? "mastered" : !answered ? "unanswered"
+        : items.some(item => item.firstTry === false && !item.solved) ? "unmastered" : "practicing";
+      return {status, streak:0, credited:false, used:answered, answered, solved,
+        total:items.length, finished:solved === items.length,
+        corrected:items.some(item => item.firstTry === false)};
+    }
     if (record.practiceItems) {
       const items = record.practiceItems;
       const answered = items.filter(item => item.firstTry !== null).length;
@@ -158,6 +168,55 @@
       attempts:practiceItems.reduce((sum,item) => sum + item.attempts,0), lastAnswer:"", review:{attempts:[],ready:true}};
   }
 
-  global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next, normalizeFixedItems };
-})(globalThis);
+  function fractionSteps(problem) {
+    const gcd = (a,b) => b ? gcd(b,a%b) : a;
+    const {a,b,c,d} = problem;
+    const denominator = b*d/gcd(b,d);
+    const numerator = a*denominator/b-c*denominator/d;
+    const divisor = gcd(numerator,denominator);
+    const top = numerator/divisor, bottom = denominator/divisor;
+    const steps = [
+      {id:"denominator", title:"Find the least common denominator", answers:[denominator]},
+      {id:"numerator", title:"Find the numerator", answers:[numerator], denominator},
+    ];
+    if (divisor > 1) steps.push({id:"simplify", title:"Write the fraction in simplest form", answers:[top,bottom], numerator,denominator});
+    if (top > bottom && bottom > 1) steps.push({id:"mixed", title:"Change to a whole number + fraction", answers:[Math.floor(top/bottom),top%bottom,bottom], numerator:top,denominator:bottom});
+    return steps;
+  }
 
+  function normalizeGuidedItems(value, problems) {
+    const validDate = date => typeof date === "string" && Number.isFinite(Date.parse(date));
+    const guidedItems = problems.map((problem,index) => {
+      let unlocked = true;
+      const steps = fractionSteps(problem).map((definition,stepIndex) => {
+        const attempts = [];
+        const savedAttempts = value?.guidedItems?.[index]?.steps?.[stepIndex]?.attempts;
+        if (unlocked) for (const saved of Array.isArray(savedAttempts) ? savedAttempts : []) {
+          if (!Array.isArray(saved?.answers) || saved.answers.length !== definition.answers.length ||
+            !saved.answers.every(answer => typeof answer === "string" && /^\d+$/.test(answer) && Number.isSafeInteger(Number(answer)))) continue;
+          const correct = saved.answers.every((answer,i) => Number(answer) === definition.answers[i]);
+          attempts.push({answers:saved.answers.slice(),correct,...(validDate(saved.createdAt) ? {createdAt:saved.createdAt} : {})});
+          if (correct) break;
+        }
+        const solved = attempts.at(-1)?.correct === true;
+        unlocked = unlocked && solved;
+        return {attempts,solved};
+      });
+      const solved = steps.every(step => step.solved);
+      const missed = steps.some(step => step.attempts.some(attempt => !attempt.correct));
+      const completedAt = solved ? steps.at(-1).attempts.at(-1)?.createdAt : null;
+      return {steps,solved,firstTry:missed ? false : solved ? true : null,
+        attempts:steps.reduce((sum,step) => sum+step.attempts.length,0),
+        ...(completedAt ? {completedAt,...(missed ? {correctedAt:completedAt} : {})} : {})};
+    });
+    const solved = guidedItems.every(item => item.solved);
+    const position = Number.isInteger(value?.guidedPosition) && value.guidedPosition >= 0 && value.guidedPosition < problems.length
+      ? value.guidedPosition : Math.max(0,guidedItems.findIndex(item => !item.solved));
+    return {guidedItems,guidedPosition:position,solved,
+      firstTry:guidedItems.every(item => item.firstTry !== null) ? guidedItems.every(item => item.firstTry) : null,
+      attempts:guidedItems.reduce((sum,item) => sum+item.attempts,0),lastAnswer:"",review:{attempts:[],ready:true},
+      ...(solved && validDate(value?.masteredAt) ? {masteredAt:value.masteredAt} : {})};
+  }
+
+  global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next, normalizeFixedItems, fractionSteps, normalizeGuidedItems };
+})(globalThis);

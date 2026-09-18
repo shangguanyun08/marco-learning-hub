@@ -1157,7 +1157,8 @@
     ].map((parts, i) => ({...fractionCalculation(...parts, "+"), id:`daily-fraction-add-q32-extra-${i + 1}`})),
   });
   entries.push({
-    question: {...fractionCalculation(5, 8, 5, 12, "−"), id:"daily-fraction-subtract-q33", sourceLabel:"Daily math · Subtract fractions"},
+    // Preserve the original Q33 record and bank in their saved slot.
+    question: {...fractionCalculation(5, 8, 5, 12, "−"), id:"daily-fraction-subtract-q33", sourceLabel:"Daily math · Subtract fractions", removed:true},
     followUps: [
       [7, 10, 1, 6], [3, 4, 2, 9], [5, 6, 3, 8], [7, 12, 1, 8], [4, 5, 3, 10],
       [5, 7, 1, 14], [11, 15, 1, 6], [7, 9, 5, 12], [13, 16, 1, 6], [5, 6, 7, 18],
@@ -1194,6 +1195,18 @@
       fixedItems: [[3,1,2], [3,2,3], [2,1,2], [4,1,3], [2,3,4],
         [5,1,2], [1,4,5], [4,2,3], [3,3,4], [2,5,6]]
         .map(([whole,numerator,denominator]) => ({whole,numerator,denominator,answer:whole*denominator+numerator})),
+      sourceLabel:"Daily math · Complete all 10",
+    },
+    followUps: [],
+  });
+  // The replacement for Q33 is last; visible cards are renumbered automatically.
+  entries.push({
+    question: {
+      id:"daily-guided-fractions-q35", skill:"Subtract fractions step by step",
+      prompt:"Complete all 10 fraction problems, one step at a time.",
+      guidedItems: [[5,8,5,12], [4,5,3,10], [7,10,1,6], [3,4,2,9], [7,12,1,8],
+        [5,6,7,18], [7,3,1,6], [9,4,1,6], [19,10,1,6], [5,2,3,6]]
+        .map(([a,b,c,d]) => ({a,b,c,d,operator:"−"})),
       sourceLabel:"Daily math · Complete all 10",
     },
     followUps: [],

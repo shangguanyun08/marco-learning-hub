@@ -38,12 +38,12 @@ function submit(api, result, bank, correct) {
 
 test("35 main questions retain all existing slots after combining simplest-form practice", () => {
   const api=boot();
-  assert.equal(api.questionSets[6].length,44);
+  assert.equal(api.questionSets[6].length,45);
   assert.equal(api.questionCount(6),35);
   assert.deepEqual(clone(api.day3Indexes().slice(0,6)),[0,3,5,6,8,12]);
   assert.deepEqual(clone(api.questionSets[6].slice(14,28).map(q=>q.id)),[2,5,7,15,16,18,21,23,24,26,27,29,30,34].map(n=>`2026-08-30-q${n}`));
-  assert.equal(api.day3Banks.length,44);
-  assert.ok(api.day3Banks.every((bank,index)=>bank.length===(api.questionSets[6][index].fixedItems ? 0 : 10)));
+  assert.equal(api.day3Banks.length,45);
+  assert.ok(api.day3Banks.every((bank,index)=>bank.length===((api.questionSets[6][index].fixedItems || api.questionSets[6][index].guidedItems) ? 0 : 10)));
   for (const [set,count] of [[4,14],[5,14],[7,10],[8,10]]) assert.equal(api.questionCount(set),count);
 });
 
@@ -228,7 +228,7 @@ test("Q32 and Q33 use the requested fractions and all calculations have reduced,
   }
 });
 
-for (const number of [32, 33, 34]) test(`Q${number} uses two fraction boxes and preserves earlier progress through mastery and reload`, () => {
+for (const number of [32, 33]) test(`Q${number} uses two fraction boxes and preserves earlier progress through mastery and reload`, () => {
   const data = boot(), index = data.day3Indexes()[number - 1];
   finishBefore(data, number);
   const legacy = clone(data.records);
@@ -461,7 +461,7 @@ test("adding STAR questions preserves all old answer slots, first tries and foll
   const old={4:{questions:Array.from({length:16},()=>({firstTry:true,attempts:1,solved:true,lastAnswer:"5"})),completedAt:"2026-08-28T23:48:41.249Z"},6:{questions:Array.from({length:14},(_,i)=>({firstTry:i%2===0,attempts:2,solved:true,lastAnswer:String(i)})),completedAt:null}};
   old[6].questions[12]=existing;
   const restored=boot(old);
-  assert.equal(restored.records[6].questions.length,44);
+  assert.equal(restored.records[6].questions.length,45);
   for(let i=0;i<14;i++) {
     assert.equal(restored.records[6].questions[i].lastAnswer,old[6].questions[i].lastAnswer);
     assert.equal(restored.records[6].questions[i].firstTry,old[6].questions[i].firstTry);
@@ -546,7 +546,7 @@ test("all 35 questions can be opened without changing answers or losing a draft"
     }
     assert.equal(page.document.querySelector("#day3-next").disabled,true);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="44"]').hidden,false);
+    assert.equal(page.document.querySelector('[data-question="45"]').hidden,false);
     page.document.querySelector('[data-question-index="0"]').click();
     assert.equal(page.document.querySelector("#day3-previous").disabled,true);
     assert.equal(page.document.querySelector("#day3-next").disabled,false);
@@ -634,8 +634,8 @@ test("mastery records the third correct answer time and preserves it through rel
   assert.equal(api.normalizeRecords({ 6: { questions: oldQuestions } })[6].questions[5].masteredAt, undefined);
 });
 
-test("Q35 requires all ten numerator answers and preserves red/yellow/green results after reload and sync", () => {
-  const data = boot(), index = data.day3Indexes().at(-1);
+test("Q34 requires all ten numerator answers and preserves red/yellow/green results after reload and sync", () => {
+  const data = boot(), index = data.day3Indexes().at(-2);
   const problems = data.questionSets[6][index].fixedItems;
   assert.equal(index,43, "Append after the retired slot");
   assert.equal(problems.length,10);
@@ -668,7 +668,7 @@ test("Q35 requires all ten numerator answers and preserves red/yellow/green resu
     assert.equal(page.api.records[6].questions[index].practiceItems[0].firstAnswer,"8");
     assert.equal(page.api.records[6].questions[index].practiceItems[0].firstTry,false);
     for (let position = 1; position <= 3; position++) submitItem(position,String(problems[position].answer));
-    assert.equal(data.mastery.progress(page.api.records[6].questions[index]).finished,false,"Three correct answers must not end Q35");
+    assert.equal(data.mastery.progress(page.api.records[6].questions[index]).finished,false,"Three correct answers must not end Q34");
     assert.equal(card.querySelectorAll(".fixed-practice input:not(:disabled)").length,6);
     page.api.openDay3Question(5);
     page.api.openDay3Question(index);
@@ -701,8 +701,8 @@ test("Q35 requires all ten numerator answers and preserves red/yellow/green resu
   } finally { page.close(); }
 });
 
-test("Q35 saves unfinished red answers without crediting unsubmitted or forged corrections", () => {
-  const data = boot(), index = data.day3Indexes().at(-1), page = bootHistoryPage(data.records);
+test("Q34 saves unfinished red answers without crediting unsubmitted or forged corrections", () => {
+  const data = boot(), index = data.day3Indexes().at(-2), page = bootHistoryPage(data.records);
   try {
     page.api.openDay3Question(index);
     const input = page.document.getElementById(`fixed-${index}-1`);
@@ -847,7 +847,12 @@ function finishBefore(data, number) {
   for (const index of data.day3Indexes().slice(0, number - 1)) {
     const current = data.records[6].questions[index];
     if (data.mastery.progress(current).finished) continue;
-    Object.assign(current, {firstTry: true, attempts: 1, lastAnswer: String(data.questionSets[6][index].answer)});
+    const definition = data.questionSets[6][index];
+    if (definition.fixedItems) {
+      Object.assign(current, data.mastery.normalizeFixedItems({practiceItems:definition.fixedItems.map(q => ({firstAnswer:String(q.answer),lastAnswer:String(q.answer),attempts:1}))}, definition.fixedItems));
+      continue;
+    }
+    Object.assign(current, {firstTry: true, attempts: 1, lastAnswer: String(definition.answer)});
     submit(data, current, data.day3Banks[index], true);
     submit(data, current, data.day3Banks[index], true);
   }
@@ -926,12 +931,12 @@ test("finishing the ten-follow-up limit preserves free navigation and the last q
     const allDone = boot(page.api.records);
     finishBefore(allDone, 35);
     page.remote(allDone.records);
-    page.document.querySelector('[data-question-index="43"]').click();
+    page.document.querySelector('[data-question-index="44"]').click();
     assert.equal(page.document.querySelector("#day3-next").disabled, true);
     assert.equal(page.document.querySelectorAll(".question-jump:disabled").length, 0);
     const saved = JSON.stringify(page.api.records);
     page.api.moveDay3Question(1);
-    assert.equal(page.document.querySelector('[data-question="44"]').hidden, false);
+    assert.equal(page.document.querySelector('[data-question="45"]').hidden, false);
     assert.equal(JSON.stringify(page.api.records), saved);
     assert.deepEqual(page.errors, []);
   } finally { page.close(); }
@@ -1048,7 +1053,7 @@ test("legacy correct marks remain reviewable without inventing a missing first a
 });
 
 test("Q16 onward changes ten question families to numeric entry and preserves Q17 and Q25 choices", () => {
-  const data = boot(), indexes = data.day3Indexes().filter(index => !data.questionSets[6][index].fixedItems);
+  const data = boot(), indexes = data.day3Indexes().filter(index => !data.questionSets[6][index].fixedItems && !data.questionSets[6][index].guidedItems);
   for (const [position, index] of indexes.slice(0, 29).entries()) {
     const q = data.questionSets[6][index];
     const converted = position >= 15 && position <= 26 && ![16, 24].includes(position);
@@ -1387,8 +1392,8 @@ test("normalization rejects correction marks for right, unanswered, out-of-scope
   assert.equal(data.normalizeRecords(normalized)[6].questions[5].corrections, undefined);
 });
 
-test("all 374 active main and practice misses can be corrected without revealing answers or changing original scores", () => {
-  const data = boot(), indexes = data.day3Indexes().filter(index => !data.questionSets[6][index].fixedItems);
+test("all 363 active main and practice misses can be corrected without revealing answers or changing original scores", () => {
+  const data = boot(), indexes = data.day3Indexes().filter(index => !data.questionSets[6][index].fixedItems && !data.questionSets[6][index].guidedItems);
   const wrongAnswer = q => String(q.choices?.find(choice => !data.isCorrectAnswer(String(choice), q)) ?? "-999");
   for (const index of indexes) {
     Object.assign(data.records[6].questions[index], {firstTry:false, attempts:1, solved:false,
@@ -1435,15 +1440,15 @@ test("all 374 active main and practice misses can be corrected without revealing
       assert.equal(card.querySelectorAll(".light-step.corrected").length,11);
       assert.equal(data.mastery.progress(page.api.records[6].questions[index]).status,data.mastery.progress(before[6].questions[index]).status);
     }
-    assert.equal(count,374);
+    assert.equal(count,363);
     const corrected = clone(page.api.records), withoutCorrections = clone(corrected);
     for (const index of indexes) delete withoutCorrections[6].questions[index].corrections;
     assert.deepEqual(withoutCorrections,before);
     assert.deepEqual(clone(boot(corrected).recordStats(6)),clone(originalStats));
-    assert.equal(data.syncScore(corrected),data.syncScore(before)+374);
+    assert.equal(data.syncScore(corrected),data.syncScore(before)+363);
     assert.deepEqual(clone(boot(corrected).records),corrected,"All yellow marks survive normalization and reload");
     assert.equal(JSON.stringify([data.questionSets,data.day3Banks]),originals);
-    assert.equal(page.pushed.length,374,"Only successful corrections save online");
+    assert.equal(page.pushed.length,363,"Only successful corrections save online");
     assert.deepEqual(page.errors,[]);
   } finally {page.close();}
 });
@@ -1454,4 +1459,130 @@ test("shaded-fraction diagrams do not state the fraction answer in their accessi
     assert.match(q.visualHtml, /aria-label="Cylinder with a shaded lower portion"/);
     assert.doesNotMatch(q.visualHtml, /shaded about/);
   }
+});
+
+const guidedExpected = [
+  [[24],[5]], [[10],[5],[1,2]], [[30],[16],[8,15]], [[36],[19]], [[24],[11]],
+  [[18],[8],[4,9]], [[6],[13],[2,1,6]], [[12],[25],[2,1,12]],
+  [[30],[52],[26,15],[1,11,15]], [[6],[12],[2,1]],
+];
+
+test("old Q33 moves last with stable saved slots, ten accurate problems and only necessary steps", () => {
+  const data = boot(), indexes = data.day3Indexes();
+  assert.deepEqual(clone(indexes.slice(-3)),[41,43,44]);
+  assert.equal(data.questionSets[6][40].removed,true);
+  const legacy = data.records[6].questions[40];
+  Object.assign(legacy,{firstTry:false,attempts:1,lastAnswer:"4/24",corrections:{0:{answer:"5/24",createdAt:"2026-09-17T12:00:00Z"}}});
+  submit(data,legacy,data.day3Banks[40],true);
+  const saved = clone(data.records);
+  const reloaded = boot(saved);
+  assert.deepEqual(clone(reloaded.records[6].questions.slice(0,44)),saved[6].questions.slice(0,44));
+  const problems = data.questionSets[6][44].guidedItems;
+  assert.equal(problems.length,10);
+  for (const [i,problem] of problems.entries()) {
+    const steps = data.mastery.fractionSteps(problem);
+    assert.deepEqual(clone(steps.map(step => step.answers)),guidedExpected[i]);
+    const n=guidedExpected[i][1][0],d=guidedExpected[i][0][0];
+    assert.equal(n*problem.b*problem.d,(problem.a*problem.d-problem.c*problem.b)*d);
+    for(let multiple=1;multiple<d;multiple++) assert.ok(multiple%problem.b || multiple%problem.d);
+  }
+  assert.deepEqual(clone(data.mastery.fractionSteps(problems[8]).map(step=>step.id)),["denominator","numerator","simplify","mixed"]);
+  assert.deepEqual(clone(data.mastery.fractionSteps(problems[9]).map(step=>step.id)),["denominator","numerator","simplify"]);
+});
+
+test("guided fractions gate each step, preserve all retries and colors, resume and require all ten", () => {
+  const data = boot(), page = bootHistoryPage(data.records), index=44;
+  const check = answers => {
+    const form = page.document.querySelector(".guided-form");
+    assert.ok(form);
+    assert.equal(form.querySelectorAll("input").length,answers.length);
+    form.querySelectorAll("input").forEach((input,i)=>{input.value=String(answers[i]);});
+    form.requestSubmit();
+  };
+  try {
+    page.api.openDay3Question(index);
+    const card = page.document.querySelector('[data-question="45"]');
+    assert.equal(card.querySelector(".number").textContent,"35");
+    assert.equal(card.querySelectorAll(".fixed-answer-lights li").length,10);
+    const original = clone(page.api.records[6].questions.slice(0,44));
+    for(const invalid of ["","-1","2.4","1e2","24/1"]) check([invalid]);
+    assert.equal(page.api.records[6].questions[index].attempts,0);
+    for(let i=0;i<12;i++) check([48]); // A common denominator must be the least one.
+    assert.equal(page.api.records[6].questions[index].guidedItems[0].attempts,12);
+    assert.match(card.querySelector(".guided-step-title").textContent,/least common denominator/);
+    assert.equal(card.querySelectorAll(".fixed-answer-lights .incorrect").length,1);
+    assert.equal(card.querySelector(".guided-form .feedback").textContent,"Not yet. Try again.");
+    assert.equal(card.querySelector(".correct-answer"),null);
+    check([24]);
+    assert.match(card.querySelector(".guided-step-title").textContent,/Find the numerator/);
+    assert.equal(card.querySelector(".guided-answer .fraction-bottom").textContent,"24");
+    assert.equal(card.querySelector(".guided-form input").value,"");
+    check([5]);
+    assert.equal(card.querySelector(".guided-form"),null,"Unnecessary simplify and mixed steps are skipped");
+    assert.equal(card.querySelectorAll(".fixed-answer-lights .corrected").length,1);
+    assert.equal(page.api.records[6].questions[index].guidedItems[0].firstTry,false);
+    assert.equal(page.api.records[6].questions[index].solved,false);
+    for(let position=1;position<10;position++) {
+      card.querySelector(".guided-next").click();
+      assert.equal(page.api.records[6].questions[index].guidedPosition,position);
+      for(let step=0;step<guidedExpected[position].length;step++) {
+        if(position===1 && step===2) {
+          check([2,4]);
+          assert.match(card.querySelector(".guided-step-title").textContent,/simplest form/);
+          assert.equal(card.querySelector(".guided-form .feedback").textContent,"Not yet. Try again.");
+        }
+        if(position===8 && step===3) {
+          const saved=JSON.parse(page.win.localStorage.getItem("harry-math-practice-record-v1"));
+          const restored=bootHistoryPage(saved);
+          try {
+            restored.api.openDay3Question(index);
+            assert.match(restored.document.querySelector(".guided-practice h3").textContent,/Problem 9/);
+            assert.match(restored.document.querySelector(".guided-step-title").textContent,/Step 4 of 4/);
+            assert.equal(restored.document.querySelectorAll(".guided-form input").length,3);
+            assert.deepEqual(clone(restored.api.records),saved);
+          } finally {restored.close();}
+          page.remote(saved);
+          page.api.openDay3Question(index);
+          assert.match(card.querySelector(".guided-step-title").textContent,/Step 4 of 4/);
+        }
+        check(guidedExpected[position][step]);
+      }
+      assert.equal(page.api.records[6].questions[index].solved,position===9);
+    }
+    const saved=clone(page.api.records), record=saved[6].questions[index];
+    assert.equal(record.firstTry,false);
+    assert.equal(record.solved,true);
+    assert.ok(record.masteredAt);
+    assert.equal(card.querySelector(".guided-form, .guided-next"),null);
+    assert.equal(card.querySelectorAll(".fixed-answer-lights .correct").length,8);
+    assert.equal(card.querySelectorAll(".fixed-answer-lights .corrected").length,2);
+    assert.ok(page.document.querySelector('[data-question-index="44"]').closest(".corrected"));
+    assert.match(card.querySelector(".fixed-summary").textContent,/10\/10 correct/);
+    assert.deepEqual(saved[6].questions.slice(0,44),original);
+    assert.deepEqual(clone(boot(saved).records),saved);
+    assert.equal(page.pushed.at(-1)[6].questions[index].solved,true);
+    assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
+});
+
+test("guided step normalization rejects forged completion and retains drafts across card navigation", () => {
+  const data=boot(), index=44, page=bootHistoryPage(data.records);
+  try {
+    page.api.openDay3Question(index);
+    page.document.querySelector(".guided-form input").value="24";
+    page.api.openDay3Question(43);page.api.openDay3Question(index);
+    assert.equal(page.document.querySelector(".guided-form input").value,"24");
+    page.document.querySelector(".guided-form").requestSubmit();
+    page.document.querySelector(".guided-form input").value="99";
+    page.document.querySelector(".guided-form").requestSubmit();
+    const saved=clone(page.api.records);
+    Object.assign(saved[6].questions[index].guidedItems[0],{solved:true,firstTry:true});
+    saved[6].questions[index].guidedItems[0].steps[1].attempts[0].correct=true;
+    const normalized=boot(saved).records[6].questions[index].guidedItems[0];
+    assert.equal(normalized.solved,false);assert.equal(normalized.firstTry,false);
+    saved[6].questions[index].guidedItems[0].steps[0].attempts={};
+    const blocked=boot(saved).records[6].questions[index].guidedItems[0];
+    assert.equal(blocked.attempts,0);assert.equal(blocked.solved,false);
+    assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
 });

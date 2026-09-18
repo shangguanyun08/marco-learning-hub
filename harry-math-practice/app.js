@@ -152,7 +152,7 @@ function lightStep(status, label, description) {
 }
 
 function correctionQuestion(questionIndex, position) {
-  const number = day3Indexes().indexOf(questionIndex) + 1;
+  const number = questionSets[DAY3_SET][questionIndex]?.id === "daily-fraction-subtract-q33" ? 36 : day3Indexes().indexOf(questionIndex) + 1;
   if (number < 1 || !Number.isInteger(position) || position < 0) return null;
   const original = position === 0 ? questionSets[DAY3_SET][questionIndex] : day3Banks[questionIndex]?.[position - 1];
   if (!original) return null;
@@ -439,7 +439,7 @@ function renderDay3TotalTrack() {
     button.disabled = false;
     button.dataset.questionIndex = String(index);
     button.setAttribute("aria-label", `Question ${position + 1}: ${questionSets[DAY3_SET][index].skill}, ${description}`);
-    button.setAttribute("aria-controls", state.total ? `fixed-${index}-0` : `answer-${index + 1}`);
+    button.setAttribute("aria-controls", questionSets[DAY3_SET][index].guidedItems ? `guided-${index}` : state.total ? `fixed-${index}-0` : `answer-${index + 1}`);
     button.title = questionSets[DAY3_SET][index].skill;
     button.append(...step.childNodes);
     const skill = document.createElement("span");
@@ -484,7 +484,7 @@ function captureDay3Draft() {
   if (activeSet !== DAY3_SET || activeDay3Index === null) return;
   const card = cards[activeDay3Index];
   const record = records[DAY3_SET].questions[activeDay3Index];
-  if (record.practiceItems) {
+  if (record.practiceItems || record.guidedItems) {
     card.querySelectorAll(".fixed-practice input:not(:disabled)").forEach(input => day3Drafts.set(input.id, input.value));
     return;
   }
@@ -517,6 +517,7 @@ function normalizeCorrections(value, questionIndex, record) {
 
 function normalizeQuestionRecord(value, setNumber, questionIndex) {
   const definition = questionSets[setNumber][questionIndex];
+  if (definition.guidedItems) return mastery.normalizeGuidedItems(value, definition.guidedItems);
   if (definition.fixedItems) {
     const record = mastery.normalizeFixedItems(value, definition.fixedItems);
     if (record.solved && typeof value?.masteredAt === "string" && Number.isFinite(Date.parse(value.masteredAt))) record.masteredAt = value.masteredAt;
@@ -587,7 +588,8 @@ function syncScore(value) {
         (setTotal, question) =>
           setTotal + (question.solved ? 1000 : 0) + (question.firstTry !== null ? 1 : 0)
             + (question.review?.attempts.length || 0) + Object.keys(question.corrections || {}).length
-            + (question.practiceItems?.reduce((sum, item) => sum + item.attempts, 0) || 0),
+            + (question.practiceItems?.reduce((sum, item) => sum + item.attempts, 0) || 0)
+            + (question.guidedItems?.reduce((sum, item) => sum + item.attempts, 0) || 0),
         0,
       ),
     0,
@@ -995,7 +997,7 @@ function renderFixedPractice(card, index) {
   card.classList.toggle("right", state.finished);
   const panel = document.createElement("section");
   panel.className = "fixed-practice";
-  panel.setAttribute("aria-label", "Question 35: 10 mixed-number problems");
+  panel.setAttribute("aria-label", `Question ${day3Indexes().indexOf(index) + 1}: 10 mixed-number problems`);
   const heading = document.createElement("h2");
   heading.textContent = "Fill in all 10 numerators";
   const track = document.createElement("section");
@@ -1129,7 +1131,169 @@ function renderFixedPractice(card, index) {
   card.append(panel);
 }
 
+function renderGuidedPractice(card, index) {
+  const definition = activeQuestions()[index];
+  const record = activeRecord().questions[index];
+  const state = mastery.progress(record);
+  const position = record.guidedPosition;
+  const problem = definition.guidedItems[position];
+  const item = record.guidedItems[position];
+  const steps = mastery.fractionSteps(problem);
+  const stepIndex = item.steps.findIndex(step => !step.solved);
+  const currentStep = steps[stepIndex];
+  for (const selector of [":scope > .expression", ":scope > form", ":scope > .feedback"]) card.querySelector(selector).hidden = true;
+  card.querySelector(":scope > form input").disabled = true;
+  card.querySelectorAll(".answer-track, .mastery-practice, .mastery-badge, .fixed-practice").forEach(element => element.remove());
+  card.classList.remove("retry", "wrong");
+  card.classList.toggle("right", state.finished);
+  const panel = document.createElement("section");
+  panel.className = "fixed-practice guided-practice";
+  panel.id = `guided-${index}`;
+  panel.setAttribute("aria-label", "10 step-by-step fraction problems");
+  const heading = document.createElement("h2");
+  heading.textContent = "Subtract fractions · 10 problems";
+  const track = document.createElement("ol");
+  track.className = "fixed-answer-lights";
+  track.setAttribute("aria-label", "Results for all 10 problems");
+  function openProblem(target) {
+    captureDay3Draft();
+    activeRecord().questions[index].guidedPosition = target;
+    saveRecords();
+    renderGuidedPractice(card,index);
+    card.querySelector(".guided-practice input, .guided-next")?.focus();
+  }
+  record.guidedItems.forEach((result,i) => {
+    const status = result.solved ? result.firstTry ? "correct" : "corrected"
+      : result.firstTry === false ? "incorrect" : result.attempts ? "practicing" : "pending";
+    const description = `Problem ${i+1}: ${result.solved ? result.firstTry ? "correct first try" : "corrected later" : status === "incorrect" ? "try again" : status === "practicing" ? "in progress" : "not started"}`;
+    const light = lightStep(status,String(i+1),description);
+    const jump = document.createElement("button");
+    jump.type = "button";
+    jump.className = "fixed-progress-jump";
+    jump.setAttribute("aria-label",description);
+    jump.setAttribute("aria-controls",panel.id);
+    if (i === position) { jump.setAttribute("aria-current","step"); light.classList.add("current-question"); }
+    jump.append(...light.childNodes);
+    jump.addEventListener("click",() => openProblem(i));
+    light.append(jump);
+    track.append(light);
+  });
+  const summary = document.createElement("p");
+  summary.className = "fixed-summary";
+  summary.textContent = `${state.solved}/10 correct · ${record.guidedItems.filter(result => result.firstTry === true).length}/10 correct first try${state.finished ? " · Complete!" : ""}`;
+  const legend = document.createElement("p");
+  legend.className = "light-legend";
+  legend.textContent = "Green: correct first try · Red: try again · Yellow: corrected later";
+  const problemHeading = document.createElement("h3");
+  problemHeading.textContent = `Problem ${position+1} of 10`;
+  const expression = document.createElement("div");
+  expression.className = "guided-equation";
+  expression.append(makeFraction(problem.a,problem.b)," − ",makeFraction(problem.c,problem.d));
+  panel.append(heading,track,summary,legend,problemHeading,expression);
+  if (item.solved) {
+    const done = document.createElement("p");
+    done.className = "guided-success";
+    done.setAttribute("role","status");
+    done.textContent = `${item.firstTry ? "✓ Correct first try!" : "✓ Correct — yellow circle."} ${state.finished ? "All 10 problems are correct!" : "This problem is complete."}`;
+    const last = steps.at(-1), answers = last.answers;
+    const result = document.createElement("div");
+    result.className = "guided-equation";
+    result.append("= ");
+    if (last.id === "mixed") result.append(String(answers[0])," + ",makeFraction(answers[1],answers[2]));
+    else {
+      const top = last.id === "simplify" ? answers[0] : steps[1].answers[0];
+      const bottom = last.id === "simplify" ? answers[1] : steps[0].answers[0];
+      result.append(bottom === 1 ? String(top) : makeFraction(top,bottom));
+    }
+    panel.append(result,done);
+    const next = record.guidedItems.findIndex((result,i) => i > position && !result.solved);
+    const target = next === -1 ? record.guidedItems.findIndex(result => !result.solved) : next;
+    if (target !== -1) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "guided-next";
+      button.textContent = "Next problem →";
+      button.addEventListener("click",() => openProblem(target));
+      panel.append(button);
+    }
+    card.append(panel);
+    return;
+  }
+  const title = document.createElement("h4");
+  title.className = "guided-step-title";
+  title.textContent = `Step ${stepIndex+1} of ${steps.length} · ${currentStep.title}`;
+  const instruction = document.createElement("p");
+  instruction.textContent = {
+    denominator:"What is the smallest number that both denominators divide into?",
+    numerator:"Use this denominator for both fractions. Subtract, then fill in the top number.",
+    simplify:"Divide the top and bottom by their greatest common factor (约分). Fill in both numbers.",
+    mixed:"Fill in the whole number, then the numerator and denominator of the fraction.",
+  }[currentStep.id];
+  const form = document.createElement("form");
+  form.className = "guided-form";
+  const equation = document.createElement("div");
+  equation.className = "guided-equation guided-answer";
+  const inputs = [];
+  function input(label) {
+    const field = document.createElement("input");
+    field.type = "text";
+    field.inputMode = "numeric";
+    field.autocomplete = "off";
+    field.id = `guided-input-${index}-${position}-${stepIndex}-${inputs.length}`;
+    field.setAttribute("aria-label",label);
+    field.value = day3Drafts.get(field.id) ?? "";
+    inputs.push(field);
+    return field;
+  }
+  function fractionInputs(topLabel,bottomLabel) {
+    const fraction = makeFraction("",bottomLabel ? "" : currentStep.denominator);
+    fraction.removeAttribute("aria-label");
+    fraction.querySelector(".fraction-top").append(input(topLabel));
+    if (bottomLabel) fraction.querySelector(".fraction-bottom").append(input(bottomLabel));
+    return fraction;
+  }
+  if (currentStep.id === "denominator") equation.append(input("Least common denominator"));
+  if (currentStep.id === "numerator") equation.append("= ",fractionInputs("Numerator"));
+  if (currentStep.id === "simplify") equation.append(makeFraction(currentStep.numerator,currentStep.denominator)," = ",fractionInputs("Simplest numerator","Simplest denominator"));
+  if (currentStep.id === "mixed") equation.append(makeFraction(currentStep.numerator,currentStep.denominator)," = ",input("Whole number")," + ",fractionInputs("Fraction numerator","Fraction denominator"));
+  const button = document.createElement("button");
+  button.type = "submit";
+  button.textContent = "Check";
+  const feedback = document.createElement("p");
+  feedback.className = "feedback";
+  feedback.setAttribute("aria-live","polite");
+  feedback.textContent = item.steps[stepIndex].attempts.length ? "Not yet. Try again." : stepIndex ? "✓ Correct. Continue with this step." : "Check each step to continue.";
+  form.append(equation,button,feedback);
+  form.addEventListener("submit",event => {
+    event.preventDefault();
+    if (card.hidden || activeSet !== DAY3_SET || activeDay3Index !== index || !form.isConnected) return;
+    const answers = inputs.map(field => field.value.trim());
+    if (!answers.every(answer => /^\d+$/.test(answer) && Number.isSafeInteger(Number(answer)))) {
+      feedback.textContent = "Fill every box with one whole number.";
+      inputs.find(field => !/^\d+$/.test(field.value.trim()))?.focus();
+      return;
+    }
+    const current = activeRecord().questions[index];
+    if (current.guidedPosition !== position || current.guidedItems[position].steps[stepIndex].solved) return;
+    const now = new Date().toISOString();
+    current.guidedItems[position].steps[stepIndex].attempts.push({answers,createdAt:now});
+    Object.assign(current,mastery.normalizeGuidedItems(current,definition.guidedItems));
+    if (current.solved && !current.masteredAt) current.masteredAt = now;
+    inputs.forEach(field => day3Drafts.delete(field.id));
+    saveRecords();
+    renderGuidedPractice(card,index);
+    updateProgress();
+    card.querySelector(".guided-practice input, .guided-next")?.focus();
+  });
+  panel.append(title,instruction,form);
+  card.append(panel);
+}
+
 function renderQuestionState(card, index) {
+  if (activeQuestions()[index].guidedItems) {
+    renderGuidedPractice(card, index);
+    return;
+  }
   if (activeQuestions()[index].fixedItems) {
     renderFixedPractice(card, index);
     return;

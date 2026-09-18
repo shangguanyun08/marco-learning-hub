@@ -356,6 +356,21 @@ footer a:hover { text-decoration: underline; }
 }
 
 /* Keep fraction division readable alongside the existing question cards. */
+.guided-practice h3 { margin: 28px 0 12px; font-size: 22px; }
+.guided-step-title { margin: 22px 0 10px; font-size: 18px; line-height: 1.5; }
+.guided-equation { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 30px; font-weight: 800; }
+.guided-answer { margin: 18px 0; }
+.guided-answer input { width: 76px; min-width: 0; padding: 9px 5px; font-size: 24px; text-align: center; }
+.guided-answer .fraction { min-width: 76px; }
+.guided-form > button, .guided-next { min-height: 48px; padding: 12px 24px; border: 0; border-radius: 10px; color: white; background: #244775; font-family: inherit; font-size: 16px; font-weight: 800; line-height: 1.4; cursor: pointer; }
+.guided-success { color: #08723e; font-weight: 800; }
+.guided-practice button:focus-visible { outline: 3px solid #315ecb; outline-offset: 3px; }
+@media (max-width: 480px) {
+  .guided-equation { gap: 8px; font-size: 26px; }
+  .guided-answer input { width: 56px; font-size: 22px; }
+  .guided-answer .fraction { min-width: 56px; }
+  .guided-form > button, .guided-next { width: 100%; }
+}
 .question-visual.big-equation { display:flex; align-items:center; justify-content:center; gap:12px; flex-wrap:wrap; }
 
 .saved-answer.correct { color: #08723e; }
