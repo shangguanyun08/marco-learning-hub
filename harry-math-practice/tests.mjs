@@ -1501,6 +1501,7 @@ test("guided fractions gate each step, preserve all retries and colors, resume a
   };
   try {
     page.api.openDay3Question(index);
+    page.document.querySelectorAll(".guided-practice .fixed-progress-jump")[2].click();
     const card = page.document.querySelector('[data-question="45"]');
     assert.equal(card.querySelector(".number").textContent,"35");
     assert.equal(card.querySelectorAll(".fixed-answer-lights li").length,10);
@@ -1523,7 +1524,8 @@ test("guided fractions gate each step, preserve all retries and colors, resume a
     assert.equal(page.api.records[6].questions[index].guidedItems[0].firstTry,false);
     assert.equal(page.api.records[6].questions[index].solved,false);
     for(let position=1;position<10;position++) {
-      card.querySelector(".guided-next").click();
+      const order = data.mastery.guidedOrder(data.questionSets[6][index].guidedItems);
+      card.querySelectorAll(".fixed-progress-jump")[order.indexOf(position)].click();
       assert.equal(page.api.records[6].questions[index].guidedPosition,position);
       for(let step=0;step<guidedExpected[position].length;step++) {
         if(position===1 && step===2) {
@@ -1536,7 +1538,7 @@ test("guided fractions gate each step, preserve all retries and colors, resume a
           const restored=bootHistoryPage(saved);
           try {
             restored.api.openDay3Question(index);
-            assert.match(restored.document.querySelector(".guided-practice h3").textContent,/Problem 9/);
+            assert.match(restored.document.querySelector(".guided-practice h3").textContent,/Problem 10/);
             assert.match(restored.document.querySelector(".guided-step-title").textContent,/Step 4 of 4/);
             assert.equal(restored.document.querySelectorAll(".guided-form input").length,3);
             assert.deepEqual(clone(restored.api.records),saved);
@@ -1569,6 +1571,7 @@ test("guided step normalization rejects forged completion and retains drafts acr
   const data=boot(), index=44, page=bootHistoryPage(data.records);
   try {
     page.api.openDay3Question(index);
+    page.document.querySelectorAll(".guided-practice .fixed-progress-jump")[2].click();
     page.document.querySelector(".guided-form input").value="24";
     page.api.openDay3Question(43);page.api.openDay3Question(index);
     assert.equal(page.document.querySelector(".guided-form input").value,"24");
@@ -1585,4 +1588,42 @@ test("guided step normalization rejects forged completion and retains drafts acr
     assert.equal(blocked.attempts,0);assert.equal(blocked.solved,false);
     assert.deepEqual(page.errors,[]);
   } finally {page.close();}
+});
+
+test("guided easy-to-harder order drives numbering and Next while preserving saved identities", () => {
+  const data=boot(), index=44, problems=data.questionSets[6][index].guidedItems;
+  const order=[1,5,0,4,2,3,9,6,7,8];
+  assert.deepEqual(clone(data.mastery.guidedOrder(problems)),order);
+  const page=bootHistoryPage(data.records);
+  try {
+    page.api.openDay3Question(index);
+    for (const [displayIndex,stableIndex] of order.entries()) {
+      assert.equal(page.api.records[6].questions[index].guidedPosition,stableIndex);
+      assert.equal(page.document.querySelector('.guided-practice h3').textContent,`Problem ${displayIndex+1} of 10`);
+      const problem=problems[stableIndex];
+      assert.deepEqual([...page.document.querySelector('.guided-equation').querySelectorAll('.fraction')].map(el=>el.getAttribute('aria-label')),[`${problem.a} over ${problem.b}`,`${problem.c} over ${problem.d}`]);
+      for (const answers of guidedExpected[stableIndex]) {
+        const form=page.document.querySelector('.guided-form');
+        form.querySelectorAll('input').forEach((input,i)=>input.value=String(answers[i]));
+        form.requestSubmit();
+      }
+      if(displayIndex<9) page.document.querySelector('.guided-next').click();
+    }
+    const saved=clone(page.api.records);
+    assert.equal(saved[6].questions[index].solved,true);
+    assert.deepEqual(clone(boot(saved).records),saved);
+    assert.deepEqual(page.errors,[]);
+  } finally {page.close();}
+  // Old problem 1 is now displayed as problem 3, with its earlier mistake intact.
+  const old=clone(data.records);
+  old[6].questions[index].guidedPosition=0;
+  old[6].questions[index].guidedItems[0].steps[0].attempts=[{answers:['48'],createdAt:'2026-09-18T12:00:00Z'}];
+  const restored=bootHistoryPage(old);
+  try {
+    restored.api.openDay3Question(index);
+    assert.equal(restored.document.querySelector('.guided-practice h3').textContent,'Problem 3 of 10');
+    assert.ok(restored.document.querySelectorAll('.guided-practice .fixed-answer-lights li')[2].classList.contains('incorrect'));
+    assert.equal(restored.api.records[6].questions[index].guidedItems[0].firstTry,false);
+    assert.equal(restored.api.records[6].questions[index].guidedItems[1].attempts,0);
+  } finally {restored.close();}
 });

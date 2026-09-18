@@ -1135,6 +1135,7 @@ function renderGuidedPractice(card, index) {
   const definition = activeQuestions()[index];
   const record = activeRecord().questions[index];
   const state = mastery.progress(record);
+  const order = mastery.guidedOrder(definition.guidedItems);
   const position = record.guidedPosition;
   const problem = definition.guidedItems[position];
   const item = record.guidedItems[position];
@@ -1151,7 +1152,7 @@ function renderGuidedPractice(card, index) {
   panel.id = `guided-${index}`;
   panel.setAttribute("aria-label", "10 step-by-step fraction problems");
   const heading = document.createElement("h2");
-  heading.textContent = "Subtract fractions · 10 problems";
+  heading.textContent = "Subtract fractions · Easy to harder";
   const track = document.createElement("ol");
   track.className = "fixed-answer-lights";
   track.setAttribute("aria-label", "Results for all 10 problems");
@@ -1162,11 +1163,12 @@ function renderGuidedPractice(card, index) {
     renderGuidedPractice(card,index);
     card.querySelector(".guided-practice input, .guided-next")?.focus();
   }
-  record.guidedItems.forEach((result,i) => {
+  order.forEach((i,displayIndex) => {
+    const result = record.guidedItems[i];
     const status = result.solved ? result.firstTry ? "correct" : "corrected"
       : result.firstTry === false ? "incorrect" : result.attempts ? "practicing" : "pending";
-    const description = `Problem ${i+1}: ${result.solved ? result.firstTry ? "correct first try" : "corrected later" : status === "incorrect" ? "try again" : status === "practicing" ? "in progress" : "not started"}`;
-    const light = lightStep(status,String(i+1),description);
+    const description = `Problem ${displayIndex+1}: ${result.solved ? result.firstTry ? "correct first try" : "corrected later" : status === "incorrect" ? "try again" : status === "practicing" ? "in progress" : "not started"}`;
+    const light = lightStep(status,String(displayIndex+1),description);
     const jump = document.createElement("button");
     jump.type = "button";
     jump.className = "fixed-progress-jump";
@@ -1185,7 +1187,7 @@ function renderGuidedPractice(card, index) {
   legend.className = "light-legend";
   legend.textContent = "Green: correct first try · Red: try again · Yellow: corrected later";
   const problemHeading = document.createElement("h3");
-  problemHeading.textContent = `Problem ${position+1} of 10`;
+  problemHeading.textContent = `Problem ${order.indexOf(position)+1} of 10`;
   const expression = document.createElement("div");
   expression.className = "guided-equation";
   expression.append(makeFraction(problem.a,problem.b)," − ",makeFraction(problem.c,problem.d));
@@ -1206,9 +1208,9 @@ function renderGuidedPractice(card, index) {
       result.append(bottom === 1 ? String(top) : makeFraction(top,bottom));
     }
     panel.append(result,done);
-    const next = record.guidedItems.findIndex((result,i) => i > position && !result.solved);
-    const target = next === -1 ? record.guidedItems.findIndex(result => !result.solved) : next;
-    if (target !== -1) {
+    const target = order.slice(order.indexOf(position)+1).find(i => !record.guidedItems[i].solved)
+      ?? order.find(i => !record.guidedItems[i].solved);
+    if (target !== undefined) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "guided-next";

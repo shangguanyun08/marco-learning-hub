@@ -1206,7 +1206,7 @@
       prompt:"Complete all 10 fraction problems, one step at a time.",
       guidedItems: [[5,8,5,12], [4,5,3,10], [7,10,1,6], [3,4,2,9], [7,12,1,8],
         [5,6,7,18], [7,3,1,6], [9,4,1,6], [19,10,1,6], [5,2,3,6]]
-        .map(([a,b,c,d]) => ({a,b,c,d,operator:"−"})),
+        .map(([a,b,c,d], index) => ({a,b,c,d,operator:"−", practiceOrder:[2,0,4,5,3,1,7,8,9,6][index]})),
       sourceLabel:"Daily math · Complete all 10",
     },
     followUps: [],

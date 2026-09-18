@@ -184,6 +184,11 @@
     return steps;
   }
 
+  // Display order is independent of stable saved problem indexes.
+  function guidedOrder(problems) {
+    return problems.map((_,index) => index).sort((a,b) => (problems[a].practiceOrder ?? a)-(problems[b].practiceOrder ?? b));
+  }
+
   function normalizeGuidedItems(value, problems) {
     const validDate = date => typeof date === "string" && Number.isFinite(Date.parse(date));
     const guidedItems = problems.map((problem,index) => {
@@ -210,13 +215,14 @@
         ...(completedAt ? {completedAt,...(missed ? {correctedAt:completedAt} : {})} : {})};
     });
     const solved = guidedItems.every(item => item.solved);
-    const position = Number.isInteger(value?.guidedPosition) && value.guidedPosition >= 0 && value.guidedPosition < problems.length
-      ? value.guidedPosition : Math.max(0,guidedItems.findIndex(item => !item.solved));
+    const order = guidedOrder(problems);
+    const position = guidedItems.some(item => item.attempts > 0) && Number.isInteger(value?.guidedPosition) && value.guidedPosition >= 0 && value.guidedPosition < problems.length
+      ? value.guidedPosition : (order.find(index => !guidedItems[index].solved) ?? order[0]);
     return {guidedItems,guidedPosition:position,solved,
       firstTry:guidedItems.every(item => item.firstTry !== null) ? guidedItems.every(item => item.firstTry) : null,
       attempts:guidedItems.reduce((sum,item) => sum+item.attempts,0),lastAnswer:"",review:{attempts:[],ready:true},
       ...(solved && validDate(value?.masteredAt) ? {masteredAt:value.masteredAt} : {})};
   }
 
-  global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next, normalizeFixedItems, fractionSteps, normalizeGuidedItems };
+  global.HarryDay3Mastery = { LIMIT, TARGET, createBanks, progress, normalizeReview, submit, next, normalizeFixedItems, fractionSteps, normalizeGuidedItems, guidedOrder };
 })(globalThis);
