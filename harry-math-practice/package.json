@@ -1,6 +1,6 @@
 {
   "name": "harry-math-practice",
   "private": true,
-  "scripts": { "test": "node --test tests.mjs" },
+  "scripts": { "test": "node --test tests.mjs star-sept20/tests.mjs" },
   "devDependencies": { "jsdom": "30.0.1" }
 }
