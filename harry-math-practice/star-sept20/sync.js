@@ -2,7 +2,7 @@
   'use strict';
   const APP_ID='harry-star-sept20-four-sessions-v1';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
-  const IDS=['original','similar-a','similar-b','similar-c'];
+  const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f'];
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));

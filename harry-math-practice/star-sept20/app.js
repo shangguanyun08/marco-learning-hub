@@ -38,7 +38,7 @@
     }).join('');
     document.querySelector('#jump').innerHTML=active.questions.map((q,i)=>`<a href="#q${i+1}" class="${result(q,current())}" aria-label="Question ${i+1}">${i+1}</a>`).join('');
     const completion=document.querySelector('#completion');completion.hidden=s.finished!==12;
-    completion.innerHTML=s.finished===12?`<h2>${s.first===12?'12 out of 12 on your first tries!':'Session complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/12 (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.id==='similar-c'?'Your four-session practice record is below. Review any skills that still need work.':'When you are ready, try the next fresh session on another day.'}</p>`:'';
+    completion.innerHTML=s.finished===12?`<h2>${s.first===12?'12 out of 12 on your first tries!':'Session complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/12 (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.id===bank.at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next fresh session on another day.'}</p>`:'';
     document.querySelector('#new-run').hidden=s.finished!==12;
     renderHistory();
   }

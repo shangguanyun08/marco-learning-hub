@@ -63,3 +63,11 @@ test('real page loads sync and uploads a submitted answer without changing scori
  try{await new Promise(resolve=>setTimeout(resolve,0));const q=w.HARRY_SEPT_PRACTICE[1].questions[0],form=w.document.querySelector(`form[data-source="${q.source}"]`);form.querySelector(`input[value="${q.correct}"]`).checked=true;form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));await new Promise(resolve=>setTimeout(resolve,0));assert.equal(w.document.querySelector('#score').textContent,'1 / 12');assert.equal(w.document.querySelector('#save-note').dataset.syncStatus,'live');assert.equal(api.record.state.sessions['similar-a'][0].answers[q.source].attempts.length,1);}
  finally{w.close();}
 });
+
+test('all three added sessions upload and restore alongside existing session history',async()=>{
+ const api=server(),sessions={};
+ for(const id of ['similar-c','similar-d','similar-e','similar-f'])sessions[id]=[run(id,{4:answer(1,true)})];
+ const a=client({version:1,sessions},api.fetch),b=client(empty(),api.fetch);
+ try{assert.equal(a.w.HarrySeptSync.valid(a.state),true);await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.deepEqual(Object.keys(b.state.sessions),Object.keys(sessions));assert.equal(b.status.kind,'live');}
+ finally{a.close();b.close();}
+});

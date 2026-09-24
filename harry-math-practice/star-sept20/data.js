@@ -51,12 +51,57 @@
     q(31,'Estimate by rounding each mixed number to the nearest whole number: 7 5/6 + 3 1/8',['10','12','9','11'],3,'7 5/6 rounds to 8, and 3 1/8 rounds to 3. Then 8 + 3 = 11.'),
     q(34,'A rectangle is 14 meters long and 5 meters wide. What is its area?',['38 square meters','70 square meters','19 square meters','65 square meters'],1,'Area = length × width = 14 × 5 = 70 square meters.')
   ];
+  const d = [
+    q(4,'Which fraction is equal to 3/7?',['6/21','3/14','9/21','7/3'],2,'Multiply the numerator and denominator by 3: 3/7 = 9/21.'),
+    q(5,'60 quarts = ____ gallons',['15','16','56','240'],0,'There are 4 quarts in one gallon. 60 ÷ 4 = 15 gallons.'),
+    q(8,'Nora has read 30 pages of a book. She reads 8 more pages each day for 5 days. How many pages has she read in all?',['43','40','240','70'],3,'First find the new pages: 8 × 5 = 40. Then add: 30 + 40 = 70.'),
+    q(10,'Which table matches the rule “subtract 4 from the input number”?',['Inputs: 12, 16, 19 → Outputs: 16, 20, 23','Inputs: 12, 16, 19 → Outputs: 8, 12, 15','Inputs: 12, 16, 19 → Outputs: 8, 13, 15','Inputs: 12, 16, 19 → Outputs: 4, 4, 4'],1,'Check every pair: 12 − 4 = 8, 16 − 4 = 12, and 19 − 4 = 15.'),
+    q(11,'Multiply: 4,627 × 5',['23,135','23,035','22,135','23,105'],0,'4,000 × 5 = 20,000; 600 × 5 = 3,000; 27 × 5 = 135. Total: 23,135.'),
+    q(14,'A machine packs 108 pencils in 9 minutes at a constant rate. How many pencils does it pack per minute?',['9','99','12','13'],2,'Pencils per minute = total pencils ÷ minutes. 108 ÷ 9 = 12.'),
+    q(17,'A pitcher holds 11/12 gallon of lemonade. Zoe pours out 5/12 gallon. How much remains? Choose the simplest form.',['6/24 gallon','1/2 gallon','5/12 gallon','1/3 gallon'],1,'11/12 − 5/12 = 6/12. Divide both parts by 6 to get 1/2 gallon.'),
+    q(23,'Multiply: 46 × 23',['920','138','1,048','1,058'],3,'46 × 20 = 920 and 46 × 3 = 138. Add: 920 + 138 = 1,058.'),
+    q(25,'Amir finished 9/12 of a puzzle. Grace finished 2/12 of an identical puzzle. How much greater was Amir’s fraction?',['11/12','7/24','7/12','2/12'],2,'Find the difference: 9/12 − 2/12 = 7/12. The denominator stays 12.'),
+    q(26,'Which shape is at 4/8 on the number line?',['yellow square','yellow star','blue circle','green triangle'],0,'Count four equal intervals from 0. The yellow square is at 4/8, or 1/2.','numberline'),
+    q(31,'Estimate by rounding each mixed number to the nearest whole number: 9 2/3 + 4 1/5',['13','15','12','14'],3,'9 2/3 rounds to 10, and 4 1/5 rounds to 4. Then 10 + 4 = 14.'),
+    q(34,'A rectangle is 11 inches long and 8 inches wide. What is its area?',['38 square inches','88 square inches','19 square inches','80 square inches'],1,'Area = length × width = 11 × 8 = 88 square inches.')
+  ];
+  const e = [
+    q(4,'Which fraction is equal to 7/10?',['14/30','21/30','7/20','10/7'],1,'Multiply both the numerator and denominator by 3: 7/10 = 21/30.'),
+    q(5,'68 quarts = ____ gallons',['16','64','272','17'],3,'Divide quarts by 4 to find gallons: 68 ÷ 4 = 17.'),
+    q(8,'A club has collected 58 bottles. It collects 7 more bottles each day for 5 days. How many bottles has it collected altogether?',['93','70','35','406'],0,'The club collects 7 × 5 = 35 new bottles. 58 + 35 = 93.'),
+    q(10,'Which table matches the rule “subtract 7 from the input number”?',['Inputs: 15, 19, 24 → Outputs: 22, 26, 31','Inputs: 15, 19, 24 → Outputs: 8, 13, 17','Inputs: 15, 19, 24 → Outputs: 8, 12, 17','Inputs: 15, 19, 24 → Outputs: 7, 7, 7'],2,'15 − 7 = 8, 19 − 7 = 12, and 24 − 7 = 17. All three pairs must match.'),
+    q(11,'Multiply: 6,318 × 4',['25,232','24,272','25,172','25,272'],3,'6,000 × 4 = 24,000; 300 × 4 = 1,200; 18 × 4 = 72. Total: 25,272.'),
+    q(14,'A printer prints 126 pages in 9 minutes at a constant rate. How many pages does it print per minute?',['9','14','117','15'],1,'Pages per minute = 126 ÷ 9 = 14. Check: 14 × 9 = 126.'),
+    q(17,'There is 7/9 liter of soup in a pot. Theo serves 1/9 liter. How much is left? Choose the simplest form.',['6/18 liter','1/3 liter','2/3 liter','1/9 liter'],2,'7/9 − 1/9 = 6/9. Divide the numerator and denominator by 3: 6/9 = 2/3.'),
+    q(23,'Multiply: 58 × 34',['1,972','1,740','232','1,872'],0,'58 × 30 = 1,740 and 58 × 4 = 232. Add: 1,740 + 232 = 1,972.'),
+    q(25,'Isla walked 11/15 of a trail. Jack walked 2/15 of the same trail. How much greater was Isla’s fraction? Choose the simplest form.',['13/15','3/5','3/10','1/5'],1,'11/15 − 2/15 = 9/15. Divide both parts by 3: 9/15 = 3/5.'),
+    q(26,'Which shape is at 1/4 on the number line?',['blue circle','green triangle','yellow square','yellow star'],3,'1/4 is equal to 2/8. The yellow star is two equal intervals after 0.','numberline'),
+    q(31,'Estimate by rounding each mixed number to the nearest whole number: 5 1/8 + 6 4/5',['12','11','13','10'],0,'5 1/8 rounds to 5, and 6 4/5 rounds to 7. Then 5 + 7 = 12.'),
+    q(34,'A rectangle is 13 centimeters long and 6 centimeters wide. What is its area?',['38 square centimeters','19 square centimeters','78 square centimeters','72 square centimeters'],2,'Area = length × width = 13 × 6 = 78 square centimeters.')
+  ];
+  const f = [
+    q(4,'Which fraction is equal to 5/6?',['20/24','10/18','5/12','6/5'],0,'Multiply both parts by 4: 5/6 = 20/24.'),
+    q(5,'76 quarts = ____ gallons',['18','72','19','304'],2,'There are 4 quarts in a gallon. 76 ÷ 4 = 19 gallons.'),
+    q(8,'A library display has 73 books. A librarian adds 6 books each day for 8 days. How many books are on the display then?',['87','121','48','438'],1,'First multiply: 6 × 8 = 48 new books. Then add: 73 + 48 = 121.'),
+    q(10,'Which table matches the rule “subtract 8 from the input number”?',['Inputs: 17, 22, 26 → Outputs: 25, 30, 34','Inputs: 17, 22, 26 → Outputs: 9, 15, 18','Inputs: 17, 22, 26 → Outputs: 8, 8, 8','Inputs: 17, 22, 26 → Outputs: 9, 14, 18'],3,'17 − 8 = 9, 22 − 8 = 14, and 26 − 8 = 18.'),
+    q(11,'Multiply: 7,246 × 3',['21,638','21,708','21,738','20,738'],2,'7,000 × 3 = 21,000; 200 × 3 = 600; 46 × 3 = 138. Total: 21,738.'),
+    q(14,'A machine fills 156 cups in 12 minutes at a constant rate. How many cups does it fill per minute?',['13','12','144','14'],0,'Divide total cups by minutes: 156 ÷ 12 = 13 cups per minute.'),
+    q(17,'A container holds 13/16 gallon of water. Ella uses 5/16 gallon. How much remains? Choose the simplest form.',['8/32 gallon','1/4 gallon','5/16 gallon','1/2 gallon'],3,'13/16 − 5/16 = 8/16. Divide both parts by 8: 8/16 = 1/2.'),
+    q(23,'Multiply: 67 × 25',['1,340','1,675','335','1,575'],1,'67 × 20 = 1,340 and 67 × 5 = 335. Add: 1,340 + 335 = 1,675.'),
+    q(25,'Lucy filled 7/8 of a bucket. Max filled 2/8 of an identical bucket. How much greater was Lucy’s fraction?',['5/8','9/8','5/16','3/8'],0,'Find the difference: 7/8 − 2/8 = 5/8. Keep the denominator 8.'),
+    q(26,'Which shape is at 3/4 on the number line?',['yellow square','blue circle','green triangle','yellow star'],2,'3/4 is equal to 6/8. The green triangle is six equal intervals after 0.','numberline'),
+    q(31,'Estimate by rounding each mixed number to the nearest whole number: 8 2/7 + 4 5/6',['12','13','14','11'],1,'8 2/7 rounds to 8, and 4 5/6 rounds to 5. Then 8 + 5 = 13.'),
+    q(34,'A rectangle is 16 meters long and 7 meters wide. What is its area?',['46 square meters','23 square meters','105 square meters','112 square meters'],3,'Area = length × width = 16 × 7 = 112 square meters.')
+  ];
   // Fixed, mixed orders keep saved question IDs stable without repeating the original sequence.
   const mix = (items,order) => order.map(index=>items[index]);
   window.HARRY_SEPT_PRACTICE = [
     {id:'original',title:'Session 1 · Original retry',description:'The 12 questions from the September 20 test. Solve them again without the recorded answers.',questions:original},
     {id:'similar-a',title:'Session 2 · Fresh check A',description:'12 new questions using the same skills. Try on another day after reviewing Session 1.',questions:mix(a,[3,6,0,9,2,10,4,1,11,7,5,8])},
     {id:'similar-b',title:'Session 3 · Fresh check B',description:'Another 12 new questions. Work independently and explain your thinking.',questions:mix(b,[11,4,8,1,10,5,2,9,0,7,3,6])},
-    {id:'similar-c',title:'Session 4 · Fresh check C',description:'A final fresh set of 12. Try a few days later to check what you remember.',questions:mix(c,[7,2,9,4,6,11,3,8,5,0,10,1])}
+    {id:'similar-c',title:'Session 4 · Fresh check C',description:'A fresh set of 12. Try a few days later to check what you remember.',questions:mix(c,[7,2,9,4,6,11,3,8,5,0,10,1])},
+    {id:'similar-d',title:'Session 5 · Fresh check D',description:'12 more questions with the same skills and format. Work out each answer before choosing.',questions:mix(d,[0,5,10,3,8,1,6,11,4,9,2,7])},
+    {id:'similar-e',title:'Session 6 · Fresh check E',description:'Another fresh set of 12. Use paper to show your working and check your calculations.',questions:mix(e,[6,1,4,9,2,7,10,5,0,11,8,3])},
+    {id:'similar-f',title:'Session 7 · Fresh check F',description:'12 new questions to check what you remember. Try this session on another day.',questions:mix(f,[10,3,8,5,0,11,6,1,9,4,7,2])}
   ];
 })();
