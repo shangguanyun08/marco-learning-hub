@@ -66,7 +66,7 @@ test('browser flow protects first-try scores, reveals after two misses and resto
     submit(p,56,0);submit(p,56,2);assert.match(p.doc.querySelector('[data-source="56"] .answer').textContent,/362/);
     submit(p,143,4);assert.match(p.doc.querySelector('[data-source="143"]').textContent,/E/);
     const saved=p.w.localStorage.getItem(key),reloaded=page('math-original',saved);try{assert.equal(reloaded.doc.querySelector('#score').textContent,'0 / 7');assert.equal(reloaded.doc.querySelectorAll('[data-source="43"] input:disabled').length,4);}finally{reloaded.close();}
-    const vocab=page('vocab-original',saved);try{submit(vocab,3,1);assert.equal(vocab.doc.querySelector('#score').textContent,'1 / 11');assert.match(vocab.doc.querySelector('#score-label').textContent,/Vocabulary/);const state=JSON.parse(vocab.w.localStorage.getItem(key));assert.equal(state.sessions['math-original'][0].answers[43].attempts.length,2);}finally{vocab.close();}
+    const vocab=page('vocab-original',saved);try{submit(vocab,3,1);assert.equal(vocab.doc.querySelector('#vocab-score').textContent,'1 / 11');assert.equal(vocab.doc.querySelector('#score').textContent,'0 / 7');assert.match(vocab.doc.querySelector('#vocab-score-wrap').textContent,/Vocabulary/);const state=JSON.parse(vocab.w.localStorage.getItem(key));assert.equal(state.sessions['math-original'][0].answers[43].attempts.length,2);}finally{vocab.close();}
   }finally{p.close();}
 });
 test('complete days stay green and preserve scores when a new run starts',()=>{
@@ -75,8 +75,8 @@ test('complete days stay green and preserve scores when a new run starts',()=>{
     for(const q of bank[3].questions)submit(p,q.source,q.correct);
     assert.equal(p.doc.querySelector('#completion').hidden,false);assert.match(p.doc.querySelector('#completion').textContent,/7\/7/);
     p.doc.querySelector('#new-run').click();assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
-    assert.equal(p.doc.querySelector('a[href="?session=math-c"]').classList.contains('completed'),true);
-    assert.match(p.doc.querySelector('a[href="?session=math-c"]').textContent,/7\/7/);
+    assert.equal(p.doc.querySelector('a[href="?session=session-4"]').classList.contains('completed'),true);
+    assert.match(p.doc.querySelector('a[href="?session=session-4"]').textContent,/7\/7/);
     assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-c'].length,2);
   }finally{p.close();}
 });
@@ -104,8 +104,36 @@ test('leaving and reloading does not reset a timed session',()=>{
   clock.now+=120000;const resumed=page('math-c',saved,clock);try{assert.match(resumed.doc.querySelector('#countdown').textContent,/5:00/);}finally{resumed.close();}
   clock.now+=300001;const expired=page('math-c',saved,clock);try{assert.equal(expired.doc.querySelector('#score').textContent,'0 / 7');assert.equal(expired.doc.querySelector('#completion').hidden,false);assert.equal(expired.doc.querySelectorAll('#questions input:not(:disabled)').length,0);}finally{expired.close();}
 });
-test('all six session routes render proper counts and hidden answers',()=>{
-  for(const s of bank){const p=page(s.id);try{assert.equal(p.doc.querySelectorAll('.question').length,s.questions.length);assert.equal(p.doc.querySelectorAll('.answer').length,0);assert.equal(p.doc.querySelectorAll('.session-link').length,6);assert.match(p.doc.querySelector('#save-note').textContent,/Preview/);}finally{p.close();}}
+test('four session pages have 18, 18, 7, 7 questions; vocabulary appears only in sessions 1 and 2',()=>{
+  for(let i=1;i<=4;i++){const p=page('session-'+i);try{
+    assert.equal(p.doc.querySelectorAll('.question').length,i<=2?18:7);
+    assert.equal(p.doc.querySelectorAll('.answer').length,0);assert.equal(p.doc.querySelectorAll('.session-link').length,4);
+    assert.equal(p.doc.querySelectorAll('#heading-vocab').length,i<=2?1:0);
+    assert.equal(p.doc.querySelector('#vocab-score-wrap').hidden,i>2);
+    assert.equal(p.doc.querySelector('#session-title').textContent,'Session '+i);
+    assert.match(p.doc.querySelector('#save-note').textContent,/Preview/);
+  }finally{p.close();}}
+});
+test('old subject links open the corresponding combined session without losing saved attempts',()=>{
+  const state=empty();for(const part of [bank[0],bank[4]]){const r=run();engine.submit(r,part.questions[0],part.questions[0].correct,at);state.sessions[part.id]=[r];}
+  for(const alias of ['math-original','vocab-original']){const p=page(alias,JSON.stringify(state));try{
+    assert.equal(p.doc.querySelector('#session-title').textContent,'Session 1');
+    assert.equal(p.doc.querySelector('#score').textContent,'1 / 7');assert.equal(p.doc.querySelector('#vocab-score').textContent,'1 / 11');
+    assert.equal(p.doc.querySelectorAll('.question').length,18);
+  }finally{p.close();}}
+});
+test('combined sessions finish after both subjects; a new run keeps both histories',()=>{
+  const p=page('session-1');try{
+    for(const q of bank[0].questions)submit(p,q.source,q.correct);
+    assert.equal(p.doc.querySelector('#completion').hidden,true);assert.equal(p.doc.querySelector('#new-run').hidden,true);
+    assert.equal(p.doc.querySelector('a[href="?session=session-1"]').classList.contains('completed'),false);
+    for(const q of bank[4].questions)submit(p,q.source,q.correct);
+    assert.equal(p.doc.querySelector('#completion').hidden,false);assert.match(p.doc.querySelector('#completion').textContent,/Math first-try score: 7\/7/);assert.match(p.doc.querySelector('#completion').textContent,/Vocabulary first-try score: 11\/11/);
+    p.doc.querySelector('#new-run').click();
+    const state=JSON.parse(p.w.localStorage.getItem(key));assert.equal(state.sessions['math-original'].length,2);assert.equal(state.sessions['vocab-original'].length,2);
+    assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');assert.equal(p.doc.querySelector('#vocab-score').textContent,'0 / 11');
+    assert.equal(p.doc.querySelector('a[href="?session=session-1"]').classList.contains('completed'),true);
+  }finally{p.close();}
 });
 test('sync validates fifth choices and keeps differing first tries as separate histories',()=>{
   const p=page('math-original');try{
