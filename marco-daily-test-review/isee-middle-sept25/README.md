@@ -1,0 +1,20 @@
+# Marco’s Zozeck ISEE Middle review
+
+Review extracted September 25, 2026 from the user’s open Zozeck completed-attempt page. This is a review date, not an asserted test date.
+
+The navigation contained 161 response slots: 76 marked answered and 85 unanswered. Nineteen answered slots had an error marker. Eighteen were multiple-choice questions with an incorrect selected option and an answer key; Q153 was an essay with no answer key and is excluded from scored practice.
+
+Math attempt totals: 35 of 84 answered, 28 correct, 7 wrong, 49 blank (80% correct among attempted questions). Quantitative reasoning: 28 of 37 answered, 22 correct, 6 wrong, 9 blank. Mathematics achievement: 7 of 47 answered, 6 correct, 1 wrong, 40 blank. All 40 verbal questions were answered: 29 correct and 11 wrong. All 36 reading response slots were blank.
+
+- Vocabulary (11): 3, 4, 9, 12, 21, 23, 27, 29, 31, 32, 35.
+- Math (7): 43, 56, 66, 69, 74, 76, 143.
+- Math: original plus three similar sets (Sessions 1–4).
+- Vocabulary: original plus one seeded, frozen choice permutation (two sessions). No new words, prompts, or choices.
+
+Q69 spelling is cleaned up and the geometry diagram is redrawn without revealing the radius. Q66 uses standard mixed-number notation and corrects the source explanation’s arithmetic: Column B is 73/6 = 12 1/6. The original answer key remains B. Q23, 27, 31, and 35 have plausible alternative choices; feedback explicitly acknowledges this rather than teaching a false distinction. Scores follow the source key.
+
+The app keeps independent scores and runs for all six sessions. One point is earned only on a correct first submission; one different retry is allowed. The answer appears after success or two misses. Empty or repeated-choice submissions use no attempt. Starting a new run retains completed history. Local and online records use the dedicated `marco-isee-middle-sept25-v1` app ID. Answer order is fixed across devices; do not change content identities after launch without a migration. Localhost never uploads answers.
+
+Math Session 4 has a single 420-second timer for all seven questions, including retries. It starts only on the Start button. The absolute deadline persists through navigation/reload and syncs even before the first answer. At expiry, selected unsubmitted choices are checked, blanks earn zero, all questions lock, and explanations appear. A completed run retains its original deadline and score. Sessions 1–3 and both vocabulary sessions are untimed.
+
+Shared engine and sync patterns are adapted from Harry’s September 20 practice; existing Harry/Marco apps and scores are unchanged. No source answer selections or essay text are published.
