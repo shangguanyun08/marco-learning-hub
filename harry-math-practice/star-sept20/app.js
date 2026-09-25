@@ -8,7 +8,8 @@
   let sync=null, syncKind='connecting', syncMessage='Connecting… Your saved answers will sync automatically.';
   let storageOK=true, state={version:1,sessions:{}};
   try {const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1&&saved.sessions)state=saved;} catch {storageOK=false;}
-  let active=bank.find(s=>s.id===new URLSearchParams(location.search).get('session'))||bank[0];
+  const selectedDay=()=>bank.find(s=>s.id===new URLSearchParams(location.search).get('session'))||null;
+  let active=selectedDay();
   function newRun(restart=false){return {restart,id:crypto.randomUUID(),startedAt:new Date().toISOString(),answers:{},completedAt:null};}
   function runs(session){return state.sessions[session.id] ||= [newRun()];}
   function current(){return runs(active).at(-1);}
@@ -29,16 +30,27 @@
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCD'[index]}</span><span class="choice-text">${math(choice)}${tag?`<small>${tag}</small>`:''}</span></label>`;
     }).join('')}</fieldset>${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form><p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}</strong><p>${math(q.explanation)}</p></div>`:''}</article>`;
   }
+  function renderDays(){
+    let completedDays=0;
+    document.querySelector('#sessions').innerHTML=bank.map((session,i)=>{
+      const history=state.sessions[session.id]||[],latest=history.at(-1),r=latest?engine.stats(session,latest):null;
+      const completed=history.filter(run=>engine.stats(session,run).finished===session.questions.length)
+        .sort((a,b)=>(a.completedAt||a.startedAt).localeCompare(b.completedAt||b.startedAt)).at(-1);
+      const score=completed?engine.stats(session,completed):null;
+      const status=completed?'completed':r?.attempted?'in-progress':'not-started';
+      if(completed)completedDays++;
+      const repeat=completed&&latest!==completed&&r.finished!==r.total;
+      return `<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>Day ${i+1}</b><span>${i?'Fresh check '+String.fromCharCode(64+i):'Original retry'}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>Latest completed first-try score</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted`:'12 questions'}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;
+    }).join('');
+    document.querySelector('#days-progress').textContent=`${completedDays} of ${bank.length} days completed`;
+  }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=`${s.first} / ${s.total}`;
     document.querySelector('#progress').textContent=`${s.attempted}/12 first tries recorded · ${s.corrected} corrected on retry · ${s.revealed} answers shown${s.attempted===12?` · Final first-try score: ${s.percent}%`:''}`;
-    document.querySelector('#sessions').innerHTML=bank.map((session,i)=>{
-      const latest=state.sessions[session.id]?.at(-1),r=latest?engine.stats(session,latest):null;
-      return `<a class="session-link" href="?session=${session.id}" ${active.id===session.id?'aria-current="page"':''}><b>Session ${i+1}</b><span>${i?'Fresh check '+String.fromCharCode(64+i):'Original retry'}</span><small>${r?.attempted?`${r.first}/12 first-try points · ${r.attempted}/12 attempted`:'12 questions · Not started'}</small></a>`;
-    }).join('');
+    renderDays();
     document.querySelector('#jump').innerHTML=active.questions.map((q,i)=>`<a href="#q${i+1}" class="${result(q,current())}" aria-label="Question ${i+1}">${i+1}</a>`).join('');
     const completion=document.querySelector('#completion');completion.hidden=s.finished!==12;
-    completion.innerHTML=s.finished===12?`<h2>${s.first===12?'12 out of 12 on your first tries!':'Session complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/12 (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.id===bank.at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next fresh session on another day.'}</p>`:'';
+    completion.innerHTML=s.finished===12?`<h2>${s.first===12?'12 out of 12 on your first tries!':'Day complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/12 (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.id===bank.at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next day’s fresh questions.'}</p>`:'';
     document.querySelector('#new-run').hidden=s.finished!==12;
     renderHistory();
   }
@@ -51,6 +63,9 @@
     }).join('');
   }
   function render(){
+    document.querySelector('#practice-content').hidden=!active;
+    document.title=active?`${active.title} · Harry’s Daily Math`:'Harry’s Daily Math · Days 1–7';
+    if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderDays();updateSaveNote();return;}
     runs(active);document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent=active.description;
     document.querySelector('#questions').innerHTML=active.questions.map(card).join('');renderSummary();updateSaveNote();
   }
@@ -63,7 +78,7 @@
     const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
   document.querySelector('#sessions').addEventListener('click',event=>{const link=event.target.closest('a');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>s.id===id);history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
-  window.addEventListener('popstate',()=>{active=bank.find(s=>s.id===new URLSearchParams(location.search).get('session'))||bank[0];render();});
+  window.addEventListener('popstate',()=>{active=selectedDay();render();});
   window.addEventListener('storage',event=>{if(event.key!==KEY||!event.newValue)return;try{const remote=JSON.parse(event.newValue);if(remote.version===1&&remote.sessions){state=window.HarrySeptSync?window.HarrySeptSync.merge(state,remote):remote;render();void sync?.push();}}catch{}});
   document.querySelector('#large-text').addEventListener('click',event=>{event.currentTarget.setAttribute('aria-pressed',String(document.body.classList.toggle('large')));});
   document.querySelector('#new-run').addEventListener('click',()=>{if(engine.stats(active,current()).finished!==12)return;runs(active).push(newRun(true));save();render();document.querySelector('#session-title').scrollIntoView();});

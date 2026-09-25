@@ -6,7 +6,7 @@ import { JSDOM } from "jsdom";
 
 const read = file => readFileSync(new URL(file, import.meta.url), "utf8");
 const source = read("./app.js");
-const html = read("./index.html");
+const html = read("./archive/index.html");
 const clone = value => JSON.parse(JSON.stringify(value));
 function declaration(name) {
   const start = source.indexOf(`function ${name}(`);
@@ -728,7 +728,7 @@ test("Q34 saves unfinished red answers without crediting unsubmitted or forged c
 });
 
 function bootHistoryPage(saved) {
-  const dom = new JSDOM(html, {url: "https://practice.test/harry-math-practice/", runScripts: "outside-only"});
+  const dom = new JSDOM(html, {url: "https://practice.test/harry-math-practice/archive/", runScripts: "outside-only"});
   const win = dom.window, pushed = [], errors = [];
   let remote;
   win.addEventListener("error", event => errors.push(event.error));

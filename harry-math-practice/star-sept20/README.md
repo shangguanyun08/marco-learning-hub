@@ -1,6 +1,8 @@
 # September 20 STAR Math follow-up
 
-Seven dated follow-up sessions linked prominently from `harry-math-practice/`:
+Seven daily practice sets linked directly from Harry’s section of the main hub. `harry-math-practice/star-sept20/` opens a standalone day overview; selecting a day opens its questions. The old `harry-math-practice/` entrance redirects here. The earlier Q1–Q35 practice is at `harry-math-practice/archive/` and linked in Harry’s hub archive, using the original scripts, storage key, and online app ID so existing progress stays available.
+
+Cards are labeled Day 1–7. Finished days are green and show the latest completed first-try score as points and a percentage; unfinished work is amber. Starting another run keeps the completed color and score, with separate current-run progress. Completion requires every question to finish (a correct choice or two attempts), not just every first attempt. Cards refresh when online or cross-tab saved records arrive.
 
 1. `?session=original`: the 12 original mistakes (STAR Q4, 5, 8, 10, 11, 14, 17, 23, 25, 26, 31, 34).
 2. `?session=similar-a`: 12 fresh, skill-matched questions.

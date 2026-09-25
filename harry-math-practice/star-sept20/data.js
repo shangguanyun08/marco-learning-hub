@@ -96,12 +96,12 @@
   // Fixed, mixed orders keep saved question IDs stable without repeating the original sequence.
   const mix = (items,order) => order.map(index=>items[index]);
   window.HARRY_SEPT_PRACTICE = [
-    {id:'original',title:'Session 1 · Original retry',description:'The 12 questions from the September 20 test. Solve them again without the recorded answers.',questions:original},
-    {id:'similar-a',title:'Session 2 · Fresh check A',description:'12 new questions using the same skills. Try on another day after reviewing Session 1.',questions:mix(a,[3,6,0,9,2,10,4,1,11,7,5,8])},
-    {id:'similar-b',title:'Session 3 · Fresh check B',description:'Another 12 new questions. Work independently and explain your thinking.',questions:mix(b,[11,4,8,1,10,5,2,9,0,7,3,6])},
-    {id:'similar-c',title:'Session 4 · Fresh check C',description:'A fresh set of 12. Try a few days later to check what you remember.',questions:mix(c,[7,2,9,4,6,11,3,8,5,0,10,1])},
-    {id:'similar-d',title:'Session 5 · Fresh check D',description:'12 more questions with the same skills and format. Work out each answer before choosing.',questions:mix(d,[0,5,10,3,8,1,6,11,4,9,2,7])},
-    {id:'similar-e',title:'Session 6 · Fresh check E',description:'Another fresh set of 12. Use paper to show your working and check your calculations.',questions:mix(e,[6,1,4,9,2,7,10,5,0,11,8,3])},
-    {id:'similar-f',title:'Session 7 · Fresh check F',description:'12 new questions to check what you remember. Try this session on another day.',questions:mix(f,[10,3,8,5,0,11,6,1,9,4,7,2])}
+    {id:'original',title:'Day 1 · Original retry',description:'The 12 questions from the September 20 test. Solve them again without the recorded answers.',questions:original},
+    {id:'similar-a',title:'Day 2 · Fresh check A',description:'12 new questions using the same skills. Try on another day after reviewing Day 1.',questions:mix(a,[3,6,0,9,2,10,4,1,11,7,5,8])},
+    {id:'similar-b',title:'Day 3 · Fresh check B',description:'Another 12 new questions. Work independently and explain your thinking.',questions:mix(b,[11,4,8,1,10,5,2,9,0,7,3,6])},
+    {id:'similar-c',title:'Day 4 · Fresh check C',description:'A fresh set of 12. Try a few days later to check what you remember.',questions:mix(c,[7,2,9,4,6,11,3,8,5,0,10,1])},
+    {id:'similar-d',title:'Day 5 · Fresh check D',description:'12 more questions with the same skills and format. Work out each answer before choosing.',questions:mix(d,[0,5,10,3,8,1,6,11,4,9,2,7])},
+    {id:'similar-e',title:'Day 6 · Fresh check E',description:'Another fresh set of 12. Use paper to show your working and check your calculations.',questions:mix(e,[6,1,4,9,2,7,10,5,0,11,8,3])},
+    {id:'similar-f',title:'Day 7 · Fresh check F',description:'12 new questions to check what you remember. Try this set on another day.',questions:mix(f,[10,3,8,5,0,11,6,1,9,4,7,2])}
   ];
 })();
