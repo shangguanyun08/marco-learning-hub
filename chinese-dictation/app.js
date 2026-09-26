@@ -42,7 +42,7 @@
   function stopAudio() {
     speechToken++;
     clearTimeout(speechTimer);
-    if (synth) synth.cancel();
+    if (synth && (synth.speaking || synth.pending)) synth.cancel();
     utterance = null;
   }
   function say(text, wholePassage = false) {
@@ -54,7 +54,7 @@
       return;
     }
     const voices = synth.getVoices();
-    const voice = voices.find(v => /^zh[-_](CN|SG|Hans)/i.test(v.lang)) || voices.find(v => /^cmn/i.test(v.lang)) || voices.find(v => /^zh([-_]TW)?$/i.test(v.lang));
+    const voice = voices.find(v => v.voiceURI === $('voice').value);
     utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = voice?.lang || 'zh-CN';
     if (voice) utterance.voice = voice;
@@ -66,23 +66,34 @@
       if (token !== speechToken) return;
       started = true;
       clearTimeout(speechTimer);
-      $('audio-status').textContent = wholePassage ? '正在读完整句子……' : '仔细听，听完后在纸上写。';
+      $('audio-status').textContent = wholePassage ? '正在读完整句子……' : '仔细听，听完后在纸上写。若无声，请调高音量、关闭静音并检查蓝牙输出。';
     };
     utterance.onend = () => {
       if (token !== speechToken) return;
       clearTimeout(speechTimer);
+      utterance = null;
       $('audio-status').textContent = wholePassage ? '完整句子读完了。' : '轮到你写了。没听清可以再听一遍。';
     };
     utterance.onerror = event => {
       if (token !== speechToken || ['canceled', 'interrupted'].includes(event.error)) return;
       clearTimeout(speechTimer);
-      $('audio-status').textContent = '暂时没有读出声音，请再点“听题”，并检查音量和中文语音设置。';
+      utterance = null;
+      $('audio-status').textContent = `未能朗读（${event.error}）。请用 Safari 打开，选择中文声音后再试。`;
     };
-    synth.resume();
-    synth.speak(utterance);
     speechTimer = setTimeout(() => {
-      if (token === speechToken && !started) $('audio-status').textContent = '没听到声音？请再点一次“听题”，检查音量；也可以请家长读题。';
-    }, 4000);
+      if (token === speechToken && !started) {
+        stopAudio();
+        $('audio-status').textContent = '朗读未启动。请用 Safari 打开，选择中文声音，再点“测试声音”。';
+      }
+    }, 5000);
+    try {
+      if (synth.paused) synth.resume();
+      // Keep speech within the tap; do not force a possibly unavailable voice.
+      synth.speak(utterance);
+    } catch (error) {
+      stopAudio();
+      $('audio-status').textContent = '无法启动朗读。请用 Safari 打开后再试。';
+    }
   }
   function listen() {
     if (!item()) return;
@@ -90,7 +101,7 @@
     $('source').open = false;
     renderExercise();
     const text = item().text;
-    say(clues[text] ? `${text}。${clues[text]}。请写下来。` : `${text}${state.mode === 'words' ? '。' : ''}请写下来。`);
+    say(clues[text] ? `${text}。${clues[text]}。` : `${text}${state.mode === 'words' ? '。' : ''}`);
   }
   function resultColor(result) {
     if (!result) return '';
@@ -228,6 +239,16 @@
   document.addEventListener('visibilitychange', () => { if (document.hidden) stopAudio(); });
   window.addEventListener('pagehide', stopAudio);
   // Voice lists may arrive after page load on iOS; choose the voice on every tap.
-  if (synth) synth.getVoices();
+  function refreshVoices() {
+    const select = $('voice'), selected = select.value;
+    select.replaceChildren(new Option('自动普通话', ''));
+    if (synth) synth.getVoices().filter(v => /^(zh|cmn)([-_]|$)/i.test(v.lang) && !/HK|yue/i.test(v.lang)).forEach(v => select.add(new Option(v.name + ' · ' + v.lang, v.voiceURI)));
+    if ([...select.options].some(v => v.value === selected)) select.value = selected;
+  }
+  refreshVoices();
+  if (synth) synth.addEventListener?.('voiceschanged', refreshVoices);
+  $('voice').addEventListener('change', stopAudio);
+  $('test-sound').addEventListener('click', () => say('你好，我们开始中文听写。', true));
   render();
 })();
+
