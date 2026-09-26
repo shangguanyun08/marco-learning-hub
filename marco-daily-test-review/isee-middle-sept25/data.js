@@ -952,11 +952,12 @@ window.MARCO_ISEE_PRACTICE = [
   },
   {
     "id": "math-f",
+    "timeLimitSeconds": 420,
     "subject": "math",
     "day": 7,
     "label": "Similar set F",
     "title": "Math · Session 7 · Similar set F",
-    "description": "Seven new math questions on the same skills. Take your time and check your work.",
+    "description": "Seven new math questions with 7 minutes for the entire session.",
     "questions": [
       {
         "source": 43,
