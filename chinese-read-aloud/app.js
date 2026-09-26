@@ -1,75 +1,137 @@
 (() => {
-  'use strict';
-  const row1 = ['年','月','日','岁','九岁','十岁','星期','星期六','星期天','上课','上中文课'];
-  const row2 = ['学校','老师','学生','同学','男同学','女同学','医生','看医生','诗人','士兵'];
-  const phrases = ['两千多年以前，','中国的历史上，','曾经有两段特殊的时期，','一段叫做“春秋时期”，','一段叫做“战国时期”。'];
-  const $ = id => document.getElementById(id);
-  const synth = window.speechSynthesis;
-  const cells = [];
-  let token = 0, utterance = null, timer = null;
-  const examples = {年:'新年',月:'月亮',日:'日期',岁:'岁数',九:'九岁',十:'十岁',星:'星期',期:'星期',六:'星期六',天:'天空',上:'上课',课:'上课',中:'中国',文:'中文',学:'学校',校:'学校',老:'老师',师:'老师',生:'学生',同:'同学',男:'男生',女:'女生',医:'医生',看:'看医生',诗:'诗人',人:'诗人',士:'士兵',兵:'士兵',两:'两个',千:'一千',多:'多少',以:'以前',前:'以前',国:'中国',的:'我的',历:'历史',史:'历史',曾:'曾经',经:'曾经',有:'有无',段:'一段',特:'特殊',殊:'特殊',时:'时间',一:'一个',叫:'叫做',做:'叫做',春:'春天',秋:'秋天',战:'战国'};
-  function cancel() {
-    token++; clearTimeout(timer);
-    if (synth) synth.cancel();
-    utterance = null; $('stop').disabled = true;
-    cells.forEach(c => c.node.classList.remove('playing'));
+'use strict';
+const groups = [
+ {title:'一、阅读',rows:[
+  '第一单元 第五周（课文《田忌赛马》（p.30））',
+  '熟读课文《田忌赛马》本周所教部分（p.30），准备录音。',
+  '阅读本周阅读材料，并完成相应的“阅读与理解”练习。'
+ ]},
+ {title:'《常用的汉字有多少》',rows:[
+  '“汉字”就是平常所说的“中国字”。　对　错',
+  '汉字看起来很多，而其实并没有人们想象的那么多。　对　错',
+  '王小强已经学了（___）个常用字了。'
+ ]},
+ {title:'《献给亲爱的妈妈》',rows:[
+  '这是一首小朋友写给妈妈的诗。　对　错',
+  '“搂”和“楼”的偏旁不一样，声部却是一样的。　对　错',
+  '不管什么时候，妈妈爱我（___）爱她自己。'
+ ]},
+ {title:'《小方的新发现》',rows:[
+  '妈妈买了很多日历让小方挑一本。　对　错',
+  '小方想挑一本星期六和星期天特别多的日历。　对　错'
+ ]},
+ {title:'《萝卜回来了（下）》',rows:[
+  '小猴找到的是（___），山羊找到的是（___）。',
+  '小白兔醒来睁开眼睛一看，（___）。'
+ ]},
+ {title:'本周谜底（选一个）',rows:['云　雪　雨']},
+ {title:'三、认读',rows:['认读本周生字卡片（黄色），上课时请带来。']}
+];
+const speakerIcon = '<svg class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg>';
+const $ = id => document.getElementById(id);
+const isHan = char => /[\u3400-\u9fff]/.test(char);
+const synth=window.speechSynthesis;
+let mode='dictation', queue=[], index=0, revealed=false, run=0, utterance=null, playing=null;
+function stop(){
+ run++;if(synth)synth.cancel();utterance=null;
+ if(playing)playing.classList.remove('speaking');playing=null;
+ $('stop').disabled=true;
+}
+function speak(text,button){
+ stop();$('status').textContent='';
+ if(!synth||!window.SpeechSynthesisUtterance){$('status').textContent='此浏览器不支持朗读，请用 Safari 或 Chrome 打开。';return;}
+ const id=run,u=new SpeechSynthesisUtterance(text.replace(/_+/g,'空格').replace(/p\.30/g,'第三十页'));
+ utterance=u;u.lang='zh-CN';u.rate=Number($('speed').value);
+ const voices=synth.getVoices();
+ const voice=voices.find(v=>/^zh[-_]CN$/i.test(v.lang))||voices.find(v=>/^cmn[-_]CN$/i.test(v.lang))||voices.find(v=>/^zh[-_](SG|TW)$/i.test(v.lang));
+ if(voice)u.voice=voice;
+ if(button){playing=button;button.classList.add('speaking');}
+ $('stop').disabled=false;
+ u.onend=()=>{if(id!==run)return;if(playing)playing.classList.remove('speaking');playing=null;utterance=null;$('stop').disabled=true;};
+ u.onerror=e=>{if(id!==run)return;stop();$('status').textContent=e.error==='language-unavailable'||e.error==='voice-unavailable'?'请在设备中添加普通话朗读语音后重试。':'未能朗读，请检查音量并再点一次声音按钮。';};
+ synth.speak(u);
+}
+function selectedGroups(){return $('scope').value==='all'?groups:[groups[Number($('scope').value)]];}
+function buildQueue(){
+ queue=[];
+ for(const group of selectedGroups()){
+  for(const text of [group.title,...group.rows]){
+   for(const char of text)if(isHan(char))queue.push({char,context:text,group:group.title});
   }
-  function speak(text, node) {
-    cancel();
-    const run = token;
-    if (!synth || !window.SpeechSynthesisUtterance) { $('status').textContent = '此浏览器不支持朗读，请用 Safari 或 Chrome 打开，或请家长读题。'; return; }
-    const voices = synth.getVoices();
-    const voice = voices.find(v=>/^zh[-_](CN|SG|Hans)/i.test(v.lang)) || voices.find(v=>/^cmn/i.test(v.lang)) || voices.find(v=>/^zh([-_]TW)?$/i.test(v.lang));
-    utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = voice?.lang || 'zh-CN';
-    if (voice) utterance.voice = voice;
-    utterance.rate = Number($('speed').value);
-    utterance.volume = 1;
-    $('stop').disabled = false;
-    node?.classList.add('playing');
-    $('status').textContent = '仔细听，然后在纸上写。不会写时，再点下面的“显示字”。';
-    utterance.onstart = () => { if (run===token) clearTimeout(timer); };
-    utterance.onend = () => { if (run!==token) return; clearTimeout(timer); $('stop').disabled=true; $('status').textContent='轮到你写了。没听清，可以再点一次喇叭。'; };
-    utterance.onerror = e => { if(run!==token || ['canceled','interrupted'].includes(e.error)) return; cancel(); $('status').textContent='没有读出声音，请再点喇叭，并检查音量和设备的普通话语音。'; };
-    synth.resume(); synth.speak(utterance);
-    timer=setTimeout(()=>{if(run===token) $('status').textContent='没听到声音？请检查音量，再点一次喇叭。';},5000);
+ }
+ index=0;revealed=false;
+}
+function drawPractice(){
+ const item=queue[index];
+ $('group-name').textContent=item.group;
+ $('counter').textContent=`第 ${index+1} / ${queue.length} 个字`;
+ $('progress').max=queue.length;$('progress').value=index+1;
+ // The hidden character is never inserted into text, labels or tooltips.
+ $('character').textContent=revealed?item.char:'?';
+ $('character-box').classList.toggle('masked',!revealed);
+ $('character-box').setAttribute('aria-label',revealed?'汉字已显示':'汉字暂时隐藏');
+ $('hint').textContent=revealed?'看清楚后，在纸上再写一次。':'先听读音，在纸上写这个字。';
+ $('reveal').textContent=revealed?'藏起来，再写一次':'不会写，显示这个字';
+ $('reveal').setAttribute('aria-expanded',String(revealed));
+ $('previous').disabled=index===0;
+ $('next').textContent=index===queue.length-1?'写好了，完成本轮 ✓':'写好了，下一个 →';
+}
+function characterLine(text){
+ const line=document.createElement('div');line.className='characters';
+ for(const part of text.split(/(_+)/)){
+  if(/^_+$/.test(part)){const span=document.createElement('span');span.className='blank';span.textContent='填空';line.append(span);continue;}
+  for(const char of part){
+   if(isHan(char)){
+    const b=document.createElement('button');b.type='button';b.className='char-button';b.setAttribute('aria-label',`朗读汉字：${char}`);
+    const glyph=document.createElement('span');glyph.className='glyph';glyph.textContent=char;
+    const icon=document.createElement('span');icon.className='speaker';icon.innerHTML=speakerIcon;icon.setAttribute('aria-hidden','true');
+    b.append(glyph,icon);b.addEventListener('click',()=>speak(char,b));line.append(b);
+   }else{
+    const span=document.createElement('span');span.className=/[\s\da-z.]/i.test(char)?'inline-label':'punctuation';span.textContent=char;line.append(span);
+   }
   }
-  function hide(cell) {
-    cell.glyph.textContent='?'; cell.glyph.classList.add('hidden');
-    cell.glyph.setAttribute('aria-label','字已隐藏');
-    cell.node.classList.remove('revealed');
-    cell.reveal.textContent='显示字'; cell.reveal.setAttribute('aria-expanded','false');
-  }
-  function addGroup(parent,text,index,sentence=false) {
-    const group=document.createElement('article'); group.className=`group${sentence?' phrase':''}`;
-    const heading=document.createElement('div'); heading.className='group-heading';
-    const label=document.createElement('span'); label.textContent=`第 ${index+1} ${sentence?'小段':'组'}`;
-    const whole=document.createElement('button'); whole.type='button'; whole.textContent=sentence?'🔊 听这一小段':'🔊 听整个词';
-    whole.addEventListener('click',()=>speak(text)); heading.append(label,whole);
-    const characters=document.createElement('div'); characters.className='characters';
-    let pos=0;
-    Array.from(text).forEach(char=>{
-      if(!/\p{Script=Han}/u.test(char)) { const punctuation=document.createElement('span'); punctuation.className='punctuation'; punctuation.textContent=char; characters.append(punctuation); return; }
-      pos++;
-      const node=document.createElement('div'); node.className='character';
-      const speaker=document.createElement('button'); speaker.type='button'; speaker.className='speaker'; speaker.textContent='🔊'; speaker.setAttribute('aria-label',`听第 ${pos} 个字`);
-      const glyph=document.createElement('div'); glyph.className='glyph hidden';
-      const reveal=document.createElement('button'); reveal.type='button'; reveal.className='reveal';
-      const cell={node,glyph,reveal,char}; cells.push(cell);hide(cell);
-      speaker.addEventListener('click',()=>speak(examples[char]?`${examples[char]}的${char}。${char}。`:char,node));
-      reveal.addEventListener('click',()=>{
-        if(node.classList.contains('revealed')) { hide(cell); return; }
-        glyph.textContent=char; glyph.classList.remove('hidden'); glyph.removeAttribute('aria-label');
-        node.classList.add('revealed'); reveal.textContent='藏起来'; reveal.setAttribute('aria-expanded','true');
-      });
-      node.append(speaker,glyph,reveal);characters.append(node);
-    });
-    group.append(heading,characters);$(parent).append(group);
-  }
-  row1.forEach((s,i)=>addGroup('words1',s,i));row2.forEach((s,i)=>addGroup('words2',s,i));phrases.forEach((s,i)=>addGroup('phrases',s,i,true));
-  $('hide-all').addEventListener('click',()=>{cancel();cells.forEach(hide);$('status').textContent='字都藏好了。点喇叭听音，再自己写。';});
-  $('paragraph').addEventListener('click',()=>speak(phrases.join('')));
-  $('stop').addEventListener('click',()=>{cancel();$('status').textContent='已停止。点喇叭可以再听。';});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel();});window.addEventListener('pagehide',cancel);
-  if(synth)synth.getVoices();
+ }
+ return line;
+}
+function drawReading(){
+ const root=$('reading-content');root.replaceChildren();
+ for(const group of selectedGroups()){
+  const section=document.createElement('section');section.className='reading-section';
+  const heading=document.createElement('h2');heading.textContent=group.title;section.append(heading);
+  [group.title,...group.rows].forEach((text,i)=>{
+   const row=document.createElement('div');row.className='sentence';
+   const head=document.createElement('div');head.className='sentence-head';
+   const label=document.createElement('span');label.textContent=i===0?'标题':`第 ${i} 句`;
+   const read=document.createElement('button');read.innerHTML=speakerIcon+(i===0?' 读标题':' 读整句');read.addEventListener('click',()=>speak(text,read));
+   head.append(label,read);row.append(head,characterLine(text));section.append(row);
+  });
+  root.append(section);
+ }
+}
+function switchMode(next){
+ stop();mode=next;revealed=false;$('status').textContent='';
+ $('dictation').hidden=mode!=='dictation';$('reading').hidden=mode!=='reading';
+ $('dictation-tab').setAttribute('aria-pressed',String(mode==='dictation'));
+ $('reading-tab').setAttribute('aria-pressed',String(mode==='reading'));
+ if(mode==='reading')drawReading();else{$('reading-content').replaceChildren();drawPractice();}
+}
+const allOption=document.createElement('option');allOption.value='all';allOption.textContent='整页文字（按顺序）';$('scope').append(allOption);
+groups.forEach((group,i)=>{const option=document.createElement('option');option.value=String(i);option.textContent=group.title;$('scope').append(option);});
+$('scope').addEventListener('change',()=>{stop();buildQueue();if(mode==='reading')drawReading();else drawPractice();$('status').textContent='';});
+$('dictation-tab').addEventListener('click',()=>switchMode('dictation'));
+$('reading-tab').addEventListener('click',()=>switchMode('reading'));
+$('listen').addEventListener('click',()=>speak(queue[index].char,$('listen')));
+$('context').addEventListener('click',()=>speak(queue[index].context,$('context')));
+$('reveal').addEventListener('click',()=>{revealed=!revealed;drawPractice();});
+$('previous').addEventListener('click',()=>{if(index===0)return;index--;revealed=false;drawPractice();speak(queue[index].char,$('listen'));});
+$('next').addEventListener('click',()=>{
+ if(index===queue.length-1){stop();index=0;revealed=false;drawPractice();$('status').textContent='本轮听写完成！可以选另一部分继续练习，或再听写一轮。';return;}
+ index++;revealed=false;drawPractice();speak(queue[index].char,$('listen'));
+});
+$('stop').addEventListener('click',stop);
+$('speed').addEventListener('change',stop);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
+window.addEventListener('pagehide',stop);
+if(synth)synth.getVoices();
+buildQueue();drawPractice();
 })();

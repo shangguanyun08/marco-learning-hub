@@ -1,14 +1,28 @@
 <!doctype html>
 <html lang="zh-CN">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#3158d7"><title>Marco 中文 · 逐字听写</title><meta name="description" content="点喇叭听一个字，在纸上写；不会写时再显示大字。"><link rel="stylesheet" href="./style.css?v=2"><script src="./app.js?v=2" defer></script></head>
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f4ef"><title>Marco 中文 · 第五周</title>
+<meta name="description" content="第五周中文练习：逐字点读、听写，写不出来再显示汉字。">
+<link rel="stylesheet" href="./style.css?v=week5-2"><script src="./app.js?v=week5-2" defer></script>
+</head>
 <body><main>
-  <a class="back" href="../">← 主学习中心</a>
-  <header><h1>Marco 中文</h1><p>点 🔊 听一个字 → 在纸上写 → 不会写，再点“显示字”</p></header>
-  <div class="toolbar"><nav aria-label="练习内容"><a href="#row1">第一行词语</a><a href="#row2">第二行词语</a><a href="#sentences">课文句子</a></nav><div class="settings"><label>语速 <select id="speed"><option value="0.7">慢读</option><option value="0.9">正常</option></select></label><button id="hide-all">全部藏起来</button><button id="stop" disabled>停止朗读</button></div></div>
-  <p id="status" role="status" aria-live="polite">每个喇叭对应一个字。字先藏着，写不出时再看。</p>
-  <section id="row1"><h2>第一行词语 <span>11 个</span></h2><div id="words1" class="groups"></div></section>
-  <section id="row2"><h2>第二行词语 <span>10 个</span></h2><div id="words2" class="groups"></div></section>
-  <section id="sentences"><div class="section-title"><h2>课文句子 <span>分 5 小段</span></h2><button id="paragraph">🔊 听完整句子</button></div><div id="phrases" class="phrases"></div></section>
-  <footer>在纸上写。点“显示字”对照，记住后再藏起来写一次。</footer>
-  <noscript>请开启浏览器 JavaScript 后使用逐字听写。</noscript>
+<header><a href="../">← 返回学习主页</a><span class="lesson-label">第一单元 · 第五周 · 练习册第 8 页</span><h1>Marco 中文</h1><p>先听，在纸上写；不会写，再看字。</p></header>
+<nav class="tabs" aria-label="练习模式"><button id="dictation-tab" aria-pressed="true">听写练习</button><button id="reading-tab" aria-pressed="false">逐字点读</button></nav>
+<div class="settings"><label>练习内容 <select id="scope"></select></label><label>语速 <select id="speed"><option value="0.75">慢读</option><option value="1">正常</option></select></label><button id="stop" class="quiet" disabled>停止朗读</button></div>
+<section id="dictation" aria-label="听写练习">
+<div class="practice-top"><span id="group-name"></span><span id="counter"></span></div><progress id="progress" value="0" max="1" aria-label="听写进度"></progress>
+<div class="practice-card"><p class="step">1 听读音 → 2 在纸上写 → 3 不会再看</p>
+<button id="listen" class="listen primary"><svg class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg> 听这个字</button>
+<div id="character-box" class="character-box"><span id="character" aria-live="polite">?</span></div>
+<p id="hint">先听读音，在纸上写这个字。</p>
+<button id="reveal" class="reveal">不会写，显示这个字</button>
+<button id="context" class="context"><svg class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg> 听这句话</button>
+</div>
+<div class="navigation"><button id="previous">← 上一个</button><button id="next" class="primary">写好了，下一个 →</button></div>
+<p class="note">听写按原页文字顺序逐字进行。原题的填空留空，不加入猜测的答案。</p>
+</section>
+<section id="reading" hidden aria-label="逐字点读"><p class="reading-intro">每个字都有声音按钮，点字或 <svg class="sound-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14"/></svg> 都能听。整句也可以朗读。</p><div id="reading-content"></div></section>
+<p id="status" role="status" aria-live="polite"></p><noscript>请启用 JavaScript 后使用点读与听写。</noscript>
+<footer>第一单元 · 第五周 · 《田忌赛马》相关练习</footer>
 </main></body></html>
