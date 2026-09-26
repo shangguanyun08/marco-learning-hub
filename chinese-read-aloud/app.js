@@ -1,132 +1,75 @@
 (() => {
   'use strict';
-  // Coordinates use the original 2048 × 544 photo, preserving its exact layout.
-  const row1 = [
-    ['年',208,0,91,91],['月',337,14,74,83],['日',446,25,76,82],
-    ['岁',546,30,85,91],['九岁',662,36,132,88],['十岁',818,47,140,86],
-    ['星期',984,57,144,91],['星期六',1148,64,188,96],
-    ['星期天',1354,77,187,85],['上课',1556,83,141,89],['上中文课',1704,95,239,86]
-  ];
-  const row2 = [
-    ['学校',206,91,151,85],['老师',383,105,146,90],['学生',557,117,145,88],
-    ['同学',727,131,146,81],['男同学',895,141,193,84],['女同学',1105,150,194,87],
-    ['医生',1329,160,132,79],['看医生',1477,167,183,82],['诗人',1677,176,128,83],['士兵',1821,183,124,83]
-  ];
-  const phrases = [
-    ['两千多年以前，',352,360,435,91],['中国的历史上，',803,380,412,89],
-    ['曾经有两段特殊的时期，',1222,391,602,100],['一段',1831,411,143,86],
-    ['叫做',185,439,146,83],['“春秋时期”，',342,445,414,89],
-    ['一段叫做',769,465,259,77],['“战国时期”。',1031,465,393,79]
-  ];
-  const paragraph = '两千多年以前，中国的历史上，曾经有两段特殊的时期，一段叫做“春秋时期”，一段叫做“战国时期”。';
-  const all = [...row1,...row2,...phrases];
+  const row1 = ['年','月','日','岁','九岁','十岁','星期','星期六','星期天','上课','上中文课'];
+  const row2 = ['学校','老师','学生','同学','男同学','女同学','医生','看医生','诗人','士兵'];
+  const phrases = ['两千多年以前，','中国的历史上，','曾经有两段特殊的时期，','一段叫做“春秋时期”，','一段叫做“战国时期”。'];
   const $ = id => document.getElementById(id);
   const synth = window.speechSynthesis;
-  let voices = [], token = 0, activeUtterance = null, last = null, busy = false;
-  const buttons = all.map((item,index) => {
-    const [text,x,y,w,h] = item;
-    const button = document.createElement('button');
-    button.className = 'hotspot';
-    button.type = 'button';
-    button.dataset.index = index;
-    button.setAttribute('aria-label',`朗读：${text}`);
-    button.title = `点读：${text}`;
-    Object.assign(button.style,{left:`${x/2048*100}%`,top:`${y/544*100}%`,width:`${w/2048*100}%`,height:`${h/544*100}%`});
-    button.addEventListener('click',() => start([{text,indices:[index]}]));
-    $('hotspots').append(button);
-    return button;
-  });
-  function refreshVoices() { voices = synth ? synth.getVoices() : []; }
-  function mandarinVoice() {
-    const preferred = [/^zh[-_]CN$/i,/^cmn[-_]CN$/i,/^zh[-_]SG$/i,/^zh[-_]TW$/i,/^cmn/i];
-    for (const pattern of preferred) {
-      const found = voices.find(voice => pattern.test(voice.lang));
-      if (found) return found;
-    }
-    return voices.find(voice => /^zh$/i.test(voice.lang));
-  }
-  function highlight(indices=[]) { buttons.forEach((button,index) => button.classList.toggle('playing',indices.includes(index))); }
+  const cells = [];
+  let token = 0, utterance = null, timer = null;
+  const examples = {年:'新年',月:'月亮',日:'日期',岁:'岁数',九:'九岁',十:'十岁',星:'星期',期:'星期',六:'星期六',天:'天空',上:'上课',课:'上课',中:'中国',文:'中文',学:'学校',校:'学校',老:'老师',师:'老师',生:'学生',同:'同学',男:'男生',女:'女生',医:'医生',看:'看医生',诗:'诗人',人:'诗人',士:'士兵',兵:'士兵',两:'两个',千:'一千',多:'多少',以:'以前',前:'以前',国:'中国',的:'我的',历:'历史',史:'历史',曾:'曾经',经:'曾经',有:'有无',段:'一段',特:'特殊',殊:'特殊',时:'时间',一:'一个',叫:'叫做',做:'叫做',春:'春天',秋:'秋天',战:'战国'};
   function cancel() {
-    token += 1;
+    token++; clearTimeout(timer);
     if (synth) synth.cancel();
-    activeUtterance = null;
-    busy = false;
-    $('stop').disabled = true;
-    highlight();
+    utterance = null; $('stop').disabled = true;
+    cells.forEach(c => c.node.classList.remove('playing'));
   }
-  function start(items) {
+  function speak(text, node) {
     cancel();
-    last = items;
-    $('repeat').disabled = false;
-    $('voice-help').hidden = true;
-    if (!synth || !window.SpeechSynthesisUtterance) {
-      $('status').textContent = '此浏览器暂不支持朗读';
-      $('current-text').textContent = items.map(item => item.text).join('　');
-      $('voice-help').textContent = '请用 iPad / iPhone 的 Safari 或电脑的 Chrome 打开本页。';
-      $('voice-help').hidden = false;
-      return;
-    }
-    refreshVoices();
     const run = token;
-    busy = true;
-    $('stop').disabled = false;
-    speakNext(items,0,run);
-  }
-  function speakNext(items,index,run) {
-    if (run !== token) return;
-    if (index >= items.length) {
-      busy = false;
-      activeUtterance = null;
-      $('stop').disabled = true;
-      $('status').textContent = '读完了 · 可以再点一个';
-      highlight();
-      return;
-    }
-    const item = items[index];
-    $('current-text').textContent = item.text;
-    $('status').textContent = items.length > 1 ? `正在读 · ${index+1} / ${items.length}` : '正在朗读';
-    highlight(item.indices);
-    if (item.indices.length === 1 && items.length > 1) {
-      const target=buttons[item.indices[0]], box=$('paper-scroll');
-      const left=target.offsetLeft, right=left+target.offsetWidth;
-      if (left<box.scrollLeft || right>box.scrollLeft+box.clientWidth) {
-        box.scrollLeft=Math.max(0,left-(box.clientWidth-target.offsetWidth)/2);
-      }
-    }
-    const utterance = new SpeechSynthesisUtterance(item.text);
-    activeUtterance = utterance; // Keep an owning reference for mobile Safari.
-    utterance.lang = 'zh-CN';
-    utterance.rate = Number($('speed').value);
-    const voice = mandarinVoice();
+    if (!synth || !window.SpeechSynthesisUtterance) { $('status').textContent = '此浏览器不支持朗读，请用 Safari 或 Chrome 打开，或请家长读题。'; return; }
+    const voices = synth.getVoices();
+    const voice = voices.find(v=>/^zh[-_](CN|SG|Hans)/i.test(v.lang)) || voices.find(v=>/^cmn/i.test(v.lang)) || voices.find(v=>/^zh([-_]TW)?$/i.test(v.lang));
+    utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = voice?.lang || 'zh-CN';
     if (voice) utterance.voice = voice;
-    utterance.onend = () => { if (run === token) speakNext(items,index+1,run); };
-    utterance.onerror = event => {
-      if (run !== token) return;
-      cancel();
-      $('status').textContent = '朗读没有开始，请点「再读一次」';
-      $('voice-help').textContent = event.error === 'language-unavailable' || event.error === 'voice-unavailable'
-        ? '请在设备的朗读语音设置中添加「中文（普通话）」语音，再重新打开此页。'
-        : '请检查设备音量；也可用 Safari 或 Chrome 重新打开。';
-      $('voice-help').hidden = false;
-    };
-    synth.speak(utterance);
+    utterance.rate = Number($('speed').value);
+    utterance.volume = 1;
+    $('stop').disabled = false;
+    node?.classList.add('playing');
+    $('status').textContent = '仔细听，然后在纸上写。不会写时，再点下面的“显示字”。';
+    utterance.onstart = () => { if (run===token) clearTimeout(timer); };
+    utterance.onend = () => { if (run!==token) return; clearTimeout(timer); $('stop').disabled=true; $('status').textContent='轮到你写了。没听清，可以再点一次喇叭。'; };
+    utterance.onerror = e => { if(run!==token || ['canceled','interrupted'].includes(e.error)) return; cancel(); $('status').textContent='没有读出声音，请再点喇叭，并检查音量和设备的普通话语音。'; };
+    synth.resume(); synth.speak(utterance);
+    timer=setTimeout(()=>{if(run===token) $('status').textContent='没听到声音？请检查音量，再点一次喇叭。';},5000);
   }
-  $('read-row-1').addEventListener('click',() => start(row1.map((item,index)=>({text:item[0],indices:[index]}))));
-  $('read-row-2').addEventListener('click',() => start(row2.map((item,index)=>({text:item[0],indices:[row1.length+index]}))));
-  $('read-paragraph').addEventListener('click',() => start([{text:paragraph,indices:phrases.map((_,index)=>21+index)}]));
-  $('repeat').addEventListener('click',() => { if (last) start(last); });
-  $('stop').addEventListener('click',() => { cancel(); $('status').textContent='已停止 · 点一下继续读'; });
-  $('speed').addEventListener('change',() => { if (busy && last) start(last); });
-  $('zoom').addEventListener('change',() => {
-    const value=$('zoom').value;
-    $('paper').className=`paper ${value==='fit'?'fit':value==='larger'?'larger':''}`;
-    $('scroll-hint').textContent=value==='fit'?'原纸整页 · 选「大字」可放大':'↔ 左右滑动看整行，排版与原纸相同';
-  });
-  $('zones').addEventListener('change',() => $('hotspots').classList.toggle('show-zones',$('zones').checked));
-  document.addEventListener('visibilitychange',() => { if (document.hidden && busy) { cancel(); $('status').textContent='已暂停 · 点一下继续读'; } });
-  window.addEventListener('pagehide',cancel);
-  if (synth) {
-    refreshVoices();
-    if (synth.addEventListener) synth.addEventListener('voiceschanged',refreshVoices);
+  function hide(cell) {
+    cell.glyph.textContent='?'; cell.glyph.classList.add('hidden');
+    cell.glyph.setAttribute('aria-label','字已隐藏');
+    cell.node.classList.remove('revealed');
+    cell.reveal.textContent='显示字'; cell.reveal.setAttribute('aria-expanded','false');
   }
+  function addGroup(parent,text,index,sentence=false) {
+    const group=document.createElement('article'); group.className=`group${sentence?' phrase':''}`;
+    const heading=document.createElement('div'); heading.className='group-heading';
+    const label=document.createElement('span'); label.textContent=`第 ${index+1} ${sentence?'小段':'组'}`;
+    const whole=document.createElement('button'); whole.type='button'; whole.textContent=sentence?'🔊 听这一小段':'🔊 听整个词';
+    whole.addEventListener('click',()=>speak(text)); heading.append(label,whole);
+    const characters=document.createElement('div'); characters.className='characters';
+    let pos=0;
+    Array.from(text).forEach(char=>{
+      if(!/\p{Script=Han}/u.test(char)) { const punctuation=document.createElement('span'); punctuation.className='punctuation'; punctuation.textContent=char; characters.append(punctuation); return; }
+      pos++;
+      const node=document.createElement('div'); node.className='character';
+      const speaker=document.createElement('button'); speaker.type='button'; speaker.className='speaker'; speaker.textContent='🔊'; speaker.setAttribute('aria-label',`听第 ${pos} 个字`);
+      const glyph=document.createElement('div'); glyph.className='glyph hidden';
+      const reveal=document.createElement('button'); reveal.type='button'; reveal.className='reveal';
+      const cell={node,glyph,reveal,char}; cells.push(cell);hide(cell);
+      speaker.addEventListener('click',()=>speak(examples[char]?`${examples[char]}的${char}。${char}。`:char,node));
+      reveal.addEventListener('click',()=>{
+        if(node.classList.contains('revealed')) { hide(cell); return; }
+        glyph.textContent=char; glyph.classList.remove('hidden'); glyph.removeAttribute('aria-label');
+        node.classList.add('revealed'); reveal.textContent='藏起来'; reveal.setAttribute('aria-expanded','true');
+      });
+      node.append(speaker,glyph,reveal);characters.append(node);
+    });
+    group.append(heading,characters);$(parent).append(group);
+  }
+  row1.forEach((s,i)=>addGroup('words1',s,i));row2.forEach((s,i)=>addGroup('words2',s,i));phrases.forEach((s,i)=>addGroup('phrases',s,i,true));
+  $('hide-all').addEventListener('click',()=>{cancel();cells.forEach(hide);$('status').textContent='字都藏好了。点喇叭听音，再自己写。';});
+  $('paragraph').addEventListener('click',()=>speak(phrases.join('')));
+  $('stop').addEventListener('click',()=>{cancel();$('status').textContent='已停止。点喇叭可以再听。';});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)cancel();});window.addEventListener('pagehide',cancel);
+  if(synth)synth.getVoices();
 })();
