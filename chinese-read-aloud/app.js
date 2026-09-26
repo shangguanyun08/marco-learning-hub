@@ -31,9 +31,17 @@ const speakerIcon = '<svg class="sound-icon" viewBox="0 0 24 24" fill="none" str
 const $ = id => document.getElementById(id);
 const isHan = char => /[\u3400-\u9fff]/.test(char);
 const synth=window.speechSynthesis;
-let mode='dictation', queue=[], index=0, revealed=false, run=0, utterance=null, playing=null;
+let mode='dictation', queue=[], index=0, revealed=false, run=0, utterance=null, playing=null, startTimer=null;
+let voices=[];
+function refreshVoices(){
+ voices=synth?synth.getVoices():[];
+ const select=$('voice');if(!select)return;
+ const selected=select.value;select.replaceChildren(new Option('自动选择普通话',''));
+ voices.filter(v=>/^(zh|cmn)([-_]|$)/i.test(v.lang)&&!/HK|yue/i.test(v.lang)).forEach(v=>select.add(new Option(v.name+' · '+v.lang,v.voiceURI)));
+ if([...select.options].some(o=>o.value===selected))select.value=selected;
+}
 function stop(){
- run++;if(synth)synth.cancel();utterance=null;
+ run++;clearTimeout(startTimer);if(synth&&(utterance||synth.speaking||synth.pending))synth.cancel();utterance=null;
  if(playing)playing.classList.remove('speaking');playing=null;
  $('stop').disabled=true;
 }
@@ -41,15 +49,23 @@ function speak(text,button){
  stop();$('status').textContent='';
  if(!synth||!window.SpeechSynthesisUtterance){$('status').textContent='此浏览器不支持朗读，请用 Safari 或 Chrome 打开。';return;}
  const id=run,u=new SpeechSynthesisUtterance(text.replace(/_+/g,'空格').replace(/p\.30/g,'第三十页'));
- utterance=u;u.lang='zh-CN';u.rate=Number($('speed').value);
- const voices=synth.getVoices();
- const voice=voices.find(v=>/^zh[-_]CN$/i.test(v.lang))||voices.find(v=>/^cmn[-_]CN$/i.test(v.lang))||voices.find(v=>/^zh[-_](SG|TW)$/i.test(v.lang));
- if(voice)u.voice=voice;
+ utterance=u;u.lang='zh-CN';u.volume=1;u.rate=Number($('speed').value);
+ refreshVoices();
+ const voice=voices.find(v=>v.voiceURI===($('voice')&&$('voice').value));
+ // Let the OS choose its default Mandarin voice unless the user selects one.
+ if(voice){u.voice=voice;u.lang=voice.lang;}
+ $('status').textContent='正在启动朗读…';
+ u.onstart=()=>{if(id!==run)return;clearTimeout(startTimer);$('status').textContent='正在朗读；如果听不到，请调高音量、关闭静音，并检查蓝牙音频输出。';};
  if(button){playing=button;button.classList.add('speaking');}
  $('stop').disabled=false;
- u.onend=()=>{if(id!==run)return;if(playing)playing.classList.remove('speaking');playing=null;utterance=null;$('stop').disabled=true;};
- u.onerror=e=>{if(id!==run)return;stop();$('status').textContent=e.error==='language-unavailable'||e.error==='voice-unavailable'?'请在设备中添加普通话朗读语音后重试。':'未能朗读，请检查音量并再点一次声音按钮。';};
- synth.speak(u);
+ u.onend=()=>{if(id!==run)return;clearTimeout(startTimer);$('status').textContent='朗读结束。再点声音按钮可重听。';if(playing)playing.classList.remove('speaking');playing=null;utterance=null;$('stop').disabled=true;};
+ u.onerror=e=>{if(id!==run)return;stop();$('status').textContent=e.error==='language-unavailable'||e.error==='voice-unavailable'?'请在设备中添加普通话朗读语音后重试。':'未能朗读（'+e.error+'）。请用 Safari 打开，或换一个中文声音再试。';};
+ startTimer=setTimeout(()=>{if(id!==run)return;stop();$('status').textContent='朗读没有启动。请用 Safari 打开此页，选择一个中文声音，再点“测试声音”。';},5000);
+ try{
+  if(synth.paused)synth.resume();
+  // Keep speak synchronous with the tap so iOS retains user activation.
+  synth.speak(u);
+ }catch(error){stop();$('status').textContent='无法启动朗读，请用 Safari 打开后重试。';}
 }
 function selectedGroups(){return $('scope').value==='all'?groups:[groups[Number($('scope').value)]];}
 function buildQueue(){
@@ -132,6 +148,8 @@ $('stop').addEventListener('click',stop);
 $('speed').addEventListener('change',stop);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
 window.addEventListener('pagehide',stop);
-if(synth)synth.getVoices();
+if(synth){refreshVoices();synth.addEventListener('voiceschanged',refreshVoices);}
+if($('test-sound'))$('test-sound').addEventListener('click',()=>speak('你好，我们开始中文听写。',$('test-sound')));
+if($('voice'))$('voice').addEventListener('change',stop);
 buildQueue();drawPractice();
 })();
