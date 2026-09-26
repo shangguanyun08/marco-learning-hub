@@ -24,7 +24,7 @@ function submit(p,source,choice){
   form.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));
 }
 test('exactly seven answered-wrong math sources and eleven verbal sources; no blanks or essay',()=>{
-  assert.deepEqual(bank.map(s=>s.questions.length),[7,7,7,7,11,11]);
+  assert.deepEqual(bank.map(s=>s.questions.length),[7,7,7,7,11,11,7,7,7]);
   assert.deepEqual(bank[0].questions.map(q=>q.source),[43,56,66,69,74,76,143]);
   assert.deepEqual(bank[4].questions.map(q=>q.source),[3,4,9,12,21,23,27,29,31,32,35]);
   for(const s of bank){assert.equal(new Set(s.questions.map(q=>q.source)).size,s.questions.length);for(const q of s.questions){assert.equal(new Set(q.choices).size,q.choices.length);assert.ok(q.correct>=0&&q.correct<q.choices.length);}}
@@ -36,15 +36,16 @@ test('vocabulary repeat changes only order and maps each answer by text',()=>{
     assert.equal(q.choices[q.correct],r.choices[r.correct]);assert.notEqual(q.correct,r.correct);
   });
 });
-test('independent calculation verifies all twenty-eight math keys',()=>{
-  const mix=[[10,100],[15,135],[24,176],[18,162]];
-  const div=[[27874,77],[23528,68],[31752,84],[29484,78]];
-  const fractions=[[(3+2/3)/(5/9),(5+3/14)/(3/7)],[(2+1/2)/(5/8),(3+3/4)/(3/4)],[(4+1/2)/(3/4),(2+2/3)/(4/9)],[(5+1/4)/(7/8),(3+1/3)/(2/3)]];
-  const arcB=[22,25,24,25],percent=[[68,145,145,68],[36,125,125,36],[42,150,150,40],[72,125,125,72]];
-  const equations=[[3,9,21,4],[5,-7,28,8],[4,6,42,8],[7,-11,38,7]],polys=[[-5,6],[-7,12],[1,-20],[-9,20]];
+test('independent calculation verifies all forty-nine math keys',()=>{
+  const mathBank=bank.filter(s=>s.subject==='math');
+  const mix=[[10,100],[15,135],[24,176],[18,162],[21,119],[30,210],[36,132]];
+  const div=[[27874,77],[23528,68],[31752,84],[29484,78],[26712,72],[34104,84],[28416,64]];
+  const fractions=[[(3+2/3)/(5/9),(5+3/14)/(3/7)],[(2+1/2)/(5/8),(3+3/4)/(3/4)],[(4+1/2)/(3/4),(2+2/3)/(4/9)],[(5+1/4)/(7/8),(3+1/3)/(2/3)],[(3+3/5)/(3/4),(2+2/5)/(2/5)],[(4+2/3)/(7/9),(3+3/4)/(5/8)],[(5+1/4)/(3/4),(2+5/6)/(1/2)]];
+  const arcB=[22,25,24,25,18,32,30],percent=[[68,145,145,68],[36,125,125,36],[42,150,150,40],[72,125,125,72],[64,125,125,64],[45,160,160,48],[52,175,175,50]];
+  const equations=[[3,9,21,4],[5,-7,28,8],[4,6,42,8],[7,-11,38,7],[6,5,59,8],[8,-13,43,7],[9,16,70,7]],polys=[[-5,6],[-7,12],[1,-20],[-9,20],[-8,15],[2,-24],[-2,-35]];
   const cmp=(a,b)=>Math.abs(a-b)<1e-9?2:a>b?0:1;
-  for(let i=0;i<4;i++){
-    const qs=bank[i].questions;
+  for(let i=0;i<mathBank.length;i++){
+    const qs=mathBank[i].questions;
     let [n,d]=qs[0].choices[qs[0].correct].split('/').map(Number);assert.equal(n/d,mix[i][0]/(mix[i][0]+mix[i][1]));
     assert.equal(+qs[1].choices[qs[1].correct],div[i][0]/div[i][1]);
     assert.equal(qs[2].correct,cmp(...fractions[i]));assert.equal(qs[3].correct,cmp(qs[3].arc.radius*qs[3].arc.angle/360,arcB[i]));
@@ -104,10 +105,11 @@ test('leaving and reloading does not reset a timed session',()=>{
   clock.now+=120000;const resumed=page('math-c',saved,clock);try{assert.match(resumed.doc.querySelector('#countdown').textContent,/5:00/);}finally{resumed.close();}
   clock.now+=300001;const expired=page('math-c',saved,clock);try{assert.equal(expired.doc.querySelector('#score').textContent,'0 / 7');assert.equal(expired.doc.querySelector('#completion').hidden,false);assert.equal(expired.doc.querySelectorAll('#questions input:not(:disabled)').length,0);}finally{expired.close();}
 });
-test('four session pages have 18, 18, 7, 7 questions; vocabulary appears only in sessions 1 and 2',()=>{
-  for(let i=1;i<=4;i++){const p=page('session-'+i);try{
+test('seven session pages have math throughout; vocabulary appears only in sessions 1 and 2',()=>{
+  for(let i=1;i<=7;i++){const p=page('session-'+i);try{
     assert.equal(p.doc.querySelectorAll('.question').length,i<=2?18:7);
-    assert.equal(p.doc.querySelectorAll('.answer').length,0);assert.equal(p.doc.querySelectorAll('.session-link').length,4);
+    assert.equal(p.doc.querySelectorAll('.answer').length,0);assert.equal(p.doc.querySelectorAll('.session-link').length,7);
+    assert.match(p.doc.querySelector('#sessions-progress').textContent,/of 7 sessions/);
     assert.equal(p.doc.querySelectorAll('#heading-vocab').length,i<=2?1:0);
     assert.equal(p.doc.querySelector('#vocab-score-wrap').hidden,i>2);
     assert.equal(p.doc.querySelector('#session-title').textContent,'Session '+i);
@@ -150,10 +152,32 @@ test('online sync restores both subjects without mixing session scores',async()=
     if(opt.method==='POST'){const body=JSON.parse(opt.body);record={state:body.state,version:(record?.version||0)+1};return{ok:true,json:async()=>({accepted:true,progress:record})};}
     return{ok:true,json:async()=>({progress:record})};
   };
-  const state=empty();for(const s of [bank[0],bank[4]]){const r=run();engine.submit(r,s.questions[0],s.questions[0].correct,at);state.sessions[s.id]=[r];}
+  const state=empty();for(const s of bank){const r=run();engine.submit(r,s.questions[0],s.questions[0].correct,at);state.sessions[s.id]=[r];}
   let restored=empty(),first=state;
   p.w.AbortController=AbortController;
   const a=p.w.MarcoIseeSync.create({getState:()=>first,onRemote:s=>first=s,onStatus(){},fetcher});
   const b=p.w.MarcoIseeSync.create({getState:()=>restored,onRemote:s=>restored=s,onStatus(){},fetcher});
-  try{await a.start();await b.start();assert.equal(engine.stats(bank[0],restored.sessions['math-original'][0]).first,1);assert.equal(engine.stats(bank[4],restored.sessions['vocab-original'][0]).first,1);}finally{a.stop();b.stop();p.close();}
+  try{await a.start();await b.start();for(const part of bank)assert.equal(engine.stats(part,restored.sessions[part.id][0]).first,1);}finally{a.stop();b.stop();p.close();}
+});
+
+test('new math sessions have distinct questions, save independently, and retain old history',()=>{
+  const prompts=bank.filter(s=>s.subject==='math').flatMap(s=>s.questions.map(q=>q.prompt));
+  assert.equal(new Set(prompts).size,49);
+  const legacy=empty();legacy.sessions['math-original']=[run()];
+  engine.submit(legacy.sessions['math-original'][0],bank[0].questions[0],bank[0].questions[0].correct,at);
+  let saved=JSON.stringify(legacy);
+  for(const [i,id] of ['math-d','math-e','math-f'].entries()){
+    const p=page('session-'+(i+5),saved),part=bank.find(s=>s.id===id);
+    try{
+      assert.equal(p.doc.querySelector('#timer-panel').hidden,true);
+      assert.equal(p.doc.querySelector('#question-work').hidden,false);
+      for(const question of part.questions)submit(p,question.source,question.correct);
+      assert.equal(p.doc.querySelector('#score').textContent,'7 / 7');
+      assert.equal(p.doc.querySelector('#completion').hidden,false);
+      saved=p.w.localStorage.getItem(key);
+      assert.deepEqual(JSON.parse(saved).sessions['math-original'],JSON.parse(JSON.stringify(legacy.sessions['math-original'])));
+      const restored=page(id,saved);try{assert.equal(restored.doc.querySelector('#score').textContent,'7 / 7');}finally{restored.close();}
+    }finally{p.close();}
+  }
+  for(const id of ['math-d','math-e','math-f'])assert.equal(JSON.parse(saved).sessions[id].length,1);
 });

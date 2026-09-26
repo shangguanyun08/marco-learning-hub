@@ -737,5 +737,323 @@ window.MARCO_ISEE_PRACTICE = [
         "note": "Classified information also fits this sentence. Classified usually means officially restricted information; the original sentence does not provide enough detail to exclude it."
       }
     ]
+  },
+  {
+    "id": "math-d",
+    "subject": "math",
+    "day": 5,
+    "label": "Similar set D",
+    "title": "Math · Session 5 · Similar set D",
+    "description": "Seven new math questions on the same skills. Take your time and check your work.",
+    "questions": [
+      {
+        "source": 43,
+        "skill": "Part of a mixture",
+        "prompt": "A solution contains 21 g of salt dissolved in 119 g of water. What fraction of the solution’s total mass is salt?",
+        "choices": [
+          "3/17",
+          "17/20",
+          "3/20",
+          "1/7"
+        ],
+        "correct": 2,
+        "explanation": "The whole solution weighs 21 + 119 = 140 g. Salt is 21/140 = 3/20 of the solution. Divide by the total mass, not just the water’s mass."
+      },
+      {
+        "source": 56,
+        "skill": "Long division",
+        "prompt": "26,712 ÷ 72 = ?",
+        "choices": [
+          "371",
+          "361",
+          "381",
+          "317"
+        ],
+        "correct": 0,
+        "explanation": "72 × 300 = 21,600, leaving 5,112. Then 72 × 70 = 5,040, leaving 72 = 72 × 1. The quotient is 300 + 70 + 1 = 371. Check: 371 × 72 = 26,712."
+      },
+      {
+        "source": 66,
+        "skill": "Divide mixed numbers",
+        "prompt": "Column A: 3 3/5 ÷ 3/4\nColumn B: 2 2/5 ÷ 2/5",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 1,
+        "explanation": "Convert each mixed number to an improper fraction, then multiply by the reciprocal. A = 18/5 × 4/3 = 24/5 = 4.8. B = 12/5 × 5/2 = 6. Column B is greater."
+      },
+      {
+        "source": 69,
+        "skill": "Arc length and circumference",
+        "prompt": "A circular wire has a radius of 120 cm. A 45° arc is cut out and bent into a new circle.\nColumn A: The new circle’s radius\nColumn B: 18 cm",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 1,
+        "explanation": "The arc is 45/360 = 1/8 of the original circumference. Its length becomes the new circumference, so the new radius is 120 ÷ 8 = 15 cm. Since 15 < 18, Column B is greater.",
+        "arc": {
+          "radius": 120,
+          "angle": 45
+        }
+      },
+      {
+        "source": 74,
+        "skill": "Percent comparisons",
+        "prompt": "Column A: 64% of 125\nColumn B: 125% of 64",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 2,
+        "explanation": "A = 64/100 × 125 = 80. B = 125/100 × 64 = 80. The same two numbers are multiplied in either order, so the quantities are equal."
+      },
+      {
+        "source": 76,
+        "skill": "Solve and compare",
+        "prompt": "6y + 5 = 59\nColumn A: y\nColumn B: 8",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 0,
+        "explanation": "Subtract 5 from both sides: 6y = 54. Divide by 6: y = 9. Since 9 > 8, Column A is greater. Check: 6 × 9 + 5 = 59."
+      },
+      {
+        "source": 143,
+        "skill": "Factor a quadratic",
+        "prompt": "Which expression is a factored form of x² − 8x + 15?",
+        "choices": [
+          "(x − 5)(x + 3)",
+          "(x + 5)(x + 3)",
+          "(x − 15)(x − 1)",
+          "(x − 5)(x − 3)",
+          "(x − 8)(x − 2)"
+        ],
+        "correct": 3,
+        "explanation": "Find two numbers whose product is 15 and whose sum is −8: −5 and −3. The factors are (x − 5)(x − 3). Expanding gives x² − 3x − 5x + 15 = x² − 8x + 15."
+      }
+    ]
+  },
+  {
+    "id": "math-e",
+    "subject": "math",
+    "day": 6,
+    "label": "Similar set E",
+    "title": "Math · Session 6 · Similar set E",
+    "description": "Seven new math questions on the same skills. Take your time and check your work.",
+    "questions": [
+      {
+        "source": 43,
+        "skill": "Part of a mixture",
+        "prompt": "A drink is made by dissolving 30 g of sugar in 210 g of water. What fraction of the drink’s total mass is sugar?",
+        "choices": [
+          "1/7",
+          "1/8",
+          "7/8",
+          "1/9"
+        ],
+        "correct": 1,
+        "explanation": "The drink weighs 30 + 210 = 240 g. Sugar is 30/240 = 1/8 of the total. The fraction 30/210 compares sugar with water, not with the whole drink."
+      },
+      {
+        "source": 56,
+        "skill": "Long division",
+        "prompt": "34,104 ÷ 84 = ?",
+        "choices": [
+          "46",
+          "416",
+          "460",
+          "406"
+        ],
+        "correct": 3,
+        "explanation": "84 × 400 = 33,600, leaving 504 = 84 × 6. The quotient is 400 + 0 + 6 = 406. Keep the zero in the tens place. Check: 406 × 84 = 34,104."
+      },
+      {
+        "source": 66,
+        "skill": "Divide mixed numbers",
+        "prompt": "Column A: 4 2/3 ÷ 7/9\nColumn B: 3 3/4 ÷ 5/8",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 2,
+        "explanation": "A = 14/3 × 9/7 = 6. B = 15/4 × 8/5 = 6. Convert the mixed numbers and use the reciprocals before comparing. The quantities are equal."
+      },
+      {
+        "source": 69,
+        "skill": "Arc length and circumference",
+        "prompt": "A circular wire has a radius of 96 cm. A 135° arc is cut out and bent into a new circle.\nColumn A: The new circle’s radius\nColumn B: 32 cm",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 0,
+        "explanation": "The arc is 135/360 = 3/8 of the original circumference. The new radius is 3/8 × 96 = 36 cm. Since 36 > 32, Column A is greater.",
+        "arc": {
+          "radius": 96,
+          "angle": 135
+        }
+      },
+      {
+        "source": 74,
+        "skill": "Percent comparisons",
+        "prompt": "Column A: 45% of 160\nColumn B: 160% of 48",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 1,
+        "explanation": "A = 0.45 × 160 = 72. B = 1.60 × 48 = 76.8. Column B is greater. The numbers are not an exact swapped pair: 45 and 48 are different."
+      },
+      {
+        "source": 76,
+        "skill": "Solve and compare",
+        "prompt": "8y − 13 = 43\nColumn A: y\nColumn B: 7",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 2,
+        "explanation": "Add 13 to both sides: 8y = 56. Divide by 8: y = 7. The quantities are equal. Check: 8 × 7 − 13 = 43."
+      },
+      {
+        "source": 143,
+        "skill": "Factor a quadratic",
+        "prompt": "Which expression is a factored form of x² + 2x − 24?",
+        "choices": [
+          "(x − 6)(x + 4)",
+          "(x + 6)(x − 4)",
+          "(x + 8)(x − 3)",
+          "(x + 6)(x + 4)",
+          "(x − 8)(x + 3)"
+        ],
+        "correct": 1,
+        "explanation": "The numbers 6 and −4 multiply to −24 and add to 2. The factors are (x + 6)(x − 4). Expanding gives x² − 4x + 6x − 24 = x² + 2x − 24."
+      }
+    ]
+  },
+  {
+    "id": "math-f",
+    "subject": "math",
+    "day": 7,
+    "label": "Similar set F",
+    "title": "Math · Session 7 · Similar set F",
+    "description": "Seven new math questions on the same skills. Take your time and check your work.",
+    "questions": [
+      {
+        "source": 43,
+        "skill": "Part of a mixture",
+        "prompt": "A solution is made by dissolving 36 g of salt in 132 g of water. What fraction of the solution’s total mass is salt?",
+        "choices": [
+          "3/11",
+          "11/14",
+          "1/4",
+          "3/14"
+        ],
+        "correct": 3,
+        "explanation": "The total mass is 36 + 132 = 168 g. Salt is 36/168 = 3/14 of the solution. Simplify by dividing the numerator and denominator by 12."
+      },
+      {
+        "source": 56,
+        "skill": "Long division",
+        "prompt": "28,416 ÷ 64 = ?",
+        "choices": [
+          "434",
+          "454",
+          "444",
+          "464"
+        ],
+        "correct": 2,
+        "explanation": "64 × 400 = 25,600, leaving 2,816. Then 64 × 40 = 2,560, leaving 256 = 64 × 4. The quotient is 444. Check: 444 × 64 = 28,416."
+      },
+      {
+        "source": 66,
+        "skill": "Divide mixed numbers",
+        "prompt": "Column A: 5 1/4 ÷ 3/4\nColumn B: 2 5/6 ÷ 1/2",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 0,
+        "explanation": "A = 21/4 × 4/3 = 7. B = 17/6 × 2 = 17/3 = 5 2/3. Since 7 > 5 2/3, Column A is greater."
+      },
+      {
+        "source": 69,
+        "skill": "Arc length and circumference",
+        "prompt": "A circular wire has a radius of 144 cm. A 75° arc is cut out and bent into a new circle.\nColumn A: The new circle’s radius\nColumn B: 30 cm",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 2,
+        "explanation": "The arc is 75/360 = 5/24 of the original circumference. The new radius is 5/24 × 144 = 30 cm. The quantities are equal.",
+        "arc": {
+          "radius": 144,
+          "angle": 75
+        }
+      },
+      {
+        "source": 74,
+        "skill": "Percent comparisons",
+        "prompt": "Column A: 52% of 175\nColumn B: 175% of 50",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 0,
+        "explanation": "A = 0.52 × 175 = 91. B = 1.75 × 50 = 87.5. Column A is greater. Read carefully: 52 and 50 are different, so these are not exactly swapped factors."
+      },
+      {
+        "source": 76,
+        "skill": "Solve and compare",
+        "prompt": "9y + 16 = 70\nColumn A: y\nColumn B: 7",
+        "choices": [
+          "the quantity in Column A is greater",
+          "the quantity in Column B is greater",
+          "the two quantities are equal",
+          "the relationship cannot be determined from the information given"
+        ],
+        "correct": 1,
+        "explanation": "Subtract 16 from both sides: 9y = 54. Divide by 9: y = 6. Since 6 < 7, Column B is greater. Check: 9 × 6 + 16 = 70."
+      },
+      {
+        "source": 143,
+        "skill": "Factor a quadratic",
+        "prompt": "Which expression is a factored form of x² − 2x − 35?",
+        "choices": [
+          "(x + 7)(x − 5)",
+          "(x − 7)(x − 5)",
+          "(x − 35)(x + 1)",
+          "(x + 7)(x + 5)",
+          "(x − 7)(x + 5)"
+        ],
+        "correct": 4,
+        "explanation": "The numbers −7 and 5 multiply to −35 and add to −2. The factors are (x − 7)(x + 5). Expanding gives x² + 5x − 7x − 35 = x² − 2x − 35."
+      }
+    ]
   }
 ];

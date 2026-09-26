@@ -7,7 +7,10 @@
     {id:'session-1',number:1,label:'Original questions',ids:['math-original','vocab-original'],description:'One practice set: 7 original math questions, followed by 11 original vocabulary questions.'},
     {id:'session-2',number:2,label:'Similar math · shuffled vocabulary',ids:['math-a','vocab-shuffled'],description:'One practice set: 7 similar math questions, followed by the same 11 vocabulary questions with shuffled choices.'},
     {id:'session-3',number:3,label:'Math only',ids:['math-b'],description:'One practice set of 7 similar math questions.'},
-    {id:'session-4',number:4,label:'Timed math',ids:['math-c'],description:'One practice set of 7 similar math questions, with 7 minutes for the entire session.'}
+    {id:'session-4',number:4,label:'Timed math',ids:['math-c'],description:'One practice set of 7 similar math questions, with 7 minutes for the entire session.'},
+    {id:'session-5',number:5,label:'Math only · Similar set D',ids:['math-d'],description:'One practice set of 7 new math questions on the same skills.'},
+    {id:'session-6',number:6,label:'Math only · Similar set E',ids:['math-e'],description:'One practice set of 7 new math questions on the same skills.'},
+    {id:'session-7',number:7,label:'Math only · Similar set F',ids:['math-f'],description:'One practice set of 7 new math questions on the same skills.'}
   ].map(s=>({...s,parts:s.ids.map(id=>bank.find(p=>p.id===id))}));
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const math=s=>esc(s).replace(/\b(\d+)\/(\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>');
@@ -83,7 +86,7 @@
       if(completed)completedSessions++;
       return `<a class="session-link ${completed?'completed':started?'in-progress':'not-started'}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>Session ${session.number}</b><span>${session.parts.length===2?'7 math + 11 vocabulary':'7 math questions'}</span><small>${esc(session.label)}</small>${session.number===4?'<small>7 minutes total</small>':''}<span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${started||completed?parts.map(p=>`<small class="part-score">${subject(p.part)}: <strong>${p.score.first}/${p.score.total}</strong> first-try</small>`).join(''):''}${repeat?'<small class="repeat-note">New run in progress · earlier scores kept</small>':''}</a>`;
     }).join('');
-    document.querySelector('#sessions-progress').textContent=`${completedSessions} of 4 sessions completed`;
+    document.querySelector('#sessions-progress').textContent=`${completedSessions} of ${sessions.length} sessions completed`;
   }
   function renderSummary(){
     const scores=active.parts.map(part=>({part,s:engine.stats(part,current(part))}));
@@ -110,7 +113,7 @@
   }
   function render(){
     document.querySelector('#practice-content').hidden=!active;
-    document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Four sessions';
+    document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Seven sessions';
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderSessions();updateSaveNote();return;}
     active.parts.forEach(runs);
     document.querySelector('#session-title').textContent=`Session ${active.number}`;
@@ -162,3 +165,4 @@
   render();expireTimedRuns();setInterval(()=>{expireTimedRuns();if(active)renderTimer();},500);
   if(!isLocalPreview){const tracker=document.createElement('script');tracker.src='../../shared-activity-tracker.js?v=1';tracker.dataset.appId=KEY;tracker.dataset.course='Marco ISEE Middle test review';document.body.append(tracker);}
 })();
+
