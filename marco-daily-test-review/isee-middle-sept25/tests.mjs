@@ -113,6 +113,15 @@ test('seven session pages have math throughout; vocabulary appears only in sessi
     assert.equal(p.doc.querySelectorAll('#heading-vocab').length,i<=2?1:0);
     assert.equal(p.doc.querySelector('#vocab-score-wrap').hidden,i>2);
     assert.equal(p.doc.querySelector('#session-title').textContent,'Session '+i);
+    if(i>=5){
+      assert.equal(p.doc.querySelectorAll('.scratch-text,.scratch-toggle').length,0);
+      for(const question of p.doc.querySelectorAll('.question')){
+        const form=question.querySelector('form'),scratch=form.nextElementSibling;
+        assert.ok(scratch.matches('.scratch'));
+        assert.equal(scratch.querySelector('.scratch-drawing').hidden,false);
+      }
+    }
+
     assert.match(p.doc.querySelector('#save-note').textContent,/Preview/);
   }finally{p.close();}}
 });
@@ -190,29 +199,29 @@ test('new math sessions have distinct questions, save independently, and retain 
 });
 
 test('main steps save before answering and each try preserves its own idea without affecting points',()=>{
-  const p=page('session-5');
-  const write=text=>{const input=p.doc.querySelector('#steps-math-d-43');input.value=text;input.dispatchEvent(new p.w.Event('input',{bubbles:true}));};
+  const p=page('session-3');
+  const write=text=>{const input=p.doc.querySelector('#steps-math-b-43');input.value=text;input.dispatchEvent(new p.w.Event('input',{bubbles:true}));};
   try{
     assert.equal(p.doc.querySelectorAll('[data-scratch-part]').length,7);
     write('First compare salt with water.');
-    let state=JSON.parse(p.w.localStorage.getItem(key)),r=state.sessions['math-d'][0];
+    let state=JSON.parse(p.w.localStorage.getItem(key)),r=state.sessions['math-b'][0];
     assert.equal(Object.keys(r.answers).length,0);assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
     assert.equal(p.w.MarcoIseeSync.valid(state),true);
-    assert.equal(p.w.MarcoIseeSync.merge(state,empty()).sessions['math-d'][0].work[43].text,'First compare salt with water.');
-    const resumed=page('session-5',JSON.stringify(state));try{assert.equal(resumed.doc.querySelector('#steps-math-d-43').value,'First compare salt with water.');}finally{resumed.close();}
+    assert.equal(p.w.MarcoIseeSync.merge(state,empty()).sessions['math-b'][0].work[43].text,'First compare salt with water.');
+    const resumed=page('session-3',JSON.stringify(state));try{assert.equal(resumed.doc.querySelector('#steps-math-b-43').value,'First compare salt with water.');}finally{resumed.close();}
     submit(p,43,0);write('Add salt and water first, then divide salt by the total.');submit(p,43,2);
-    r=JSON.parse(p.w.localStorage.getItem(key)).sessions['math-d'][0];
+    r=JSON.parse(p.w.localStorage.getItem(key)).sessions['math-b'][0];
     assert.equal(r.answers[43].attempts[0].work.text,'First compare salt with water.');
     assert.equal(r.answers[43].attempts[1].work.text,'Add salt and water first, then divide salt by the total.');
     assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
     assert.match(p.doc.querySelector('#history').textContent,/Steps for try 1/);
     assert.match(p.doc.querySelector('#history').textContent,/First compare salt with water/);
     const old=r.answers[43].attempts[0].work.text;write('Later correction');
-    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-d'][0].answers[43].attempts[0].work.text,old);
-    for(const q of bank.find(s=>s.id==='math-d').questions.slice(1))submit(p,q.source,q.correct);
+    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-b'][0].answers[43].attempts[0].work.text,old);
+    for(const q of bank.find(s=>s.id==='math-b').questions.slice(1))submit(p,q.source,q.correct);
     p.doc.querySelector('#new-run').click();
-    assert.equal(p.doc.querySelector('#steps-math-d-43').value,'');
-    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-d'].length,2);
+    assert.equal(p.doc.querySelector('#steps-math-b-43').value,'');
+    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-b'].length,2);
     const combined=page('session-1');try{assert.equal(combined.doc.querySelectorAll('[data-scratch-part]').length,7);assert.equal(combined.doc.querySelectorAll('[data-scratch-part^="vocab"]').length,0);}finally{combined.close();}
   }finally{p.close();}
 });

@@ -9,9 +9,11 @@
     if(!hasWork(work))return '';
     return `<details class="scratch-record"><summary>${esc(label)}</summary>${work.text?`<p class="scratch-written">${esc(work.text)}</p>`:''}${work.strokes?.length?`<svg class="scratch-preview" viewBox="0 0 800 600" role="img" aria-label="Saved handwritten main steps">${lines(work.strokes)}</svg>`:''}</details>`;
   }
-  function markup(part,source,work){
-    const key=part+'-'+source,show=!!work?.strokes?.length||drawn.has(key);
-    return `<section class="scratch" data-scratch-part="${part}" data-scratch-source="${source}" aria-label="Main steps for this question"><div class="scratch-heading"><label for="steps-${key}">My main steps <small>(optional)</small></label><span>Saved with each try</span></div><textarea id="steps-${key}" class="scratch-text" rows="2" maxlength="4000" placeholder="What will you do first? Write your plan or key calculation.">${esc(work?.text)}</textarea><button class="scratch-toggle" type="button" aria-expanded="${show}" aria-controls="drawing-${key}">${show?'Hide handwriting box':'Write by hand'}</button><div class="scratch-drawing" id="drawing-${key}" ${show?'':'hidden'}><p class="scratch-hint">Write with your finger, Apple Pencil, or mouse. Scroll outside the box.</p><svg class="scratch-pad" viewBox="0 0 800 600" role="img" aria-label="Handwriting box for your main steps"><g>${lines(work?.strokes)}</g></svg><div class="scratch-tools"><button type="button" data-scratch-action="undo" ${work?.strokes?.length?'':'disabled'}>Undo stroke</button><button type="button" data-scratch-action="clear" ${work?.strokes?.length?'':'disabled'}>Clear handwriting</button></div><p class="scratch-status" role="status"></p></div></section>`;
+  function markup(part,source,work,{handwritingOnly=false}={}){
+    const key=part+'-'+source,show=handwritingOnly||!!work?.strokes?.length||drawn.has(key);
+    const heading=handwritingOnly?'<strong>My main steps <small>(optional)</small></strong>':`<label for="steps-${key}">My main steps <small>(optional)</small></label>`;
+    const typing=handwritingOnly?'':`<textarea id="steps-${key}" class="scratch-text" rows="2" maxlength="4000" placeholder="What will you do first? Write your plan or key calculation.">${esc(work?.text)}</textarea><button class="scratch-toggle" type="button" aria-expanded="${show}" aria-controls="drawing-${key}">${show?'Hide handwriting box':'Write by hand'}</button>`;
+    return `<section class="scratch" data-scratch-part="${part}" data-scratch-source="${source}" aria-label="Main steps for this question"><div class="scratch-heading">${heading}<span>Saved with each try</span></div>${typing}<div class="scratch-drawing" id="drawing-${key}" ${show?'':'hidden'}><p class="scratch-hint">Write with your finger, Apple Pencil, or mouse. Scroll outside the box.</p><svg class="scratch-pad" viewBox="0 0 800 600" role="img" aria-label="Handwriting box for your main steps"><g>${lines(work?.strokes)}</g></svg><div class="scratch-tools"><button type="button" data-scratch-action="undo" ${work?.strokes?.length?'':'disabled'}>Undo stroke</button><button type="button" data-scratch-action="clear" ${work?.strokes?.length?'':'disabled'}>Clear handwriting</button></div><p class="scratch-status" role="status"></p></div></section>`;
   }
   function mount(container,{read,change}){
     container.querySelectorAll('[data-scratch-part]').forEach(box=>{
@@ -23,8 +25,8 @@
       const write=(field,value)=>{const at=field==='text'?'textAt':'drawingAt';change(part,source,{[field]:value,[at]:stamp(work()[at])});};
       const controls=()=>box.querySelectorAll('[data-scratch-action]').forEach(button=>{button.disabled=!(work().strokes||[]).length;});
       const redraw=()=>{group.innerHTML=lines(work().strokes);controls();};
-      box.querySelector('.scratch-text').addEventListener('input',event=>write('text',event.target.value));
-      box.querySelector('.scratch-toggle').addEventListener('click',event=>{
+      box.querySelector('.scratch-text')?.addEventListener('input',event=>write('text',event.target.value));
+      box.querySelector('.scratch-toggle')?.addEventListener('click',event=>{
         const panel=box.querySelector('.scratch-drawing');panel.hidden=!panel.hidden;
         if(panel.hidden)drawn.delete(key);else drawn.add(key);
         event.currentTarget.setAttribute('aria-expanded',String(!panel.hidden));
