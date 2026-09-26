@@ -82,20 +82,20 @@ test('complete days stay green and preserve scores when a new run starts',()=>{
   }finally{p.close();}
 });
 
-test('session 4 has one seven-minute deadline, auto-checks selected answers, and locks blanks at expiry',()=>{
-  const clock={now:Date.parse(at)},p=page('math-c',undefined,clock);
+for(const timedId of ['math-c','math-f'])test(timedId+' has one seven-minute deadline, auto-checks selected answers, and locks blanks at expiry',()=>{
+  const clock={now:Date.parse(at)},p=page(timedId,undefined,clock);
   try{
     assert.equal(p.doc.querySelector('#question-work').hidden,true);
     p.doc.querySelector('#start-timer').click();
-    const saved=p.w.localStorage.getItem(key),state=JSON.parse(saved),r=state.sessions['math-c'][0];
+    const saved=p.w.localStorage.getItem(key),state=JSON.parse(saved),r=state.sessions[timedId][0];
     assert.equal(Date.parse(r.deadlineAt)-Date.parse(r.startedAt),7*60*1000);
     assert.match(p.doc.querySelector('#countdown').textContent,/7:00/);
-    const merged=p.w.MarcoIseeSync.merge(state,empty());assert.equal(merged.sessions['math-c'][0].deadlineAt,r.deadlineAt,'Starting the timer syncs even with no answers');
-    const q=bank[3].questions[0];p.doc.querySelector(`form[data-source="${q.source}"] input[value="${q.correct}"]`).checked=true;
+    const merged=p.w.MarcoIseeSync.merge(state,empty());assert.equal(merged.sessions[timedId][0].deadlineAt,r.deadlineAt,'Starting the timer syncs even with no answers');
+    const q=bank.find(s=>s.id===timedId).questions[0];p.doc.querySelector(`form[data-source="${q.source}"] input[value="${q.correct}"]`).checked=true;
     clock.now+=420000;submit(p,56);
     assert.equal(p.doc.querySelector('#score').textContent,'1 / 7');assert.match(p.doc.querySelector('#completion').textContent,/Unanswered when time ended: 6/);
     assert.equal(p.doc.querySelectorAll('#questions input:not(:disabled)').length,0);
-    const restored=page('math-c',p.w.localStorage.getItem(key),clock);try{assert.equal(restored.doc.querySelector('#score').textContent,'1 / 7');assert.match(restored.doc.querySelector('#timer-result').textContent,/Time is up/);}finally{restored.close();}
+    const restored=page(timedId,p.w.localStorage.getItem(key),clock);try{assert.equal(restored.doc.querySelector('#score').textContent,'1 / 7');assert.match(restored.doc.querySelector('#timer-result').textContent,/Time is up/);}finally{restored.close();}
   }finally{p.close();}
 });
 
@@ -185,7 +185,8 @@ test('new math sessions have distinct questions, save independently, and retain 
   for(const [i,id] of ['math-d','math-e','math-f'].entries()){
     const p=page('session-'+(i+5),saved),part=bank.find(s=>s.id===id);
     try{
-      assert.equal(p.doc.querySelector('#timer-panel').hidden,true);
+      assert.equal(p.doc.querySelector('#timer-panel').hidden,id!=='math-f');
+      if(id==='math-f')p.doc.querySelector('#start-timer').click();
       assert.equal(p.doc.querySelector('#question-work').hidden,false);
       for(const question of part.questions)submit(p,question.source,question.correct);
       assert.equal(p.doc.querySelector('#score').textContent,'7 / 7');
