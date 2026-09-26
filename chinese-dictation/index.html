@@ -7,7 +7,7 @@
   <meta name="description" content="中文听写：先听、自己写，不会再看大字提示。">
   <title>中文听写 · Learning Hub</title>
   <link rel="stylesheet" href="./styles.css?v=1">
-  <script src="./app.js?v=1" defer></script>
+  <script src="./app.js?v=2" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -20,6 +20,10 @@
     <div class="toolbar">
       <label>朗读速度 <select id="speed"><option value="0.7">慢一点</option><option value="0.9">正常</option></select></label>
       <button id="bigger" class="text-button" aria-pressed="false">字再大一点 ＋</button>
+    </div>
+    <div class="toolbar">
+      <label>中文声音 <select id="voice"><option value="">自动普通话</option></select></label>
+      <button id="test-sound" class="button secondary">🔊 测试声音</button>
     </div>
     <section class="practice" aria-label="听写练习">
       <div class="card-heading"><span id="group-label">第一行字词</span><strong id="position">第 1 / 21 题</strong></div>
@@ -45,3 +49,4 @@
   </main>
 </body>
 </html>
+
