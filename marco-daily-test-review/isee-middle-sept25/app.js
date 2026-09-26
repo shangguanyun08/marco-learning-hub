@@ -70,12 +70,18 @@
     document.querySelector('#timer-panel').hidden=!part;
     document.querySelector('#question-work').hidden=!!part&&!run.deadlineAt&&!run.completedAt;
     document.querySelector('#start-timer').hidden=!!run?.deadlineAt||!!run?.completedAt;
-    const countdown=document.querySelector('#countdown');countdown.hidden=!part||!run?.deadlineAt;
+    const running=!!part&&!!run?.deadlineAt&&!run.completedAt;
+    document.querySelector('#running-timer').hidden=!running;
+    document.body.classList.toggle('timer-running',running);
+    const countdown=document.querySelector('#countdown');countdown.hidden=!part||!run?.deadlineAt||running;
     if(!part)return;
     document.querySelector('#timer-title').textContent=`Session ${active.number} · ${part.timeLimitSeconds/60} minutes total`;
     const remaining=run.deadlineAt?Math.max(0,Math.ceil((Date.parse(run.deadlineAt)-Date.parse(run.completedAt||new Date().toISOString()))/1000)):part.timeLimitSeconds;
     countdown.textContent=`${clockText(remaining)} ${run.completedAt?'remaining at finish':'remaining'}`;
     countdown.classList.toggle('urgent',remaining<=60&&!run.completedAt);
+    document.querySelector('#running-session').textContent=`Session ${active.number}`;
+    document.querySelector('#running-countdown').textContent=`${clockText(remaining)} remaining`;
+    document.querySelector('#running-timer').classList.toggle('urgent',remaining<=60);
     document.querySelector('#timer-result').textContent=run.timedOutAt?'Time is up. Answers are locked.':run.completedAt?'Session finished. Your first-try score is saved.':run.deadlineAt?'The timer keeps running if you leave this page.':'The timer begins when you press Start.';
   }
   function arcDiagram(q){
@@ -140,7 +146,7 @@
     scratch.flush();
     document.querySelector('#practice-content').hidden=!active;
     document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Nine sessions';
-    if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderSessions();updateSaveNote();return;}
+    if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderSessions();renderTimer();updateSaveNote();return;}
     active.parts.forEach(runs);
     document.querySelector('#session-title').textContent=`Session ${active.number}`;
     document.querySelector('#session-description').textContent=active.description;
