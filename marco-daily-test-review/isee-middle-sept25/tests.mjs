@@ -24,7 +24,7 @@ function submit(p,source,choice){
   form.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));
 }
 test('exactly seven answered-wrong math sources and eleven verbal sources; no blanks or essay',()=>{
-  assert.deepEqual(bank.map(s=>s.questions.length),[7,7,7,7,11,11,7,7,7]);
+  assert.deepEqual(bank.map(s=>s.questions.length),[7,7,7,7,11,11,7,7,7,7,7]);
   assert.deepEqual(bank[0].questions.map(q=>q.source),[43,56,66,69,74,76,143]);
   assert.deepEqual(bank[4].questions.map(q=>q.source),[3,4,9,12,21,23,27,29,31,32,35]);
   for(const s of bank){assert.equal(new Set(s.questions.map(q=>q.source)).size,s.questions.length);for(const q of s.questions){assert.equal(new Set(q.choices).size,q.choices.length);assert.ok(q.correct>=0&&q.correct<q.choices.length);}}
@@ -36,13 +36,13 @@ test('vocabulary repeat changes only order and maps each answer by text',()=>{
     assert.equal(q.choices[q.correct],r.choices[r.correct]);assert.notEqual(q.correct,r.correct);
   });
 });
-test('independent calculation verifies all forty-nine math keys',()=>{
+test('independent calculation verifies all sixty-three math keys',()=>{
   const mathBank=bank.filter(s=>s.subject==='math');
-  const mix=[[10,100],[15,135],[24,176],[18,162],[21,119],[30,210],[36,132]];
-  const div=[[27874,77],[23528,68],[31752,84],[29484,78],[26712,72],[34104,84],[28416,64]];
-  const fractions=[[(3+2/3)/(5/9),(5+3/14)/(3/7)],[(2+1/2)/(5/8),(3+3/4)/(3/4)],[(4+1/2)/(3/4),(2+2/3)/(4/9)],[(5+1/4)/(7/8),(3+1/3)/(2/3)],[(3+3/5)/(3/4),(2+2/5)/(2/5)],[(4+2/3)/(7/9),(3+3/4)/(5/8)],[(5+1/4)/(3/4),(2+5/6)/(1/2)]];
-  const arcB=[22,25,24,25,18,32,30],percent=[[68,145,145,68],[36,125,125,36],[42,150,150,40],[72,125,125,72],[64,125,125,64],[45,160,160,48],[52,175,175,50]];
-  const equations=[[3,9,21,4],[5,-7,28,8],[4,6,42,8],[7,-11,38,7],[6,5,59,8],[8,-13,43,7],[9,16,70,7]],polys=[[-5,6],[-7,12],[1,-20],[-9,20],[-8,15],[2,-24],[-2,-35]];
+  const mix=[[10,100],[15,135],[24,176],[18,162],[21,119],[30,210],[36,132],[28,132],[45,180]];
+  const div=[[27874,77],[23528,68],[31752,84],[29484,78],[26712,72],[34104,84],[28416,64],[31512,78],[36504,72]];
+  const fractions=[[(3+2/3)/(5/9),(5+3/14)/(3/7)],[(2+1/2)/(5/8),(3+3/4)/(3/4)],[(4+1/2)/(3/4),(2+2/3)/(4/9)],[(5+1/4)/(7/8),(3+1/3)/(2/3)],[(3+3/5)/(3/4),(2+2/5)/(2/5)],[(4+2/3)/(7/9),(3+3/4)/(5/8)],[(5+1/4)/(3/4),(2+5/6)/(1/2)],[(4+1/5)/(7/10),(3+1/3)/(5/9)],[(2+4/5)/(7/10),(3+1/2)/(7/12)]];
+  const arcB=[22,25,24,25,18,32,30,30,28],percent=[[68,145,145,68],[36,125,125,36],[42,150,150,40],[72,125,125,72],[64,125,125,64],[45,160,160,48],[52,175,175,50],[48,150,150,46],[84,125,125,84]];
+  const equations=[[3,9,21,4],[5,-7,28,8],[4,6,42,8],[7,-11,38,7],[6,5,59,8],[8,-13,43,7],[9,16,70,7],[5,-9,36,9],[7,8,50,7]],polys=[[-5,6],[-7,12],[1,-20],[-9,20],[-8,15],[2,-24],[-2,-35],[-3,-28],[3,-40]];
   const cmp=(a,b)=>Math.abs(a-b)<1e-9?2:a>b?0:1;
   for(let i=0;i<mathBank.length;i++){
     const qs=mathBank[i].questions;
@@ -82,7 +82,7 @@ test('complete days stay green and preserve scores when a new run starts',()=>{
   }finally{p.close();}
 });
 
-for(const timedId of ['math-c','math-f'])test(timedId+' has one seven-minute deadline, auto-checks selected answers, and locks blanks at expiry',()=>{
+for(const timedId of ['math-c','math-f','math-g','math-h'])test(timedId+' has one seven-minute deadline, auto-checks selected answers, and locks blanks at expiry',()=>{
   const clock={now:Date.parse(at)},p=page(timedId,undefined,clock);
   try{
     assert.equal(p.doc.querySelector('#question-work').hidden,true);
@@ -105,23 +105,15 @@ test('leaving and reloading does not reset a timed session',()=>{
   clock.now+=120000;const resumed=page('math-c',saved,clock);try{assert.match(resumed.doc.querySelector('#countdown').textContent,/5:00/);}finally{resumed.close();}
   clock.now+=300001;const expired=page('math-c',saved,clock);try{assert.equal(expired.doc.querySelector('#score').textContent,'0 / 7');assert.equal(expired.doc.querySelector('#completion').hidden,false);assert.equal(expired.doc.querySelectorAll('#questions input:not(:disabled)').length,0);}finally{expired.close();}
 });
-test('seven session pages have math throughout; vocabulary appears only in sessions 1 and 2',()=>{
-  for(let i=1;i<=7;i++){const p=page('session-'+i);try{
+test('nine session pages have math throughout; vocabulary appears only in sessions 1 and 2',()=>{
+  for(let i=1;i<=9;i++){const p=page('session-'+i);try{
     assert.equal(p.doc.querySelectorAll('.question').length,i<=2?18:7);
-    assert.equal(p.doc.querySelectorAll('.answer').length,0);assert.equal(p.doc.querySelectorAll('.session-link').length,7);
-    assert.match(p.doc.querySelector('#sessions-progress').textContent,/of 7 sessions/);
+    assert.equal(p.doc.querySelectorAll('.answer').length,0);assert.equal(p.doc.querySelectorAll('.session-link').length,9);
+    assert.match(p.doc.querySelector('#sessions-progress').textContent,/of 9 sessions/);
     assert.equal(p.doc.querySelectorAll('#heading-vocab').length,i<=2?1:0);
     assert.equal(p.doc.querySelector('#vocab-score-wrap').hidden,i>2);
     assert.equal(p.doc.querySelector('#session-title').textContent,'Session '+i);
-    if(i>=5){
-      assert.equal(p.doc.querySelectorAll('.scratch-text,.scratch-toggle').length,0);
-      for(const question of p.doc.querySelectorAll('.question')){
-        const form=question.querySelector('form'),scratch=form.nextElementSibling;
-        assert.ok(scratch.matches('.scratch'));
-        assert.equal(scratch.querySelector('.scratch-drawing').hidden,false);
-      }
-    }
-
+    assert.equal(p.doc.querySelectorAll('.scratch,.scratch-text,.scratch-pad').length,0);
     assert.match(p.doc.querySelector('#save-note').textContent,/Preview/);
   }finally{p.close();}}
 });
@@ -178,15 +170,15 @@ test('online sync restores both subjects without mixing session scores',async()=
 
 test('new math sessions have distinct questions, save independently, and retain old history',()=>{
   const prompts=bank.filter(s=>s.subject==='math').flatMap(s=>s.questions.map(q=>q.prompt));
-  assert.equal(new Set(prompts).size,49);
+  assert.equal(new Set(prompts).size,63);
   const legacy=empty();legacy.sessions['math-original']=[run()];
   engine.submit(legacy.sessions['math-original'][0],bank[0].questions[0],bank[0].questions[0].correct,at);
   let saved=JSON.stringify(legacy);
-  for(const [i,id] of ['math-d','math-e','math-f'].entries()){
+  for(const [i,id] of ['math-d','math-e','math-f','math-g','math-h'].entries()){
     const p=page('session-'+(i+5),saved),part=bank.find(s=>s.id===id);
     try{
-      assert.equal(p.doc.querySelector('#timer-panel').hidden,id!=='math-f');
-      if(id==='math-f')p.doc.querySelector('#start-timer').click();
+      assert.equal(p.doc.querySelector('#timer-panel').hidden,!part.timeLimitSeconds);
+      if(part.timeLimitSeconds)p.doc.querySelector('#start-timer').click();
       assert.equal(p.doc.querySelector('#question-work').hidden,false);
       for(const question of part.questions)submit(p,question.source,question.correct);
       assert.equal(p.doc.querySelector('#score').textContent,'7 / 7');
@@ -196,35 +188,7 @@ test('new math sessions have distinct questions, save independently, and retain 
       const restored=page(id,saved);try{assert.equal(restored.doc.querySelector('#score').textContent,'7 / 7');}finally{restored.close();}
     }finally{p.close();}
   }
-  for(const id of ['math-d','math-e','math-f'])assert.equal(JSON.parse(saved).sessions[id].length,1);
-});
-
-test('main steps save before answering and each try preserves its own idea without affecting points',()=>{
-  const p=page('session-3');
-  const write=text=>{const input=p.doc.querySelector('#steps-math-b-43');input.value=text;input.dispatchEvent(new p.w.Event('input',{bubbles:true}));};
-  try{
-    assert.equal(p.doc.querySelectorAll('[data-scratch-part]').length,7);
-    write('First compare salt with water.');
-    let state=JSON.parse(p.w.localStorage.getItem(key)),r=state.sessions['math-b'][0];
-    assert.equal(Object.keys(r.answers).length,0);assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
-    assert.equal(p.w.MarcoIseeSync.valid(state),true);
-    assert.equal(p.w.MarcoIseeSync.merge(state,empty()).sessions['math-b'][0].work[43].text,'First compare salt with water.');
-    const resumed=page('session-3',JSON.stringify(state));try{assert.equal(resumed.doc.querySelector('#steps-math-b-43').value,'First compare salt with water.');}finally{resumed.close();}
-    submit(p,43,0);write('Add salt and water first, then divide salt by the total.');submit(p,43,2);
-    r=JSON.parse(p.w.localStorage.getItem(key)).sessions['math-b'][0];
-    assert.equal(r.answers[43].attempts[0].work.text,'First compare salt with water.');
-    assert.equal(r.answers[43].attempts[1].work.text,'Add salt and water first, then divide salt by the total.');
-    assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
-    assert.match(p.doc.querySelector('#history').textContent,/Steps for try 1/);
-    assert.match(p.doc.querySelector('#history').textContent,/First compare salt with water/);
-    const old=r.answers[43].attempts[0].work.text;write('Later correction');
-    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-b'][0].answers[43].attempts[0].work.text,old);
-    for(const q of bank.find(s=>s.id==='math-b').questions.slice(1))submit(p,q.source,q.correct);
-    p.doc.querySelector('#new-run').click();
-    assert.equal(p.doc.querySelector('#steps-math-b-43').value,'');
-    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-b'].length,2);
-    const combined=page('session-1');try{assert.equal(combined.doc.querySelectorAll('[data-scratch-part]').length,7);assert.equal(combined.doc.querySelectorAll('[data-scratch-part^="vocab"]').length,0);}finally{combined.close();}
-  }finally{p.close();}
+  for(const id of ['math-d','math-e','math-f','math-g','math-h'])assert.equal(JSON.parse(saved).sessions[id].length,1);
 });
 
 test('text and handwriting sync independently; clear stays cleared and invalid drawings are rejected',()=>{
@@ -243,10 +207,9 @@ test('text and handwriting sync independently; clear stays cleared and invalid d
     assert.equal(sync.merge(cleared,merged).sessions['math-d'][0].work[43].strokes.length,0);
     const invalid=structuredClone(merged);invalid.sessions['math-d'][0].work[43].strokes=[[[0,0],[Infinity,900]]];assert.equal(sync.valid(invalid),false);
     const preview=page('session-5',JSON.stringify(merged));try{
-      assert.equal(preview.doc.querySelector('#drawing-math-d-43').hidden,false);
-      assert.equal(preview.doc.querySelector('#drawing-math-d-43 polyline').getAttribute('points'),'10,20 30,40');
-      preview.doc.querySelector('#drawing-math-d-43 [data-scratch-action="undo"]').click();
-      assert.equal(JSON.parse(preview.w.localStorage.getItem(key)).sessions['math-d'][0].work[43].strokes.length,0);
+      assert.equal(preview.doc.querySelectorAll('.scratch,.scratch-text,.scratch-pad').length,0);
+      assert.match(preview.doc.querySelector('#history').textContent,/Find the whole first/);
+      assert.equal(JSON.parse(preview.w.localStorage.getItem(key)).sessions['math-d'][0].work[43].strokes.length,1);
     }finally{preview.close();}
   }finally{p.close();}
 });

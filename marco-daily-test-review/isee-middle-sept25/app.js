@@ -11,6 +11,9 @@
     {id:'session-5',number:5,label:'Math only · Similar set D',ids:['math-d'],description:'One practice set of 7 new math questions on the same skills.'},
     {id:'session-6',number:6,label:'Math only · Similar set E',ids:['math-e'],description:'One practice set of 7 new math questions on the same skills.'},
     {id:'session-7',number:7,label:'Timed math · Similar set F',ids:['math-f'],description:'One practice set of 7 new math questions, with 7 minutes for the entire session.'}
+,
+    {id:'session-8',number:8,label:'Timed math · Similar set G',ids:['math-g'],description:'One practice set of 7 new math questions, with 7 minutes for the entire session.'},
+    {id:'session-9',number:9,label:'Timed math · Similar set H',ids:['math-h'],description:'One practice set of 7 new math questions, with 7 minutes for the entire session.'}
   ].map(s=>({...s,parts:s.ids.map(id=>bank.find(p=>p.id===id))}));
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const math=s=>esc(s).replace(/\b(\d+)\/(\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>');
@@ -82,18 +85,17 @@
   }
   function card(q,i,part){
     const run=current(part),entry=run.answers[q.source],attempts=entry?.attempts||[],closed=engine.done(q,entry,run),status=result(q,run);
-    const handwritingOnly=['math-d','math-e','math-f'].includes(part.id);
     let feedback='Choose an answer, then press Check answer.';
     if(status==='first')feedback='Correct on your first try! 1 point earned.';
     if(status==='pending')feedback='Not quite. You have one more try. Your first-try score stays unchanged.';
     if(status==='retry')feedback='You got it on your second try! This correction is saved; the first-try score stays unchanged.';
     if(status==='revealed')feedback='Two tries completed. Read the explanation below to learn the method.';
     if(status==='timedout')feedback=attempts.length?'Time is up. Your submitted answer and first-try score are saved.':'Time is up. This question was unanswered and earns 0 first-try points.';
-    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${part.id.endsWith('original')?'Original':'Matches'} Zozeck Q${q.source} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${arcDiagram(q)}${part.subject==='math'&&!handwritingOnly?scratch.markup(part.id,q.source,run.work?.[q.source]):''}<form data-part="${part.id}" data-source="${q.source}" novalidate><fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
+    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${part.id.endsWith('original')?'Original':'Matches'} Zozeck Q${q.source} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${arcDiagram(q)}<form data-part="${part.id}" data-source="${q.source}" novalidate><fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
       const tried=attempts.findIndex(a=>a.choice===index),disabled=closed||tried>=0;
       const tag=tried>=0?`Try ${tried+1}${index===q.correct?' · correct':' · incorrect'}`:'';
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCDE'[index]}</span><span class="choice-text">${math(choice)}${tag?`<small>${tag}</small>`:''}</span></label>`;
-    }).join('')}</fieldset>${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form>${handwritingOnly?scratch.markup(part.id,q.source,run.work?.[q.source],{handwritingOnly:true}):''}<p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${'ABCDE'[q.correct]} · ${math(q.choices[q.correct])}</strong><p>${math(q.explanation)}</p>${q.note?`<p class="question-note"><strong>Wording note:</strong> ${esc(q.note)}</p>`:''}</div>`:''}</article>`;
+    }).join('')}</fieldset>${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form><p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${'ABCDE'[q.correct]} · ${math(q.choices[q.correct])}</strong><p>${math(q.explanation)}</p>${q.note?`<p class="question-note"><strong>Wording note:</strong> ${esc(q.note)}</p>`:''}</div>`:''}</article>`;
   }
   function renderSessions(){
     let completedSessions=0;
@@ -137,7 +139,7 @@
   function render(){
     scratch.flush();
     document.querySelector('#practice-content').hidden=!active;
-    document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Seven sessions';
+    document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Nine sessions';
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderSessions();updateSaveNote();return;}
     active.parts.forEach(runs);
     document.querySelector('#session-title').textContent=`Session ${active.number}`;

@@ -1056,5 +1056,219 @@ window.MARCO_ISEE_PRACTICE = [
         "explanation": "The numbers −7 and 5 multiply to −35 and add to −2. The factors are (x − 7)(x + 5). Expanding gives x² + 5x − 7x − 35 = x² − 2x − 35."
       }
     ]
-  }
+  },
+{
+  "id": "math-g",
+  "day": 8,
+  "label": "Similar set G",
+  "questions": [
+    {
+      "source": 43,
+      "skill": "Part of a mixture",
+      "prompt": "A solution contains 28 g of salt dissolved in 132 g of water. What fraction of the solution’s total mass is salt?",
+      "choices": [
+        "7/33",
+        "7/40",
+        "33/40",
+        "1/5"
+      ],
+      "correct": 1,
+      "explanation": "The total mass is 28 + 132 = 160 g. Salt is 28/160 = 7/40 of the solution. Use the total mass, not only the water."
+    },
+    {
+      "source": 56,
+      "skill": "Long division",
+      "prompt": "31,512 ÷ 78 = ?",
+      "choices": [
+        "44",
+        "414",
+        "404",
+        "440"
+      ],
+      "correct": 2,
+      "explanation": "78 × 400 = 31,200, leaving 312 = 78 × 4. The quotient is 404. Keep the zero in the tens place. Check: 404 × 78 = 31,512."
+    },
+    {
+      "source": 66,
+      "skill": "Divide mixed numbers",
+      "prompt": "Column A: 4 1/5 ÷ 7/10\nColumn B: 3 1/3 ÷ 5/9",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 2,
+      "explanation": "A = 21/5 × 10/7 = 6. B = 10/3 × 9/5 = 6. The quantities are equal."
+    },
+    {
+      "source": 69,
+      "skill": "Arc length and circumference",
+      "prompt": "A circular wire has a radius of 150 cm. A 60° arc is cut out and bent into a new circle.\nColumn A: The new circle’s radius\nColumn B: 30 cm",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 1,
+      "explanation": "The arc is 60/360 = 1/6 of the original circumference. The new radius is 150 ÷ 6 = 25 cm. Since 25 < 30, Column B is greater.",
+      "arc": {
+        "radius": 150,
+        "angle": 60
+      }
+    },
+    {
+      "source": 74,
+      "skill": "Percent comparisons",
+      "prompt": "Column A: 48% of 150\nColumn B: 150% of 46",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 0,
+      "explanation": "A = 0.48 × 150 = 72. B = 1.50 × 46 = 69. Column A is greater. The numbers 48 and 46 are different."
+    },
+    {
+      "source": 76,
+      "skill": "Solve and compare",
+      "prompt": "5y − 9 = 36\nColumn A: y\nColumn B: 9",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 2,
+      "explanation": "Add 9: 5y = 45. Divide by 5: y = 9. The quantities are equal."
+    },
+    {
+      "source": 143,
+      "skill": "Factor a quadratic",
+      "prompt": "Which expression is a factored form of x² − 3x − 28?",
+      "choices": [
+        "(x + 7)(x − 4)",
+        "(x − 7)(x − 4)",
+        "(x − 14)(x + 2)",
+        "(x − 7)(x + 4)",
+        "(x + 7)(x + 4)"
+      ],
+      "correct": 3,
+      "explanation": "The numbers −7 and 4 multiply to −28 and add to −3. The factors are (x − 7)(x + 4)."
+    }
+  ],
+  "subject": "math",
+  "timeLimitSeconds": 420,
+  "title": "Math · Session 8 · Similar set G",
+  "description": "Seven new math questions with 7 minutes for the entire session."
+},
+{
+  "id": "math-h",
+  "day": 9,
+  "label": "Similar set H",
+  "questions": [
+    {
+      "source": 43,
+      "skill": "Part of a mixture",
+      "prompt": "A drink contains 45 g of sugar dissolved in 180 g of water. What fraction of the drink’s total mass is sugar?",
+      "choices": [
+        "1/4",
+        "4/5",
+        "1/6",
+        "1/5"
+      ],
+      "correct": 3,
+      "explanation": "The whole drink weighs 45 + 180 = 225 g. Sugar is 45/225 = 1/5 of the total. The fraction 45/180 = 1/4 compares sugar with water only."
+    },
+    {
+      "source": 56,
+      "skill": "Long division",
+      "prompt": "36,504 ÷ 72 = ?",
+      "choices": [
+        "507",
+        "57",
+        "517",
+        "570"
+      ],
+      "correct": 0,
+      "explanation": "72 × 500 = 36,000, leaving 504 = 72 × 7. The quotient is 507. Keep the zero in the tens place. Check: 507 × 72 = 36,504."
+    },
+    {
+      "source": 66,
+      "skill": "Divide mixed numbers",
+      "prompt": "Column A: 2 4/5 ÷ 7/10\nColumn B: 3 1/2 ÷ 7/12",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 1,
+      "explanation": "A = 14/5 × 10/7 = 4. B = 7/2 × 12/7 = 6. Column B is greater."
+    },
+    {
+      "source": 69,
+      "skill": "Arc length and circumference",
+      "prompt": "A circular wire has a radius of 84 cm. A 120° arc is cut out and bent into a new circle.\nColumn A: The new circle’s radius\nColumn B: 28 cm",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 2,
+      "explanation": "The arc is 120/360 = 1/3 of the original circumference. The new radius is 84 ÷ 3 = 28 cm. The quantities are equal.",
+      "arc": {
+        "radius": 84,
+        "angle": 120
+      }
+    },
+    {
+      "source": 74,
+      "skill": "Percent comparisons",
+      "prompt": "Column A: 84% of 125\nColumn B: 125% of 84",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 2,
+      "explanation": "Both expressions are 84 × 125 ÷ 100 = 105. Swapping the two numbers leaves the product unchanged."
+    },
+    {
+      "source": 76,
+      "skill": "Solve and compare",
+      "prompt": "7y + 8 = 50\nColumn A: y\nColumn B: 7",
+      "choices": [
+        "the quantity in Column A is greater",
+        "the quantity in Column B is greater",
+        "the two quantities are equal",
+        "the relationship cannot be determined from the information given"
+      ],
+      "correct": 1,
+      "explanation": "Subtract 8: 7y = 42. Divide by 7: y = 6. Since 6 < 7, Column B is greater."
+    },
+    {
+      "source": 143,
+      "skill": "Factor a quadratic",
+      "prompt": "Which expression is a factored form of x² + 3x − 40?",
+      "choices": [
+        "(x − 8)(x + 5)",
+        "(x + 8)(x − 5)",
+        "(x + 10)(x − 4)",
+        "(x + 8)(x + 5)",
+        "(x − 8)(x − 5)"
+      ],
+      "correct": 1,
+      "explanation": "The numbers 8 and −5 multiply to −40 and add to 3. The factors are (x + 8)(x − 5)."
+    }
+  ],
+  "subject": "math",
+  "timeLimitSeconds": 420,
+  "title": "Math · Session 9 · Similar set H",
+  "description": "Seven new math questions with 7 minutes for the entire session."
+}
 ];
