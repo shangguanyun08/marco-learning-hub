@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#3158d7">
+  <meta name="description" content="中文听写：先听、自己写，不会再看大字提示。">
+  <title>中文听写 · Learning Hub</title>
+  <link rel="stylesheet" href="./styles.css?v=1">
+  <script src="./app.js?v=1" defer></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><a href="../">← 主学习中心</a><span>9月26日 · 中文练习</span></header>
+    <div class="heading"><div><h1>中文听写</h1><p>先听，再在纸上写。不会时，看看提示。</p></div><span class="title-mark" aria-hidden="true">写</span></div>
+    <nav class="modes" aria-label="选择听写内容">
+      <button data-mode="words" aria-pressed="true">字词 <span>21</span></button>
+      <button data-mode="sentences" aria-pressed="false">句子 <span>5 小段</span></button>
+    </nav>
+    <div class="toolbar">
+      <label>朗读速度 <select id="speed"><option value="0.7">慢一点</option><option value="0.9">正常</option></select></label>
+      <button id="bigger" class="text-button" aria-pressed="false">字再大一点 ＋</button>
+    </div>
+    <section class="practice" aria-label="听写练习">
+      <div class="card-heading"><span id="group-label">第一行字词</span><strong id="position">第 1 / 21 题</strong></div>
+      <div class="progress-track"><div id="progress-bar"></div></div>
+      <div id="exercise">
+        <div id="answer-space" class="answer-space">
+          <div id="cover"><div class="ear" aria-hidden="true">♪</div><h2 id="prompt">准备好纸和笔了吗？</h2><p id="instruction">点“听题”，听完后自己写。</p></div>
+          <div id="reveal" hidden><p id="reveal-note" class="reveal-note"></p><div id="answer" class="answer" lang="zh-CN"></div></div>
+        </div>
+        <button id="listen" class="button listen"><span aria-hidden="true">▶</span> <span id="listen-label">听题</span></button>
+        <p id="audio-status" class="audio-status" role="status" aria-live="polite"></p>
+        <div id="write-actions" class="action-row"><button id="hint" class="button secondary" disabled>不会写，看看字</button><button id="check" class="button primary" disabled>写好了，对照一下</button></div>
+        <div id="hint-actions" hidden><button id="hide-retry" class="button primary wide">记住了，藏起来再写</button></div>
+        <div id="check-actions" class="action-row" hidden><button id="again" class="button secondary">还要练，再写一次</button><button id="correct" class="button success">写对了，下一题</button></div>
+        <div class="navigation"><button id="previous" class="text-button">← 上一题</button><button id="skip" class="text-button">先跳过 →</button></div>
+      </div>
+      <div id="summary" class="summary" hidden><p class="summary-kicker">这一轮完成了</p><h2>听写完成！</h2><p id="summary-text"></p><div id="review-list"></div><div class="summary-buttons"><button id="review-missed" class="button primary">再练需要复习的题</button><button id="restart" class="button secondary">全部再听写一遍</button><button id="next-mode" class="text-button"></button></div></div>
+    </section>
+    <section class="question-map" aria-label="听写进度"><div class="map-heading"><h2>本轮进度</h2><button id="review-toggle" class="text-button">只练需复习的题</button></div><div id="dots" class="dots"></div><p class="legend"><span><i class="green"></i>独立写对</span><span><i class="yellow"></i>提示后写对</span><span><i class="red"></i>还要练</span><span><i></i>未完成</span></p><p id="save-note" class="save-note">进度自动保存在这台设备上。</p></section>
+    <details id="source" class="source"><summary>查看照片里的全部内容</summary><p class="source-warning">正在听写时，先把这里收起来。</p><h2>第一行</h2><p>年　月　日　岁　九岁　十岁　星期　星期六　星期天　上课　上中文课</p><h2>第二行</h2><p>学校　老师　学生　同学　男同学　女同学　医生　看医生　诗人　士兵</p><h2>句子</h2><p class="passage">两千多年以前，中国的历史上，曾经有两段特殊的时期，一段叫做“春秋时期”，一段叫做“战国时期”。</p><button id="read-passage" class="button secondary">听完整句子</button></details>
+    <footer>在纸上写，再自己或请家长对照检查。</footer>
+    <noscript>请开启浏览器的 JavaScript，使用听写与大字提示。</noscript>
+  </main>
+</body>
+</html>
