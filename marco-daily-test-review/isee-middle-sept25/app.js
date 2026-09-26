@@ -10,7 +10,7 @@
     {id:'session-4',number:4,label:'Timed math',ids:['math-c'],description:'One practice set of 7 similar math questions, with 7 minutes for the entire session.'},
     {id:'session-5',number:5,label:'Math only · Similar set D',ids:['math-d'],description:'One practice set of 7 new math questions on the same skills.'},
     {id:'session-6',number:6,label:'Math only · Similar set E',ids:['math-e'],description:'One practice set of 7 new math questions on the same skills.'},
-    {id:'session-7',number:7,label:'Math only · Similar set F',ids:['math-f'],description:'One practice set of 7 new math questions on the same skills.'}
+    {id:'session-7',number:7,label:'Timed math · Similar set F',ids:['math-f'],description:'One practice set of 7 new math questions, with 7 minutes for the entire session.'}
   ].map(s=>({...s,parts:s.ids.map(id=>bank.find(p=>p.id===id))}));
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const math=s=>esc(s).replace(/\b(\d+)\/(\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>');
@@ -65,10 +65,11 @@
   function renderTimer(){
     const part=timedPart(),run=part?current(part):null;
     document.querySelector('#timer-panel').hidden=!part;
-    document.querySelector('#question-work').hidden=!!part&&!run.deadlineAt;
-    document.querySelector('#start-timer').hidden=!!run?.deadlineAt;
+    document.querySelector('#question-work').hidden=!!part&&!run.deadlineAt&&!run.completedAt;
+    document.querySelector('#start-timer').hidden=!!run?.deadlineAt||!!run?.completedAt;
     const countdown=document.querySelector('#countdown');countdown.hidden=!part||!run?.deadlineAt;
     if(!part)return;
+    document.querySelector('#timer-title').textContent=`Session ${active.number} · ${part.timeLimitSeconds/60} minutes total`;
     const remaining=run.deadlineAt?Math.max(0,Math.ceil((Date.parse(run.deadlineAt)-Date.parse(run.completedAt||new Date().toISOString()))/1000)):part.timeLimitSeconds;
     countdown.textContent=`${clockText(remaining)} ${run.completedAt?'remaining at finish':'remaining'}`;
     countdown.classList.toggle('urgent',remaining<=60&&!run.completedAt);
@@ -106,7 +107,7 @@
       const completed=parts.every(p=>p.completed),started=parts.some(p=>p.score.attempted||p.latest?.deadlineAt||Object.keys(p.latest?.work||{}).length);
       const repeat=completed&&parts.some(p=>p.latest!==p.completed);
       if(completed)completedSessions++;
-      return `<a class="session-link ${completed?'completed':started?'in-progress':'not-started'}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>Session ${session.number}</b><span>${session.parts.length===2?'7 math + 11 vocabulary':'7 math questions'}</span><small>${esc(session.label)}</small>${session.number===4?'<small>7 minutes total</small>':''}<span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${started||completed?parts.map(p=>`<small class="part-score">${subject(p.part)}: <strong>${p.score.first}/${p.score.total}</strong> first-try</small>`).join(''):''}${repeat?'<small class="repeat-note">New run in progress · earlier scores kept</small>':''}</a>`;
+      return `<a class="session-link ${completed?'completed':started?'in-progress':'not-started'}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>Session ${session.number}</b><span>${session.parts.length===2?'7 math + 11 vocabulary':'7 math questions'}</span><small>${esc(session.label)}</small>${session.parts.some(part=>part.timeLimitSeconds)?'<small>7 minutes total</small>':''}<span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${started||completed?parts.map(p=>`<small class="part-score">${subject(p.part)}: <strong>${p.score.first}/${p.score.total}</strong> first-try</small>`).join(''):''}${repeat?'<small class="repeat-note">New run in progress · earlier scores kept</small>':''}</a>`;
     }).join('');
     document.querySelector('#sessions-progress').textContent=`${completedSessions} of ${sessions.length} sessions completed`;
   }
