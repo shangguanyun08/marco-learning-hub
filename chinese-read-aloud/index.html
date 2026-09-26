@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f3eb">
+  <meta name="description" content="按原练习纸排版的中文点读：21 个词语与春秋、战国课文。点击听普通话，可放大、慢读。">
+  <title>中文点读 · Learning Hub</title>
+  <link rel="stylesheet" href="./style.css?v=1">
+  <script src="./app.js?v=1" defer></script>
+</head>
+<body>
+  <main>
+    <header>
+      <a class="back" href="../">← 返回 main hub</a>
+      <span class="eyebrow">中文练习 · 21 个词语</span>
+      <h1>中文点读<span class="title-dot" aria-hidden="true">。</span></h1>
+      <p class="intro">像读纸上的课文一样，点哪里，就读哪里。</p>
+    </header>
+
+    <section class="controls" aria-label="朗读与显示设置">
+      <div class="read-controls">
+        <button class="primary" id="read-paragraph">▶ 读课文</button>
+        <button id="read-row-1">读第一行词语</button>
+        <button id="read-row-2">读第二行词语</button>
+        <button id="stop" disabled>■ 停止</button>
+      </div>
+      <div class="settings">
+        <label>语速 <select id="speed"><option value="0.75" selected>慢读</option><option value="1">正常</option></select></label>
+        <label>字号 <select id="zoom"><option value="fit">整页</option><option value="large" selected>大字</option><option value="larger">特大字</option></select></label>
+        <label class="show-zones"><input id="zones" type="checkbox"> 显示点读区域</label>
+      </div>
+    </section>
+
+    <div class="paper-heading"><span>原纸点读</span><span id="scroll-hint">↔ 左右滑动看整行，排版与原纸相同</span></div>
+    <section class="paper-scroll" id="paper-scroll" tabindex="0" aria-label="原纸点读，可左右滑动">
+      <div class="paper" id="paper">
+        <img src="./lesson.jpeg" width="3024" height="803" alt="原中文练习纸：上方两行词语，下方为五、写字及春秋时期、战国时期的两行正文。点读按钮按原文位置排列。" draggable="false">
+        <div id="hotspots" class="hotspots"></div>
+      </div>
+    </section>
+
+    <section class="reading-card" aria-label="当前点读内容">
+      <div class="reading-top"><span id="status" role="status" aria-live="polite">点一下纸上的词语或正文短语</span><button id="repeat" disabled>↻ 再读一次</button></div>
+      <p id="current-text">开始点读吧</p>
+      <p class="voice-help" id="voice-help" hidden></p>
+    </section>
+
+    <details class="transcript">
+      <summary>查看完整文字</summary>
+      <p>年　月　日　岁　九岁　十岁　星期　星期六　星期天　上课　上中文课</p>
+      <p>学校　老师　学生　同学　男同学　女同学　医生　看医生　诗人　士兵</p>
+      <p>五、写字（有 * 的一段下周上课时需在第14页上听写）</p>
+      <p>两千多年以前，中国的历史上，曾经有两段特殊的时期，一段叫做“春秋时期”，一段叫做“战国时期”。</p>
+    </details>
+    <footer>点词语听读音 · 点正文听短语 · 点「读课文」听完整的一段</footer>
+  </main>
+</body>
+</html>
