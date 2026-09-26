@@ -7,13 +7,30 @@
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
+  const validWork=work=>object(work)&&typeof work.text==='string'&&work.text.length<=4000&&time(work.textAt)&&time(work.drawingAt)&&
+    Array.isArray(work.strokes)&&work.strokes.length<=120&&work.strokes.every(stroke=>Array.isArray(stroke)&&stroke.length<=600&&stroke.length>=2&&stroke.every(p=>
+      Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&p[0]>=0&&p[0]<=800&&p[1]>=0&&p[1]<=600));
+  function mergeWork(a={},b={}){
+    const output={};
+    for(const source of [...new Set([...Object.keys(a),...Object.keys(b)])].sort((x,y)=>Number(x)-Number(y))){
+      if(!a[source]||!b[source]){output[source]=clone(a[source]||b[source]);continue;}
+      const work={};
+      for(const [field,at] of [['text','textAt'],['strokes','drawingAt']]){
+        const candidates=[a[source],b[source]].sort((x,y)=>x[at].localeCompare(y[at])||JSON.stringify(x[field]).localeCompare(JSON.stringify(y[field])));
+        work[field]=clone(candidates[1][field]);work[at]=candidates[1][at];
+      }
+      output[source]=work;
+    }
+    return output;
+  }
   function valid(state){
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
         (!run.deadlineAt||time(run.deadlineAt))&&(!run.timedOutAt||time(run.timedOutAt))&&
+        (!run.work||(object(run.work)&&Object.entries(run.work).every(([source,work])=>BANK.find(s=>s.id===id).subject==='math'&&BANK.find(s=>s.id===id).questions.some(q=>String(q.source)===source)&&validWork(work))))&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
           BANK.find(s=>s.id===id).questions.some(q=>String(q.source)===source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
-            object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<BANK.find(s=>s.id===id).questions.find(q=>String(q.source)===source).choices.length&&typeof a.correct==='boolean'&&time(a.at)))));
+            object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<BANK.find(s=>s.id===id).questions.find(q=>String(q.source)===source).choices.length&&typeof a.correct==='boolean'&&time(a.at)&&(!a.work||validWork(a.work))))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
   const compatible=(a,b)=>Object.keys(a.answers).every(key=>{
@@ -30,7 +47,7 @@
         const run=clone(raw);
         // Opening an untouched page is not a new practice run. Explicit repeat
         // runs (including older, already-saved repeats) remain part of history.
-        if(!Object.values(run.answers).some(e=>e.attempts.length)&&!run.restart&&!run.deadlineAt&&!index)continue;
+        if(!Object.values(run.answers).some(e=>e.attempts.length)&&!Object.keys(run.work||{}).length&&!run.restart&&!run.deadlineAt&&!index)continue;
         const base=run.id.split('~')[0];
         if(!groups.has(base))groups.set(base,[]);
         groups.get(base).push(run);
@@ -42,7 +59,13 @@
         for(const run of candidates){
           const target=versions.find(v=>compatible(v,run));
           if(!target){versions.push(run);continue;}
+          if(target.work||run.work)target.work=mergeWork(target.work,run.work);
           for(const [key,entry] of Object.entries(run.answers))if((target.answers[key]?.attempts.length||0)<entry.attempts.length)target.answers[key]=entry;
+          // A device with the same answer may still carry its saved step snapshot.
+          for(const [key,entry] of Object.entries(run.answers))entry.attempts.forEach((attempt,i)=>{
+            const saved=target.answers[key]?.attempts[i];
+            if(saved&&sameAttempt(saved,attempt)&&attempt.work&&!saved.work)saved.work=clone(attempt.work);
+          });
           target.startedAt=[target.startedAt,run.startedAt].sort()[0];
           target.completedAt=[target.completedAt,run.completedAt].filter(Boolean).sort()[0]||null;
           for(const field of ['deadlineAt','timedOutAt']){const value=[target[field],run[field]].filter(Boolean).sort()[0];if(value)target[field]=value;}

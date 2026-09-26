@@ -23,3 +23,4 @@ Session 4 has a single 420-second timer for all seven questions, including retri
 
 Shared engine and sync patterns are adapted from Harry’s September 20 practice; existing Harry/Marco apps and scores are unchanged. No source answer selections or essay text are published.
 
+Every math question has an optional main-steps box with a resizable text area and a handwriting pad for finger, stylus, or mouse input. Handwriting has undo and clear controls. Work saves locally and syncs with the same run even before an answer is submitted. Each answer attempt retains a separate snapshot of the steps, visible in practice history and included in record downloads. New runs begin with blank scratch work and preserve old snapshots. Scratch work earns no points and does not use an attempt. Text and handwriting merge independently by timestamp across devices; clearing handwriting is also synced. Stored drawings use bounded vector points, so they resize consistently across devices.

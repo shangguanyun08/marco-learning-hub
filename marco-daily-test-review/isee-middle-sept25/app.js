@@ -1,6 +1,6 @@
 (function () {
   'use strict';
-  const bank=window.MARCO_ISEE_PRACTICE, engine=window.MarcoIseeEngine;
+  const bank=window.MARCO_ISEE_PRACTICE, engine=window.MarcoIseeEngine, scratch=window.MarcoScratch;
   const KEY='marco-isee-middle-sept25-v1';
   // Keep the original subject storage IDs so every saved score and timer survives.
   const sessions=[
@@ -17,7 +17,7 @@
   const date=s=>new Date(s).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
   const subject=part=>part.subject==='math'?'Math':'Vocabulary';
   let sync=null,syncKind='connecting',syncMessage='Connecting… Your saved answers will sync automatically.';
-  let storageOK=true,state={version:1,sessions:{}};
+  let storageOK=true,state={version:1,sessions:{}},scratchUpload=null,pendingRemote=null;
   try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1&&saved.sessions)state=saved;}catch{storageOK=false;}
   const selectedSession=()=>{const id=new URLSearchParams(location.search).get('session');return sessions.find(s=>s.id===id||s.ids.includes(id))||null;};
   let active=selectedSession();
@@ -27,6 +27,26 @@
   function items(session=active){return session.parts.flatMap(part=>part.questions.map(q=>({q,part})));}
   function complete(session=active){return session.parts.every(part=>engine.stats(part,current(part)).finished===part.questions.length);}
   function save(upload=true){try{if(!storageOK)throw new Error('Storage unavailable');localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}updateSaveNote();if(upload)void sync?.push();}
+  function mountScratch(){
+    scratch.mount(document.querySelector('#questions'),{
+      read:(id,source)=>current(bank.find(p=>p.id===id)).work?.[source],
+      change(id,source,patch){
+        const run=current(bank.find(p=>p.id===id));run.work ||= {};
+        run.work[source]={text:'',textAt:'1970-01-01T00:00:00.000Z',strokes:[],drawingAt:'1970-01-01T00:00:00.000Z',...run.work[source],...patch};
+        save(false);renderSessions();renderHistory();
+        clearTimeout(scratchUpload);scratchUpload=setTimeout(()=>void sync?.push(),600);
+        if(pendingRemote){const remote=pendingRemote;pendingRemote=null;setTimeout(()=>applyRemote(remote),0);}
+      }
+    });
+  }
+  function applyRemote(remote){
+    if(scratch.isDrawing()){pendingRemote=window.MarcoIseeSync.merge(pendingRemote||state,remote);return;}
+    const focused=document.activeElement,typing=focused?.matches('.scratch-text')?{id:focused.id,start:focused.selectionStart,end:focused.selectionEnd}:null;
+    const selected=Array.from(document.querySelectorAll('input:checked:not(:disabled)')).map(input=>[input.name,input.value]);
+    state=window.MarcoIseeSync.merge(state,remote);save(false);render();
+    for(const [name,value] of selected){const input=document.querySelector(`input[name="${name}"][value="${value}"]:not(:disabled)`);if(input)input.checked=true;}
+    if(typing){const textarea=document.getElementById(typing.id);if(textarea){textarea.focus({preventScroll:true});textarea.setSelectionRange(typing.start,typing.end);}}
+  }
   function updateSaveNote(){const el=document.querySelector('#save-note');el.dataset.syncStatus=syncKind;el.classList.toggle('warning',!storageOK||syncKind==='offline');el.textContent=storageOK?syncMessage:'Progress could not be saved in this browser. Keep this page open and download your records before leaving.';}
   function result(q,run){const e=run.answers[q.source];if(!e?.attempts.length)return run.timedOutAt?'timedout':'';if(e.attempts[0].choice===q.correct)return 'first';if(e.attempts[1]?.choice===q.correct)return 'retry';return e.attempts.length===2?'revealed':run.timedOutAt?'timedout':'pending';}
   const timedPart=()=>active?.parts.find(p=>p.timeLimitSeconds);
@@ -37,6 +57,7 @@
       const run=state.sessions[part.id]?.at(-1);if(!run?.deadlineAt||run.completedAt)continue;
       const pending={};
       if(active?.ids.includes(part.id))document.querySelectorAll(`#questions form[data-part="${part.id}"] input:checked:not(:disabled)`).forEach(input=>{pending[input.closest('form').dataset.source]=Number(input.value);});
+      if(Date.now()>=Date.parse(run.deadlineAt))scratch.flush();
       if(engine.expire(run,part,new Date().toISOString(),pending))changed=true;
     }
     if(changed){save();render();}
@@ -66,7 +87,7 @@
     if(status==='retry')feedback='You got it on your second try! This correction is saved; the first-try score stays unchanged.';
     if(status==='revealed')feedback='Two tries completed. Read the explanation below to learn the method.';
     if(status==='timedout')feedback=attempts.length?'Time is up. Your submitted answer and first-try score are saved.':'Time is up. This question was unanswered and earns 0 first-try points.';
-    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${part.id.endsWith('original')?'Original':'Matches'} Zozeck Q${q.source} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${arcDiagram(q)}<form data-part="${part.id}" data-source="${q.source}" novalidate><fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
+    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${part.id.endsWith('original')?'Original':'Matches'} Zozeck Q${q.source} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${arcDiagram(q)}${part.subject==='math'?scratch.markup(part.id,q.source,run.work?.[q.source]):''}<form data-part="${part.id}" data-source="${q.source}" novalidate><fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
       const tried=attempts.findIndex(a=>a.choice===index),disabled=closed||tried>=0;
       const tag=tried>=0?`Try ${tried+1}${index===q.correct?' · correct':' · incorrect'}`:'';
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCDE'[index]}</span><span class="choice-text">${math(choice)}${tag?`<small>${tag}</small>`:''}</span></label>`;
@@ -81,7 +102,7 @@
           .sort((a,b)=>(a.completedAt||a.startedAt).localeCompare(b.completedAt||b.startedAt)).at(-1);
         return {part,latest,completed,score:engine.stats(part,completed||latest||{answers:{}})};
       });
-      const completed=parts.every(p=>p.completed),started=parts.some(p=>p.score.attempted||p.latest?.deadlineAt);
+      const completed=parts.every(p=>p.completed),started=parts.some(p=>p.score.attempted||p.latest?.deadlineAt||Object.keys(p.latest?.work||{}).length);
       const repeat=completed&&parts.some(p=>p.latest!==p.completed);
       if(completed)completedSessions++;
       return `<a class="session-link ${completed?'completed':started?'in-progress':'not-started'}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>Session ${session.number}</b><span>${session.parts.length===2?'7 math + 11 vocabulary':'7 math questions'}</span><small>${esc(session.label)}</small>${session.number===4?'<small>7 minutes total</small>':''}<span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${started||completed?parts.map(p=>`<small class="part-score">${subject(p.part)}: <strong>${p.score.first}/${p.score.total}</strong> first-try</small>`).join(''):''}${repeat?'<small class="repeat-note">New run in progress · earlier scores kept</small>':''}</a>`;
@@ -107,11 +128,12 @@
     document.querySelector('#history').innerHTML=active.parts.map(part=>`<section aria-label="${subject(part)} history"><h3>${subject(part)}</h3>${runs(part).map((run,i)=>{
       const s=engine.stats(part,run);
       return `<details class="history-run"><summary>Run ${i+1}${run.deviceConflict?' · Separate device attempt':''} · ${esc(date(run.startedAt))} · ${s.first}/${s.total} first-try points · ${s.finished===s.total?'Complete':`${s.attempted}/${s.total} attempted`}</summary><p>${run.completedAt?'Completed '+esc(date(run.completedAt)):'In progress'} · ${s.corrected} corrected on retry · ${s.revealed} answers shown</p><ol>${part.questions.map(q=>{
-        const e=run.answers[q.source];return `<li>Zozeck Q${q.source}: ${esc(q.skill)} — ${e?.attempts.length?e.attempts.map((a,j)=>`Try ${j+1}: ${'ABCDE'[a.choice]} (${esc(q.choices[a.choice])}) · ${a.choice===q.correct?'correct':'incorrect'} · ${esc(date(a.at))}`).join('; '):run.timedOutAt?'Unanswered when time ended · 0 points':'Not attempted'}</li>`;
+        const e=run.answers[q.source];return `<li>Zozeck Q${q.source}: ${esc(q.skill)} — ${e?.attempts.length?e.attempts.map((a,j)=>`Try ${j+1}: ${'ABCDE'[a.choice]} (${esc(q.choices[a.choice])}) · ${a.choice===q.correct?'correct':'incorrect'} · ${esc(date(a.at))}${scratch.view(a.work,'Steps for try '+(j+1))}`).join('; '):run.timedOutAt?'Unanswered when time ended · 0 points':'Not attempted'}${JSON.stringify(e?.attempts?.at(-1)?.work)!==JSON.stringify(run.work?.[q.source])?scratch.view(run.work?.[q.source],'Latest main steps'):''}</li>`;
       }).join('')}</ol></details>`;
     }).join('')}</section>`).join('');
   }
   function render(){
+    scratch.flush();
     document.querySelector('#practice-content').hidden=!active;
     document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Seven sessions';
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderSessions();updateSaveNote();return;}
@@ -121,32 +143,33 @@
     document.querySelector('#session-guidance').textContent=timedPart()?'One 7-minute timer covers all 7 questions, including retries. The timer keeps running if you leave or reload.':'Your first answer earns the point. If you miss, try once more. There is no timer for this session.';
     let index=0;
     document.querySelector('#questions').innerHTML=active.parts.map(part=>`<section class="practice-subject" aria-labelledby="heading-${part.subject}"><h2 id="heading-${part.subject}">${subject(part)} · ${part.questions.length} questions</h2>${part.questions.map(q=>card(q,index++,part)).join('')}</section>`).join('');
-    renderSummary();updateSaveNote();
+    mountScratch();renderSummary();updateSaveNote();
   }
   document.querySelector('#questions').addEventListener('submit',event=>{
-    event.preventDefault();const form=event.target,part=active.parts.find(p=>p.id===form.dataset.part),q=part?.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
+    event.preventDefault();scratch.flush();const form=event.target,part=active.parts.find(p=>p.id===form.dataset.part),q=part?.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
     const run=current(part);if(part.timeLimitSeconds&&!run.deadlineAt)return;
     if(run.deadlineAt&&!run.completedAt&&Date.now()>=Date.parse(run.deadlineAt)){expireTimedRuns();return;}
     const selected=form.querySelector('input:checked:not(:disabled)'),feedback=document.querySelector(`#feedback-${q.source}`);
     if(!selected){feedback.textContent='Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
     if(!engine.submit(run,q,Number(selected.value),new Date().toISOString()))return;
     if(engine.stats(part,run).finished===part.questions.length)run.completedAt=new Date().toISOString();save();
-    const index=items().findIndex(item=>item.q===q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index,part);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
+    const index=items().findIndex(item=>item.q===q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index,part);mountScratch();renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
   document.querySelector('#session-picker').addEventListener('click',event=>{
     const link=event.target.closest('a');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
     event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=sessions.find(s=>s.id===id);history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});
   });
   window.addEventListener('popstate',()=>{active=selectedSession();render();});
-  window.addEventListener('storage',event=>{if(event.key!==KEY||!event.newValue)return;try{const remote=JSON.parse(event.newValue);if(remote.version===1&&remote.sessions){state=window.MarcoIseeSync?window.MarcoIseeSync.merge(state,remote):remote;render();void sync?.push();}}catch{}});
+  window.addEventListener('storage',event=>{if(event.key!==KEY||!event.newValue)return;try{const remote=JSON.parse(event.newValue);if(window.MarcoIseeSync.valid(remote)){applyRemote(remote);void sync?.push();}}catch{}});
   document.querySelector('#large-text').addEventListener('click',event=>{event.currentTarget.setAttribute('aria-pressed',String(document.body.classList.toggle('large')));});
   document.querySelector('#start-timer').addEventListener('click',()=>{
     const part=timedPart();if(!part||current(part).deadlineAt)return;
     const run=current(part);run.startedAt=new Date().toISOString();run.deadlineAt=new Date(Date.now()+part.timeLimitSeconds*1000).toISOString();
     save();render();document.querySelector('.scorebar').scrollIntoView({block:'start'});
   });
-  document.querySelector('#new-run').addEventListener('click',()=>{if(!complete())return;active.parts.forEach(part=>runs(part).push(newRun(true)));save();render();document.querySelector('#session-title').scrollIntoView();});
+  document.querySelector('#new-run').addEventListener('click',()=>{if(!complete())return;scratch.flush();active.parts.forEach(part=>runs(part).push(newRun(true)));save();render();document.querySelector('#session-title').scrollIntoView();});
   document.querySelector('#download').addEventListener('click',()=>{
+    scratch.flush();
     const payload={exportedAt:new Date().toISOString(),reviewDate:'2026-09-25',scoring:'One point only for a correct first try. Second tries do not change the score.',sessions:sessions.map(session=>({number:session.number,parts:session.parts.map(part=>({...part,runs:state.sessions[part.id]||[]}))}))};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='marco-isee-middle-sept25-practice-records.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
@@ -154,15 +177,11 @@
   if(window.MarcoIseeSync&&!isLocalPreview){
     sync=window.MarcoIseeSync.create({
       getState:()=>state,
-      onRemote(remote){
-        const selected=Array.from(document.querySelectorAll('input:checked:not(:disabled)')).map(input=>[input.name,input.value]);
-        state=remote;save(false);render();
-        for(const [name,value] of selected){const input=document.querySelector(`input[name="${name}"][value="${value}"]:not(:disabled)`);if(input)input.checked=true;}
-      },
+      onRemote:applyRemote,
       onStatus(kind,message){syncKind=kind;syncMessage=message;updateSaveNote();}
     });void sync.start();
   }else{syncKind='offline';syncMessage=isLocalPreview?'Preview · Progress saves only in this browser.':'Not synced · Saved on this device. Reload to reconnect.';}
+  window.addEventListener('pagehide',()=>{scratch.flush();save(false);});
   render();expireTimedRuns();setInterval(()=>{expireTimedRuns();if(active)renderTimer();},500);
   if(!isLocalPreview){const tracker=document.createElement('script');tracker.src='../../shared-activity-tracker.js?v=1';tracker.dataset.appId=KEY;tracker.dataset.course='Marco ISEE Middle test review';document.body.append(tracker);}
 })();
-

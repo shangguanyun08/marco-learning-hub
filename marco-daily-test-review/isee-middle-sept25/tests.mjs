@@ -15,7 +15,7 @@ function page(id,saved,clock){
   if(clock)w.Date=class extends Date{constructor(...a){super(...(a.length?a:[clock.now]));}static now(){return clock.now;}};
   w.HTMLElement.prototype.scrollIntoView=function(){};
   if(saved)w.localStorage.setItem(key,saved);
-  for(const script of ['data.js','engine.js','sync.js','app.js'])w.eval(read(script));
+  for(const script of ['data.js','engine.js','sync.js','scratch.js','app.js'])w.eval(read(script));
   return {w,dom,doc:w.document,close:()=>w.close()};
 }
 function submit(p,source,choice){
@@ -153,11 +153,18 @@ test('online sync restores both subjects without mixing session scores',async()=
     return{ok:true,json:async()=>({progress:record})};
   };
   const state=empty();for(const s of bank){const r=run();engine.submit(r,s.questions[0],s.questions[0].correct,at);state.sessions[s.id]=[r];}
+  const notesOnly={...run(),id:'notes-before-answer',startedAt:'2026-09-25T15:03:00.000Z',work:{43:{text:'Find the whole',textAt:at,strokes:[[[10,20],[30,40]]],drawingAt:at}}};
+  state.sessions['math-d'].push(notesOnly);
   let restored=empty(),first=state;
   p.w.AbortController=AbortController;
   const a=p.w.MarcoIseeSync.create({getState:()=>first,onRemote:s=>first=s,onStatus(){},fetcher});
   const b=p.w.MarcoIseeSync.create({getState:()=>restored,onRemote:s=>restored=s,onStatus(){},fetcher});
-  try{await a.start();await b.start();for(const part of bank)assert.equal(engine.stats(part,restored.sessions[part.id][0]).first,1);}finally{a.stop();b.stop();p.close();}
+  try{
+    await a.start();await b.start();for(const part of bank)assert.equal(engine.stats(part,restored.sessions[part.id][0]).first,1);
+    assert.equal(restored.sessions['math-d'][1].work[43].text,'Find the whole');
+    assert.equal(restored.sessions['math-d'][1].work[43].strokes.length,1);
+    assert.equal(Object.keys(restored.sessions['math-d'][1].answers).length,0);
+  }finally{a.stop();b.stop();p.close();}
 });
 
 test('new math sessions have distinct questions, save independently, and retain old history',()=>{
@@ -180,4 +187,56 @@ test('new math sessions have distinct questions, save independently, and retain 
     }finally{p.close();}
   }
   for(const id of ['math-d','math-e','math-f'])assert.equal(JSON.parse(saved).sessions[id].length,1);
+});
+
+test('main steps save before answering and each try preserves its own idea without affecting points',()=>{
+  const p=page('session-5');
+  const write=text=>{const input=p.doc.querySelector('#steps-math-d-43');input.value=text;input.dispatchEvent(new p.w.Event('input',{bubbles:true}));};
+  try{
+    assert.equal(p.doc.querySelectorAll('[data-scratch-part]').length,7);
+    write('First compare salt with water.');
+    let state=JSON.parse(p.w.localStorage.getItem(key)),r=state.sessions['math-d'][0];
+    assert.equal(Object.keys(r.answers).length,0);assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
+    assert.equal(p.w.MarcoIseeSync.valid(state),true);
+    assert.equal(p.w.MarcoIseeSync.merge(state,empty()).sessions['math-d'][0].work[43].text,'First compare salt with water.');
+    const resumed=page('session-5',JSON.stringify(state));try{assert.equal(resumed.doc.querySelector('#steps-math-d-43').value,'First compare salt with water.');}finally{resumed.close();}
+    submit(p,43,0);write('Add salt and water first, then divide salt by the total.');submit(p,43,2);
+    r=JSON.parse(p.w.localStorage.getItem(key)).sessions['math-d'][0];
+    assert.equal(r.answers[43].attempts[0].work.text,'First compare salt with water.');
+    assert.equal(r.answers[43].attempts[1].work.text,'Add salt and water first, then divide salt by the total.');
+    assert.equal(p.doc.querySelector('#score').textContent,'0 / 7');
+    assert.match(p.doc.querySelector('#history').textContent,/Steps for try 1/);
+    assert.match(p.doc.querySelector('#history').textContent,/First compare salt with water/);
+    const old=r.answers[43].attempts[0].work.text;write('Later correction');
+    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-d'][0].answers[43].attempts[0].work.text,old);
+    for(const q of bank.find(s=>s.id==='math-d').questions.slice(1))submit(p,q.source,q.correct);
+    p.doc.querySelector('#new-run').click();
+    assert.equal(p.doc.querySelector('#steps-math-d-43').value,'');
+    assert.equal(JSON.parse(p.w.localStorage.getItem(key)).sessions['math-d'].length,2);
+    const combined=page('session-1');try{assert.equal(combined.doc.querySelectorAll('[data-scratch-part]').length,7);assert.equal(combined.doc.querySelectorAll('[data-scratch-part^="vocab"]').length,0);}finally{combined.close();}
+  }finally{p.close();}
+});
+
+test('text and handwriting sync independently; clear stays cleared and invalid drawings are rejected',()=>{
+  const p=page('session-5');try{
+    const a=empty(),b=empty(),t1='2026-09-25T15:01:00.000Z',t2='2026-09-25T15:02:00.000Z';
+    const steps={text:'Find the whole first',textAt:t1,strokes:[],drawingAt:at};
+    a.sessions['math-d']=[{...run(),work:{43:steps}}];
+    b.sessions['math-d']=[{...run(),work:{43:{text:'',textAt:at,strokes:[[[10,20],[30,40]]],drawingAt:t1}}}];
+    const sync=p.w.MarcoIseeSync,merged=JSON.parse(JSON.stringify(sync.merge(a,b)));
+    assert.equal(sync.valid(merged),true);
+    assert.equal(merged.sessions['math-d'][0].work[43].text,'Find the whole first');
+    assert.deepEqual(merged.sessions['math-d'][0].work[43].strokes,[[[10,20],[30,40]]]);
+    assert.deepEqual(JSON.parse(JSON.stringify(sync.merge(b,a))),merged);
+    const cleared=structuredClone(merged);cleared.sessions['math-d'][0].work[43].strokes=[];cleared.sessions['math-d'][0].work[43].drawingAt=t2;
+    assert.equal(sync.merge(merged,cleared).sessions['math-d'][0].work[43].strokes.length,0);
+    assert.equal(sync.merge(cleared,merged).sessions['math-d'][0].work[43].strokes.length,0);
+    const invalid=structuredClone(merged);invalid.sessions['math-d'][0].work[43].strokes=[[[0,0],[Infinity,900]]];assert.equal(sync.valid(invalid),false);
+    const preview=page('session-5',JSON.stringify(merged));try{
+      assert.equal(preview.doc.querySelector('#drawing-math-d-43').hidden,false);
+      assert.equal(preview.doc.querySelector('#drawing-math-d-43 polyline').getAttribute('points'),'10,20 30,40');
+      preview.doc.querySelector('#drawing-math-d-43 [data-scratch-action="undo"]').click();
+      assert.equal(JSON.parse(preview.w.localStorage.getItem(key)).sessions['math-d'][0].work[43].strokes.length,0);
+    }finally{preview.close();}
+  }finally{p.close();}
 });

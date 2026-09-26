@@ -6,7 +6,9 @@
     if (!Number.isInteger(choice) || choice<0 || choice>=question.choices.length) return false;
     const entry=run.answers[question.source] || {attempts:[]};
     if (done(question,entry) || entry.attempts.some(a=>a.choice===choice)) return false;
-    entry.attempts.push({choice,correct:choice===question.correct,at});
+    const attempt={choice,correct:choice===question.correct,at};
+    if(run.work?.[question.source])attempt.work=JSON.parse(JSON.stringify(run.work[question.source]));
+    entry.attempts.push(attempt);
     run.answers[question.source]=entry;
     return true;
   }
