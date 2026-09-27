@@ -1,0 +1,85 @@
+/* Shared palette from Marco's Summer Math Redo, across every dated review. */
+:root {
+  --ink: #16324a;
+  --muted: #596d7d;
+  --paper: #fffdf8;
+  --blue: #2468e5;
+  --blue-soft: #eaf1ff;
+  --mint: #e3f7ef;
+  --green: #16805c;
+  --coral: #de5c50;
+  --line: #dfe4e6;
+  --card-line: #ddd8ce;
+}
+
+body { background: #f2f0eb; }
+h1, h2, h3 { color: #173957; }
+a, .eyebrow { color: var(--blue); }
+button:focus-visible, a:focus-visible, input:focus-visible,
+summary:focus-visible, .scratch-text:focus-visible {
+  outline-color: var(--blue);
+}
+
+.question, .section-link, .attempt-summary, .history-run {
+  background: var(--paper);
+  border-color: var(--card-line);
+  box-shadow: 0 14px 35px rgba(43, 55, 64, .07);
+}
+.question, .section-link { border-radius: 20px; }
+.question { border-left-color: #b5cbef; }
+.section-link { color: var(--ink); }
+.section-link:hover { border-color: #9bb9ef; }
+.section-link > strong { color: var(--blue); }
+.session-link { background: var(--paper); border-color: var(--card-line); }
+.session-link:hover { border-color: #9bb9ef; box-shadow: 0 7px 18px rgba(36, 104, 229, .08); }
+.session-link[aria-current=page] { background: var(--blue-soft); border-color: var(--blue); outline-color: var(--blue); }
+.session-link .day-status { background: #f0f2f3; color: var(--muted); }
+.session-link[aria-current=page] .day-status { background: #dbe7ff; color: #234f8c; }
+.session-link .day-score { color: var(--green); }
+.session-link.completed { background: var(--mint); border-color: #85bda5; }
+.session-link.completed .day-status { background: var(--green); color: white; }
+.session-link.completed[aria-current=page] { border-color: var(--blue); }
+.session-link.in-progress { background: #fff0dd; border-color: #e8d4aa; }
+.session-link.in-progress .day-status { background: #f8ecd6; color: #8a4b13; }
+.session-link.in-progress[aria-current=page] { border-color: var(--blue); }
+.session-link .repeat-note { border-color: #b5dcca; }
+
+.scorebar { background: #fffdf8f7; border-color: var(--card-line); }
+.scorebar button, .record-actions button, .scratch button { border-color: #ccd3d7; background: white; }
+.scorebar button[aria-pressed=true] { background: #173957; color: white; }
+.jump a { background: var(--paper); }
+.jump .first { background: var(--mint); border-color: #7bc7aa; }
+.jump .retry { background: #fff0dd; border-color: #e8d4aa; }
+.jump .revealed, .jump .pending, .jump .timedout { background: #fff0ed; border-color: #e8aaa4; }
+.choice { background: white; border-color: #d7dcde; }
+.choice:hover:not(.disabled) { border-color: #9bb9ef; }
+.choice:has(input:checked) { border-color: var(--blue); background: var(--blue-soft); }
+.choice input { accent-color: var(--blue); }
+.choice .letter { color: #5e6d77; }
+.choice.wrong-option, .choice.wrong-option:has(input:checked) { background: #fff2ef; border-color: #e8aaa4; }
+.choice.correct-option { background: var(--mint); border-color: #7bc7aa; }
+.question.first { border-left-color: var(--green); }
+.question.retry { border-left-color: #d79025; }
+.question.revealed, .question.pending, .question.timedout { border-left-color: var(--coral); }
+.submit { background: var(--blue); }
+.answer, .completion { background: var(--mint); }
+.completion { border-color: #85bda5; }
+.answer > strong { color: #0f6c4d; }
+.tip { border-color: #b5dcca; }
+.question-note { background: #fff0dd; border-color: #d79025; color: #8a4b13; }
+.save-note.warning { background: #fff0ed; color: #a94239; }
+.timer-panel { background: var(--blue-soft); border-color: #9bb9ef; }
+.running-timer { background: #173957; box-shadow: 0 2px 8px #17395726; }
+.running-timer.urgent { background: #a94239; }
+.countdown.urgent { color: #a94239; }
+.scratch, .scratch-record { background: #f6f3ed; border-color: var(--card-line); }
+.math-table th, .math-table td { border-color: #ccd3d7; }
+.math-table thead th { background: var(--blue-soft); }
+.math-table tbody th { background: #f6f3ed; }
+.review-choices summary { color: var(--muted); font-weight: 650; }
+.review-choices li::marker { color: #5e6d77; font-weight: 700; }
+
+@media print {
+  body { background: white; }
+  .question, .section-link, .attempt-summary, .history-run { box-shadow: none; }
+}
