@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f5f4ef"><title>Marco 中文 · 2026年9月26日</title><link rel="stylesheet" href="../style.css?v=1"></head><body><main><header><a href="../">← 中文学习 · 所有日期</a><h1 class="lesson-title">2026年9月26日</h1><p>先听，在纸上写；不会写，再看字。</p></header><nav class="tabs" aria-label="选择练习"><button type="button" data-lesson="words" aria-pressed="true">字词与句子</button><button type="button" data-lesson="week5" aria-pressed="false">第五周练习</button></nav><section id="practice" aria-label="中文练习"></section><noscript><p><a href="../../chinese-dictation/">字词与句子听写</a> · <a href="../../chinese-read-aloud/">第五周练习</a></p></noscript></main><script>
+(() => {
+const buttons=[...document.querySelectorAll('[data-lesson]')];
+const host=document.getElementById('practice');
+const sources={words:'../../chinese-dictation/',week5:'../../chinese-read-aloud/'};
+let observer;
+function show(key){
+ if(!sources[key])key='words';
+ const old=host.querySelector('iframe');
+ if(old){try{old.contentWindow.speechSynthesis?.cancel();}catch{}}
+ observer?.disconnect();
+ buttons.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lesson===key)));
+ history.replaceState(null,'','#'+key);
+ const frame=document.createElement('iframe');
+ frame.title=key==='words'?'字词与句子听写':'第五周逐字点读与听写';
+ frame.allow='autoplay';
+ frame.addEventListener('load',()=>{
+  const doc=frame.contentDocument;
+  if(!doc)return;
+  const style=doc.createElement('style');
+  style.textContent='body{background:transparent!important}main{margin-top:0!important}main>header,main>.heading{display:none!important}';
+  doc.head.append(style);
+  const resize=()=>{frame.style.height=Math.ceil(doc.body.getBoundingClientRect().height+40)+'px';};
+  observer=new ResizeObserver(resize);observer.observe(doc.body);resize();
+ });
+ frame.src=sources[key];
+ host.replaceChildren(frame);
+}
+buttons.forEach(b=>b.addEventListener('click',()=>show(b.dataset.lesson)));
+show(location.hash.slice(1));
+window.addEventListener('pagehide',()=>{try{host.querySelector('iframe')?.contentWindow.speechSynthesis?.cancel();}catch{}});
+})();
+</script></body></html>
