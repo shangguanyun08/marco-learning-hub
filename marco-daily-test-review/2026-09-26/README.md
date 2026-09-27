@@ -10,13 +10,13 @@ Extracted from the user's two open completed Zozeck attempts, using visible ques
 
 Test 1 included Q41, 42, 44, 45, 46, 49, 51, 52, 54, 56, 57, 59, 60. Test 2 included Q41, 42, 43, 44, 48, 49, 51, 52, 54, 55, 61. IDs combine test number and source question number, so identically numbered questions cannot share progress.
 
-Review is unscored and shows the useful method, answer, worked explanation, and any source correction. Session 1 retries the 24 source questions. Session 2 and Session 3 each have 24 new questions, with one counterpart for each source question. Choice order in the generated sets is deterministic across devices. Session 3 has one 1,440-second timer pinned at the top, persisting across navigation/reload and online sync. At expiry pending selected answers are submitted, blanks earn zero, and questions lock. First submissions alone earn points. A different second try is permitted; completed histories survive starting another run.
+The unscored review stage is removed. The default page and legacy ?session=review links open Session 1, with only Sessions 1–3 in navigation. Methods, answers, worked explanations, and source corrections remain hidden until a question is solved or both tries are used (or the timer expires). Storage and sync IDs are unchanged. Session 1 retries the 24 source questions. Session 2 and Session 3 each have 24 new questions, with one counterpart for each source question. Choice order in the generated sets is deterministic across devices. Session 3 has one 1,440-second timer pinned at the top, persisting across navigation/reload and online sync. At expiry pending selected answers are submitted, blanks earn zero, and questions lock. First submissions alone earn points. A different second try is permitted; completed histories survive starting another run.
 
 Source corrections:
 
 - Test 1 Q41: source explanation misdescribes choice A. The displayed A is 9/4 × 2/3, which flips the dividend. The rebuilt explanation matches the actual choice.
 - Test 1 Q42: “has an integral” is clarified to “has a value.”
-- Test 1 Q45: “first-order” alone admits B and C. The prompt explicitly asks for a linear equation in one variable. This clarification is visible in the review.
+- Test 1 Q45: “first-order” alone admits B and C. The prompt explicitly asks for a linear equation in one variable. This clarification is visible with the revealed answer.
 - Test 1 Q49: correct angle is 55°, absent from the original choices. A fifth choice is added. The erroneous source key C (35°) is explicitly identified.
 - Test 2 Q43: same-place-value wording is clarified; the source explanation is replaced with decimal-column reasoning.
 - Test 2 Q48: DC = 7 − 4 = 3; AB = 3 + 7 = 10. The original explanation wrongly invokes a triangle.

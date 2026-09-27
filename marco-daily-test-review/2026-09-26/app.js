@@ -7,7 +7,7 @@
   const stamp=s=>new Date(s).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
   let state={version:1,sessions:{}},storageOK=true,sync=null,statusText='Connecting…',statusKind='connecting';
   try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(window.MarcoIseeSync.valid(saved))state=saved;}catch{storageOK=false;}
-  const selection=()=>{const p=new URLSearchParams(location.search).get('session');return bank.find(s=>p===`session-${s.number}`||p===s.id)||null;};
+  const selection=()=>{const p=new URLSearchParams(location.search).get('session');return bank.find(s=>p===`session-${s.number}`||p===s.id)||bank[0];};
   let active=selection();
   function newRun(restart=false){return {id:crypto.randomUUID(),startedAt:new Date().toISOString(),completedAt:null,answers:{},restart};}
   function runs(s){return state.sessions[s.id]||=([]);}
@@ -16,19 +16,18 @@
   function saveNote(){$('#save-note').textContent=storageOK?statusText:'This browser could not save progress. Keep the page open and download your records.';$('#save-note').classList.toggle('warning',!storageOK||statusKind==='offline');}
   function result(q,r){const a=r.answers[q.source]?.attempts||[];if(a[0]?.choice===q.correct)return 'first';if(a[1]?.choice===q.correct)return 'retry';if(r.timedOutAt)return 'timedout';return a.length===2?'revealed':a.length?'pending':'';}
   function choices(q,r){const entry=r.answers[q.source],a=entry?.attempts||[],closed=E.done(q,entry,r);return q.choices.map((c,i)=>{const tried=a.findIndex(x=>x.choice===i),disabled=closed||tried>=0;return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&i!==q.correct?'wrong-option':''} ${closed&&i===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${i}" ${disabled?'disabled':''} ${tried>=0&&tried===a.length-1?'checked':''}><span class="letter">${'ABCDE'[i]}</span><span class="choice-text">${q.choiceVisuals?`<img class="choice-diagram" src="./assets/${q.choiceVisuals[i]}" alt="${esc(c)}">`:math(c)}${tried>=0?`<small>Try ${tried+1} · ${i===q.correct?'correct':'incorrect'}</small>`:''}</span></label>`;}).join('');}
-  function question(q,i,review=false){
-    const r=review?null:current(),a=r?.answers[q.source]?.attempts||[],closed=review||E.done(q,r?.answers[q.source],r),kind=review?'review-card':result(q,r);
+  function question(q,i){
+    const r=current(),a=r.answers[q.source]?.attempts||[],closed=E.done(q,r.answers[q.source],r),kind=result(q,r);
     let feedback='Choose an answer, then press Check answer.';
     if(kind==='first')feedback='Correct on your first try! 1 point earned.';
     if(kind==='retry')feedback='Correct on your second try. Your correction is saved; your first-try score stays the same.';
     if(kind==='pending')feedback='Not quite. Try a different answer once more. Your first-try score stays the same.';
     if(kind==='revealed')feedback='Two tries completed. Read the solution below.';
     if(kind==='timedout')feedback=a.length?'Time is up. Your recorded answers are saved.':'Time is up. This question was unanswered and earns 0 first-try points.';
-    return `<article class="question ${kind}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>${review?'Review':'Question'} ${i+1}</h3><span class="source">Test ${q.test} · Q${q.number} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${V.visual(q)}${review?`<details class="review-choices" open><summary>Answer choices</summary><ol type="A">${q.choices.map(c=>`<li>${math(c)}</li>`).join('')}</ol></details>`:`<form data-source="${q.source}"><fieldset class="choices"><legend>${closed?'Recorded answers':'Choose one answer'}</legend>${choices(q,r)}</fieldset>${closed?'':'<button class="submit" type="submit">'+(a.length?'Check second try':'Check answer')+'</button>'}</form><p class="feedback" id="feedback-${q.source}" role="status" tabindex="-1">${feedback}</p>`}${closed?`<div class="answer"><strong>Answer: ${'ABCDE'[q.correct]} · ${math(q.choices[q.correct])}</strong><p class="tip"><b>Useful approach:</b> ${math(q.tip)}</p><p>${math(q.explanation)}</p>${q.note?`<p class="question-note"><b>Source note:</b> ${esc(q.note)}</p>`:''}</div>`:''}</article>`;
+    return `<article class="question ${kind}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">Test ${q.test} · Q${q.number} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${V.visual(q)}<form data-source="${q.source}"><fieldset class="choices"><legend>${closed?'Recorded answers':'Choose one answer'}</legend>${choices(q,r)}</fieldset>${closed?'':'<button class="submit" type="submit">'+(a.length?'Check second try':'Check answer')+'</button>'}</form><p class="feedback" id="feedback-${q.source}" role="status" tabindex="-1">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${'ABCDE'[q.correct]} · ${math(q.choices[q.correct])}</strong><p class="tip"><b>Useful approach:</b> ${math(q.tip)}</p><p>${math(q.explanation)}</p>${q.note?`<p class="question-note"><b>Source note:</b> ${esc(q.note)}</p>`:''}</div>`:''}</article>`;
   }
   function renderCards(){
-    const review=`<a class="session-link review-link" href="?session=review" ${active?'':'aria-current="page"'}><b>Review</b><span>Methods & answers</span><small>24 worked questions</small><span class="day-status">Start here · unscored</span></a>`;
-    $('#sessions').innerHTML=review+bank.map(s=>{const history=state.sessions[s.id]||[],latest=history.at(-1),completed=history.filter(r=>E.stats(s,r).finished===s.questions.length).at(-1),r=completed||latest,stats=r?E.stats(s,r):null,started=!!latest&&(!!latest.deadlineAt||E.stats(s,latest).attempted>0);return `<a class="session-link ${completed?'completed':started?'in-progress':''}" href="?session=session-${s.number}" ${active===s?'aria-current="page"':''}><b>Session ${s.number}</b><span>${esc(s.label)}</span><small>24 questions${s.timeLimitSeconds?' · 24 minutes total':''}</small><span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${stats&&(started||completed)?`<small><strong>${stats.first}/24</strong> first-try points</small>`:''}${completed&&latest!==completed?'<small>New run · earlier result kept</small>':''}</a>`;}).join('');
+    $('#sessions').innerHTML=bank.map(s=>{const history=state.sessions[s.id]||[],latest=history.at(-1),completed=history.filter(r=>E.stats(s,r).finished===s.questions.length).at(-1),r=completed||latest,stats=r?E.stats(s,r):null,started=!!latest&&(!!latest.deadlineAt||E.stats(s,latest).attempted>0);return `<a class="session-link ${completed?'completed':started?'in-progress':''}" href="?session=session-${s.number}" ${active===s?'aria-current="page"':''}><b>Session ${s.number}</b><span>${esc(s.label)}</span><small>24 questions${s.timeLimitSeconds?' · 24 minutes total':''}</small><span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${stats&&(started||completed)?`<small><strong>${stats.first}/24</strong> first-try points</small>`:''}${completed&&latest!==completed?'<small>New run · earlier result kept</small>':''}</a>`;}).join('');
   }
   function timer(){
     const timed=bank.find(s=>s.timeLimitSeconds),r=state.sessions[timed.id]?.at(-1),running=!!r?.deadlineAt&&!r.completedAt;
@@ -49,15 +48,15 @@
     renderCards();timer();
   }
   function render(){
-    const review=!active;document.title=`${review?'Review':'Session '+active.number} · September 26, 2026 · Marco`;
-    $('#session-title').textContent=review?'Review · methods and answers':`Session ${active.number} · ${active.label}`;
-    $('#session-description').textContent=review?'Read the useful approach and solution for each question. This review is unscored. Notes flag source errors and clarify ambiguous questions.':active.number===1?'Retry the 24 questions marked wrong. Source errors are corrected as explained in the review. Earn one point for a correct first answer; one retry is allowed.':active.number===2?'24 new questions on the same skills. Earn one point for a correct first answer; one retry is allowed.':'24 fresh similar questions. One 24-minute timer covers all questions, including retries.';
-    $('#timer-panel').hidden=!active?.timeLimitSeconds;$('#question-work').hidden=false;$('#scorebar').hidden=review;$('#records').hidden=review;$('#completion').hidden=true;
-    const questions=(active||bank[0]).questions;$('#questions').innerHTML=questions.map((q,i)=>question(q,i,review)).join('');
-    if(review){$('#jump').innerHTML=questions.map((q,i)=>`<a href="#q${i+1}" aria-label="Review question ${i+1}">${i+1}</a>`).join('');$('#history').innerHTML='';renderCards();timer();}else summary();
+    document.title=`Session ${active.number} · September 26, 2026 · Marco`;
+    $('#session-title').textContent=`Session ${active.number} · ${active.label}`;
+    $('#session-description').textContent=active.number===1?'Retry the 24 questions marked wrong. Source corrections, tricks, and explanations appear with each revealed answer. Earn one point for a correct first answer; one retry is allowed.':active.number===2?'24 new questions on the same skills. Earn one point for a correct first answer; one retry is allowed.':'24 fresh similar questions. One 24-minute timer covers all questions, including retries.';
+    $('#timer-panel').hidden=!active?.timeLimitSeconds;$('#question-work').hidden=false;$('#scorebar').hidden=false;$('#records').hidden=false;$('#completion').hidden=true;
+    $('#questions').innerHTML=active.questions.map((q,i)=>question(q,i)).join('');
+    summary();
     saveNote();
   }
-  function navigate(link){const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>id===`session-${s.number}`)||null;history.pushState(null,'',link.href);render();$('#session-title').scrollIntoView({block:'start'});$('#session-title').focus({preventScroll:true});}
+  function navigate(link){const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>id===`session-${s.number}`)||bank[0];history.pushState(null,'',link.href);render();$('#session-title').scrollIntoView({block:'start'});$('#session-title').focus({preventScroll:true});}
   document.addEventListener('click',event=>{const link=event.target.closest('#sessions a,#running-timer a');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();navigate(link);});
   window.addEventListener('popstate',()=>{active=selection();render();});
   $('#questions').addEventListener('submit',event=>{
