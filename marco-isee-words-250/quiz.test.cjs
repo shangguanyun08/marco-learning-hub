@@ -8,11 +8,33 @@ const ctx={window:{}};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'data.js'),'utf8'),ctx);
 const words=JSON.parse(JSON.stringify(ctx.window.MARCO_VOCABULARY_WORDS));
 const at='2026-09-27T16:00:00Z';
-test('all 250 words have unique IDs and consecutive five-session source order',()=>{
+test('all 250 source words appear once in five mixed sessions',()=>{
  assert.equal(words.length,250);assert.equal(new Set(words.map(w=>w.id)).size,250);
- assert.deepEqual(words.map(w=>w.number),Array.from({length:250},(_,i)=>i+1));
+ assert.deepEqual(words.map(w=>w.number).sort((a,b)=>a-b),Array.from({length:250},(_,i)=>i+1));
  assert.deepEqual([1,2,3,4,5].map(s=>words.filter(w=>w.session===s).length),[50,50,50,50,50]);
- assert.equal(words[0].word,'Abbreviate');assert.equal(words.at(-1).word,'Zeal');
+ for(let session=1;session<=5;session++){
+  const group=words.filter(w=>w.session===session);
+  assert.ok(new Set(group.map(w=>w.word[0])).size>=12);
+  assert.notDeepEqual(group.map(w=>w.number),group.map(w=>w.number).sort((a,b)=>a-b));
+ }
+});
+test('question order is shuffled by round and stable across refreshes and devices',()=>{
+ const ids=words.slice(0,50).map(w=>w.id);
+ const first=Core.questionOrder(ids,1,1),second=Core.questionOrder(ids,1,2);
+ assert.deepEqual([...first].sort(),[...ids].sort());
+ assert.notDeepEqual(first,[...ids].sort());assert.notDeepEqual(first,second);
+ assert.deepEqual(first,Core.questionOrder([...ids].reverse(),1,1));
+});
+test('old untouched sessions adopt mixed sets and existing first tries follow their word IDs',()=>{
+ Core.configureLayout(words);
+ const source=words.slice().sort((a,b)=>a.number-b.number);
+ const old={version:1,sessions:{1:{rounds:[{number:1,ids:source.slice(0,50).map(w=>w.id),answers:{[source[0].id]:{choice:source[0].id,correct:true,at}},startedAt:at,finishedAt:null,position:0}],completedAt:null}}};
+ const migrated=Core.merge(old,null);
+ assert.equal(migrated.layoutVersion,2);
+ const target=source[0].session;
+ assert.equal(migrated.sessions[target].rounds[0].answers[source[0].id].correct,true);
+ assert.deepEqual(migrated.sessions[1].rounds[0].ids,words.filter(w=>w.session===1).map(w=>w.id));
+ assert.deepEqual(Core.merge(migrated,old),migrated);
 });
 test('every word in rounds 1–4 has four deterministic distinct choices including its answer',()=>{
  for(const w of words)for(let r=1;r<=4;r++){

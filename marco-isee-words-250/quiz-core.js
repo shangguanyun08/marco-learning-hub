@@ -5,7 +5,28 @@
 })(typeof window === 'object' ? window : globalThis, function () {
   'use strict';
   const copy = value => JSON.parse(JSON.stringify(value));
-  const blank = () => ({version: 1, sessions: {}});
+  const blank = () => ({version: 1, layoutVersion: 2, sessions: {}});
+  let layout = null;
+  function configureLayout(words) {
+    layout = Array.from({length:5}, (_,i) => words.filter(w => w.session === i+1).map(w => w.id));
+  }
+  function migrate(value) {
+    if (!valid(value) || value.layoutVersion === 2 || !layout) return value;
+    const migrated = blank();
+    const firstAnswers = {};
+    for (const record of Object.values(value.sessions)) {
+      Object.assign(firstAnswers, record.rounds?.[0]?.answers || {});
+    }
+    // Preserve any older scored history verbatim; carry first tries by word ID.
+    if (Object.values(value.sessions).some(s => s.rounds?.some(r => r.finishedAt))) migrated.previousLayout = copy(value.sessions);
+    layout.forEach((ids,index) => {
+      const answers = Object.fromEntries(ids.filter(id => firstAnswers[id]).map(id => [id,copy(firstAnswers[id])]));
+      if (!value.sessions[index+1] && !Object.keys(answers).length) return;
+      const at = value.sessions[index+1]?.rounds?.[0]?.startedAt || Object.values(answers)[0]?.at;
+      migrated.sessions[index+1] = {rounds:[{...round(1,ids,at),answers}],completedAt:null};
+    });
+    return migrated;
+  }
   const valid = value => value?.version === 1 && value.sessions && typeof value.sessions === 'object' && !Array.isArray(value.sessions);
   const hash = text => [...text].reduce((n, c) => Math.imul(n ^ c.charCodeAt(0), 16777619) >>> 0, 2166136261);
   function shuffled(items, seed) {
@@ -18,6 +39,7 @@
     }
     return result;
   }
+  const questionOrder = (ids, session, number) => shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
   function options(word, round, words) {
     // Exclude close meanings even when the source uses different synonym wording.
     const families = [
@@ -56,8 +78,8 @@
       const shared = [...other].filter(token => meaning.has(token)).length;
       return shared === 0;
     };
-    let pool = words.filter(candidate => candidate.partOfSpeech === word.partOfSpeech && eligible(candidate));
-    if (pool.length < 3) pool = words.filter(eligible);
+    let pool = words.filter(candidate => candidate.partOfSpeech === word.partOfSpeech && eligible(candidate)).sort((a,b) => a.number-b.number);
+    if (pool.length < 3) pool = words.filter(eligible).sort((a,b) => a.number-b.number);
     const seen = new Set();
     const distractors = [];
     for (const candidate of shuffled(pool, `${word.id}:${round}:distractors`)) {
@@ -113,8 +135,11 @@
   const score = progress => Object.values(progress?.sessions || {}).reduce((sum, session) => sum + (session.rounds || []).reduce((total, r) => total + Object.keys(r.answers || {}).length + (r.finishedAt ? 1 : 0), 0), 0);
   // Shared saves may arrive out of order. Keep immutable answers from both devices.
   function merge(left, right) {
+    left = migrate(left);
+    right = migrate(right);
     const result = valid(left) ? copy(left) : blank();
     if (!valid(right)) return result;
+    if (right.previousLayout && !result.previousLayout) result.previousLayout = copy(right.previousLayout);
     for (const [key, incoming] of Object.entries(right.sessions)) {
       if (!Array.isArray(incoming.rounds)) continue;
       const existing = result.sessions[key];
@@ -153,5 +178,5 @@
     }
     return result;
   }
-  return {blank, valid, options, start, current, answer, advance, finishRound, score, merge};
+  return {blank, valid, configureLayout, questionOrder, options, start, current, answer, advance, finishRound, score, merge};
 });
