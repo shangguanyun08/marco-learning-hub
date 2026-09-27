@@ -71,3 +71,11 @@ test('all three added sessions upload and restore alongside existing session his
  try{assert.equal(a.w.HarrySeptSync.valid(a.state),true);await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.deepEqual(Object.keys(b.state.sessions),Object.keys(sessions));assert.equal(b.status.kind,'live');}
  finally{a.close();b.close();}
 });
+
+test('September 27 uploads and restores all four sessions without replacing September 20',async()=>{
+ const api=server(),sessions={original:[run('old',{4:answer(1,true)})]};
+ for(const id of ['sept27-original','sept27-a','sept27-b','sept27-c'])sessions[id]=[run(id,{3:answer(0,false)})];
+ const a=client({version:1,sessions},api.fetch),b=client(empty(),api.fetch);
+ try{await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.equal(Object.keys(b.state.sessions).length,5);assert.equal(b.state.sessions.original[0].answers[4].attempts[0].correct,true);assert.equal(b.status.kind,'live');}
+ finally{a.close();b.close();}
+});

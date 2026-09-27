@@ -1,6 +1,18 @@
-# September 20 STAR Math follow-up
+# Dated STAR Math follow-up groups
 
-Seven daily practice sets linked directly from Harry’s section of the main hub. `harry-math-practice/star-sept20/` opens a standalone day overview; selecting a day opens its questions. The old `harry-math-practice/` entrance redirects here. The earlier Q1–Q35 practice is at `harry-math-practice/archive/` and linked in Harry’s hub archive, using the original scripts, storage key, and online app ID so existing progress stays available.
+The existing URL now opens two date groups. `?group=2026-09-20` preserves all seven September 20 days and their IDs, choices and saved scores. `?group=2026-09-27` opens four new 10-question sessions, with IDs `sept27-original`, `sept27-a`, `sept27-b`, and `sept27-c`. Existing `?session=original` and `?session=similar-a` through `similar-f` bookmarks still work. There are 124 practice items in total: 84 existing and 40 new.
+
+## September 27 extraction
+
+Reviewed all 34 questions in `star math Renaissance - Google Chrome 2026-09-27 09-25-33.mp4`. Selection-enabled periods were inspected at 25 frames/second, with the last selected frame retained before each transition. Question counters were independently checked in a 34-item montage. Results: 24 correct choices, 10 incorrect. This is an independently checked raw-choice count, not an official STAR score.
+
+The wrong questions are Q3, Q5, Q9, Q14, Q22, Q25, Q27, Q30, Q33 and Q34. Q25 changed from B to A before advancing: the final recorded answer is A. Q30's selected answer is A, not the hovered C. The original retry rebuilds the prompts, choices and diagrams without showing recorded selections. Three fresh sets each cover the same ten skills in fixed mixed order. The video and private frame evidence remain local, not published.
+
+New sessions score out of 10; old sessions remain out of 12. Both groups use the unchanged local/online app ID and retain timestamped histories. Sync completion handles each group's question count. The added tests independently check keys, diagram data, group navigation, 10/10 completion, retries, reveal, reload persistence, mixed-date sync, and preservation of older records.
+
+## Preserved September 20 group
+
+Seven daily practice sets remain linked from the September 20 date group; selecting a day opens its questions. The old `harry-math-practice/` entrance redirects to the dated-group overview. The earlier Q1–Q35 practice is at `harry-math-practice/archive/` and linked in Harry’s hub archive, using the original scripts, storage key, and online app ID so existing progress stays available.
 
 Cards are labeled Day 1–7. Finished days are green and show the latest completed first-try score as points and a percentage; unfinished work is amber. Starting another run keeps the completed color and score, with separate current-run progress. Completion requires every question to finish (a correct choice or two attempts), not just every first attempt. Cards refresh when online or cross-tab saved records arrive.
 
