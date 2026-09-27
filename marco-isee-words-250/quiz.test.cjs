@@ -1,0 +1,57 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const vm=require('node:vm');
+const path=require('node:path');
+const Core=require('./quiz-core.js');
+const ctx={window:{}};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'data.js'),'utf8'),ctx);
+const words=JSON.parse(JSON.stringify(ctx.window.MARCO_VOCABULARY_WORDS));
+const at='2026-09-27T16:00:00Z';
+test('all 250 words have unique IDs and consecutive five-session source order',()=>{
+ assert.equal(words.length,250);assert.equal(new Set(words.map(w=>w.id)).size,250);
+ assert.deepEqual(words.map(w=>w.number),Array.from({length:250},(_,i)=>i+1));
+ assert.deepEqual([1,2,3,4,5].map(s=>words.filter(w=>w.session===s).length),[50,50,50,50,50]);
+ assert.equal(words[0].word,'Abbreviate');assert.equal(words.at(-1).word,'Zeal');
+});
+test('every word in rounds 1–4 has four deterministic distinct choices including its answer',()=>{
+ for(const w of words)for(let r=1;r<=4;r++){
+  const options=Core.options(w,r,words);assert.equal(options.length,4,w.word);
+  assert.equal(new Set(options).size,4);assert.ok(options.includes(w.id));
+  assert.deepEqual(options,Core.options(w,r,words));
+  for(const id of options.filter(id=>id!==w.id)){
+   const other=words.find(w=>w.id===id);
+   assert.ok(!w.meaning.toLowerCase().includes(other.word.toLowerCase()),w.word+' / '+other.word);
+  }
+ }
+});
+test('all 50 answers are required and immutable; rounds 2, 3 and 4 only repeat misses',()=>{
+ const p=Core.blank(),ids=words.slice(0,50).map(w=>w.id);Core.start(p,1,ids,at);
+ assert.equal(Core.finishRound(p,1,at),false);
+ // Answer backwards to verify that question order is optional.
+ for(const id of [...ids].reverse()){
+  const w=words.find(w=>w.id===id),choice=ids.indexOf(id)<3?Core.options(w,1,words).find(x=>x!==id):id;
+  assert.equal(Core.answer(p,1,choice,words,at,id),true);
+  assert.equal(Core.answer(p,1,id,words,at,id),false);
+ }
+ assert.equal(Core.finishRound(p,1,at),'round');
+ for(let r=2;r<=4;r++){
+  const active=Core.current(p.sessions[1]);assert.equal(active.number,r);assert.equal(active.ids.length,5-r);
+  active.ids.forEach((id,i)=>{
+   const w=words.find(w=>w.id===id),choice=i===0?id:Core.options(w,r,words).find(x=>x!==id);
+   Core.answer(p,1,choice,words,at,id);
+  });
+  assert.equal(Core.finishRound(p,1,at),r===4?'complete':'round');
+ }
+ assert.equal(p.sessions[1].completedAt,at);assert.equal(p.sessions[1].rounds.length,4);
+ assert.equal(Object.values(p.sessions[1].rounds[0].answers).filter(a=>a.correct).length,47);
+});
+test('stale or conflicting device records preserve earliest answers and later rounds',()=>{
+ const a=Core.blank();Core.start(a,1,words.slice(0,2).map(w=>w.id),at);
+ const b=JSON.parse(JSON.stringify(a));
+ Core.answer(a,1,words[0].id,words,at,words[0].id);
+ Core.answer(b,1,words[1].id,words,at,words[1].id);
+ const merged=Core.merge(a,b);assert.equal(Object.keys(Core.current(merged.sessions[1]).answers).length,2);
+ assert.equal(Core.finishRound(merged,1,at),'complete');
+ assert.equal(Core.merge(merged,a).sessions[1].completedAt,at);
+});
