@@ -145,7 +145,7 @@
   function render(){
     scratch.flush();
     document.querySelector('#practice-content').hidden=!active;
-    document.title=active?`Session ${active.number} · Marco’s ISEE Middle Review`:'Marco’s ISEE Middle Review · Nine sessions';
+    document.title=active?`Session ${active.number} · September 24, 2026 · Marco’s ISEE Middle Review`:'September 24, 2026 · Marco’s ISEE Middle Review · Nine sessions';
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderSessions();renderTimer();updateSaveNote();return;}
     active.parts.forEach(runs);
     document.querySelector('#session-title').textContent=`Session ${active.number}`;
