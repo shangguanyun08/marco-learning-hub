@@ -79,3 +79,10 @@ test('September 27 uploads and restores all four sessions without replacing Sept
  try{await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.equal(Object.keys(b.state.sessions).length,5);assert.equal(b.state.sessions.original[0].answers[4].attempts[0].correct,true);assert.equal(b.status.kind,'live');}
  finally{a.close();b.close();}
 });
+
+test('Typed Think Academy answers and retries restore on a second device',async()=>{
+ const api=server(),saved={version:1,sessions:{'sept27-original':[run('typed',{102:{attempts:[{choice:'7200',correct:false,at},{choice:'2600',correct:true,at:'2026-09-27T18:00:00.000Z'}]}})]}};
+ const a=client(saved,api.fetch),b=client(empty(),api.fetch);
+ try{await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.equal(b.state.sessions['sept27-original'][0].answers[102].attempts[0].choice,'7200');assert.equal(b.status.kind,'live');}
+ finally{a.close();b.close();}
+});

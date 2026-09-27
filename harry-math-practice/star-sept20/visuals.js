@@ -11,6 +11,7 @@
       return svg(550,90,'Number line '+String.fromCharCode(65+index)+'. Whole numbers from '+v.start+' to '+v.end+', with '+v.den+' equal intervals per whole and one dot.',line(25,30,525,30,'stroke-width="2"')+Array.from({length:n+1},(_,i)=>line(x(i),i%v.den?25:20,x(i),i%v.den?35:40)+(i%v.den?'':text(x(i),68,v.start+i/v.den,28))).join('')+`<circle cx="${x(v.steps[index])}" cy="30" r="6" fill="#193c49"/>`);
     }
     if(index!==undefined)return '';
+    if(v.type==='table')return `<table class="rule-table"><thead><tr>${v.headings.map(h=>`<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${v.rows.map(row=>`<tr>${row.map(n=>`<td>${esc(n)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     if(v.type==='plot')return svg(640,260,'Distance jumped in feet. Each X represents one student.',text(320,25,'Distance Jumped (ft)',28)+line(35,200,605,200)+v.counts.map((count,i)=>{const x=55+i*88;return line(x,195,x,205)+text(x,231,v.labels[i],26)+Array.from({length:count},(_,j)=>text(x,184-j*23,'×',28)).join('');}).join(''));
     if(v.type==='rectangle')return svg(570,255,`Rectangle labeled ${v.width} ${v.unit} wide and ${v.height} ${v.unit} tall.`,`<rect x="60" y="25" width="340" height="160" fill="#f4f7f3" stroke="#193c49" stroke-width="3"/>`+text(230,225,v.width+' '+v.unit,28)+text(477,111,v.height+' '+v.unit,25));
     if(v.type==='coordinates'){

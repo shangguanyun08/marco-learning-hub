@@ -11,7 +11,7 @@
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
           /^\d+$/.test(source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
-            object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4&&typeof a.correct==='boolean'&&time(a.at)))));
+            object(a)&&((Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)||(source==='102'&&typeof a.choice==='string'&&/^\d{1,15}$/.test(a.choice)))&&typeof a.correct==='boolean'&&time(a.at)))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
   const compatible=(a,b)=>Object.keys(a.answers).every(key=>{
@@ -52,7 +52,8 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.values(run.answers);
-          if(!run.completedAt&&entries.length===(id.startsWith('sept27-')?10:12)&&entries.every(e=>e.attempts.length===2||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
+          const expected=id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          if(!run.completedAt&&entries.length===expected&&entries.every(e=>e.attempts.length===2||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });
       }

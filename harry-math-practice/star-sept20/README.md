@@ -1,5 +1,13 @@
 # Dated STAR Math follow-up groups
 
+## Think Academy addition (reviewed September 27)
+
+The open Think Academy report showed 3/6 points, with Q2, Q4 and Q6 marked incorrect. Q2: `25 × 104 = 25 × (100 + 4)`; entered 7200, correct 2600. Q4: inputs 20/25/30/35 produce 4/5/6/7; selected `a − 16`, correct `a ÷ 5`. Q6: 8 million divided by 40 thousand; selected 20, correct 200. The report's account URL and token are not stored or published.
+
+`think-sept27-data.js` appends these three originals and three matched questions per fresh set. Each September 27 session now has **13** questions; total current practice bank: **136**. The earlier 10-question STAR portion and all source IDs remain unchanged. Think Academy uses separate numeric IDs 102/104/106 and explicit display labels to avoid collisions. Q2 remains a typed-number question, including retries, comma handling and online history. The input-output tables are rebuilt as HTML. Existing September 27 answers remain; a previously completed 10-question portion is shown as awaiting the added questions. September 20 remains 12 questions per day.
+
+The sections below document the original STAR-only release before this addition.
+
 The existing URL now opens two date groups. `?group=2026-09-20` preserves all seven September 20 days and their IDs, choices and saved scores. `?group=2026-09-27` opens four new 10-question sessions, with IDs `sept27-original`, `sept27-a`, `sept27-b`, and `sept27-c`. Existing `?session=original` and `?session=similar-a` through `similar-f` bookmarks still work. There are 124 practice items in total: 84 existing and 40 new.
 
 ## September 27 extraction
