@@ -225,3 +225,5 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .site-footer>span{max-width:600px;text-align:right;font-size:13px;line-height:1.5}
 @media(max-width:900px){.session-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.session-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.site-footer>span{text-align:left}.topbar h1{line-height:1.15}}
+
+.session-picker .review-session{grid-column:1/-1;border-color:var(--blue);background:#f0f5ff}.review-intro p{margin:6px 0 0;line-height:1.5;font-weight:500}

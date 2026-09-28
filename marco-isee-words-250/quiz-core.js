@@ -40,7 +40,8 @@
     return result;
   }
   const questionOrder = (ids, session, number) => shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
-  function options(word, round, words) {
+  function options(word, round, words, session) {
+    const reviewSalt = Number(session) === 6 ? 'review:' : '';
     // Exclude close meanings even when the source uses different synonym wording.
     const families = [
       'Abundant Ample Adequate', 'Abrupt Concise', 'Advisable Wary',
@@ -82,14 +83,14 @@
     if (pool.length < 3) pool = words.filter(eligible).sort((a,b) => a.number-b.number);
     const seen = new Set();
     const distractors = [];
-    for (const candidate of shuffled(pool, `${word.id}:${round}:distractors`)) {
+    for (const candidate of shuffled(pool, `${reviewSalt}${word.id}:${round}:distractors`)) {
       const name = candidate.word.toLowerCase();
       if (seen.has(name)) continue;
       seen.add(name);
       distractors.push(candidate);
       if (distractors.length === 3) break;
     }
-    return shuffled([word, ...distractors], `${word.id}:${round}:positions`).map(item => item.id);
+    return shuffled([word, ...distractors], `${reviewSalt}${word.id}:${round}:positions`).map(item => item.id);
   }
   function round(number, ids, at) {
     return {number, ids: [...ids], answers: {}, position: 0, startedAt: at, finishedAt: null};
@@ -107,7 +108,7 @@
     const id = questionId ?? active.ids[active.position];
     if (!active.ids.includes(id)) return false;
     const word = words.find(item => item.id === id);
-    if (!word || active.answers[id] || !options(word, active.number, words).includes(choice)) return false;
+    if (!word || active.answers[id] || !options(word, active.number, words, session).includes(choice)) return false;
     active.answers[id] = {choice, correct: choice === id, at};
     return true;
   }

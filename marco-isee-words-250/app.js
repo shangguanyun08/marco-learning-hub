@@ -5,10 +5,12 @@
   Core.configureLayout(words);
   const byId = new Map(words.map(word => [word.id, word]));
   const sessions = Array.from({length: 5}, (_, i) => ({number: i + 1, words: words.filter(word => word.session === i + 1)}));
+  const review = window.MARCO_ISEE_REVIEW;
+  sessions.push({number:6, words:review.ids.map(id => byId.get(id))});
   const optionCache = new Map();
   function optionsFor(word, round) {
-    const key = `${word.id}:${round}`;
-    if (!optionCache.has(key)) optionCache.set(key, Core.options(word, round, words));
+    const key = `${selected}:${word.id}:${round}`;
+    if (!optionCache.has(key)) optionCache.set(key, Core.options(word, round, words, selected));
     return optionCache.get(key);
   }
   const APP_ID = 'marco-isee-words-250';
@@ -21,7 +23,7 @@
   const read = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } };
   let progress = Core.merge(read(STORAGE_KEY), read(TEST_KEY));
-  let selected = Number(read(SELECTION_KEY)) || 1;
+  let selected = Number(new URLSearchParams(location.search).get('session')) || Number(read(SELECTION_KEY)) || 1;
   if (!sessions.some(session => session.number === selected)) selected = 1;
   let view = location.hash === '#results' ? 'results' : 'practice';
   let sync = null;
@@ -30,7 +32,7 @@
   const now = () => new Date().toISOString();
   const info = number => sessions[number - 1];
   const range = number => `${info(number).words.length} mixed words`;
-  const label = number => `Session ${number}`;
+  const label = number => number === 6 ? 'Round 1 Misses Review' : `Session ${number}`;
   const date = value => value ? new Intl.DateTimeFormat(undefined, {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value)) : 'Not started';
   const answered = round => round ? round.ids.filter(id => round.answers[id]).length : 0;
   const current = () => Core.current(progress.sessions[selected]);
@@ -46,7 +48,7 @@
     if (Core.start(progress, number, info(number).words.map(word => word.id), now())) save();
   }
   function header() {
-    return `<header class="topbar"><div><p class="eyebrow">Marco · Middle Level ISEE · 250 words · 5 sessions</p><h1>ISEE Words to Know</h1><p class="course-intro">50 mixed words per session, in shuffled order. Round 1 checks every word; Rounds 2, 3, 4 and onward review only missed words.</p></div>
+    return `<header class="topbar"><div><p class="eyebrow">Marco · Middle Level ISEE · 250 words · 5 sessions + review</p><h1>ISEE Words to Know</h1><p class="course-intro">${selected === 6 ? "Review 23 first-try misses in shuffled order. Rounds 2, 3 and onward repeat only words missed in this review." : "50 mixed words per session, in shuffled order. Round 1 checks every word; later rounds review only missed words."}</p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
   function picker() {
@@ -54,7 +56,7 @@
       const record = progress.sessions[session.number];
       const round = Core.current(record);
       const status = record?.completedAt ? 'Mastered' : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
-      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>Session ${session.number}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
+      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''} ${session.number === 6 ? 'review-session' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
     }).join('')}</section>`;
   }
   function syncNote() {
@@ -62,7 +64,7 @@
   }
   function question() {
     const record = progress.sessions[selected];
-    if (record?.completedAt) return `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All 50 words in this session have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${selected < 5 ? `<button data-session="${selected + 1}">Continue to Session ${selected + 1}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
+    if (record?.completedAt) return `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All ${info(selected).words.length} words in this session have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${selected < 6 ? `<button data-session="${selected + 1}">${selected === 5 ? 'Start Round 1 Misses Review' : `Continue to Session ${selected + 1}`}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
     const savedRound = current();
     const round = {...savedRound, ids: Core.questionOrder(savedRound.ids, selected, savedRound.number)};
     return `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}"><div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}</h2><span>${round.number === 1 ? `All ${round.ids.length} words on this page` : 'Previous round’s missed words'}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
@@ -114,6 +116,7 @@
     app.innerHTML = header() + (view === 'practice' ? picker() : '') + syncNote() +
       (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
       (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
+      (view === 'practice' && selected === 6 ? `<div class="notice review-intro"><strong>23 first-try misses · one review session</strong><p>From Sessions 1–5: ${review.sources.map(s => `${s.missed} from Session ${s.session}`).join(' · ')}. Review Round 1 covers all 23 words; later rounds repeat only your new misses.</p></div>` : '') +
       (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><span>Word list: Test Innovators · 250 ISEE Words to Know for Middle Level (2026)</span></footer>';
     if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
     expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
@@ -126,7 +129,10 @@
   }
   function changeView(next) {
     view = next;
-    history.replaceState(null, '', next === 'results' ? '#results' : location.pathname + location.search);
+    const url = new URL(location.href);
+    url.searchParams.set('session', selected);
+    url.hash = next === 'results' ? 'results' : '';
+    history.replaceState(null, '', url.pathname + url.search + url.hash);
     render();
   }
   app.addEventListener('click', async event => {
