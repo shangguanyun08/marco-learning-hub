@@ -133,14 +133,14 @@
           const data=await request(),record=data.progress;
           const empty={version:1,sessions:{}},remote=record?.state||empty;
           const next=apply(remote);
-          if(same(next,normalized(remote))){onStatus('live',record?'Synced · Saved online and on this device.':'Connected · Answers will sync across your devices.');return;}
+          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · Math and VR progress saved online and on this device.':'Live online sync connected · Math and both VR sessions sync across your devices.');return;}
           onStatus('saving','Saving online… Your answers are saved on this device.');
           const saved=await request({appId:APP_ID,studentName:'Marco',deviceId:device,state:next,
             progressScore:Object.values(next.sessions).flat().reduce((sum,run)=>sum+Object.values(run.answers).reduce((n,e)=>n+e.attempts.length,0),0),
             baseVersion:record?.version??null,clientUpdatedAt:new Date().toISOString()});
           if(!saved.progress)throw new Error('Online save was not confirmed');
           apply(saved.progress.state);
-          if(saved.accepted&&same(normalized(getState()),normalized(saved.progress.state))){onStatus('live','Synced · Saved online and on this device.');return;}
+          if(saved.accepted&&same(normalized(getState()),normalized(saved.progress.state))){onStatus('live','Live online sync · Math and VR progress saved online and on this device.');return;}
         }
         onStatus('saving','Syncing changes from another device…');
       }catch{onStatus('offline','Not synced · Saved on this device. Sync will retry automatically.');}
@@ -148,9 +148,9 @@
     }
     const visible=()=>{if(root.document.visibilityState==='visible')void refresh();};
     return {
-      start(){onStatus('connecting','Connecting… Your saved answers will sync automatically.');root.addEventListener('online',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},
+      start(){onStatus('connecting','Connecting… Your saved answers will sync automatically.');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},
       push:refresh,refresh,
-      stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.document.removeEventListener('visibilitychange',visible);}
+      stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.document.removeEventListener('visibilitychange',visible);}
     };
   }
   root.MarcoIseeSync={valid,merge,create};
