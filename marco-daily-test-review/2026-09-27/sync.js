@@ -4,6 +4,7 @@
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const BANK=root.MARCO_ISEE_PRACTICE;
   const IDS=BANK.map(s=>s.id);
+  const sourceQuestions=id=>id==='math-original'?[...BANK[0].questions,...BANK.find(s=>s.id==='vocab-original').questions]:BANK.find(s=>s.id===id).questions;
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
@@ -29,8 +30,8 @@
         (!run.deadlineAt||time(run.deadlineAt))&&(!run.timedOutAt||time(run.timedOutAt))&&
         (!run.work||(object(run.work)&&Object.entries(run.work).every(([source,work])=>BANK.find(s=>s.id===id).subject==='math'&&BANK.find(s=>s.id===id).questions.some(q=>String(q.source)===source)&&validWork(work))))&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
-          BANK.find(s=>s.id===id).questions.some(q=>String(q.source)===source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
-            object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<BANK.find(s=>s.id===id).questions.find(q=>String(q.source)===source).choices.length&&typeof a.correct==='boolean'&&time(a.at)&&(!a.work||validWork(a.work))))));
+          sourceQuestions(id).some(q=>String(q.source)===source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
+            object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<sourceQuestions(id).find(q=>String(q.source)===source).choices.length&&typeof a.correct==='boolean'&&time(a.at)&&(!a.work||validWork(a.work))))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
   const compatible=(a,b)=>Object.keys(a.answers).every(key=>{
@@ -39,7 +40,20 @@
   });
   function signature(run){return JSON.stringify(Object.keys(run.answers).sort().map(key=>[key,run.answers[key].attempts.map(a=>[a.choice,a.at])]));}
   function hash(text){let h=2166136261;for(const c of text){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return (h>>>0).toString(16);}
+  function splitLegacy(state){
+    const next=clone(state||{version:1,sessions:{}}),verbal=BANK.find(s=>s.id==='vocab-original');
+    for(const run of next.sessions['math-original']||[]){
+      const answers=Object.fromEntries(Object.entries(run.answers).filter(([source])=>verbal.questions.some(q=>String(q.source)===source)));
+      if(!Object.keys(answers).length)continue;
+      const vr={...clone(run),answers,completedAt:null};delete vr.work;delete vr.deadlineAt;delete vr.timedOutAt;
+      (next.sessions['vocab-original']||=[]).push(vr);
+      for(const source of Object.keys(answers))delete run.answers[source];
+      run.completedAt=null;
+    }
+    return next;
+  }
   function merge(a,b){
+    a=splitLegacy(a);b=splitLegacy(b);
     const result={version:1,sessions:{}};
     for(const id of IDS){
       const groups=new Map();

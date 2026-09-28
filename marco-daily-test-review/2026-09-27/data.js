@@ -2,145 +2,9 @@ window.MARCO_ISEE_PRACTICE = [
   {
     "id": "math-original",
     "number": 1,
-    "subject": "mixed",
-    "label": "Original missed questions",
+    "subject": "math",
+    "label": "Original missed math",
     "questions": [
-      {
-        "source": 1010,
-        "section": "VR",
-        "subject": "words",
-        "number": 10,
-        "skill": "Synonyms",
-        "prompt": "Choose the word closest in meaning to MUTINY.",
-        "choices": [
-          "blackmail",
-          "militia",
-          "rebellion",
-          "spire"
-        ],
-        "correct": 2,
-        "tip": "Think of a short definition, then choose the closest match.",
-        "explanation": "A mutiny is a rebellion against authority, such as sailors refusing to obey their captain."
-      },
-      {
-        "source": 1012,
-        "section": "VR",
-        "subject": "words",
-        "number": 12,
-        "skill": "Synonyms",
-        "prompt": "Choose the word closest in meaning to PRESTIGIOUS.",
-        "choices": [
-          "influential",
-          "laden",
-          "subordinate",
-          "varsity"
-        ],
-        "correct": 0,
-        "tip": "Think of a short definition, then choose the closest match.",
-        "explanation": "Prestigious means highly respected or distinguished. Of these choices, influential is the closest match: a respected person or institution often has influence."
-      },
-      {
-        "source": 1015,
-        "section": "VR",
-        "subject": "words",
-        "number": 15,
-        "skill": "Synonyms",
-        "prompt": "Choose the word closest in meaning to VOCATION.",
-        "choices": [
-          "amusement",
-          "narrative",
-          "pursuit",
-          "steeple"
-        ],
-        "correct": 2,
-        "tip": "Think of a short definition, then choose the closest match.",
-        "explanation": "A vocation is a profession or calling. Pursuit can mean an occupation or an activity to which someone devotes time."
-      },
-      {
-        "source": 1017,
-        "section": "VR",
-        "subject": "words",
-        "number": 17,
-        "skill": "Synonyms",
-        "prompt": "Choose the word closest in meaning to BLIGHT.",
-        "choices": [
-          "conspiracy",
-          "meteorite",
-          "plague",
-          "tonic"
-        ],
-        "correct": 2,
-        "tip": "Think of a short definition, then choose the closest match.",
-        "explanation": "A blight is a disease or destructive affliction. Plague is the closest choice."
-      },
-      {
-        "source": 1018,
-        "section": "VR",
-        "subject": "words",
-        "number": 18,
-        "skill": "Synonyms",
-        "prompt": "Choose the word closest in meaning to MERIT.",
-        "choices": [
-          "correspondence",
-          "distinction",
-          "excursion",
-          "plaque"
-        ],
-        "correct": 1,
-        "tip": "Think of a short definition, then choose the closest match.",
-        "explanation": "Merit means worth or excellence. Distinction can mean excellence that sets someone or something apart."
-      },
-      {
-        "source": 1037,
-        "section": "VR",
-        "subject": "words",
-        "number": 37,
-        "skill": "Sentence completion",
-        "prompt": "In a famous scene from Romeo and Juliet, Romeo ------- while attending a party at Juliet's home in order to avoid being recognized as a member of a rival family.",
-        "choices": [
-          "balks",
-          "flatters",
-          "masquerades",
-          "serenades"
-        ],
-        "correct": 2,
-        "tip": "Use the clue “avoid being recognized.”",
-        "explanation": "To masquerade is to disguise yourself or pretend to be someone else. That would help Romeo avoid recognition."
-      },
-      {
-        "source": 1038,
-        "section": "VR",
-        "subject": "words",
-        "number": 38,
-        "skill": "Sentence completion",
-        "prompt": "Although Bridget often preferred to spend time alone and only ------- attended the class retreat, she was pleasantly surprised to enjoy the time with her classmates.",
-        "choices": [
-          "affectionately",
-          "begrudgingly",
-          "merely",
-          "periodically"
-        ],
-        "correct": 1,
-        "tip": "“Although” signals a contrast between her expectations and her enjoyable experience.",
-        "explanation": "Begrudgingly means reluctantly or unwillingly. She did not want to attend at first, but later enjoyed herself."
-      },
-      {
-        "source": 1040,
-        "section": "VR",
-        "subject": "words",
-        "number": 40,
-        "skill": "Sentence completion",
-        "prompt": "From the ------- hillsides of the Tuscany region to the busy streets of Rome, Italy offers a diverse range of settings to explore.",
-        "choices": [
-          "fluorescent",
-          "monotonous",
-          "rustic",
-          "turbulent"
-        ],
-        "correct": 2,
-        "tip": "Look for a word that contrasts with “busy streets.”",
-        "explanation": "Rustic means rural or characteristic of the countryside. It contrasts naturally with the city streets."
-      },
       {
         "source": 2014,
         "section": "QR",
@@ -1076,6 +940,294 @@ window.MARCO_ISEE_PRACTICE = [
         "correct": 1,
         "tip": "Divide the unfinished fraction by the hourly rate.",
         "explanation": "The unfinished part is 3/8. Time = (3/8) ÷ (5/8) = 3/5 hour = 0.60 hour."
+      }
+    ]
+  },
+  {
+    "id": "vocab-original",
+    "number": 1,
+    "subject": "words",
+    "label": "Original missed VR",
+    "questions": [
+      {
+        "source": 1010,
+        "section": "VR",
+        "subject": "words",
+        "number": 10,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to MUTINY.",
+        "choices": [
+          "blackmail",
+          "militia",
+          "rebellion",
+          "spire"
+        ],
+        "correct": 2,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "A mutiny is a rebellion against authority, such as sailors refusing to obey their captain."
+      },
+      {
+        "source": 1012,
+        "section": "VR",
+        "subject": "words",
+        "number": 12,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to PRESTIGIOUS.",
+        "choices": [
+          "influential",
+          "laden",
+          "subordinate",
+          "varsity"
+        ],
+        "correct": 0,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "Prestigious means highly respected or distinguished. Of these choices, influential is the closest match: a respected person or institution often has influence."
+      },
+      {
+        "source": 1015,
+        "section": "VR",
+        "subject": "words",
+        "number": 15,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to VOCATION.",
+        "choices": [
+          "amusement",
+          "narrative",
+          "pursuit",
+          "steeple"
+        ],
+        "correct": 2,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "A vocation is a profession or calling. Pursuit can mean an occupation or an activity to which someone devotes time."
+      },
+      {
+        "source": 1017,
+        "section": "VR",
+        "subject": "words",
+        "number": 17,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to BLIGHT.",
+        "choices": [
+          "conspiracy",
+          "meteorite",
+          "plague",
+          "tonic"
+        ],
+        "correct": 2,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "A blight is a disease or destructive affliction. Plague is the closest choice."
+      },
+      {
+        "source": 1018,
+        "section": "VR",
+        "subject": "words",
+        "number": 18,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to MERIT.",
+        "choices": [
+          "correspondence",
+          "distinction",
+          "excursion",
+          "plaque"
+        ],
+        "correct": 1,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "Merit means worth or excellence. Distinction can mean excellence that sets someone or something apart."
+      },
+      {
+        "source": 1037,
+        "section": "VR",
+        "subject": "words",
+        "number": 37,
+        "skill": "Sentence completion",
+        "prompt": "In a famous scene from Romeo and Juliet, Romeo ------- while attending a party at Juliet's home in order to avoid being recognized as a member of a rival family.",
+        "choices": [
+          "balks",
+          "flatters",
+          "masquerades",
+          "serenades"
+        ],
+        "correct": 2,
+        "tip": "Use the clue “avoid being recognized.”",
+        "explanation": "To masquerade is to disguise yourself or pretend to be someone else. That would help Romeo avoid recognition."
+      },
+      {
+        "source": 1038,
+        "section": "VR",
+        "subject": "words",
+        "number": 38,
+        "skill": "Sentence completion",
+        "prompt": "Although Bridget often preferred to spend time alone and only ------- attended the class retreat, she was pleasantly surprised to enjoy the time with her classmates.",
+        "choices": [
+          "affectionately",
+          "begrudgingly",
+          "merely",
+          "periodically"
+        ],
+        "correct": 1,
+        "tip": "“Although” signals a contrast between her expectations and her enjoyable experience.",
+        "explanation": "Begrudgingly means reluctantly or unwillingly. She did not want to attend at first, but later enjoyed herself."
+      },
+      {
+        "source": 1040,
+        "section": "VR",
+        "subject": "words",
+        "number": 40,
+        "skill": "Sentence completion",
+        "prompt": "From the ------- hillsides of the Tuscany region to the busy streets of Rome, Italy offers a diverse range of settings to explore.",
+        "choices": [
+          "fluorescent",
+          "monotonous",
+          "rustic",
+          "turbulent"
+        ],
+        "correct": 2,
+        "tip": "Look for a word that contrasts with “busy streets.”",
+        "explanation": "Rustic means rural or characteristic of the countryside. It contrasts naturally with the city streets."
+      }
+    ]
+  },
+  {
+    "id": "vocab-repeat",
+    "number": 2,
+    "subject": "words",
+    "label": "Repeat the same VR questions",
+    "questions": [
+      {
+        "source": 1010,
+        "section": "VR",
+        "subject": "words",
+        "number": 10,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to MUTINY.",
+        "choices": [
+          "blackmail",
+          "militia",
+          "rebellion",
+          "spire"
+        ],
+        "correct": 2,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "A mutiny is a rebellion against authority, such as sailors refusing to obey their captain."
+      },
+      {
+        "source": 1012,
+        "section": "VR",
+        "subject": "words",
+        "number": 12,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to PRESTIGIOUS.",
+        "choices": [
+          "influential",
+          "laden",
+          "subordinate",
+          "varsity"
+        ],
+        "correct": 0,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "Prestigious means highly respected or distinguished. Of these choices, influential is the closest match: a respected person or institution often has influence."
+      },
+      {
+        "source": 1015,
+        "section": "VR",
+        "subject": "words",
+        "number": 15,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to VOCATION.",
+        "choices": [
+          "amusement",
+          "narrative",
+          "pursuit",
+          "steeple"
+        ],
+        "correct": 2,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "A vocation is a profession or calling. Pursuit can mean an occupation or an activity to which someone devotes time."
+      },
+      {
+        "source": 1017,
+        "section": "VR",
+        "subject": "words",
+        "number": 17,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to BLIGHT.",
+        "choices": [
+          "conspiracy",
+          "meteorite",
+          "plague",
+          "tonic"
+        ],
+        "correct": 2,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "A blight is a disease or destructive affliction. Plague is the closest choice."
+      },
+      {
+        "source": 1018,
+        "section": "VR",
+        "subject": "words",
+        "number": 18,
+        "skill": "Synonyms",
+        "prompt": "Choose the word closest in meaning to MERIT.",
+        "choices": [
+          "correspondence",
+          "distinction",
+          "excursion",
+          "plaque"
+        ],
+        "correct": 1,
+        "tip": "Think of a short definition, then choose the closest match.",
+        "explanation": "Merit means worth or excellence. Distinction can mean excellence that sets someone or something apart."
+      },
+      {
+        "source": 1037,
+        "section": "VR",
+        "subject": "words",
+        "number": 37,
+        "skill": "Sentence completion",
+        "prompt": "In a famous scene from Romeo and Juliet, Romeo ------- while attending a party at Juliet's home in order to avoid being recognized as a member of a rival family.",
+        "choices": [
+          "balks",
+          "flatters",
+          "masquerades",
+          "serenades"
+        ],
+        "correct": 2,
+        "tip": "Use the clue “avoid being recognized.”",
+        "explanation": "To masquerade is to disguise yourself or pretend to be someone else. That would help Romeo avoid recognition."
+      },
+      {
+        "source": 1038,
+        "section": "VR",
+        "subject": "words",
+        "number": 38,
+        "skill": "Sentence completion",
+        "prompt": "Although Bridget often preferred to spend time alone and only ------- attended the class retreat, she was pleasantly surprised to enjoy the time with her classmates.",
+        "choices": [
+          "affectionately",
+          "begrudgingly",
+          "merely",
+          "periodically"
+        ],
+        "correct": 1,
+        "tip": "“Although” signals a contrast between her expectations and her enjoyable experience.",
+        "explanation": "Begrudgingly means reluctantly or unwillingly. She did not want to attend at first, but later enjoyed herself."
+      },
+      {
+        "source": 1040,
+        "section": "VR",
+        "subject": "words",
+        "number": 40,
+        "skill": "Sentence completion",
+        "prompt": "From the ------- hillsides of the Tuscany region to the busy streets of Rome, Italy offers a diverse range of settings to explore.",
+        "choices": [
+          "fluorescent",
+          "monotonous",
+          "rustic",
+          "turbulent"
+        ],
+        "correct": 2,
+        "tip": "Look for a word that contrasts with “busy streets.”",
+        "explanation": "Rustic means rural or characteristic of the countryside. It contrasts naturally with the city streets."
       }
     ]
   }

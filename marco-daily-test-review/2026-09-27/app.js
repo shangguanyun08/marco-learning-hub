@@ -6,8 +6,8 @@
   const math=s=>esc(s).replace(/\^\(([^)]+)\)/g,'<sup>$1</sup>').replace(/\b([a-z]|\d+)\/([a-z]|\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>');
   const stamp=s=>new Date(s).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
   let state={version:1,sessions:{}},storageOK=true,sync=null,statusText='Connecting…',statusKind='connecting';
-  try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(window.MarcoIseeSync.valid(saved))state=saved;}catch{storageOK=false;}
-  const selection=()=>{const p=new URLSearchParams(location.search).get('session');return bank.find(s=>p===`session-${s.number}`||p===s.id)||bank[0];};
+  try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(window.MarcoIseeSync.valid(saved))state=window.MarcoIseeSync.merge(saved,{version:1,sessions:{}});}catch{storageOK=false;}
+  const selection=()=>{const p=new URLSearchParams(location.search).get('session');return bank.find(s=>p===(s.subject==='words'?`vr-${s.number}`:`session-${s.number}`)||p===s.id)||bank[0];};
   let active=selection();
   function newRun(restart=false){return {id:crypto.randomUUID(),startedAt:new Date().toISOString(),completedAt:null,answers:{},restart};}
   function runs(s){return state.sessions[s.id]||=([]);}
@@ -27,7 +27,8 @@
     return `<article class="question ${kind}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${q.section} · Q${q.number} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${V.visual(q)}<form data-source="${q.source}"><fieldset class="choices"><legend>${closed?'Recorded answers':'Choose one answer'}</legend>${choices(q,r)}</fieldset>${closed?'':'<button class="submit" type="submit">'+(a.length?'Check second try':'Check answer')+'</button>'}</form><p class="feedback" id="feedback-${q.source}" role="status" tabindex="-1">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${'ABCDE'[q.correct]} · ${math(q.choices[q.correct])}</strong><p class="tip"><b>Useful approach:</b> ${math(q.tip)}</p><p>${math(q.explanation)}</p>${q.solutionImage?`<figure class="diagram source-diagram"><img src="./assets/${esc(q.solutionImage)}" alt="The polygon divided into three vertical rectangles."></figure>`:''}${q.note?`<p class="question-note"><b>Source note:</b> ${esc(q.note)}</p>`:''}</div>`:''}</article>`;
   }
   function renderCards(){
-    $('#sessions').innerHTML=bank.map(s=>{const history=state.sessions[s.id]||[],latest=history.at(-1),completed=history.filter(r=>E.stats(s,r).finished===s.questions.length).at(-1),r=completed||latest,stats=r?E.stats(s,r):null,started=!!latest&&(!!latest.deadlineAt||E.stats(s,latest).attempted>0);return `<a class="session-link ${completed?'completed':started?'in-progress':''}" href="?session=session-${s.number}" ${active===s?'aria-current="page"':''}><b>Session ${s.number}</b><span>${esc(s.label)}</span><small>${s.questions.length} questions${s.timeLimitSeconds?` · ${s.timeLimitSeconds/60} minutes total`:s.number===1?' · 8 verbal + 12 math':' · Math only'}</small><span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${stats&&(started||completed)?`<small>${scoreText(s,r)}</small>`:''}${completed&&latest!==completed?'<small>New run · earlier result kept</small>':''}</a>`;}).join('');
+    const cards=subject=>bank.filter(s=>s.subject===subject).map(s=>{const history=state.sessions[s.id]||[],latest=history.at(-1),completed=history.filter(r=>E.stats(s,r).finished===s.questions.length).at(-1),r=completed||latest,stats=r?E.stats(s,r):null,started=!!latest&&(!!latest.deadlineAt||E.stats(s,latest).attempted>0);return `<a class="session-link ${completed?'completed':started?'in-progress':''}" href="?session=${s.subject==='words'?`vr-${s.number}`:`session-${s.number}`}" ${active===s?'aria-current="page"':''}><b>Session ${s.number}</b><span>${esc(s.label)}</span><small>${s.questions.length} questions${s.timeLimitSeconds?` · ${s.timeLimitSeconds/60} minutes total`:s.subject==='words'?' · VR only':' · Math only'}</small><span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${stats&&(started||completed)?`<small>${scoreText(s,r)}</small>`:''}${completed&&latest!==completed?'<small>New run · earlier result kept</small>':''}</a>`;}).join('');
+    $('#sessions').innerHTML=`<section class="session-group"><h2>Math · QR + MA</h2><div class="sessions">${cards('math')}</div></section><section class="session-group"><h2>Verbal Reasoning · VR</h2><p>Two identical sets of the same 8 missed questions.</p><div class="sessions vr-sessions">${cards('words')}</div></section>`;
   }
   function timer(){
     const timed=bank.find(s=>s.timeLimitSeconds),r=state.sessions[timed.id]?.at(-1),running=!!r?.deadlineAt&&!r.completedAt;
@@ -42,7 +43,7 @@
   function scoreText(s,r){return ['words','math'].filter(subject=>s.questions.some(q=>q.subject===subject)).map(subject=>{const st=bySubject(s,r,subject);return (subject==='words'?'Verbal':'Math')+': '+st.first+'/'+st.total;}).join(' · ');}
   function summary(){
     if(!active)return;const r=current(),s=E.stats(active,r),done=s.finished===s.total;
-    const ms=bySubject(active,r,'math'),vs=bySubject(active,r,'words');$('#score').textContent=`${ms.first} / ${ms.total}`;$('#verbal-score-wrap').hidden=!vs.total;$('#verbal-score').textContent=`${vs.first} / ${vs.total}`;$('#progress').textContent=`${s.attempted}/${s.total} first tries · ${s.finished}/${s.total} questions finished`;
+    const ms=bySubject(active,r,'math'),vs=bySubject(active,r,'words');$('#math-score-wrap').hidden=!ms.total;$('#score').textContent=`${ms.first} / ${ms.total}`;$('#verbal-score-wrap').hidden=!vs.total;$('#verbal-score').textContent=`${vs.first} / ${vs.total}`;$('#progress').textContent=`${s.attempted}/${s.total} first tries · ${s.finished}/${s.total} questions finished`;
     $('#jump').innerHTML=active.questions.map((q,i)=>`<a href="#q${i+1}" class="${result(q,r)}" aria-label="Question ${i+1}">${i+1}</a>`).join('');
     $('#completion').hidden=!done;$('#completion').innerHTML=done?`<h2>${r.timedOutAt?'Time is up.':'Session complete.'}</h2><p>First-try scores: <strong>${scoreText(active,r)}</strong>. Corrected on retry: ${s.corrected}.${r.timedOutAt?` Unanswered: ${s.unanswered}.`:''}</p>`:'';
     $('#new-run').hidden=!done;
@@ -50,15 +51,15 @@
     renderCards();timer();
   }
   function render(){
-    document.title=`Session ${active.number} · September 27, 2026 · Marco`;
-    $('#session-title').textContent=`Session ${active.number} · ${active.label}`;
-    $('#session-description').textContent=active.number===1?'Repeat the 8 verbal and 12 math questions you missed. Verbal and math first-try scores are separate. One retry is allowed; then read the answer and explanation.':active.number===2?'12 new math questions on the same QR and MA skills. One point for a correct first answer; one retry is allowed.':'12 fresh math questions. One 12-minute timer covers the whole session, including retries.';
+    document.title=`${active.subject==='words'?'VR':'Math'} Session ${active.number} · September 27, 2026 · Marco`;
+    $('#session-title').textContent=`${active.subject==='words'?'VR':'Math'} Session ${active.number} · ${active.label}`;
+    $('#session-description').textContent=active.subject==='words'?'Practice the same 8 missed VR questions in each session. The wording and choices are identical; each session keeps its own first-try score. One retry is allowed.':active.number===1?'Repeat the 12 math questions you missed in QR and MA. One retry is allowed; then read the answer and explanation.':active.number===2?'12 new math questions on the same QR and MA skills. One point for a correct first answer; one retry is allowed.':'12 fresh math questions. One 12-minute timer covers the whole session, including retries.';
     $('#timer-panel').hidden=!active?.timeLimitSeconds;$('#question-work').hidden=false;$('#scorebar').hidden=false;$('#records').hidden=false;$('#completion').hidden=true;
     $('#questions').innerHTML=active.questions.map((q,i)=>question(q,i)).join('');
     summary();
     saveNote();
   }
-  function navigate(link){const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>id===`session-${s.number}`)||bank[0];history.pushState(null,'',link.href);render();$('#session-title').scrollIntoView({block:'start'});$('#session-title').focus({preventScroll:true});}
+  function navigate(link){const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>id===(s.subject==='words'?`vr-${s.number}`:`session-${s.number}`)||id===s.id)||bank[0];history.pushState(null,'',link.href);render();$('#session-title').scrollIntoView({block:'start'});$('#session-title').focus({preventScroll:true});}
   document.addEventListener('click',event=>{const link=event.target.closest('#sessions a,#running-timer a');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();navigate(link);});
   window.addEventListener('popstate',()=>{active=selection();render();});
   $('#questions').addEventListener('submit',event=>{

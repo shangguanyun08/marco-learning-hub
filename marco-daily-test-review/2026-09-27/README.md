@@ -10,9 +10,11 @@ Extracted from the completed mock test's View Your Answers screen in Chrome. Onl
 
 The review uses September 27 as requested (Pacific date). A completion timestamp on the source's MA screen displayed September 28. No personal account URL, test identifier, or authentication data is included.
 
-- Session 1: 20 originals, with separate verbal (8) and math (12) first-try scores.
-- Session 2: 12 similar math questions, one per missed QR/MA skill.
-- Session 3: 12 more similar math questions, one total 720-second deadline.
+- Math Session 1: 12 original QR/MA misses.
+- Math Session 2: 12 similar math questions, one per missed QR/MA skill.
+- Math Session 3: 12 more similar math questions, one total 720-second deadline.
+- VR Sessions 1 and 2: identical sets of the 8 original VR misses, including the same answer-choice order. Each has independent scores and history.
+- Existing mixed-session attempts are split by subject on load and merge. Verbal history moves into VR Session 1; VR Session 2 starts fresh. Math history and question identities are retained.
 - No separate review session. Answer choices are always visible; explanations appear after a correct answer or two attempts, and after timeout.
 - QR Q37 has no marked right angle. The relationship is undetermined; do not infer a right angle from the drawing.
 - MA Q31 uses the supplied graph's historical data, not current apportionment.
