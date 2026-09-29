@@ -52,7 +52,7 @@
     if (Core.start(progress, number, info(number).words.map(word => word.id), now())) save();
   }
   function header() {
-    const intro = 'Start with 91 previous mistakes: 71 synonym / word-meaning questions and 20 sentence completions. Then continue with the original 80 hard synonyms. Later rounds repeat only missed questions.';
+    const intro = '171 synonym, word-meaning and sentence-completion questions across Sessions 1–8. Each session has 20 questions, except Session 4 with 31. Later rounds repeat only missed questions.';
     return `<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a></p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
@@ -63,9 +63,7 @@
       const status = record?.completedAt ? 'Mastered' : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
       return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
     };
-    return `<section class="session-picker" aria-label="Choose a Zozeck session">
-      <section class="session-group redo-group" aria-labelledby="redo-group-title"><h2 id="redo-group-title">Redo · Previous mistakes</h2><p>91 questions · Sessions 1–3: 20 each · Session 4: 31</p><div class="session-group-grid">${sessions.filter(session => session.group === 'redo').map(button).join('')}</div></section>
-      <section class="session-group" aria-labelledby="zozeck-group-title"><h2 id="zozeck-group-title">Original · 2026 Zozeck Hard</h2><p>80 synonyms · Sessions 5–8: 20 each</p><div class="session-group-grid">${sessions.filter(session => session.group === 'hard').map(button).join('')}</div></section></section>`;
+    return `<section class="session-picker" aria-label="Choose a session"><div class="session-group-grid">${sessions.map(button).join('')}</div></section>`;
   }
   function syncNote() {
     return `<div class="sync-note" data-online-sync="${APP_ID}" role="status" aria-live="polite"><span aria-hidden="true"></span>${local ? 'Preview · answers save on this device only.' : 'Connecting online…'}</div>`;

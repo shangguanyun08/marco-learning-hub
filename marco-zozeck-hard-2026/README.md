@@ -1,6 +1,6 @@
 # 2026 Zozeck Hard: redo and original practice
 
-171 questions across eight displayed sessions:
+171 questions across eight displayed sessions, presented together in one continuous session grid without separate redo/original headings:
 
 | Display | Content | Questions | Saved session key |
 | --- | --- | ---: | ---: |
