@@ -2,10 +2,15 @@
   'use strict';
   const Core = window.VocabularyQuiz;
   const sourceWords = window.MARCO_ZOZECK_HARD_WORDS;
-  const words = sourceWords.map(word => ({...word, session: word.session - 6}));
+  const originalWords = sourceWords.map(word => ({...word, session: word.session - 6}));
+  const words = [...window.MARCO_ZOZECK_REDO_WORDS, ...originalWords];
   Core.configureLayout(words);
   const byId = new Map(words.map(word => [word.id, word]));
-  const sessions = Array.from({length: 4}, (_, i) => ({number: i + 1, words: words.filter(word => word.session === i + 1)}));
+  // Preserve the existing session keys and word IDs, including partial and finished rounds.
+  const sessions = [5,6,7,8,1,2,3,4].map((number, index) => ({
+    number, displayNumber: index + 1, group: index < 4 ? 'redo' : 'hard',
+    words: words.filter(word => word.session === number)
+  }));
   const optionCache = new Map();
   function optionsFor(word, round) {
     const key = `${selected}:${word.id}:${round}`;
@@ -15,23 +20,23 @@
   const APP_ID = 'marco-zozeck-hard-2026';
   const STORAGE_KEY = 'marco-zozeck-hard-2026-v1';
   const TEST_KEY = 'marco-zozeck-hard-2026-tests-v1';
-  const SELECTION_KEY = 'marco-zozeck-hard-2026-tests-selection-v1';
+  const SELECTION_KEY = 'marco-zozeck-hard-2026-redo-selection-v2';
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || location.protocol === 'file:';
   const app = document.getElementById('app');
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const read = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } };
   let progress = Core.merge(read(STORAGE_KEY), read(TEST_KEY));
-  let selected = Number(new URLSearchParams(location.search).get('session')) || Number(read(SELECTION_KEY)) || 1;
-  if (!sessions.some(session => session.number === selected)) selected = 1;
+  let selected = Number(new URLSearchParams(location.search).get('session')) || Number(read(SELECTION_KEY)) || 5;
+  if (!sessions.some(session => session.number === selected)) selected = 5;
   let view = location.hash === '#results' ? 'results' : 'practice';
   let sync = null;
   let banner = '';
   let storageError = false;
   const now = () => new Date().toISOString();
-  const info = number => sessions[number - 1];
+  const info = number => sessions.find(session => session.number === number);
   const range = number => `${info(number).words.length} questions`;
-  const label = number => `Zozeck Session ${number}`;
+  const label = number => `Session ${info(number).displayNumber}`;
   const date = value => value ? new Intl.DateTimeFormat(undefined, {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value)) : 'Not started';
   const answered = round => round ? round.ids.filter(id => round.answers[id]).length : 0;
   const current = () => Core.current(progress.sessions[selected]);
@@ -47,8 +52,8 @@
     if (Core.start(progress, number, info(number).words.map(word => word.id), now())) save();
   }
   function header() {
-    const intro = '80 challenging or tricky Zozeck synonyms in four sessions of 20. Each question keeps the source choices; later rounds review only missed questions.';
-    return `<header class="topbar"><div><p class="eyebrow">Marco · 2026 Zozeck hard synonyms</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a></p></div>
+    const intro = 'Start with 91 previous mistakes: 71 synonym / word-meaning questions and 20 sentence completions. Then continue with the original 80 hard synonyms. Later rounds repeat only missed questions.';
+    return `<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a></p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
   function picker() {
@@ -56,9 +61,11 @@
       const record = progress.sessions[session.number];
       const round = Core.current(record);
       const status = record?.completedAt ? 'Mastered' : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
-      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''} ${session.number === 6 ? 'review-session' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
+      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
     };
-    return `<section class="session-picker" aria-label="Choose a Zozeck session"><section class="session-group" aria-labelledby="zozeck-group-title"><h2 id="zozeck-group-title">2026 Zozeck Hard</h2><p>80 questions · four sessions of 20</p><div class="session-group-grid">${sessions.map(button).join('')}</div></section></section>`;
+    return `<section class="session-picker" aria-label="Choose a Zozeck session">
+      <section class="session-group redo-group" aria-labelledby="redo-group-title"><h2 id="redo-group-title">Redo · Previous mistakes</h2><p>91 questions · Sessions 1–3: 20 each · Session 4: 31</p><div class="session-group-grid">${sessions.filter(session => session.group === 'redo').map(button).join('')}</div></section>
+      <section class="session-group" aria-labelledby="zozeck-group-title"><h2 id="zozeck-group-title">Original · 2026 Zozeck Hard</h2><p>80 synonyms · Sessions 5–8: 20 each</p><div class="session-group-grid">${sessions.filter(session => session.group === 'hard').map(button).join('')}</div></section></section>`;
   }
   function syncNote() {
     return `<div class="sync-note" data-online-sync="${APP_ID}" role="status" aria-live="polite"><span aria-hidden="true"></span>${local ? 'Preview · answers save on this device only.' : 'Connecting online…'}</div>`;
@@ -66,7 +73,7 @@
   function question() {
     const record = progress.sessions[selected];
     if (record?.completedAt) {
-      const next = selected < 4 ? selected + 1 : null;
+      const next = sessions[sessions.findIndex(session => session.number === selected) + 1]?.number;
       const nextLabel = next ? `Continue to ${label(next)}` : '';
       const itemName = 'questions';
       return `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All ${info(selected).words.length} ${itemName} in this session have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${next ? `<button data-session="${next}">${nextLabel}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
@@ -89,14 +96,17 @@
   }
   function wordQuestion(round, id, index) {
     const word = byId.get(id);
-    const synonym = word.quizType === 'synonym';
+    const completion = word.quizType === 'completion';
+    const definition = word.quizType === 'definition';
     const answer = round.answers[id];
     const options = optionsFor(word, round.number);
     const pos = {'adjective':'adj.','noun':'n.','verb':'v.','adverb':'adv.'}[word.partOfSpeech] || word.partOfSpeech;
-    const rightChoice = synonym ? word.answer : word.id;
-    return `<article class="question-item" id="word-${escape(id)}" data-word-id="${escape(id)}" data-round="${round.number}" data-session-number="${selected}" aria-labelledby="heading-${escape(id)}"><div class="question-item-topline"><span>Question ${index + 1}</span></div><p class="prompt-label">${synonym ? 'Choose the closest synonym' : 'Choose the vocabulary word'}</p><h3 id="heading-${escape(id)}" tabindex="-1">${synonym ? escape(word.word) : `${escape(pos)} ${escape(word.meaning)}`}</h3>
-      <div class="options" aria-labelledby="heading-${escape(id)}">${options.map((choice,index) => `<button data-answer="${escape(choice)}" ${answer ? 'disabled' : ''} class="${answer ? choice === rightChoice ? 'correct-option' : choice === answer.choice ? 'wrong-option' : 'locked-other' : ''}"><span>${'ABCD'[index]}</span><b>${escape(synonym ? choice : byId.get(choice).word)}</b></button>`).join('')}</div>
-      ${answer ? `<div class="instant-feedback ${answer.correct ? 'correct' : 'wrong'}" role="status"><div class="feedback-mark">${answer.correct ? '✓' : '×'}</div><div><strong>${answer.correct ? 'Correct!' : 'Not quite.'}</strong><span>${answer.correct ? (synonym ? `${escape(word.answer)} is the closest synonym.` : `${escape(word.word)} is the right word.`) : `The correct answer is ${'ABCD'[options.indexOf(rightChoice)]}. ${escape(synonym ? word.answer : word.word)}.`}</span><small>Answer locked — it cannot be changed.</small></div></div>` : ''}
+    const rightChoice = word.answer;
+    const promptLabel = completion ? 'Choose the word that best completes the sentence' : definition ? 'Choose the vocabulary word' : 'Choose the closest synonym';
+    const prompt = definition ? `${pos} ${word.meaning}` : word.word;
+    return `<article class="question-item ${completion ? 'completion-question' : ''}" id="word-${escape(id)}" data-word-id="${escape(id)}" data-round="${round.number}" data-session-number="${selected}" aria-labelledby="heading-${escape(id)}"><div class="question-item-topline"><span>Question ${index + 1}</span><small>${completion ? 'Sentence completion' : definition ? 'Word meaning' : 'Synonym'}</small></div><p class="prompt-label">${promptLabel}</p><h3 id="heading-${escape(id)}" tabindex="-1">${escape(prompt)}</h3>
+      <div class="options" aria-labelledby="heading-${escape(id)}">${options.map((choice,index) => `<button data-answer="${escape(choice)}" ${answer ? 'disabled' : ''} class="${answer ? choice === rightChoice ? 'correct-option' : choice === answer.choice ? 'wrong-option' : 'locked-other' : ''}"><span>${'ABCD'[index]}</span><b>${escape(choice)}</b></button>`).join('')}</div>
+      ${answer ? `<div class="instant-feedback ${answer.correct ? 'correct' : 'wrong'}" role="status"><div class="feedback-mark">${answer.correct ? '✓' : '×'}</div><div><strong>${answer.correct ? 'Correct!' : 'Not quite.'}</strong><span>The correct answer is ${'ABCD'[options.indexOf(rightChoice)]}. ${escape(rightChoice)}.</span>${word.explanation ? `<p class="answer-explanation">${escape(word.explanation)}</p>` : ''}${word.reviewNote ? `<small>${escape(word.reviewNote)}</small>` : ''}<small>Answer locked — it cannot be changed.</small></div></div>` : ''}
       </article>`;
   }
   function results() {
@@ -111,9 +121,9 @@
         const correct = round.ids.filter(id => round.answers[id].correct).length;
         return `<details data-result="${session.number}-${round.number}"><summary><span class="round-number">${round.number}</span><span><strong>Round ${round.number}</strong><small>${date(round.finishedAt)}</small></span><span class="score"><strong>${correct}/${round.ids.length}</strong><small>correct</small></span><span class="missed"><strong>${round.ids.length-correct}</strong><small>missed</small></span></summary><div class="answer-review">${Core.questionOrder(round.ids,session.number,round.number).map((id,index) => {
           const word = byId.get(id), answer = round.answers[id];
-          const prompt = word.quizType === 'synonym' ? word.word : word.meaning;
-          const correct = word.quizType === 'synonym' ? word.answer : word.word;
-          const chosen = word.quizType === 'synonym' ? answer.choice : byId.get(answer.choice)?.word || answer.choice;
+          const prompt = word.quizType === 'definition' ? word.meaning : word.word;
+          const correct = word.answer;
+          const chosen = answer.choice;
           return `<div class="${answer.correct ? 'correct' : 'wrong'}"><span>${index+1}</span><p>${escape(prompt)}</p><p><small>Your answer</small><strong>${escape(chosen)}</strong></p><p><small>Correct</small><strong>${escape(correct)}</strong></p></div>`;
         }).join('')}</div></details>`;
       }).join('')}</div></article>`).join('')}</div>` : '<div class="empty-results compact"><strong>No finished rounds yet.</strong><span>Live partial progress is shown above.</span></div>'}</section>`;
@@ -127,7 +137,7 @@
     app.innerHTML = header() + (view === 'practice' ? picker() : '') + syncNote() +
       (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
       (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
-      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a><span>Source: Zozeck · 433 synonym list (80 selected)</span></footer>';
+      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a><span>91 previous-review questions · 80 original Zozeck hard synonyms</span></footer>';
     if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
     expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
     const replacement = anchor && document.getElementById(anchor.id);
@@ -211,7 +221,7 @@
     const tracker = document.createElement('script');
     tracker.src = '../shared-activity-tracker.js?v=1';
     tracker.dataset.appId = APP_ID;
-    tracker.dataset.course = '2026 Zozeck Hard · 80 synonyms';
+    tracker.dataset.course = '2026 Zozeck Hard · 171 questions';
     document.body.append(tracker);
   }
 })();

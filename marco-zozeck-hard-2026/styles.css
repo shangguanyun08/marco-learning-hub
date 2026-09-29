@@ -238,3 +238,12 @@ button:disabled{cursor:not-allowed;opacity:.45}
 
 .session-picker .review-session{grid-column:1/-1;border-color:var(--blue);background:#f0f5ff}.review-intro p{margin:6px 0 0;line-height:1.5;font-weight:500}
 .course-links{margin:8px 0 0;font-size:14px;font-weight:800}.course-links a{color:var(--blue-dark);text-decoration:none}.course-links a:hover{text-decoration:underline}
+
+/* Previous-mistake practice appears ahead of the original hard sets. */
+.redo-group{border:1px solid #c9dcef;background:#f6faff;border-radius:16px;padding:18px}
+.session-group-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:700px){.session-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.question-item-topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.question-item-topline small{color:var(--muted);font-size:12px;font-weight:700}
+.completion-question h3{font-size:clamp(20px,2.4vw,28px);line-height:1.5;text-transform:none;letter-spacing:normal}
+.answer-explanation{margin:8px 0;line-height:1.5;font-weight:500}
