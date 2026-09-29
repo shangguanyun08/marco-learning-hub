@@ -8,7 +8,7 @@
   const byId = new Map(words.map(word => [word.id, word]));
   // Preserve the existing session keys and word IDs, including partial and finished rounds.
   const sessions = [5,6,7,8,1,2,3,4].map((number, index) => ({
-    number, displayNumber: index + 1, group: index < 4 ? 'redo' : 'hard',
+    number, displayNumber: index + 1,
     words: words.filter(word => word.session === number)
   }));
   const optionCache = new Map();
@@ -135,7 +135,7 @@
     app.innerHTML = header() + (view === 'practice' ? picker() : '') + syncNote() +
       (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
       (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
-      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a><span>91 previous-review questions · 80 original Zozeck hard synonyms</span></footer>';
+      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a><span>171 questions · Sessions 1–8</span></footer>';
     if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
     expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
     const replacement = anchor && document.getElementById(anchor.id);
