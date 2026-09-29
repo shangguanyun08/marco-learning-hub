@@ -1,16 +1,19 @@
 (() => {
   'use strict';
   const Core = window.VocabularyQuiz;
-  const words = window.MARCO_VOCABULARY_WORDS;
-  Core.configureLayout(words);
+  const iseeWords = window.MARCO_VOCABULARY_WORDS;
+  const hardWords = window.MARCO_ZOZECK_HARD_WORDS;
+  const words = [...iseeWords, ...hardWords];
+  Core.configureLayout(iseeWords);
   const byId = new Map(words.map(word => [word.id, word]));
-  const sessions = Array.from({length: 5}, (_, i) => ({number: i + 1, words: words.filter(word => word.session === i + 1)}));
+  const sessions = Array.from({length: 5}, (_, i) => ({number: i + 1, words: iseeWords.filter(word => word.session === i + 1)}));
   const review = window.MARCO_ISEE_REVIEW;
   sessions.push({number:6, words:review.ids.map(id => byId.get(id))});
+  sessions.push(...Array.from({length:4}, (_, i) => ({number:i + 7, words:hardWords.filter(word => word.session === i + 7)})));
   const optionCache = new Map();
   function optionsFor(word, round) {
     const key = `${selected}:${word.id}:${round}`;
-    if (!optionCache.has(key)) optionCache.set(key, Core.options(word, round, words, selected));
+    if (!optionCache.has(key)) optionCache.set(key, Core.options(word, round, iseeWords, selected));
     return optionCache.get(key);
   }
   const APP_ID = 'marco-isee-words-250';
@@ -31,8 +34,8 @@
   let storageError = false;
   const now = () => new Date().toISOString();
   const info = number => sessions[number - 1];
-  const range = number => `${info(number).words.length} mixed words`;
-  const label = number => number === 6 ? 'Round 1 Misses Review' : `Session ${number}`;
+  const range = number => `${info(number).words.length} ${number >= 7 ? 'questions' : 'mixed words'}`;
+  const label = number => number === 6 ? 'Round 1 Misses Review' : number >= 7 ? `Zozeck Session ${number - 6}` : `Session ${number}`;
   const date = value => value ? new Intl.DateTimeFormat(undefined, {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value)) : 'Not started';
   const answered = round => round ? round.ids.filter(id => round.answers[id]).length : 0;
   const current = () => Core.current(progress.sessions[selected]);
@@ -48,26 +51,40 @@
     if (Core.start(progress, number, info(number).words.map(word => word.id), now())) save();
   }
   function header() {
-    return `<header class="topbar"><div><p class="eyebrow">Marco · Middle Level ISEE · 250 words · 5 sessions + review</p><h1>ISEE Words to Know</h1><p class="course-intro">${selected === 6 ? "Review 23 first-try misses in shuffled order. Rounds 2, 3 and onward repeat only words missed in this review." : "50 mixed words per session, in shuffled order. Round 1 checks every word; later rounds review only missed words."}</p></div>
+    const intro = selected === 6
+      ? 'Review 23 first-try misses in shuffled order. Later rounds repeat only words missed in this review.'
+      : selected >= 7
+        ? '80 challenging or easily confused Zozeck synonyms, in four sessions of 20. Each question keeps the source choices; later rounds review only missed words.'
+        : '50 mixed words per session, in shuffled order. Round 1 checks every word; later rounds review only missed words.';
+    return `<header class="topbar"><div><p class="eyebrow">Marco · 250 ISEE words · 2026 Zozeck hard synonyms</p><h1>ISEE Words to Know</h1><p class="course-intro">${intro}</p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
   function picker() {
-    return `<section class="session-picker" aria-label="Choose a vocabulary session">${sessions.map(session => {
+    const button = session => {
       const record = progress.sessions[session.number];
       const round = Core.current(record);
       const status = record?.completedAt ? 'Mastered' : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
       return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''} ${session.number === 6 ? 'review-session' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
-    }).join('')}</section>`;
+    };
+    return `<section class="session-picker" aria-label="Choose a vocabulary session">
+      <section class="session-group" aria-labelledby="isee-group-title"><h2 id="isee-group-title">250 ISEE word list</h2><div class="session-group-grid">${sessions.filter(session => session.number <= 6).map(button).join('')}</div></section>
+      <section class="session-group" aria-labelledby="zozeck-group-title"><h2 id="zozeck-group-title">2026 Zozeck Hard</h2><p>Top 80 hard or tricky synonym questions · four sessions of 20</p><div class="session-group-grid">${sessions.filter(session => session.number >= 7).map(button).join('')}</div></section>
+    </section>`;
   }
   function syncNote() {
     return `<div class="sync-note" data-online-sync="${APP_ID}" role="status" aria-live="polite"><span aria-hidden="true"></span>${local ? 'Preview · answers save on this device only.' : 'Connecting online…'}</div>`;
   }
   function question() {
     const record = progress.sessions[selected];
-    if (record?.completedAt) return `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All ${info(selected).words.length} words in this session have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${selected < 6 ? `<button data-session="${selected + 1}">${selected === 5 ? 'Start Round 1 Misses Review' : `Continue to Session ${selected + 1}`}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
+    if (record?.completedAt) {
+      const next = selected < 5 ? selected + 1 : selected === 5 ? 6 : selected >= 7 && selected < 10 ? selected + 1 : null;
+      const nextLabel = selected === 5 ? 'Start Round 1 Misses Review' : next ? `Continue to ${label(next)}` : '';
+      const itemName = selected >= 7 ? 'questions' : 'words';
+      return `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All ${info(selected).words.length} ${itemName} in this session have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${next ? `<button data-session="${next}">${nextLabel}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
+    }
     const savedRound = current();
     const round = {...savedRound, ids: Core.questionOrder(savedRound.ids, selected, savedRound.number)};
-    return `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}"><div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}</h2><span>${round.number === 1 ? `All ${round.ids.length} words on this page` : 'Previous round’s missed words'}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
+    return `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}"><div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}</h2><span>${round.number === 1 ? `All ${round.ids.length} ${selected >= 7 ? 'questions' : 'words'} on this page` : `Previous round’s missed ${selected >= 7 ? 'questions' : 'words'}`}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
       <div class="progress" role="progressbar" aria-label="Round progress" aria-valuenow="${answered(round)}" aria-valuemin="0" aria-valuemax="${round.ids.length}"><span style="width:${answered(round) / round.ids.length * 100}%"></span></div>
       <p class="grid-label">Jump to a question</p><div class="number-grid" aria-label="Question progress">${round.ids.map((id,index) => {
         const value = round.answers[id];
@@ -83,12 +100,14 @@
   }
   function wordQuestion(round, id, index) {
     const word = byId.get(id);
+    const synonym = word.quizType === 'synonym';
     const answer = round.answers[id];
     const options = optionsFor(word, round.number);
     const pos = {'adjective':'adj.','noun':'n.','verb':'v.','adverb':'adv.'}[word.partOfSpeech] || word.partOfSpeech;
-    return `<article class="question-item" id="word-${escape(id)}" data-word-id="${escape(id)}" data-round="${round.number}" data-session-number="${selected}" aria-labelledby="heading-${escape(id)}"><div class="question-item-topline"><span>Question ${index + 1}</span></div><p class="prompt-label">Choose the vocabulary word</p><h3 id="heading-${escape(id)}" tabindex="-1">${escape(pos)} ${escape(word.meaning)}</h3>
-      <div class="options" aria-labelledby="heading-${escape(id)}">${options.map((choice,index) => `<button data-answer="${escape(choice)}" ${answer ? 'disabled' : ''} class="${answer ? choice === word.id ? 'correct-option' : choice === answer.choice ? 'wrong-option' : 'locked-other' : ''}"><span>${'ABCD'[index]}</span><b>${escape(byId.get(choice).word)}</b></button>`).join('')}</div>
-      ${answer ? `<div class="instant-feedback ${answer.correct ? 'correct' : 'wrong'}" role="status"><div class="feedback-mark">${answer.correct ? '✓' : '×'}</div><div><strong>${answer.correct ? 'Correct!' : 'Not quite.'}</strong><span>${answer.correct ? `${escape(word.word)} is the right word.` : `The correct answer is ${'ABCD'[options.indexOf(word.id)]}. ${escape(word.word)}.`}</span><small>Answer locked — it cannot be changed.</small></div></div>` : ''}
+    const rightChoice = synonym ? word.answer : word.id;
+    return `<article class="question-item" id="word-${escape(id)}" data-word-id="${escape(id)}" data-round="${round.number}" data-session-number="${selected}" aria-labelledby="heading-${escape(id)}"><div class="question-item-topline"><span>Question ${index + 1}</span></div><p class="prompt-label">${synonym ? 'Choose the closest synonym' : 'Choose the vocabulary word'}</p><h3 id="heading-${escape(id)}" tabindex="-1">${synonym ? escape(word.word) : `${escape(pos)} ${escape(word.meaning)}`}</h3>
+      <div class="options" aria-labelledby="heading-${escape(id)}">${options.map((choice,index) => `<button data-answer="${escape(choice)}" ${answer ? 'disabled' : ''} class="${answer ? choice === rightChoice ? 'correct-option' : choice === answer.choice ? 'wrong-option' : 'locked-other' : ''}"><span>${'ABCD'[index]}</span><b>${escape(synonym ? choice : byId.get(choice).word)}</b></button>`).join('')}</div>
+      ${answer ? `<div class="instant-feedback ${answer.correct ? 'correct' : 'wrong'}" role="status"><div class="feedback-mark">${answer.correct ? '✓' : '×'}</div><div><strong>${answer.correct ? 'Correct!' : 'Not quite.'}</strong><span>${answer.correct ? (synonym ? `${escape(word.answer)} is the closest synonym.` : `${escape(word.word)} is the right word.`) : `The correct answer is ${'ABCD'[options.indexOf(rightChoice)]}. ${escape(synonym ? word.answer : word.word)}.`}</span><small>Answer locked — it cannot be changed.</small></div></div>` : ''}
       </article>`;
   }
   function results() {
@@ -103,7 +122,10 @@
         const correct = round.ids.filter(id => round.answers[id].correct).length;
         return `<details data-result="${session.number}-${round.number}"><summary><span class="round-number">${round.number}</span><span><strong>Round ${round.number}</strong><small>${date(round.finishedAt)}</small></span><span class="score"><strong>${correct}/${round.ids.length}</strong><small>correct</small></span><span class="missed"><strong>${round.ids.length-correct}</strong><small>missed</small></span></summary><div class="answer-review">${Core.questionOrder(round.ids,session.number,round.number).map((id,index) => {
           const word = byId.get(id), answer = round.answers[id];
-          return `<div class="${answer.correct ? 'correct' : 'wrong'}"><span>${index+1}</span><p>${escape(word.meaning)}</p><p><small>Your answer</small><strong>${escape(byId.get(answer.choice)?.word || answer.choice)}</strong></p><p><small>Correct</small><strong>${escape(word.word)}</strong></p></div>`;
+          const prompt = word.quizType === 'synonym' ? word.word : word.meaning;
+          const correct = word.quizType === 'synonym' ? word.answer : word.word;
+          const chosen = word.quizType === 'synonym' ? answer.choice : byId.get(answer.choice)?.word || answer.choice;
+          return `<div class="${answer.correct ? 'correct' : 'wrong'}"><span>${index+1}</span><p>${escape(prompt)}</p><p><small>Your answer</small><strong>${escape(chosen)}</strong></p><p><small>Correct</small><strong>${escape(correct)}</strong></p></div>`;
         }).join('')}</div></details>`;
       }).join('')}</div></article>`).join('')}</div>` : '<div class="empty-results compact"><strong>No finished rounds yet.</strong><span>Live partial progress is shown above.</span></div>'}</section>`;
   }
@@ -117,7 +139,7 @@
       (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
       (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
       (view === 'practice' && selected === 6 ? `<div class="notice review-intro"><strong>23 first-try misses · one review session</strong><p>From Sessions 1–5: ${review.sources.map(s => `${s.missed} from Session ${s.session}`).join(' · ')}. Review Round 1 covers all 23 words; later rounds repeat only your new misses.</p></div>` : '') +
-      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><span>Word list: Test Innovators · 250 ISEE Words to Know for Middle Level (2026)</span></footer>';
+      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><span>Sources: Test Innovators · 250 ISEE Words to Know; Zozeck · 433 synonym list (80 selected)</span></footer>';
     if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
     expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
     const replacement = anchor && document.getElementById(anchor.id);
@@ -166,7 +188,7 @@
       const correct = previous.ids.filter(id => previous.answers[id]?.correct).length;
       const action = Core.finishRound(progress, selected, now());
       if (action) {
-        if (action !== 'next') banner = `${label(selected)}, Round ${number}: ${correct}/${total} correct.${action === 'round' ? ` Round ${number + 1} contains only the ${total-correct} missed word${total-correct === 1 ? '' : 's'}.` : ' Session mastered.'}`;
+        if (action !== 'next') banner = `${label(selected)}, Round ${number}: ${correct}/${total} correct.${action === 'round' ? ` Round ${number + 1} contains only the ${total-correct} missed ${selected >= 7 ? 'question' : 'word'}${total-correct === 1 ? '' : 's'}.` : ' Session mastered.'}`;
         save(); render();
         app.querySelector('.session-summary, .complete-card')?.scrollIntoView?.({block:'start'});
       }

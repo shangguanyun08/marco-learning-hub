@@ -42,6 +42,9 @@
   const questionOrder = (ids, session, number) => shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
   function options(word, round, words, session) {
     const reviewSalt = Number(session) === 6 ? 'review:' : '';
+    if (word.quizType === 'synonym' && Array.isArray(word.choices)) {
+      return shuffled([...word.choices], `${reviewSalt}${word.id}:${round}:source-choices`);
+    }
     // Exclude close meanings even when the source uses different synonym wording.
     const families = [
       'Abundant Ample Adequate', 'Abrupt Concise', 'Advisable Wary',
@@ -79,8 +82,9 @@
       const shared = [...other].filter(token => meaning.has(token)).length;
       return shared === 0;
     };
-    let pool = words.filter(candidate => candidate.partOfSpeech === word.partOfSpeech && eligible(candidate)).sort((a,b) => a.number-b.number);
-    if (pool.length < 3) pool = words.filter(eligible).sort((a,b) => a.number-b.number);
+    const definitionWords = words.filter(candidate => candidate.quizType !== 'synonym');
+    let pool = definitionWords.filter(candidate => candidate.partOfSpeech === word.partOfSpeech && eligible(candidate)).sort((a,b) => a.number-b.number);
+    if (pool.length < 3) pool = definitionWords.filter(eligible).sort((a,b) => a.number-b.number);
     const seen = new Set();
     const distractors = [];
     for (const candidate of shuffled(pool, `${reviewSalt}${word.id}:${round}:distractors`)) {
@@ -109,7 +113,7 @@
     if (!active.ids.includes(id)) return false;
     const word = words.find(item => item.id === id);
     if (!word || active.answers[id] || !options(word, active.number, words, session).includes(choice)) return false;
-    active.answers[id] = {choice, correct: choice === id, at};
+    active.answers[id] = {choice, correct: word.quizType === 'synonym' ? choice === word.answer : choice === id, at};
     return true;
   }
   function advance(progress, session, at) {
