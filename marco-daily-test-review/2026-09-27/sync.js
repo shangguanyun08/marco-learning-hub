@@ -27,6 +27,7 @@
   function valid(state){
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
+        (!run.questionSources||(Array.isArray(run.questionSources)&&run.questionSources.every(source=>sourceQuestions(id).some(q=>q.source===source))))&&
         (!run.deadlineAt||time(run.deadlineAt))&&(!run.timedOutAt||time(run.timedOutAt))&&
         (!run.work||(object(run.work)&&Object.entries(run.work).every(([source,work])=>BANK.find(s=>s.id===id).subject==='math'&&BANK.find(s=>s.id===id).questions.some(q=>String(q.source)===source)&&validWork(work))))&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
@@ -45,10 +46,16 @@
     for(const run of next.sessions['math-original']||[]){
       const answers=Object.fromEntries(Object.entries(run.answers).filter(([source])=>verbal.questions.some(q=>String(q.source)===source)));
       if(!Object.keys(answers).length)continue;
-      const vr={...clone(run),answers,completedAt:null};delete vr.work;delete vr.deadlineAt;delete vr.timedOutAt;
+      const vr={...clone(run),answers,completedAt:null};delete vr.work;delete vr.deadlineAt;delete vr.timedOutAt;delete vr.questionSources;
       (next.sessions['vocab-original']||=[]).push(vr);
       for(const source of Object.keys(answers))delete run.answers[source];
       run.completedAt=null;
+    }
+    // Preserve the scope and scores of the earlier eight-question VR records.
+    for(const session of BANK.filter(s=>s.subject==='words')) {
+      for(const run of next.sessions[session.id]||[]) {
+        run.questionSources ||= session.questions.filter(q=>q.sourceCourse!=='marco-isee-words-250').map(q=>q.source);
+      }
     }
     return next;
   }
@@ -92,7 +99,7 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.values(run.answers);
-          if(!run.completedAt&&BANK.find(s=>s.id===id).questions.every(q=>{const e=run.answers[q.source];return e&&(e.attempts.length===2||e.attempts.some(a=>a.choice===q.correct));}))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
+          if(!run.completedAt&&BANK.find(s=>s.id===id).questions.filter(q=>!run.questionSources||run.questionSources.includes(q.source)).every(q=>{const e=run.answers[q.source];return e&&(e.attempts.length===2||e.attempts.some(a=>a.choice===q.correct));}))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });
       }

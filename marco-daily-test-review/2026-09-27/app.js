@@ -9,9 +9,19 @@
   try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(window.MarcoIseeSync.valid(saved))state=window.MarcoIseeSync.merge(saved,{version:1,sessions:{}});}catch{storageOK=false;}
   const selection=()=>{const p=new URLSearchParams(location.search).get('session');return bank.find(s=>p===(s.subject==='words'?`vr-${s.number}`:`session-${s.number}`)||p===s.id)||bank[0];};
   let active=selection();
-  function newRun(restart=false){return {id:crypto.randomUUID(),startedAt:new Date().toISOString(),completedAt:null,answers:{},restart};}
+  function newRun(restart=false,session=active){return {id:crypto.randomUUID(),startedAt:new Date().toISOString(),completedAt:null,answers:{},restart,questionSources:session.questions.map(q=>q.source)};}
   function runs(s){return state.sessions[s.id]||=([]);}
-  function current(s=active){const list=runs(s);if(!list.length)list.push(newRun());return list.at(-1);}
+  function current(s=active){
+    const list=runs(s);if(!list.length)list.push(newRun(false,s));
+    const latest=list.at(-1);
+    if(s.subject==='words' && latest.questionSources && latest.questionSources.length<s.questions.length){
+      // Keep the old run intact and continue its checked answers in the expanded set.
+      list.push({...newRun(false,s),id:latest.id.replaceAll('~','-')+'-vr31',expandedFrom:latest.id,
+        answers:JSON.parse(JSON.stringify(latest.answers)),carriedSources:Object.keys(latest.answers).map(Number)});
+      save();
+    }
+    return list.at(-1);
+  }
   function save(upload=true){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}saveNote();if(upload)void sync?.push();}
   function syncBadge(){const kind=storageOK?statusKind:'offline';const label=kind==='live'?'Live online sync':kind==='saving'?'Saving online…':kind==='preview'?'Local preview only':kind==='offline'?'Offline · sync pending':'Connecting to live sync…';return `<span class="sync-badge" data-sync-kind="${kind}">${label}</span>`;}
   function saveNote(){const message=storageOK?statusText:'This browser could not save progress. Keep the page open and download your records.';$('#save-note').textContent=message;$('#save-note').classList.toggle('warning',!storageOK||statusKind==='offline');document.querySelectorAll('[data-sync-indicator]').forEach(el=>{el.innerHTML=syncBadge();el.title=message;});}
@@ -29,7 +39,7 @@
   }
   function renderCards(){
     const cards=subject=>bank.filter(s=>s.subject===subject).map(s=>{const history=state.sessions[s.id]||[],latest=history.at(-1),completed=history.filter(r=>E.stats(s,r).finished===s.questions.length).at(-1),r=completed||latest,stats=r?E.stats(s,r):null,started=!!latest&&(!!latest.deadlineAt||E.stats(s,latest).attempted>0);return `<a class="session-link ${completed?'completed':started?'in-progress':''}" href="?session=${s.subject==='words'?`vr-${s.number}`:`session-${s.number}`}" ${active===s?'aria-current="page"':''}><b>Session ${s.number}</b><span>${esc(s.label)}</span><small>${s.questions.length} questions${s.timeLimitSeconds?` · ${s.timeLimitSeconds/60} minutes total`:s.subject==='words'?' · VR only':' · Math only'}</small><span class="day-status">${completed?'✓ Completed':started?'In progress':'Not started'}</span>${stats&&(started||completed)?`<small>${scoreText(s,r)}</small>`:''}${completed&&latest!==completed?'<small>New run · earlier result kept</small>':''}</a>`;}).join('');
-    $('#sessions').innerHTML=`<section class="session-group"><h2>Math · QR + MA</h2><div class="sessions">${cards('math')}</div></section><section class="session-group"><h2>Verbal Reasoning · VR <span data-sync-indicator role="status">${syncBadge()}</span></h2><p>Two identical sets of the same 8 missed questions. Both sessions sync checked answers, retries, scores, and history across devices.</p><div class="sessions vr-sessions">${cards('words')}</div></section>`;
+    $('#sessions').innerHTML=`<section class="session-group"><h2>Math · QR + MA</h2><div class="sessions">${cards('math')}</div></section><section class="session-group"><h2>Verbal Reasoning · VR <span data-sync-indicator role="status">${syncBadge()}</span></h2><p>Two sessions of 31 questions each: 8 mock-test questions + 23 word-meaning questions. Both sessions sync checked answers, retries, scores, and history across devices.</p><div class="sessions vr-sessions">${cards('words')}</div></section>`;
   }
   function timer(){
     const timed=bank.find(s=>s.timeLimitSeconds),r=state.sessions[timed.id]?.at(-1),running=!!r?.deadlineAt&&!r.completedAt;
@@ -48,13 +58,13 @@
     $('#jump').innerHTML=active.questions.map((q,i)=>`<a href="#q${i+1}" class="${result(q,r)}" aria-label="Question ${i+1}">${i+1}</a>`).join('');
     $('#completion').hidden=!done;$('#completion').innerHTML=done?`<h2>${r.timedOutAt?'Time is up.':'Session complete.'}</h2><p>First-try scores: <strong>${scoreText(active,r)}</strong>. Corrected on retry: ${s.corrected}.${r.timedOutAt?` Unanswered: ${s.unanswered}.`:''}</p>`:'';
     $('#new-run').hidden=!done;
-    $('#history').innerHTML=runs(active).map((run,i)=>{const st=E.stats(active,run);return `<details class="history-run"><summary>Run ${i+1}${run.deviceConflict?' · Separate device attempt':''} · ${esc(stamp(run.startedAt))} · ${scoreText(active,run)} first-try points · ${run.completedAt?'Complete':'In progress'}</summary><ol>${active.questions.map(q=>{const attempts=run.answers[q.source]?.attempts||[];return `<li>${q.section} Q${q.number}: ${attempts.length?attempts.map((a,j)=>`Try ${j+1}: ${'ABCDE'[a.choice]} (${esc(q.choices[a.choice])}) · ${a.correct?'correct':'incorrect'} · ${esc(stamp(a.at))}`).join('; '):run.timedOutAt?'Unanswered when time ended':'Not attempted'}</li>`;}).join('')}</ol></details>`;}).join('');
+    $('#history').innerHTML=runs(active).map((run,i)=>{const st=E.stats(active,run);return `<details class="history-run"><summary>Run ${i+1}${run.deviceConflict?' · Separate device attempt':''} · ${esc(stamp(run.startedAt))} · ${scoreText(active,run)} first-try points · ${run.completedAt?'Complete':'In progress'}</summary>${run.expandedFrom?`<p>Continues the earlier session with ${run.carriedSources?.length||0} saved answers carried forward.</p>`:''}<ol>${active.questions.filter(q=>!run.questionSources||run.questionSources.includes(q.source)).map(q=>{const attempts=run.answers[q.source]?.attempts||[];return `<li>${q.section} Q${q.number}: ${attempts.length?attempts.map((a,j)=>`Try ${j+1}: ${'ABCDE'[a.choice]} (${esc(q.choices[a.choice])}) · ${a.correct?'correct':'incorrect'} · ${esc(stamp(a.at))}`).join('; '):run.timedOutAt?'Unanswered when time ended':'Not attempted'}</li>`;}).join('')}</ol></details>`;}).join('');
     renderCards();timer();
   }
   function render(){
     document.title=`${active.subject==='words'?'VR':'Math'} Session ${active.number} · September 27, 2026 · Marco`;
     $('#session-title').textContent=`${active.subject==='words'?'VR':'Math'} Session ${active.number} · ${active.label}`;
-    $('#session-description').textContent=active.subject==='words'?'Practice the same 8 missed VR questions in each session. The wording and choices are identical; each session keeps its own first-try score. One retry is allowed.':active.number===1?'Repeat the 12 math questions you missed in QR and MA. One retry is allowed; then read the answer and explanation.':active.number===2?'12 new math questions on the same QR and MA skills. One point for a correct first answer; one retry is allowed.':'12 fresh math questions. One 12-minute timer covers the whole session, including retries.';
+    $('#session-description').textContent=active.subject==='words'?'31 questions together: 8 mock-test questions and 23 vocabulary questions. Both sessions use the same questions and choices, with independent first-try scores and one retry per question.':active.number===1?'Repeat the 12 math questions you missed in QR and MA. One retry is allowed; then read the answer and explanation.':active.number===2?'12 new math questions on the same QR and MA skills. One point for a correct first answer; one retry is allowed.':'12 fresh math questions. One 12-minute timer covers the whole session, including retries.';
     $('#timer-panel').hidden=!active?.timeLimitSeconds;$('#question-work').hidden=false;$('#scorebar').hidden=false;$('#records').hidden=false;$('#completion').hidden=true;
     $('#questions').innerHTML=active.questions.map((q,i)=>question(q,i)).join('');
     summary();

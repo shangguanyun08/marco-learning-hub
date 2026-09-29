@@ -48,7 +48,7 @@
     if (Core.start(progress, number, info(number).words.map(word => word.id), now())) save();
   }
   function header() {
-    return `<header class="topbar"><div><p class="eyebrow">Marco · Middle Level ISEE · 250 words · 5 sessions + review</p><h1>ISEE Words to Know</h1><p class="course-intro">${selected === 6 ? "Review 23 first-try misses in shuffled order. Rounds 2, 3 and onward repeat only words missed in this review." : "50 mixed words per session, in shuffled order. Round 1 checks every word; later rounds review only missed words."}</p><p class="course-links"><a href="../marco-zozeck-hard-2026/">Open 2026 Zozeck Hard →</a></p></div>
+    return `<header class="topbar"><div><p class="eyebrow">Archived · Middle Level ISEE · 250 words · 5 sessions + review</p><h1>ISEE Words to Know</h1><p class="course-intro">${selected === 6 ? "Review 23 first-try misses in shuffled order. Rounds 2, 3 and onward repeat only words missed in this review." : "50 mixed words per session, in shuffled order. Round 1 checks every word; later rounds review only missed words."}</p><p class="course-links"><a href="../marco-daily-test-review/2026-09-27/?session=vr-1">Open September 27 VR · includes all 23 review questions →</a></p><p class="course-intro">This course is archived. The original word list and saved results remain available here.</p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
   function picker() {

@@ -13,7 +13,7 @@ The review uses September 27 as requested (Pacific date). A completion timestamp
 - Math Session 1: 12 original QR/MA misses.
 - Math Session 2: 12 similar math questions, one per missed QR/MA skill.
 - Math Session 3: 12 more similar math questions, one total 720-second deadline.
-- VR Sessions 1 and 2: identical sets of the 8 original VR misses, including the same answer-choice order. Each has independent scores and history.
+- VR Sessions 1 and 2: identical sets of 31 questions: 8 original VR questions followed by the 23 questions from the 250-word course’s final review. Each has independent scores and history.
 - Existing mixed-session attempts are split by subject on load and merge. Verbal history moves into VR Session 1; VR Session 2 starts fresh. Math history and question identities are retained.
 - No separate review session. Answer choices are always visible; explanations appear after a correct answer or two attempts, and after timeout.
 - QR Q37 has no marked right angle. The relationship is undetermined; do not infer a right angle from the drawing.
@@ -24,3 +24,11 @@ Original diagrams are stored locally in `assets/`; new diagrams are rendered by 
 Run `node --test tests.mjs` with `jsdom` available. Checks cover extracted scope, independent math calculations, separate scoring, retries, saved history, timer persistence/expiry, synchronization, and hub links.
 
 Both VR sessions share the existing live sync client: checked answers, retries, first-try scores, and run history sync every two seconds, after an answer, and on reconnect/focus. The VR heading and active session show a status badge; green “Live online sync” appears only after a successful server response. Offline changes remain local and retry automatically. VR Session 1 and Session 2 keep independent records. Run `node --test sync.test.mjs` for two-device tests with a mock server; tests never write to the learner's online record.
+
+## September 29: combined VR sessions
+
+The final review is copied from `marco-isee-words-250/review.js`, using the original data and the source course’s deterministic Session 6, Round 1 question order and answer choices. Definition prompts, parts of speech, and correct words are preserved. Imported questions have numeric identities `4000 + original word number`, plus the source course, source ID, and source session. They are ordinary questions in both VR sessions, with no separate review group. They are not counted as September 27 mock-test mistakes in the original test summary.
+
+Earlier VR runs keep their original eight-question scope and scores in history. On opening a VR session, the newest old run is continued as a 31-question run with its checked answers and retries carried forward; its original record remains intact. The added 23 questions start unanswered in this destination. New runs cover all 31. Both VR sessions retain their existing storage namespaces and independent records. Math content is unchanged.
+
+The 250-word course is archived on the hub, remains accessible at its original URL, and links to these combined VR sessions. Daily Test Review now appears before Zozeck Hard on the hub.

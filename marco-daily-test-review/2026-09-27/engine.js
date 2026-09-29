@@ -13,6 +13,7 @@
     return true;
   }
   function stats(session,run) {
+    if (run.questionSources) session={...session,questions:session.questions.filter(q=>run.questionSources.includes(q.source))};
     let first=0,attempted=0,corrected=0,revealed=0,finished=0;
     session.questions.forEach(q=>{
       const e=run.answers[q.source];if(!e?.attempts.length)return;

@@ -77,7 +77,7 @@
   }
   function header() {
     const intro = '331 questions across Sessions 1–14. Sessions 9–12 each have 20 Sentence Completion questions. Sessions 13–14 are 20-minute VR tests: 20 synonyms + 20 sentence completions each. Later rounds cover missed questions.';
-    return `<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a></p></div>
+    return `<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Archived 250 ISEE word list →</a></p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
   function picker() {
@@ -164,7 +164,7 @@
     app.innerHTML = header() + (view === 'practice' ? picker() : '') + syncNote() +
       (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
       (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
-      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Open the 250 ISEE word list →</a><span>331 questions · Sessions 1–14</span></footer>';
+      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Archived 250 ISEE word list →</a><span>331 questions · Sessions 1–14</span></footer>';
     if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
     expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
     const replacement = anchor && document.getElementById(anchor.id);

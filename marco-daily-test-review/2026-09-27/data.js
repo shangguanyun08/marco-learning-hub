@@ -947,7 +947,7 @@ window.MARCO_ISEE_PRACTICE = [
     "id": "vocab-original",
     "number": 1,
     "subject": "words",
-    "label": "Original missed VR",
+    "label": "VR practice",
     "questions": [
       {
         "source": 1010,
@@ -1084,6 +1084,466 @@ window.MARCO_ISEE_PRACTICE = [
         "correct": 2,
         "tip": "Look for a word that contrasts with “busy streets.”",
         "explanation": "Rustic means rural or characteristic of the countryside. It contrasts naturally with the city streets."
+      },
+      {
+        "source": 4167,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 167,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) cliff, height, bluff",
+        "choices": [
+          "Inference",
+          "Fugitive",
+          "Blight",
+          "Precipice"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Precipice (noun): cliff, height, bluff.",
+        "sourceId": "isee-167",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4048,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 48,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) award, grant, bestow",
+        "choices": [
+          "Certify",
+          "Clinch",
+          "Recede",
+          "Confer"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Confer (verb): award, grant, bestow.",
+        "sourceId": "isee-048",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4219,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 219,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) testimony, witness, evidence",
+        "choices": [
+          "Predicament",
+          "Calamity",
+          "Ailment",
+          "Testament"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Testament (noun): testimony, witness, evidence.",
+        "sourceId": "isee-219",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4155,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 155,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) exclude, forget, leave out",
+        "choices": [
+          "Abbreviate",
+          "Indulge",
+          "Omit",
+          "Aspire"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Omit (verb): exclude, forget, leave out.",
+        "sourceId": "isee-155",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4023,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 23,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) passionate, fervent, impassioned",
+        "choices": [
+          "Ardent",
+          "Advisable",
+          "Deliberate",
+          "Optical"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Ardent (adjective): passionate, fervent, impassioned.",
+        "sourceId": "isee-023",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4240,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 240,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) foul, repulsive, despicable",
+        "choices": [
+          "Irate",
+          "Barren",
+          "Vile",
+          "Legible"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Vile (adjective): foul, repulsive, despicable.",
+        "sourceId": "isee-240",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4061,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 61,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) drawing, illustration, representation",
+        "choices": [
+          "Depiction",
+          "Disdain",
+          "Lecture",
+          "Quota"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Depiction (noun): drawing, illustration, representation.",
+        "sourceId": "isee-061",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4134,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 134,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) setback, mistake, error",
+        "choices": [
+          "Inference",
+          "Enclosure",
+          "Disdain",
+          "Lapse"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Lapse (noun): setback, mistake, error.",
+        "sourceId": "isee-134",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4041,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 41,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) secure, confirm, settle",
+        "choices": [
+          "Clinch",
+          "Bide",
+          "Accentuate",
+          "Embezzle"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Clinch (verb): secure, confirm, settle.",
+        "sourceId": "isee-041",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4230,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 230,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) furnish, cover, pad",
+        "choices": [
+          "Upholster",
+          "Jeer",
+          "Extract",
+          "Affirm"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Upholster (verb): furnish, cover, pad.",
+        "sourceId": "isee-230",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4139,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 139,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) guide, navigate, direct",
+        "choices": [
+          "Maneuver",
+          "Abbreviate",
+          "Derive",
+          "Revere"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Maneuver (verb): guide, navigate, direct.",
+        "sourceId": "isee-139",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4166,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 166,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) consider, contemplate, think about",
+        "choices": [
+          "Ponder",
+          "Sever",
+          "Upholster",
+          "Falter"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Ponder (verb): consider, contemplate, think about.",
+        "sourceId": "isee-166",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4031,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 31,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) brag, self-congratulate, flaunt",
+        "choices": [
+          "Pantomime",
+          "Adorn",
+          "Appease",
+          "Boast"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Boast (verb): brag, self-congratulate, flaunt.",
+        "sourceId": "isee-031",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4185,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 185,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) pardon, suspension, truce",
+        "choices": [
+          "Transmission",
+          "Abode",
+          "Calamity",
+          "Reprieve"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Reprieve (noun): pardon, suspension, truce.",
+        "sourceId": "isee-185",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4044,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 44,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) unconsciousness, stupor, insensibility",
+        "choices": [
+          "Kin",
+          "Specification",
+          "Anatomy",
+          "Coma"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Coma (noun): unconsciousness, stupor, insensibility.",
+        "sourceId": "isee-044",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4015,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 15,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) standoffish, detached, haughty",
+        "choices": [
+          "Enthusiastic",
+          "Meager",
+          "Aloof",
+          "Torrid"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Aloof (adjective): standoffish, detached, haughty.",
+        "sourceId": "isee-015",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4009,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 9,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) prudent, wise, expedient",
+        "choices": [
+          "Timid",
+          "Universal",
+          "Advisable",
+          "Solitary"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Advisable (adjective): prudent, wise, expedient.",
+        "sourceId": "isee-009",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4055,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 55,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) respectable, appropriate, modest",
+        "choices": [
+          "Reluctant",
+          "Decent",
+          "Adequate",
+          "Toxic"
+        ],
+        "correct": 1,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Decent (adjective): respectable, appropriate, modest.",
+        "sourceId": "isee-055",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4184,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 184,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) abolish, cancel, withdraw",
+        "choices": [
+          "Repeal",
+          "Stifle",
+          "Pulverize",
+          "Naturalize"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Repeal (verb): abolish, cancel, withdraw.",
+        "sourceId": "isee-184",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4090,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 90,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) gone, expired, vanished",
+        "choices": [
+          "Extinct",
+          "Colossal",
+          "Lofty",
+          "Absolute"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Extinct (adjective): gone, expired, vanished.",
+        "sourceId": "isee-090",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4165,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 165,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) stabilize, level off, flatten out",
+        "choices": [
+          "Aspire",
+          "Plateau",
+          "Pulverize",
+          "Affirm"
+        ],
+        "correct": 1,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Plateau (verb): stabilize, level off, flatten out.",
+        "sourceId": "isee-165",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4192,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 192,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) offer, dedicate, forfeit",
+        "choices": [
+          "Flourish",
+          "Exult",
+          "Aspire",
+          "Sacrifice"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Sacrifice (verb): offer, dedicate, forfeit.",
+        "sourceId": "isee-192",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4112,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 112,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) commemorative, recognized, symbolic",
+        "choices": [
+          "Universal",
+          "Humane",
+          "Timid",
+          "Honorary"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Honorary (adjective): commemorative, recognized, symbolic.",
+        "sourceId": "isee-112",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
       }
     ]
   },
@@ -1091,7 +1551,7 @@ window.MARCO_ISEE_PRACTICE = [
     "id": "vocab-repeat",
     "number": 2,
     "subject": "words",
-    "label": "Repeat the same VR questions",
+    "label": "VR practice",
     "questions": [
       {
         "source": 1010,
@@ -1228,6 +1688,466 @@ window.MARCO_ISEE_PRACTICE = [
         "correct": 2,
         "tip": "Look for a word that contrasts with “busy streets.”",
         "explanation": "Rustic means rural or characteristic of the countryside. It contrasts naturally with the city streets."
+      },
+      {
+        "source": 4167,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 167,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) cliff, height, bluff",
+        "choices": [
+          "Inference",
+          "Fugitive",
+          "Blight",
+          "Precipice"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Precipice (noun): cliff, height, bluff.",
+        "sourceId": "isee-167",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4048,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 48,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) award, grant, bestow",
+        "choices": [
+          "Certify",
+          "Clinch",
+          "Recede",
+          "Confer"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Confer (verb): award, grant, bestow.",
+        "sourceId": "isee-048",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4219,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 219,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) testimony, witness, evidence",
+        "choices": [
+          "Predicament",
+          "Calamity",
+          "Ailment",
+          "Testament"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Testament (noun): testimony, witness, evidence.",
+        "sourceId": "isee-219",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4155,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 155,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) exclude, forget, leave out",
+        "choices": [
+          "Abbreviate",
+          "Indulge",
+          "Omit",
+          "Aspire"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Omit (verb): exclude, forget, leave out.",
+        "sourceId": "isee-155",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4023,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 23,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) passionate, fervent, impassioned",
+        "choices": [
+          "Ardent",
+          "Advisable",
+          "Deliberate",
+          "Optical"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Ardent (adjective): passionate, fervent, impassioned.",
+        "sourceId": "isee-023",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4240,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 240,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) foul, repulsive, despicable",
+        "choices": [
+          "Irate",
+          "Barren",
+          "Vile",
+          "Legible"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Vile (adjective): foul, repulsive, despicable.",
+        "sourceId": "isee-240",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4061,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 61,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) drawing, illustration, representation",
+        "choices": [
+          "Depiction",
+          "Disdain",
+          "Lecture",
+          "Quota"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Depiction (noun): drawing, illustration, representation.",
+        "sourceId": "isee-061",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4134,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 134,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) setback, mistake, error",
+        "choices": [
+          "Inference",
+          "Enclosure",
+          "Disdain",
+          "Lapse"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Lapse (noun): setback, mistake, error.",
+        "sourceId": "isee-134",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4041,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 41,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) secure, confirm, settle",
+        "choices": [
+          "Clinch",
+          "Bide",
+          "Accentuate",
+          "Embezzle"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Clinch (verb): secure, confirm, settle.",
+        "sourceId": "isee-041",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4230,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 230,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) furnish, cover, pad",
+        "choices": [
+          "Upholster",
+          "Jeer",
+          "Extract",
+          "Affirm"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Upholster (verb): furnish, cover, pad.",
+        "sourceId": "isee-230",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4139,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 139,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) guide, navigate, direct",
+        "choices": [
+          "Maneuver",
+          "Abbreviate",
+          "Derive",
+          "Revere"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Maneuver (verb): guide, navigate, direct.",
+        "sourceId": "isee-139",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4166,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 166,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) consider, contemplate, think about",
+        "choices": [
+          "Ponder",
+          "Sever",
+          "Upholster",
+          "Falter"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Ponder (verb): consider, contemplate, think about.",
+        "sourceId": "isee-166",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4031,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 31,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) brag, self-congratulate, flaunt",
+        "choices": [
+          "Pantomime",
+          "Adorn",
+          "Appease",
+          "Boast"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Boast (verb): brag, self-congratulate, flaunt.",
+        "sourceId": "isee-031",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4185,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 185,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) pardon, suspension, truce",
+        "choices": [
+          "Transmission",
+          "Abode",
+          "Calamity",
+          "Reprieve"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Reprieve (noun): pardon, suspension, truce.",
+        "sourceId": "isee-185",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4044,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 44,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (noun) unconsciousness, stupor, insensibility",
+        "choices": [
+          "Kin",
+          "Specification",
+          "Anatomy",
+          "Coma"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Coma (noun): unconsciousness, stupor, insensibility.",
+        "sourceId": "isee-044",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4015,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 15,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) standoffish, detached, haughty",
+        "choices": [
+          "Enthusiastic",
+          "Meager",
+          "Aloof",
+          "Torrid"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Aloof (adjective): standoffish, detached, haughty.",
+        "sourceId": "isee-015",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4009,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 9,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) prudent, wise, expedient",
+        "choices": [
+          "Timid",
+          "Universal",
+          "Advisable",
+          "Solitary"
+        ],
+        "correct": 2,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Advisable (adjective): prudent, wise, expedient.",
+        "sourceId": "isee-009",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4055,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 55,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) respectable, appropriate, modest",
+        "choices": [
+          "Reluctant",
+          "Decent",
+          "Adequate",
+          "Toxic"
+        ],
+        "correct": 1,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Decent (adjective): respectable, appropriate, modest.",
+        "sourceId": "isee-055",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4184,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 184,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) abolish, cancel, withdraw",
+        "choices": [
+          "Repeal",
+          "Stifle",
+          "Pulverize",
+          "Naturalize"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Repeal (verb): abolish, cancel, withdraw.",
+        "sourceId": "isee-184",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4090,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 90,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) gone, expired, vanished",
+        "choices": [
+          "Extinct",
+          "Colossal",
+          "Lofty",
+          "Absolute"
+        ],
+        "correct": 0,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Extinct (adjective): gone, expired, vanished.",
+        "sourceId": "isee-090",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4165,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 165,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) stabilize, level off, flatten out",
+        "choices": [
+          "Aspire",
+          "Plateau",
+          "Pulverize",
+          "Affirm"
+        ],
+        "correct": 1,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Plateau (verb): stabilize, level off, flatten out.",
+        "sourceId": "isee-165",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4192,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 192,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (verb) offer, dedicate, forfeit",
+        "choices": [
+          "Flourish",
+          "Exult",
+          "Aspire",
+          "Sacrifice"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Sacrifice (verb): offer, dedicate, forfeit.",
+        "sourceId": "isee-192",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
+      },
+      {
+        "source": 4112,
+        "section": "ISEE Words",
+        "subject": "words",
+        "number": 112,
+        "skill": "Word meaning",
+        "prompt": "Choose the vocabulary word: (adjective) commemorative, recognized, symbolic",
+        "choices": [
+          "Universal",
+          "Humane",
+          "Timid",
+          "Honorary"
+        ],
+        "correct": 3,
+        "tip": "Match both the meaning and the part of speech.",
+        "explanation": "Honorary (adjective): commemorative, recognized, symbolic.",
+        "sourceId": "isee-112",
+        "sourceCourse": "marco-isee-words-250",
+        "sourceSession": 6
       }
     ]
   }

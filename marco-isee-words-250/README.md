@@ -13,3 +13,7 @@ The layout and definition-to-word questions follow `marco-vocabulary-round2`. Al
 Progress uses the independent `marco-isee-words-250` service record and independent local-storage keys. The synchronizer merges every fetched record before a version-checked write, retaining answers across devices and offline retries. The shared activity service recognizes this course as Marco vocabulary; mastered sessions count in hub totals. Localhost and file previews save locally without online writes or activity tracking.
 
 Validation: `node --test marco-isee-words-250/quiz.test.cjs`. Browser checks cover every session, reload, locked answers, Rounds 1–4, results, mobile/tablet layouts, concurrent device saves, conflict handling and offline recovery. Backend checks verify independent version-protected storage and correct word-session counting.
+
+## Archived September 29, 2026
+
+The hub now lists this course under Marco’s archived sites. Its original URL, full question bank, and saved progress remain available. All 23 questions in the final review were also copied into both September 27 Daily Test Review VR sessions (31 questions each). The copied practice starts fresh for those 23 questions; historical results remain with this course.
