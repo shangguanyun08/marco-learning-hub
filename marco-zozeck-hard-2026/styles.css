@@ -226,5 +226,15 @@ button:disabled{cursor:not-allowed;opacity:.45}
 @media(max-width:900px){.session-picker{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.session-picker{grid-template-columns:repeat(2,minmax(0,1fr))}.site-footer>span{text-align:left}.topbar h1{line-height:1.15}}
 
+/* Keep the original ISEE list and the Zozeck synonym set in clearly named groups. */
+.session-picker{display:grid;grid-template-columns:1fr;gap:18px}
+.session-group{min-width:0}
+.session-group h2{font:700 22px/1.2 Georgia,serif;margin:0 0 10px}
+.session-group>p{color:var(--muted);margin:-3px 0 12px;font-weight:650}
+.session-group-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.session-group-grid .review-session{grid-column:1/-1}
+@media(max-width:900px){.session-group-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:600px){.session-group-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.session-group h2{font-size:19px}}
+
 .session-picker .review-session{grid-column:1/-1;border-color:var(--blue);background:#f0f5ff}.review-intro p{margin:6px 0 0;line-height:1.5;font-weight:500}
 .course-links{margin:8px 0 0;font-size:14px;font-weight:800}.course-links a{color:var(--blue-dark);text-decoration:none}.course-links a:hover{text-decoration:underline}
