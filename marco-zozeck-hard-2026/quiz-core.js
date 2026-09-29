@@ -39,7 +39,7 @@
     }
     return result;
   }
-  const questionOrder = (ids, session, number) => shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
+  const questionOrder = (ids, session, number) => Number(session) >= 13 && number === 1 ? [...ids] : shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
   function options(word, round, words, session) {
     const reviewSalt = Number(session) === 6 ? 'review:' : '';
     if (Array.isArray(word.choices)) {
@@ -105,6 +105,14 @@
     return true;
   }
   const current = session => session?.rounds?.at(-1);
+  function startTimed(progress, session, ids, at) {
+    if (!start(progress, session, ids, at)) return false;
+    Object.assign(current(progress.sessions[session]), {
+      timeLimitSeconds: 1200,
+      deadlineAt: new Date(Date.parse(at) + 1200000).toISOString()
+    });
+    return true;
+  }
   function answer(progress, session, choice, words, at, questionId) {
     const record = progress.sessions[session];
     const active = current(record);
@@ -112,7 +120,8 @@
     const id = questionId ?? active.ids[active.position];
     if (!active.ids.includes(id)) return false;
     const word = words.find(item => item.id === id);
-    if (!word || active.answers[id] || !options(word, active.number, words, session).includes(choice)) return false;
+    if (active.timeLimitSeconds && Date.parse(at) >= Date.parse(active.deadlineAt)) return false;
+    if (!word || (!active.timeLimitSeconds && active.answers[id]) || !options(word, active.number, words, session).includes(choice)) return false;
     active.answers[id] = {choice, correct: Array.isArray(word.choices) ? choice === word.answer : choice === id, at};
     return true;
   }
@@ -137,6 +146,17 @@
     else record.completedAt = at;
     return missed.length ? 'round' : 'complete';
   }
+  function finishTimed(progress, session, at) {
+    const active = current(progress.sessions[session]);
+    if (!active?.timeLimitSeconds || active.finishedAt) return false;
+    const finished = new Date(Math.min(Date.parse(at), Date.parse(active.deadlineAt))).toISOString();
+    for (const id of active.ids) {
+      if (!active.answers[id] || active.answers[id].at > finished) {
+        active.answers[id] = {choice:'', correct:false, unanswered:true, at:finished};
+      }
+    }
+    return finishRound(progress, session, finished);
+  }
   const score = progress => Object.values(progress?.sessions || {}).reduce((sum, session) => sum + (session.rounds || []).reduce((total, r) => total + Object.keys(r.answers || {}).length + (r.finishedAt ? 1 : 0), 0), 0);
   // Shared saves may arrive out of order. Keep immutable answers from both devices.
   function merge(left, right) {
@@ -152,6 +172,31 @@
       for (const source of incoming.rounds) {
         const target = existing.rounds.find(r => r.number === source.number);
         if (!target) { existing.rounds.push(copy(source)); continue; }
+        if (target.timeLimitSeconds || source.timeLimitSeconds) {
+          // The earliest start owns the deadline; opening another device cannot restart it.
+          const starts = [target, source].filter(r => r.timeLimitSeconds).map(r => r.startedAt).sort();
+          const deadline = new Date(Date.parse(starts[0]) + 1200000).toISOString();
+          const submitted = [target, source].filter(r => r.finishedAt).sort((a,b) =>
+            a.finishedAt.localeCompare(b.finishedAt) || JSON.stringify(a.answers).localeCompare(JSON.stringify(b.answers)));
+          if (submitted.length) {
+            // A submitted attempt is a frozen snapshot; stale draft saves cannot overwrite it.
+            target.answers = copy(submitted[0].answers);
+            target.finishedAt = submitted[0].finishedAt < deadline ? submitted[0].finishedAt : deadline;
+            for (const id of target.ids) {
+              if (!target.answers[id] || target.answers[id].at > target.finishedAt) {
+                target.answers[id] = {choice:'', correct:false, unanswered:true, at:target.finishedAt};
+              }
+            }
+          } else {
+            for (const [id,value] of Object.entries(source.answers)) {
+              const prior = target.answers[id];
+              if (!prior || value.at > prior.at || (value.at === prior.at && value.choice > prior.choice)) target.answers[id] = copy(value);
+            }
+            target.answers = Object.fromEntries(Object.entries(target.answers).filter(([id,value]) => target.ids.includes(id) && value.at < deadline));
+          }
+          Object.assign(target, {startedAt:starts[0], deadlineAt:deadline, timeLimitSeconds:1200});
+          continue;
+        }
         for (const [id, value] of Object.entries(source.answers)) {
           const prior = target.answers[id];
           if (!prior || value.at < prior.at || (value.at === prior.at && value.choice < prior.choice)) target.answers[id] = copy(value);
@@ -183,5 +228,5 @@
     }
     return result;
   }
-  return {blank, valid, configureLayout, questionOrder, options, start, current, answer, advance, finishRound, score, merge};
+  return {blank, valid, configureLayout, questionOrder, options, start, startTimed, current, answer, advance, finishRound, finishTimed, score, merge};
 });
