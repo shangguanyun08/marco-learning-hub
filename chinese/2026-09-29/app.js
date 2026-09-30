@@ -70,8 +70,20 @@ function readingLines(text){
  return text.match(/[^，。！？；\n]+[，。！？；]?[”’」』]?/g)||[text];
 }
 function characterLine(text){
- const line=document.createElement('p');line.className='reading-line';
- line.textContent=text.replace(/_+/g,'________');
+ const line=document.createElement('div');line.className='characters';
+ for(const part of text.split(/(_+)/)){
+  if(/^_+$/.test(part)){const blank=document.createElement('span');blank.className='blank';blank.textContent='填空';line.append(blank);continue;}
+  for(const char of part){
+   if(isHan(char)){
+    const button=document.createElement('button');button.type='button';button.className='char-button';button.setAttribute('aria-label','朗读汉字：'+char);
+    const glyph=document.createElement('span');glyph.className='glyph';glyph.textContent=char;
+    const icon=document.createElement('span');icon.className='speaker';icon.innerHTML=speakerIcon;icon.setAttribute('aria-hidden','true');
+    button.append(glyph,icon);button.addEventListener('click',()=>speak(char,button));line.append(button);
+   }else{
+    const span=document.createElement('span');span.className=/[\s\da-z.]/i.test(char)?'inline-label':'punctuation';span.textContent=char;line.append(span);
+   }
+  }
+ }
  return line;
 }
 function drawReading(){
