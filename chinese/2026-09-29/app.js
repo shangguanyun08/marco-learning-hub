@@ -66,9 +66,6 @@ function drawPractice(){
  $('previous').disabled=index===0;
  $('next').textContent=index===queue.length-1?'写好了，完成本轮 ✓':'写好了，下一个 →';
 }
-function readingLines(text){
- return text.match(/[^，。！？；\n]+[，。！？；]?[”’」』]?/g)||[text];
-}
 function characterLine(text){
  const line=document.createElement('div');line.className='characters';
  for(const part of text.split(/(_+)/)){
@@ -91,7 +88,7 @@ function drawReading(){
  for(const group of selectedGroups()){
   const section=document.createElement('section');section.className='reading-section';
   const heading=document.createElement('h2');heading.textContent=group.title;section.append(heading);
-  [group.title,...group.rows.flatMap(readingLines)].forEach((text,i)=>{
+  [group.title,...(group.lines||group.rows)].forEach((text,i)=>{
    const row=document.createElement('div');row.className='sentence';
    const head=document.createElement('div');head.className='sentence-head';
    const label=document.createElement('span');label.textContent=i===0?'标题':`第 ${i} 行`;
@@ -128,4 +125,5 @@ if($('test-sound'))$('test-sound').addEventListener('click',()=>speak('你好，
 if($('voice'))$('voice').addEventListener('change',stop);
 switchMode(location.hash==='#dictation'?'dictation':'reading');
 })();
+
 
