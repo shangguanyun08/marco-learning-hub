@@ -7,11 +7,16 @@ const isHan = char => /[\u3400-\u9fff]/.test(char);
 const synth=window.speechSynthesis;
 let mode='reading', queue=[], index=0, revealed=false, run=0, utterance=null, playing=null, startTimer=null;
 let voices=[];
+let preferredVoice='';
+try{preferredVoice=localStorage.getItem('marco-chinese-voice')||'';}catch{}
+const mandarin=v=>/^(zh|cmn)([-_]|$)/i.test(v.lang)&&!/HK|yue/i.test(v.lang);
+const voiceScore=v=>(/CN|Hans/i.test(v.lang)?100:0)+(/premium|enhanced|natural|neural|高质量|增强/i.test(v.name)?40:0)+(/Ting.?Ting|婷婷|Xiaoxiao|晓晓/i.test(v.name)?10:0);
+function rankedVoices(){return voices.filter(mandarin).sort((a,b)=>voiceScore(b)-voiceScore(a));}
 function refreshVoices(){
  voices=synth?synth.getVoices():[];
  const select=$('voice');if(!select)return;
- const selected=select.value;select.replaceChildren(new Option('自动选择普通话',''));
- voices.filter(v=>/^(zh|cmn)([-_]|$)/i.test(v.lang)&&!/HK|yue/i.test(v.lang)).forEach(v=>select.add(new Option(v.name+' · '+v.lang,v.voiceURI)));
+ const selected=preferredVoice||select.value;const best=rankedVoices()[0];select.replaceChildren(new Option(best?'自动 · '+best.name:'自动选择普通话',''));
+ rankedVoices().forEach(v=>select.add(new Option(v.name+' · '+v.lang,v.voiceURI)));
  if([...select.options].some(o=>o.value===selected))select.value=selected;
 }
 function stop(){
@@ -25,8 +30,8 @@ function speak(text,button){
  const id=run,u=new SpeechSynthesisUtterance(text.replace(/_+/g,'空格').replace(/p\.31/g,'第三十一页').replace(/（timing）|（courage）/g,''));
  utterance=u;u.lang='zh-CN';u.volume=1;u.rate=Number($('speed').value);
  refreshVoices();
- const voice=voices.find(v=>v.voiceURI===($('voice')&&$('voice').value));
- // Let the OS choose its default Mandarin voice unless the user selects one.
+ const voice=voices.find(v=>v.voiceURI===($('voice')&&$('voice').value))||rankedVoices()[0];
+ // Prefer available mainland Mandarin voices, with quality-labelled variants first.
  if(voice){u.voice=voice;u.lang=voice.lang;}
  $('status').textContent='正在启动朗读…';
  u.onstart=()=>{if(id!==run)return;clearTimeout(startTimer);$('status').textContent='正在朗读；如果听不到，请调高音量、关闭静音，并检查蓝牙音频输出。';};
@@ -122,7 +127,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
 window.addEventListener('pagehide',stop);
 if(synth){refreshVoices();synth.addEventListener('voiceschanged',refreshVoices);}
 if($('test-sound'))$('test-sound').addEventListener('click',()=>speak('你好，我们开始中文练习。',$('test-sound')));
-if($('voice'))$('voice').addEventListener('change',stop);
+if($('voice'))$('voice').addEventListener('change',()=>{stop();preferredVoice=$('voice').value;try{localStorage.setItem('marco-chinese-voice',preferredVoice);}catch{}});
 switchMode(location.hash==='#dictation'?'dictation':'reading');
 })();
 
