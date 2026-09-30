@@ -33,16 +33,17 @@ function speak(text,button){
  if(button){playing=button;button.classList.add('speaking');}
  $('stop').disabled=false;
  u.onend=()=>{if(id!==run)return;clearTimeout(startTimer);$('status').textContent='朗读结束。再点声音按钮可重听。';if(playing)playing.classList.remove('speaking');playing=null;utterance=null;$('stop').disabled=true;};
- u.onerror=e=>{if(id!==run)return;stop();$('status').textContent=e.error==='language-unavailable'||e.error==='voice-unavailable'?'请在设备中添加普通话朗读语音后重试。':'未能朗读（'+e.error+'）。请用 Safari 打开，或换一个中文声音再试。';};
- startTimer=setTimeout(()=>{if(id!==run)return;stop();$('status').textContent='朗读没有启动。请用 Safari 打开此页，选择一个中文声音，再点“测试声音”。';},5000);
+ u.onerror=e=>{if(id!==run)return;stop();$('status').textContent=e.error==='language-unavailable'||e.error==='voice-unavailable'?'请在设备中添加普通话朗读语音后重试。':'未能朗读（'+e.error+'）。请用 Safari 打开后再试。';};
+ startTimer=setTimeout(()=>{if(id!==run)return;stop();$('status').textContent='朗读没有启动。请用 Safari 打开此页，再点朗读按钮。';},5000);
  try{
   if(synth.paused)synth.resume();
   // Keep speak synchronous with the tap so iOS retains user activation.
   synth.speak(u);
  }catch(error){stop();$('status').textContent='无法启动朗读，请用 Safari 打开后重试。';}
 }
-function selectedGroups(){const available=mode==='dictation'?groups.filter(g=>g.dictation):groups;return $('scope').value==='all'?available:[groups[Number($('scope').value)]];}
-function populateScope(){ $('scope').replaceChildren(new Option(mode==='dictation'?'全部听写词语（26 个）':'全部阅读内容','all')); groups.forEach((g,i)=>{if(mode==='reading'||g.dictation)$('scope').add(new Option(g.title,String(i)));}); }
+function inMode(g){return mode==='dictation'?g.dictation:!g.dictation&&g.title!=='课文词汇与生字';}
+function selectedGroups(){const available=groups.filter(inMode);return $('scope').value==='all'?available:[groups[Number($('scope').value)]];}
+function populateScope(){ $('scope').replaceChildren(new Option(mode==='dictation'?'全部听写词语（26 个）':'全部阅读内容','all')); groups.forEach((g,i)=>{if(inMode(g))$('scope').add(new Option(g.title,String(i)));}); }
 function buildQueue(){
  queue=[];
  for(const group of selectedGroups()){
@@ -65,21 +66,12 @@ function drawPractice(){
  $('previous').disabled=index===0;
  $('next').textContent=index===queue.length-1?'写好了，完成本轮 ✓':'写好了，下一个 →';
 }
+function readingLines(text){
+ return text.match(/[^，。！？；\n]+[，。！？；]?[”’」』]?/g)||[text];
+}
 function characterLine(text){
- const line=document.createElement('div');line.className='characters';
- for(const part of text.split(/(_+)/)){
-  if(/^_+$/.test(part)){const span=document.createElement('span');span.className='blank';span.textContent='填空';line.append(span);continue;}
-  for(const char of part){
-   if(isHan(char)){
-    const b=document.createElement('button');b.type='button';b.className='char-button';b.setAttribute('aria-label',`朗读汉字：${char}`);
-    const glyph=document.createElement('span');glyph.className='glyph';glyph.textContent=char;
-    const icon=document.createElement('span');icon.className='speaker';icon.innerHTML=speakerIcon;icon.setAttribute('aria-hidden','true');
-    b.append(glyph,icon);b.addEventListener('click',()=>speak(char,b));line.append(b);
-   }else{
-    const span=document.createElement('span');span.className=/[\s\da-z.]/i.test(char)?'inline-label':'punctuation';span.textContent=char;line.append(span);
-   }
-  }
- }
+ const line=document.createElement('p');line.className='reading-line';
+ line.textContent=text.replace(/_+/g,'________');
  return line;
 }
 function drawReading(){
@@ -87,11 +79,11 @@ function drawReading(){
  for(const group of selectedGroups()){
   const section=document.createElement('section');section.className='reading-section';
   const heading=document.createElement('h2');heading.textContent=group.title;section.append(heading);
-  [group.title,...group.rows].forEach((text,i)=>{
+  [group.title,...group.rows.flatMap(readingLines)].forEach((text,i)=>{
    const row=document.createElement('div');row.className='sentence';
    const head=document.createElement('div');head.className='sentence-head';
-   const label=document.createElement('span');label.textContent=i===0?'标题':`第 ${i} 句`;
-   const read=document.createElement('button');read.innerHTML=speakerIcon+(i===0?' 读标题':' 读整句');read.addEventListener('click',()=>speak(text,read));
+   const label=document.createElement('span');label.textContent=i===0?'标题':`第 ${i} 行`;
+   const read=document.createElement('button');read.innerHTML=speakerIcon+(i===0?' 读标题':' 读整行');read.addEventListener('click',()=>speak(text,read));
    head.append(label,read);row.append(head,characterLine(text));section.append(row);
   });
   root.append(section);
