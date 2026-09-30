@@ -42,7 +42,9 @@
     $('#sessions').innerHTML=`<section class="session-group"><h2>Math · QR + MA</h2><div class="sessions">${cards('math')}</div></section><section class="session-group"><h2>Verbal Reasoning · VR <span data-sync-indicator role="status">${syncBadge()}</span></h2><p>Two sessions of 31 questions each: 8 mock-test questions + 23 word-meaning questions. Both sessions sync checked answers, retries, scores, and history across devices.</p><div class="sessions vr-sessions">${cards('words')}</div></section>`;
   }
   function timer(){
-    const timed=bank.find(s=>s.timeLimitSeconds),r=state.sessions[timed.id]?.at(-1),running=!!r?.deadlineAt&&!r.completedAt;
+    const timedSessions=bank.filter(s=>s.timeLimitSeconds),runningSessions=timedSessions.filter(s=>{const run=state.sessions[s.id]?.at(-1);return !!run?.deadlineAt&&!run.completedAt;});
+    const timed=runningSessions.find(s=>s===active)||runningSessions[0]||(active.timeLimitSeconds?active:timedSessions[0]),r=state.sessions[timed.id]?.at(-1),running=!!r?.deadlineAt&&!r.completedAt;
+    const timerLink=$('#running-timer a');timerLink.href='?session=session-'+timed.number;timerLink.textContent='Math Session '+timed.number;$('#running-timer').setAttribute('aria-label','Time remaining for Session '+timed.number);
     $('#running-timer').hidden=!running;document.body.classList.toggle('timer-running',running);
     const seconds=r?.deadlineAt?Math.max(0,Math.ceil((Date.parse(r.deadlineAt)-Date.now())/1000)):timed.timeLimitSeconds;
     $('#running-countdown').textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')} remaining`;
@@ -64,8 +66,9 @@
   function render(){
     document.title=`${active.subject==='words'?'VR':'Math'} Session ${active.number} · September 27, 2026 · Marco`;
     $('#session-title').textContent=`${active.subject==='words'?'VR':'Math'} Session ${active.number} · ${active.label}`;
-    $('#session-description').textContent=active.subject==='words'?'31 questions together: 8 mock-test questions and 23 vocabulary questions. Both sessions use the same questions and choices, with independent first-try scores and one retry per question.':active.number===1?'Repeat the 12 math questions you missed in QR and MA. One retry is allowed; then read the answer and explanation.':active.number===2?'12 new math questions on the same QR and MA skills. One point for a correct first answer; one retry is allowed.':'12 fresh math questions. One 12-minute timer covers the whole session, including retries.';
-    $('#timer-panel').hidden=!active?.timeLimitSeconds;$('#question-work').hidden=false;$('#scorebar').hidden=false;$('#records').hidden=false;$('#completion').hidden=true;
+    $('#session-description').textContent=active.subject==='words'?'31 questions together: 8 mock-test questions and 23 vocabulary questions. Both sessions use the same questions and choices, with independent first-try scores and one retry per question.':active.number===1?'Repeat the 12 math questions you missed in QR and MA. One retry is allowed; then read the answer and explanation.':!active.timeLimitSeconds?'12 new math questions on the same QR and MA skills. One point for a correct first answer; one retry is allowed.':'12 fresh math questions. One 12-minute timer covers the whole session, including retries.';
+    $('#timer-panel').hidden=!active?.timeLimitSeconds;
+    if(active.timeLimitSeconds){const minutes=active.timeLimitSeconds/60;$('#timer-panel strong').textContent=active.questions.length+' questions · '+minutes+' minutes total';$('#start-timer').textContent='Start '+minutes+'-minute session';}$('#question-work').hidden=false;$('#scorebar').hidden=false;$('#records').hidden=false;$('#completion').hidden=true;
     $('#questions').innerHTML=active.questions.map((q,i)=>question(q,i)).join('');
     summary();
     saveNote();
@@ -90,3 +93,4 @@
   render();expire();setInterval(()=>{expire();timer();},500);
   if(!local){const script=document.createElement('script');script.src='../../shared-activity-tracker.js?v=1';script.dataset.appId=KEY;script.dataset.course='Marco ISEE review · September 27';document.body.append(script);}
 })();
+

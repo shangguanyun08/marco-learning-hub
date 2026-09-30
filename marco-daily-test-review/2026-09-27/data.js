@@ -944,6 +944,697 @@ window.MARCO_ISEE_PRACTICE = [
     ]
   },
   {
+    "id": "math-c",
+    "number": 4,
+    "subject": "math",
+    "label": "Similar math practice 2",
+    "questions": [
+      {
+        "source": 2014,
+        "section": "QR",
+        "subject": "math",
+        "number": 14,
+        "skill": "Completing a cube",
+        "prompt": "The block shown is made of equal unit cubes. Which block can be attached to make a 5 × 5 × 5 cube?",
+        "choices": [
+          "1 × 5 × 5 block",
+          "2 × 5 × 5 block",
+          "2 × 4 × 5 block",
+          "5 × 5 × 5 block"
+        ],
+        "correct": 1,
+        "tip": "Compare each edge length with the target cube.",
+        "explanation": "The block is 3 × 5 × 5. Add 5 − 3 = 2 layers, so the missing block is 2 × 5 × 5.",
+        "diagram": {
+          "type": "cuboid",
+          "dims": [
+            3,
+            5,
+            5
+          ]
+        },
+        "choiceBlocks": [
+          [
+            1,
+            5,
+            5
+          ],
+          [
+            2,
+            5,
+            5
+          ],
+          [
+            2,
+            4,
+            5
+          ],
+          [
+            5,
+            5,
+            5
+          ]
+        ]
+      },
+      {
+        "source": 2017,
+        "section": "QR",
+        "subject": "math",
+        "number": 17,
+        "skill": "Proportions",
+        "prompt": "A punch recipe uses 3 parts soda to 4 parts juice. Which proportion gives the ounces of juice, x, needed for 180 ounces of soda?",
+        "choices": [
+          "3/4 = x/180",
+          "4/7 = x/180",
+          "4/3 = x/180",
+          "4/3 = 180/x"
+        ],
+        "correct": 2,
+        "tip": "Keep juice over soda on both sides.",
+        "explanation": "Keep juice over soda: 4/3 = x/180. This gives x = 180 × 4/3 = 240 ounces."
+      },
+      {
+        "source": 2023,
+        "section": "QR",
+        "subject": "math",
+        "number": 23,
+        "skill": "Mean and median",
+        "prompt": "The graph shows games played during one week. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 1,
+        "tip": "Find the mean and median separately; an unusually high or low value affects the mean.",
+        "explanation": "The sum is 35, so the mean is 35 ÷ 7 = 5. The sorted values are 1, 3, 5, 6, 6, 7, 7; the median is 6. Column B is greater.",
+        "diagram": {
+          "type": "bars",
+          "values": [
+            1,
+            3,
+            5,
+            6,
+            6,
+            7,
+            7
+          ],
+          "labels": [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun"
+          ],
+          "title": "Games played in one week"
+        },
+        "columns": [
+          "Mean number of games per day",
+          "Median number of games per day"
+        ]
+      },
+      {
+        "source": 2029,
+        "section": "QR",
+        "subject": "math",
+        "number": 29,
+        "skill": "Percent comparisons",
+        "prompt": "Account A has a smaller positive balance than Account B. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 3,
+        "tip": "Try two different pairs of starting balances that satisfy A < B.",
+        "explanation": "If A = $50 and B = $100, the new balances are $65 and $90. If A = $80 and B = $100, they become $104 and $90. Either column can be greater, so the relationship cannot be determined.",
+        "columns": [
+          "Account A after a 30% increase",
+          "Account B after a 10% decrease"
+        ]
+      },
+      {
+        "source": 2033,
+        "section": "QR",
+        "subject": "math",
+        "number": 33,
+        "skill": "Probability and factors",
+        "prompt": "The spinner has eight equal sections numbered 1–8. Odd-numbered sections are shaded. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 2,
+        "tip": "List the favorable numbers for each event.",
+        "explanation": "Unshaded factors of 8 are 2, 4, 8. Shaded numbers less than 6 are 1, 3, 5. Each event has 3 favorable outcomes out of 8, so the probabilities are equal.",
+        "diagram": {
+          "type": "spinner"
+        },
+        "columns": [
+          "Probability of an unshaded factor of 8",
+          "Probability of a shaded number less than 6"
+        ]
+      },
+      {
+        "source": 2034,
+        "section": "QR",
+        "subject": "math",
+        "number": 34,
+        "skill": "Unit prices",
+        "prompt": "Use the price table to compare the cost per item.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 0,
+        "tip": "Divide each total price by its matching quantity.",
+        "explanation": "$360 ÷ 80 = $4.50 each. $800 ÷ 200 = $4 each. Column A is greater.",
+        "diagram": {
+          "type": "table",
+          "headers": [
+            "Quantity",
+            "Total price"
+          ],
+          "rows": [
+            [
+              80,
+              "$360"
+            ],
+            [
+              200,
+              "$800"
+            ]
+          ]
+        },
+        "columns": [
+          "Unit price for 80 pavers",
+          "Unit price for 200 pavers"
+        ]
+      },
+      {
+        "source": 2037,
+        "section": "QR",
+        "subject": "math",
+        "number": 37,
+        "skill": "Triangle information",
+        "prompt": "A triangle has sides x, 6, and 11. No right angle is marked. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 3,
+        "tip": "Use only given information. Use the Pythagorean theorem only when a right angle is given.",
+        "explanation": "The triangle inequality gives 11 − 6 < x < 11 + 6, or 5 < x < 17. For example, x could be 8 or 10. Both triangles are possible, so the relationship cannot be determined.",
+        "diagram": {
+          "type": "triangle",
+          "base": 6,
+          "side": 11,
+          "right": false
+        },
+        "columns": [
+          "x",
+          "9"
+        ]
+      },
+      {
+        "source": 3027,
+        "section": "MA",
+        "subject": "math",
+        "number": 27,
+        "skill": "Composite area",
+        "prompt": "All segments of the polygon are perpendicular or parallel. What is its area?",
+        "choices": [
+          "103 cm²",
+          "105 cm²",
+          "135 cm²",
+          "165 cm²"
+        ],
+        "correct": 0,
+        "tip": "Split the shape into three vertical rectangles.",
+        "explanation": "Left rectangle: 3 × 9 = 27. Middle: 5 × (8 + 3) = 55. Right: (15 − 3 − 5) × 3 = 21. Total: 27 + 55 + 21 = 103 cm².",
+        "diagram": {
+          "type": "area",
+          "top": 15,
+          "left": 9,
+          "step": 3,
+          "bottom": 5,
+          "lower": 8,
+          "bar": 3
+        }
+      },
+      {
+        "source": 3031,
+        "section": "MA",
+        "subject": "math",
+        "number": 31,
+        "skill": "Mean minus median",
+        "prompt": "The graph shows books read by nine students. What is the mean number of books minus the median number of books?",
+        "choices": [
+          "5",
+          "3",
+          "8",
+          "13"
+        ],
+        "correct": 1,
+        "tip": "The median of nine sorted values is the fifth value.",
+        "explanation": "The values sum to 72, so the mean is 72 ÷ 9 = 8. The fifth sorted value is 5, which is the median. The difference is 8 − 5 = 3.",
+        "diagram": {
+          "type": "bars",
+          "values": [
+            2,
+            3,
+            3,
+            4,
+            5,
+            6,
+            7,
+            9,
+            33
+          ],
+          "labels": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "title": "Books read by nine students"
+        }
+      },
+      {
+        "source": 3041,
+        "section": "MA",
+        "subject": "math",
+        "number": 41,
+        "skill": "Interpreting a formula",
+        "prompt": "A delivery cost is y = 7x + 18, where x is the number of packages. What does 7 represent?",
+        "choices": [
+          "The fixed delivery fee is $7.",
+          "The cost increases by $7 for each additional package.",
+          "The cost increases by $18 for each additional package.",
+          "Delivering 18 packages costs $7."
+        ],
+        "correct": 1,
+        "tip": "The coefficient gives the change in total cost when x increases by one.",
+        "explanation": "The coefficient 7 multiplies the package count, so each additional package adds $7. The $18 term is a fixed charge."
+      },
+      {
+        "source": 3044,
+        "section": "MA",
+        "subject": "math",
+        "number": 44,
+        "skill": "Equivalent proportions",
+        "prompt": "If p/7 = q/12, which equation must be true?",
+        "choices": [
+          "7p = 12q",
+          "pq = 84",
+          "12p = 7q",
+          "p + q = 19"
+        ],
+        "correct": 2,
+        "tip": "Cross-multiply: each numerator multiplies the opposite denominator.",
+        "explanation": "Cross-multiply, or multiply both sides by 84: 12p = 7q."
+      },
+      {
+        "source": 3047,
+        "section": "MA",
+        "subject": "math",
+        "number": 47,
+        "skill": "Work rates",
+        "prompt": "Noah paints 2/3 of a wall in one hour. At the same rate, how many additional hours will he need to finish the wall?",
+        "choices": [
+          "0.33",
+          "0.50",
+          "0.67",
+          "1.50"
+        ],
+        "correct": 1,
+        "tip": "Divide the unfinished fraction by the hourly rate.",
+        "explanation": "The unfinished part is 1/3. Time = (1/3) ÷ (2/3) = 1/2 hour = 0.50 hour."
+      }
+    ]
+  },
+  {
+    "id": "math-d",
+    "number": 5,
+    "subject": "math",
+    "label": "Timed similar math 2",
+    "timeLimitSeconds": 720,
+    "questions": [
+      {
+        "source": 2014,
+        "section": "QR",
+        "subject": "math",
+        "number": 14,
+        "skill": "Completing a cube",
+        "prompt": "The block shown is made of equal unit cubes. Which block can be attached to make a 6 × 6 × 6 cube?",
+        "choices": [
+          "1 × 6 × 6 block",
+          "2 × 6 × 6 block",
+          "2 × 5 × 6 block",
+          "6 × 6 × 6 block"
+        ],
+        "correct": 1,
+        "tip": "Compare each edge length with the target cube.",
+        "explanation": "The block is 4 × 6 × 6. Add 6 − 4 = 2 layers, so the missing block is 2 × 6 × 6.",
+        "diagram": {
+          "type": "cuboid",
+          "dims": [
+            4,
+            6,
+            6
+          ]
+        },
+        "choiceBlocks": [
+          [
+            1,
+            6,
+            6
+          ],
+          [
+            2,
+            6,
+            6
+          ],
+          [
+            2,
+            5,
+            6
+          ],
+          [
+            6,
+            6,
+            6
+          ]
+        ]
+      },
+      {
+        "source": 2017,
+        "section": "QR",
+        "subject": "math",
+        "number": 17,
+        "skill": "Proportions",
+        "prompt": "A punch recipe uses 5 parts soda to 8 parts juice. Which proportion gives the ounces of juice, x, needed for 150 ounces of soda?",
+        "choices": [
+          "5/8 = x/150",
+          "8/13 = x/150",
+          "8/5 = x/150",
+          "8/5 = 150/x"
+        ],
+        "correct": 2,
+        "tip": "Keep juice over soda on both sides.",
+        "explanation": "Keep juice over soda: 8/5 = x/150. This gives x = 150 × 8/5 = 240 ounces."
+      },
+      {
+        "source": 2023,
+        "section": "QR",
+        "subject": "math",
+        "number": 23,
+        "skill": "Mean and median",
+        "prompt": "The graph shows games played during one week. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 2,
+        "tip": "Find the mean and median separately; an unusually high or low value affects the mean.",
+        "explanation": "The sum is 49, so the mean is 49 ÷ 7 = 7. The sorted values are 2, 4, 6, 7, 8, 9, 13; the median is 7. The quantities are equal.",
+        "diagram": {
+          "type": "bars",
+          "values": [
+            2,
+            4,
+            6,
+            7,
+            8,
+            9,
+            13
+          ],
+          "labels": [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun"
+          ],
+          "title": "Games played in one week"
+        },
+        "columns": [
+          "Mean number of games per day",
+          "Median number of games per day"
+        ]
+      },
+      {
+        "source": 2029,
+        "section": "QR",
+        "subject": "math",
+        "number": 29,
+        "skill": "Percent comparisons",
+        "prompt": "Account A contains $120 and Account B contains $150. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 0,
+        "tip": "Multiply by 1 + the increase rate or 1 − the decrease rate.",
+        "explanation": "Account A becomes 120 × 1.25 = $150. Account B becomes 150 × 0.80 = $120. Column A is greater.",
+        "columns": [
+          "Account A after a 25% increase",
+          "Account B after a 20% decrease"
+        ]
+      },
+      {
+        "source": 2033,
+        "section": "QR",
+        "subject": "math",
+        "number": 33,
+        "skill": "Probability and factors",
+        "prompt": "The spinner has eight equal sections numbered 1–8. Odd-numbered sections are shaded. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 0,
+        "tip": "List the favorable numbers for each event.",
+        "explanation": "Unshaded factors of 8 are 2, 4, 8: three outcomes. Shaded factors of 6 are 1, 3: two outcomes. Thus 3/8 > 2/8, so Column A is greater.",
+        "diagram": {
+          "type": "spinner"
+        },
+        "columns": [
+          "Probability of an unshaded factor of 8",
+          "Probability of a shaded factor of 6"
+        ]
+      },
+      {
+        "source": 2034,
+        "section": "QR",
+        "subject": "math",
+        "number": 34,
+        "skill": "Unit prices",
+        "prompt": "Use the price table to compare the cost per item.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 1,
+        "tip": "Divide each total price by its matching quantity.",
+        "explanation": "$640 ÷ 160 = $4 each. $1,125 ÷ 250 = $4.50 each. Column B is greater.",
+        "diagram": {
+          "type": "table",
+          "headers": [
+            "Quantity",
+            "Total price"
+          ],
+          "rows": [
+            [
+              160,
+              "$640"
+            ],
+            [
+              250,
+              "$1,125"
+            ]
+          ]
+        },
+        "columns": [
+          "Unit price for 160 pavers",
+          "Unit price for 250 pavers"
+        ]
+      },
+      {
+        "source": 2037,
+        "section": "QR",
+        "subject": "math",
+        "number": 37,
+        "skill": "Triangle information",
+        "prompt": "A right triangle has legs x and 9 and a hypotenuse of 15. The right angle is marked. Compare the quantities.",
+        "choices": [
+          "The quantity in Column A is greater.",
+          "The quantity in Column B is greater.",
+          "The two quantities are equal.",
+          "The relationship cannot be determined from the information given."
+        ],
+        "correct": 2,
+        "tip": "Use only given information. Use the Pythagorean theorem only when a right angle is given.",
+        "explanation": "x² + 9² = 15², so x² = 225 − 81 = 144 and x = 12. The quantities are equal.",
+        "diagram": {
+          "type": "triangle",
+          "base": 9,
+          "side": 15,
+          "right": true
+        },
+        "columns": [
+          "x",
+          "12"
+        ]
+      },
+      {
+        "source": 3027,
+        "section": "MA",
+        "subject": "math",
+        "number": 27,
+        "skill": "Composite area",
+        "prompt": "All segments of the polygon are perpendicular or parallel. What is its area?",
+        "choices": [
+          "148 cm²",
+          "156 cm²",
+          "198 cm²",
+          "234 cm²"
+        ],
+        "correct": 1,
+        "tip": "Split the shape into three vertical rectangles.",
+        "explanation": "Left rectangle: 3 × 11 = 33. Middle: 7 × (9 + 4) = 91. Right: (18 − 3 − 7) × 4 = 32. Total: 33 + 91 + 32 = 156 cm².",
+        "diagram": {
+          "type": "area",
+          "top": 18,
+          "left": 11,
+          "step": 3,
+          "bottom": 7,
+          "lower": 9,
+          "bar": 4
+        }
+      },
+      {
+        "source": 3031,
+        "section": "MA",
+        "subject": "math",
+        "number": 31,
+        "skill": "Mean minus median",
+        "prompt": "The graph shows books read by nine students. What is the mean number of books minus the median number of books?",
+        "choices": [
+          "6",
+          "8",
+          "2",
+          "3"
+        ],
+        "correct": 2,
+        "tip": "The median of nine sorted values is the fifth value.",
+        "explanation": "The values sum to 72, so the mean is 72 ÷ 9 = 8. The fifth sorted value is 6, which is the median. The difference is 8 − 6 = 2.",
+        "diagram": {
+          "type": "bars",
+          "values": [
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            10,
+            27
+          ],
+          "labels": [
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I"
+          ],
+          "title": "Books read by nine students"
+        }
+      },
+      {
+        "source": 3041,
+        "section": "MA",
+        "subject": "math",
+        "number": 41,
+        "skill": "Interpreting a formula",
+        "prompt": "A delivery cost is y = 8x + 12, where x is the number of packages. What does 8 represent?",
+        "choices": [
+          "The fixed delivery fee is $8.",
+          "The cost increases by $8 for each additional package.",
+          "The cost increases by $12 for each additional package.",
+          "Delivering 12 packages costs $8."
+        ],
+        "correct": 1,
+        "tip": "The coefficient gives the change in total cost when x increases by one.",
+        "explanation": "The coefficient 8 multiplies the package count, so each additional package adds $8. The $12 term is a fixed charge."
+      },
+      {
+        "source": 3044,
+        "section": "MA",
+        "subject": "math",
+        "number": 44,
+        "skill": "Equivalent proportions",
+        "prompt": "If p/8 = q/13, which equation must be true?",
+        "choices": [
+          "8p = 13q",
+          "pq = 104",
+          "13p = 8q",
+          "p + q = 21"
+        ],
+        "correct": 2,
+        "tip": "Cross-multiply: each numerator multiplies the opposite denominator.",
+        "explanation": "Cross-multiply, or multiply both sides by 104: 13p = 8q."
+      },
+      {
+        "source": 3047,
+        "section": "MA",
+        "subject": "math",
+        "number": 47,
+        "skill": "Work rates",
+        "prompt": "Noah paints 4/7 of a wall in one hour. At the same rate, how many additional hours will he need to finish the wall?",
+        "choices": [
+          "0.43",
+          "0.57",
+          "0.75",
+          "1.75"
+        ],
+        "correct": 2,
+        "tip": "Divide the unfinished fraction by the hourly rate.",
+        "explanation": "The unfinished part is 3/7. Time = (3/7) ÷ (4/7) = 3/4 hour = 0.75 hour."
+      }
+    ]
+  },
+  {
     "id": "vocab-original",
     "number": 1,
     "subject": "words",
