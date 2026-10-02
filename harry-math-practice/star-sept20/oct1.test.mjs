@@ -69,7 +69,8 @@ test('Oct 1 typed decimals upload and restore without replacing September histor
 });
 test('Q19-style multiplication needs both products and the sum, preserves retries and sync',()=>{
  let t=boot('oct1-a'),q=t.s.questions.find(q=>q.source===102),f=()=>t.d.querySelector('form[data-source="102"]');
- assert.equal(f().querySelectorAll('input[name="number-part"]').length,3);assert.match(f().textContent,/25 × 100.*25 × 12.*Total/);
+ assert.equal(f().querySelectorAll('input[name="number-part"]').length,3);assert.doesNotMatch(f().textContent,/25 × 100|25 × 12|Multiply each part/);
+ assert.equal(f().querySelectorAll('label .sr-only').length,3);
  assert.equal(f().querySelectorAll('input[value="2500"]').length,0);assert.equal(t.d.querySelector('[data-source="102"] .answer'),null);
  answer(t,q,['2500','','2800']);assert.equal(t.w.localStorage.getItem(KEY),null);assert.match(t.d.querySelector('#feedback-102').textContent,/all three boxes/);
  answer(t,q,['2500','30','2800']);assert.equal(t.d.querySelector('[data-source="102"] .answer'),null);
@@ -89,4 +90,13 @@ test('Session 1 completed 16/22 record stays unchanged after opening a focused s
  t.d.querySelector('a[href="?session=oct1-a"]').click();assert.equal(t.d.querySelectorAll('.question').length,12);
  answer(t,t.w.HARRY_SEPT_PRACTICE.find(s=>s.id==='oct1-a').questions.find(q=>q.source===205),'8');
  const saved=JSON.parse(t.w.localStorage.getItem(KEY));assert.deepEqual(saved.sessions['oct1-original'][0],run);t.close();
+});
+test('All six two-step questions have blank boxes without per-box calculation hints',()=>{
+ for(const id of ['oct1-a','oct1-b','oct1-c']){const t=boot(id);
+  for(const q of t.s.questions.filter(q=>q.type==='split-sum')){
+   const form=t.d.querySelector(`form[data-source="${q.source}"]`);assert.doesNotMatch(form.textContent,/×|Multiply each part/);
+   assert.equal(form.querySelectorAll('.split-equation span:not(.sr-only)').length,0);
+   assert.equal(form.querySelectorAll('input').length,3);for(const input of form.querySelectorAll('input'))assert.equal(input.value,'');
+  }t.close();
+ }
 });
