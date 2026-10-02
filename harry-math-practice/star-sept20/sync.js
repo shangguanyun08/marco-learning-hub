@@ -2,7 +2,11 @@
   'use strict';
   const APP_ID='harry-star-sept20-four-sessions-v1';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
-  const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c'];
+  const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b'];
+  const validTyped=(id,source,value)=>typeof value==='string'&&(
+    (source==='102'&&/^\d{1,15}$/.test(value))||
+    (id.startsWith('oct1-')&&['201','202','203','205','206','207','208','209','210'].includes(source)&&/^\d{1,15}$/.test(value))||
+    (id.startsWith('oct1-')&&['214','215'].includes(source)&&/^\d{1,12}(?:\.\d{1,8})?$/.test(value)));
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
@@ -11,7 +15,7 @@
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
           /^\d+$/.test(source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
-            object(a)&&((Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)||(source==='102'&&typeof a.choice==='string'&&/^\d{1,15}$/.test(a.choice)))&&typeof a.correct==='boolean'&&time(a.at)))));
+            object(a)&&((Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)||validTyped(id,source,a.choice))&&typeof a.correct==='boolean'&&time(a.at)))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
   const compatible=(a,b)=>Object.keys(a.answers).every(key=>{
@@ -52,7 +56,7 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.values(run.answers);
-          const expected=id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          const expected=id.startsWith('oct1-')?22:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
           if(!run.completedAt&&entries.length===expected&&entries.every(e=>e.attempts.length===2||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });

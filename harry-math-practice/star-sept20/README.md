@@ -1,5 +1,15 @@
 # Dated STAR Math follow-up groups
 
+## October 1 · Lesson 14 and targeted review
+
+`?group=2026-10-01` adds three sessions (`oct1-original`, `oct1-a`, `oct1-b`), each with 22 questions. Original Lesson 14 content was read from the report's own studentReport endpoint after the Chrome connection failed. The report identifies lesson 14, “Multi-digit Number Division.” Private report URLs, access tokens, student identifiers, and raw responses are not saved or published.
+
+18 missed/unfinished parts are included: Q1(a–c), Q2(a), Q3(a–b), Q4(a–b), Q5(a–b), Q7(a–b), Q9, Q10(c–d), Q11, Q12, Q13. Q1(b–c), Q3(b), and Q7(a–b) are unfinished rather than confirmed wrong answers; they are labeled accordingly in the original session. Child responses were matched by question ID, not array order (Q5's response order is reversed). Correct Q2(b), Q6, Q8 and the seven correct Q10 parts are excluded. Remainder problems preserve the original numbers and are adapted to four choices; zero divisions and decimals use typed answers. Both similar sessions match each included part with new numbers/context. Every session shows all questions at once.
+
+The four review skills were selected using wrong **first attempts** across the four attempted September 27 sessions: friendly-number multiplication (4/4), improper fractions (3/4), coordinate points (2/4), and multiplying three groups (2/4). Ties were broken by the most recent first miss. The original session repeats the original September 27 items; the other two include fresh matched items. The report and history were read only; no learner records were overwritten.
+
+Existing September 20/27 IDs, questions, answer ordering, storage key, and saved records remain unchanged. Sync recognizes the three new session IDs and typed decimal answers. Decimal normalization is opt-in; existing whole-number questions still reject decimal input. First tries alone earn score; retries are recorded separately and answers are revealed after two misses. Current bank: 202 questions across 14 sessions. Run `pnpm test` from `harry-math-practice` for old regression tests and Oct 1 checks.
+
 ## Think Academy addition (reviewed September 27)
 
 The open Think Academy report showed 3/6 points, with Q2, Q4 and Q6 marked incorrect. Q2: `25 × 104 = 25 × (100 + 4)`; entered 7200, correct 2600. Q4: inputs 20/25/30/35 produce 4/5/6/7; selected `a − 16`, correct `a ÷ 5`. Q6: 8 million divided by 40 thousand; selected 20, correct 200. The report's account URL and token are not stored or published.

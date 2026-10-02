@@ -4,10 +4,16 @@
     const text=String(value).trim().replace(/[ ,]/g,'');
     return /^\d+$/.test(text)&&Number.isSafeInteger(Number(text))?String(Number(text)):null;
   };
-  const isCorrect = (question,choice) => question.type==='number'?normalize(choice)!==null&&Number(normalize(choice))===question.correct:choice===question.correct;
+  const normalizeDecimal = value => {
+    const text=String(value).trim().replace(/[ ,]/g,'');
+    return /^\d+(?:\.\d{1,8})?$/.test(text)&&Number.isFinite(Number(text))&&Number(text)<1e12?String(Number(text)):null;
+  };
+  const typed = question => question.type==='number'||question.type==='decimal';
+  const normalizeFor = (question,value) => question.decimal?normalizeDecimal(value):normalize(value);
+  const isCorrect = (question,choice) => typed(question)?normalizeFor(question,choice)!==null&&Number(normalizeFor(question,choice))===question.correct:choice===question.correct;
   const done = (question,entry) => !!entry && (entry.attempts.length >= 2 || entry.attempts.some(a=>isCorrect(question,a.choice)));
   function submit(run,question,choice,at) {
-    if(question.type==='number'){choice=normalize(choice);if(choice===null)return false;}
+    if(typed(question)){choice=normalizeFor(question,choice);if(choice===null)return false;}
     else if (!Number.isInteger(choice) || choice<0 || choice>=question.choices.length) return false;
     const entry=run.answers[question.source] || {attempts:[]};
     if (done(question,entry) || entry.attempts.some(a=>a.choice===choice)) return false;
@@ -27,5 +33,5 @@
     });
     return {first,attempted,corrected,revealed,finished,total:session.questions.length,percent:Math.round(first/session.questions.length*100)};
   }
-  root.HarrySeptEngine={done,submit,stats,isCorrect,normalize};
+  root.HarrySeptEngine={done,submit,stats,isCorrect,normalize,normalizeFor,typed};
 })(typeof window==='undefined'?globalThis:window);

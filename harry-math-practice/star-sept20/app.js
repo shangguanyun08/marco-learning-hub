@@ -23,7 +23,7 @@
   const sourceLabel=q=>q.sourceLabel||`STAR Q${q.source}`;
   const chosenText=(q,choice)=>q.type==='number'?esc(choice):`${'ABCD'[choice]} (${esc(q.choices[choice])})`;
   function numericField(q,attempts,closed){
-    return `<div class="numeric-entry"><label for="number-${q.source}">Your answer</label><input id="number-${q.source}" name="number-answer" type="text" inputmode="numeric" autocomplete="off" ${closed?'disabled':''} aria-describedby="feedback-${q.source}">${attempts.length?`<ol class="numeric-attempts">${attempts.map((a,i)=>`<li>Try ${i+1}: ${esc(a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'}</li>`).join('')}</ol>`:''}</div>`;
+    return `<div class="numeric-entry"><label for="number-${q.source}">Your answer</label><input id="number-${q.source}" name="number-answer" type="text" inputmode="${q.decimal?'decimal':'numeric'}" autocomplete="off" ${closed?'disabled':''} aria-describedby="feedback-${q.source}">${attempts.length?`<ol class="numeric-attempts">${attempts.map((a,i)=>`<li>Try ${i+1}: ${esc(a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'}</li>`).join('')}</ol>`:''}</div>`;
   }
   function card(q,i){
     const run=current(),entry=run.answers[q.source],attempts=entry?.attempts||[],closed=engine.done(q,entry),status=result(q,run);
@@ -50,7 +50,7 @@
       const repeat=completed&&latest!==completed&&r.finished!==r.total;
       return `<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}</b><span>${i?'Fresh check '+String.fromCharCode(64+i):'Original retry'}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>Latest completed first-try score</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;
     }).join('');
-    document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().length} ${groupId()==='2026-09-27'?'sessions':'days'} completed`;
+    document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=`${s.first} / ${s.total}`;
@@ -96,7 +96,7 @@
   document.querySelector('#questions').addEventListener('submit',event=>{
     event.preventDefault();const form=event.target,q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
     const selected=form.querySelector(q.type==='number'?'input[name="number-answer"]:not(:disabled)':'input:checked:not(:disabled)'),feedback=document.querySelector(`#feedback-${q.source}`);
-    if(!selected||(q.type==='number'&&engine.normalize(selected.value)===null)){feedback.textContent=q.type==='number'?'Type a whole-number answer before checking. No attempt has been used.':'Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
+    if(!selected||(q.type==='number'&&engine.normalizeFor(q,selected.value)===null)){feedback.textContent=q.type==='number'?`Type a ${q.decimal?'number':'whole-number'} answer before checking. No attempt has been used.`:'Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
     const run=current();if(!engine.submit(run,q,q.type==='number'?selected.value:Number(selected.value),new Date().toISOString())){feedback.textContent='Try a different answer. No new attempt has been used.';feedback.focus();return;}
     if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
     const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
@@ -107,7 +107,7 @@
   document.querySelector('#large-text').addEventListener('click',event=>{event.currentTarget.setAttribute('aria-pressed',String(document.body.classList.toggle('large')));});
   document.querySelector('#new-run').addEventListener('click',()=>{if(engine.stats(active,current()).finished!==active.questions.length)return;runs(active).push(newRun(true));save();render();document.querySelector('#session-title').scrollIntoView();});
   document.querySelector('#download').addEventListener('click',()=>{
-    const payload={exportedAt:new Date().toISOString(),testDates:['2026-09-20','2026-09-27'],scoring:'One point only for a correct first try. Second tries do not change the score.',sessions:bank.map(session=>({...session,runs:state.sessions[session.id]||[]}))};
+    const payload={exportedAt:new Date().toISOString(),testDates:groups?.map(g=>g.id)||['2026-09-20'],scoring:'One point only for a correct first try. Second tries do not change the score.',sessions:bank.map(session=>({...session,runs:state.sessions[session.id]||[]}))};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='harry-star-math-practice-records.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
   const isLocalPreview=location.hostname==='localhost'||location.hostname==='127.0.0.1';
