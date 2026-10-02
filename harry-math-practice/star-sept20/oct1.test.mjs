@@ -43,7 +43,7 @@ test('Decimal retry, reveal, first-score, sync and reload are preserved',()=>{
  const saved=JSON.stringify(state);t.close();t=boot('oct1-original',saved);assert.match(t.d.querySelector('#history').textContent,/6.73.*6.34/);q=t.s.questions.find(q=>q.source===215);answer(t,q,'5.83');answer(t,q,'4.83');assert.match(t.d.querySelector('[data-source="215"] .answer').textContent,/4.73/);t.close();
 });
 test('Every Oct 1 session completes and new run retains records',()=>{
- for(const id of ['oct1-original','oct1-a','oct1-b','oct1-c']){const t=boot(id);for(const q of t.s.questions)answer(t,q,q.type==='split-sum'?q.parts:q.correct);
+ for(const id of ['oct1-original','oct1-a','oct1-b','oct1-c']){const t=boot(id);for(const q of t.s.questions)answer(t,q,q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct);
   assert.equal(t.d.querySelector('#score').textContent,`${t.s.questions.length} / ${t.s.questions.length}`);assert.equal(t.d.querySelector('#completion').hidden,false);
   const state=JSON.parse(t.w.localStorage.getItem(KEY));assert(t.w.HarrySeptSync.valid(state));assert.equal(t.w.HarrySeptSync.merge(state,{version:1,sessions:{}}).sessions[id][0].answers[214].attempts.length,1);
   const pending=JSON.parse(JSON.stringify(state));pending.sessions[id][0].completedAt=null;assert(t.w.HarrySeptSync.merge(pending,{version:1,sessions:{}}).sessions[id][0].completedAt);
@@ -58,29 +58,33 @@ test('Oct 1 typed decimals upload and restore without replacing September histor
   return{ok:true,json:async()=>({progress:record})};
  };
  const newRuns={};for(const id of ['oct1-original','oct1-a','oct1-b','oct1-c'])newRuns[id]=[{id,startedAt:at,completedAt:null,answers:{214:{attempts:[{choice:'6.73',correct:false,at},{choice:'6.34',correct:true,at}]}}}];
- for(const id of ['oct1-a','oct1-b','oct1-c'])newRuns[id][0].answers[102]={attempts:[{choice:'2500 + 30 = 2800',correct:false,at},{choice:'2500 + 300 = 2800',correct:true,at}]};
+ for(const id of ['oct1-a','oct1-b','oct1-c']){
+  newRuns[id][0].answers[102]={attempts:[{choice:'2500 + 30 = 2800',correct:false,at},{choice:'2500 + 300 = 2800',correct:true,at}]};
+  newRuns[id][0].answers[219]={attempts:[{choice:'25 × 100 + 25 × 4 = 2500 + 100 = 2600',correct:true,at}]};
+ }
  let state={version:1,sessions:newRuns},status;
  const a=t.w.HarrySeptSync.create({getState:()=>state,onRemote:s=>{state=s},onStatus:k=>{status=k},fetcher});
  await a.refresh();assert.equal(status,'live');assert.equal(record.state.sessions['sept27-original'][0].answers[102].attempts[0].choice,'2600');
  let restored={version:1,sessions:{}};const b=t.w.HarrySeptSync.create({getState:()=>restored,onRemote:s=>{restored=s},onStatus:()=>{},fetcher});
  await b.refresh();assert.equal(Object.keys(restored.sessions).length,5);assert.equal(restored.sessions['oct1-b'][0].answers[214].attempts.length,2);
  assert.equal(restored.sessions['oct1-a'][0].answers[102].attempts[1].choice,'2500 + 300 = 2800');
+ for(const id of ['oct1-a','oct1-b','oct1-c'])assert.equal(restored.sessions[id][0].answers[219].attempts[0].choice,'25 × 100 + 25 × 4 = 2500 + 100 = 2600');
  a.stop();b.stop();t.close();
 });
 test('Q19-style multiplication needs both products and the sum, preserves retries and sync',()=>{
  let t=boot('oct1-a'),q=t.s.questions.find(q=>q.source===102),f=()=>t.d.querySelector('form[data-source="102"]');
- assert.equal(f().querySelectorAll('input[name="number-part"]').length,3);assert.doesNotMatch(f().textContent,/25 × 100|25 × 12|Multiply each part/);
- assert.equal(f().querySelectorAll('label .sr-only').length,3);
+ assert.equal(f().querySelectorAll('input[name="number-part"]').length,7);assert.doesNotMatch(f().textContent,/25 × 100|25 × 12|Multiply each part/);
+ assert.equal(f().querySelectorAll('label .sr-only').length,7);
  assert.equal(f().querySelectorAll('input[value="2500"]').length,0);assert.equal(t.d.querySelector('[data-source="102"] .answer'),null);
- answer(t,q,['2500','','2800']);assert.equal(t.w.localStorage.getItem(KEY),null);assert.match(t.d.querySelector('#feedback-102').textContent,/all three boxes/);
- answer(t,q,['2500','30','2800']);assert.equal(t.d.querySelector('[data-source="102"] .answer'),null);
- answer(t,q,['2,500','030','2,800']);let state=JSON.parse(t.w.localStorage.getItem(KEY));assert.equal(state.sessions['oct1-a'][0].answers[102].attempts.length,1);
+ answer(t,q,['25','100','25','','2500','300','2800']);assert.equal(t.w.localStorage.getItem(KEY),null);assert.match(t.d.querySelector('#feedback-102').textContent,/all seven boxes/);
+ answer(t,q,['25','100','25','12','2500','30','2800']);assert.equal(t.d.querySelector('[data-source="102"] .answer'),null);
+ answer(t,q,['025','100','25','012','2,500','030','2,800']);let state=JSON.parse(t.w.localStorage.getItem(KEY));assert.equal(state.sessions['oct1-a'][0].answers[102].attempts.length,1);
  const saved=JSON.stringify(state);t.close();t=boot('oct1-a',saved);q=t.s.questions.find(q=>q.source===102);
- answer(t,q,['2500','300','2800']);state=JSON.parse(t.w.localStorage.getItem(KEY));assert(t.w.HarrySeptSync.valid(state));
- assert.equal(state.sessions['oct1-a'][0].answers[102].attempts[1].choice,'2500 + 300 = 2800');
+ answer(t,q,['25','100','25','12','2500','300','2800']);state=JSON.parse(t.w.localStorage.getItem(KEY));assert(t.w.HarrySeptSync.valid(state));
+ assert.equal(state.sessions['oct1-a'][0].answers[102].attempts[1].choice,'25 × 100 + 25 × 12 = 2500 + 300 = 2800');
  assert.equal(t.d.querySelector('#score').textContent,'0 / 12');assert.match(t.d.querySelector('[data-source="102"] .answer').textContent,/2,500 \+ 300 = 2,800/);
- assert.equal(t.d.querySelectorAll('form[data-source="102"] input:disabled').length,3);assert.match(t.d.querySelector('#history').textContent,/2500 \+ 30 = 2800.*2500 \+ 300 = 2800/);
- q=t.s.questions.find(q=>q.source===219);answer(t,q,['2500','10','2510']);assert.equal(t.d.querySelector('[data-source="219"] .answer'),null);answer(t,q,['2500','20','2520']);assert.match(t.d.querySelector('[data-source="219"] .answer').textContent,/2,500 \+ 100 = 2,600/);t.close();
+ assert.equal(t.d.querySelectorAll('form[data-source="102"] input:disabled').length,7);assert.match(t.d.querySelector('#history').textContent,/2500 \+ 30 = 2800.*2500 \+ 300 = 2800/);
+ q=t.s.questions.find(q=>q.source===219);answer(t,q,['25','100','25','4','2500','10','2510']);assert.equal(t.d.querySelector('[data-source="219"] .answer'),null);answer(t,q,['25','100','25','4','2500','20','2520']);assert.match(t.d.querySelector('[data-source="219"] .answer').textContent,/2,500 \+ 100 = 2,600/);t.close();
 });
 test('Session 1 completed 16/22 record stays unchanged after opening a focused session',()=>{
  let t=boot();const at='2026-10-01T20:00:00.000Z',misses={102:['111','222'],205:['1','2'],207:['1','2'],209:['1','2'],210:['1','2'],213:[0,1]};
@@ -94,9 +98,25 @@ test('Session 1 completed 16/22 record stays unchanged after opening a focused s
 test('All six two-step questions have blank boxes without per-box calculation hints',()=>{
  for(const id of ['oct1-a','oct1-b','oct1-c']){const t=boot(id);
   for(const q of t.s.questions.filter(q=>q.type==='split-sum')){
-   const form=t.d.querySelector(`form[data-source="${q.source}"]`);assert.doesNotMatch(form.textContent,/×|Multiply each part/);
+   const form=t.d.querySelector(`form[data-source="${q.source}"]`);assert.doesNotMatch(form.textContent,/\d+ × \d+|Multiply each part/);
    assert.equal(form.querySelectorAll('.split-equation span:not(.sr-only)').length,0);
-   assert.equal(form.querySelectorAll('input').length,3);for(const input of form.querySelectorAll('input'))assert.equal(input.value,'');
+   assert.equal(form.querySelectorAll('input').length,7);for(const input of form.querySelectorAll('input'))assert.equal(input.value,'');
   }t.close();
  }
+});
+test('Expanded answers check all seven values and accept reversed multiplication factors',()=>{
+ const t=boot('oct1-a'),q=t.s.questions.find(q=>q.source===102),e=t.w.HarrySeptEngine;
+ assert.equal(e.isCorrect(q,['25','10','25','12','2500','300','2800']),false);
+ assert.equal(e.isCorrect(q,['100','25','12','25','2500','300','2800']),true);
+ assert.equal(e.isCorrect(q,['25','12','25','100','300','2500','2800']),true);
+ assert.equal(e.isCorrect(q,['25','100','25','12','2500','300','2801']),false);
+ assert.equal(e.submit({answers:{}},q,['2500','300','2800'],'2026-10-01T20:00:00Z'),false);t.close();
+});
+test('Legacy three-box scores and records remain intact; pending legacy work can finish with seven boxes',()=>{
+ let t=boot('oct1-a');const at='2026-10-01T20:00:00.000Z',run={id:'legacy',startedAt:at,completedAt:null,answers:{102:{attempts:[{choice:'2500 + 300 = 2800',correct:true,at}]},219:{attempts:[{choice:'2500 + 10 = 2510',correct:false,at}]}}};
+ t.close();t=boot('oct1-a',JSON.stringify({version:1,sessions:{'oct1-a':[run]}}));
+ assert.equal(t.d.querySelector('#score').textContent,'1 / 12');assert.equal(t.d.querySelectorAll('form[data-source="102"] input:disabled').length,7);
+ assert.equal(t.d.querySelector('#part-102-0').value,'');assert.equal(t.d.querySelector('#part-102-4').value,'2500');
+ answer(t,t.s.questions.find(q=>q.source===219),['25','100','25','4','2500','100','2600']);
+ const state=JSON.parse(t.w.localStorage.getItem(KEY));assert.equal(t.d.querySelector('#score').textContent,'1 / 12');assert.deepEqual(state.sessions['oct1-a'][0].answers[102],run.answers[102]);assert.deepEqual(state.sessions['oct1-a'][0].answers[219].attempts[0],run.answers[219].attempts[0]);assert(t.w.HarrySeptSync.valid(state));t.close();
 });

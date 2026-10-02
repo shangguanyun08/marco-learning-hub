@@ -7,7 +7,7 @@
     (source==='102'&&/^\d{1,15}$/.test(value))||
     (id.startsWith('oct1-')&&['201','202','203','205','206','207','208','209','210'].includes(source)&&/^\d{1,15}$/.test(value))||
     (id.startsWith('oct1-')&&['214','215'].includes(source)&&/^\d{1,12}(?:\.\d{1,8})?$/.test(value))||
-    (['oct1-a','oct1-b','oct1-c'].includes(id)&&['102','219'].includes(source)&&/^\d{1,15} \+ \d{1,15} = \d{1,15}$/.test(value)));
+    (['oct1-a','oct1-b','oct1-c'].includes(id)&&['102','219'].includes(source)&&(/^\d{1,15} \+ \d{1,15} = \d{1,15}$/.test(value)||/^\d{1,15} × \d{1,15} \+ \d{1,15} × \d{1,15} = \d{1,15} \+ \d{1,15} = \d{1,15}$/.test(value))));
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));

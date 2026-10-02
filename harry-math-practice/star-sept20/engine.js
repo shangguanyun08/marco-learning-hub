@@ -9,16 +9,33 @@
     return /^\d+(?:\.\d{1,8})?$/.test(text)&&Number.isFinite(Number(text))&&Number(text)<1e12?String(Number(text)):null;
   };
   const typed = question => question.type==='number'||question.type==='decimal'||question.type==='split-sum';
+  const splitValues = value => {
+    if(Array.isArray(value))return value;
+    const text=String(value);
+    return text.match(/^(.*?) × (.*?) \+ (.*?) × (.*?) = (.*?) \+ (.*?) = (.*?)$/)?.slice(1)||text.match(/^(.*?)\s+\+\s+(.*?)\s+=\s+(.*?)$/)?.slice(1)||null;
+  };
   const normalizeFor = (question,value) => {
     if(question.type!=='split-sum')return question.decimal?normalizeDecimal(value):normalize(value);
-    const parts=Array.isArray(value)?value:String(value).match(/^(.*?)\s+\+\s+(.*?)\s+=\s+(.*?)$/)?.slice(1);
-    if(!parts||parts.length!==3)return null;
+    const parts=splitValues(value);
+    if(!parts||![3,7].includes(parts.length))return null;
     const normalized=parts.map(normalize);
-    return normalized.some(p=>p===null)?null:`${normalized[0]} + ${normalized[1]} = ${normalized[2]}`;
+    if(normalized.some(p=>p===null))return null;
+    return normalized.length===7?`${normalized[0]} × ${normalized[1]} + ${normalized[2]} × ${normalized[3]} = ${normalized[4]} + ${normalized[5]} = ${normalized[6]}`:`${normalized[0]} + ${normalized[1]} = ${normalized[2]}`;
   };
-  const isCorrect = (question,choice) => question.type==='split-sum'?normalizeFor(question,choice)===normalizeFor(question,question.parts):typed(question)?normalizeFor(question,choice)!==null&&Number(normalizeFor(question,choice))===question.correct:choice===question.correct;
+  const isCorrect = (question,choice) => {
+    if(question.type!=='split-sum')return typed(question)?normalizeFor(question,choice)!==null&&Number(normalizeFor(question,choice))===question.correct:choice===question.correct;
+    const normalized=normalizeFor(question,choice);if(normalized===null)return false;
+    const values=splitValues(normalized).map(Number);
+    // Previously saved three-box work retains its original scoring.
+    if(values.length===3)return values.every((n,i)=>n===question.parts[i]);
+    const pair=(a,b,x,y)=>(a===x&&b===y)||(a===y&&b===x);
+    const [a,b,c,d,p,q,total]=values,[f,large,g,small]=question.expansion;
+    const factors=(pair(a,b,f,large)&&pair(c,d,g,small))||(pair(a,b,g,small)&&pair(c,d,f,large));
+    return factors&&a*b===p&&c*d===q&&p+q===total&&total===question.correct;
+  };
   const done = (question,entry) => !!entry && (entry.attempts.length >= 2 || entry.attempts.some(a=>isCorrect(question,a.choice)));
   function submit(run,question,choice,at) {
+    if(question.type==='split-sum'&&splitValues(choice)?.length!==7)return false;
     if(typed(question)){choice=normalizeFor(question,choice);if(choice===null)return false;}
     else if (!Number.isInteger(choice) || choice<0 || choice>=question.choices.length) return false;
     const entry=run.answers[question.source] || {attempts:[]};
@@ -39,5 +56,5 @@
     });
     return {first,attempted,corrected,revealed,finished,total:session.questions.length,percent:Math.round(first/session.questions.length*100)};
   }
-  root.HarrySeptEngine={done,submit,stats,isCorrect,normalize,normalizeFor,typed};
+  root.HarrySeptEngine={done,submit,stats,isCorrect,normalize,normalizeFor,typed,splitValues};
 })(typeof window==='undefined'?globalThis:window);
