@@ -5,6 +5,7 @@
   const rem=(source,label,a,b,choices,correct)=>mc(source,label,'Division with a remainder',`Calculate: ${a} ÷ ${b} = ____`,choices,correct,`${b} × ${Math.floor(a/b)} = ${b*Math.floor(a/b)}. ${a-b*Math.floor(a/b)} left over → ${choices[correct]}.`);
   const dec=(source,label,a,op,b,correct)=>({...n(source,label,`Calculate: ${a} ${op} ${b} = ____`,correct,`Line up the decimal points. ${a} ${op} ${b} = ${correct}.`),skill:'Decimal calculation',decimal:true});
   const zero=(source,label,a,b)=>n(source,label,`Calculate with the hidden zero method: ${a.toLocaleString('en-US')} ÷ ${b.toLocaleString('en-US')} = ____`,a/b,`${b} × ${(a/b).toLocaleString('en-US')} = ${a.toLocaleString('en-US')}. So the answer is ${(a/b).toLocaleString('en-US')}.`);
+  const split=(source,factor,number)=>({source,sourceLabel:'Like Session 1 Q19',skill:'Friendly-number multiplication',type:'split-sum',prompt:`Use friendly numbers: ${factor} × ${number} = ${factor} × (100 + ${number-100})`,partLabels:[`${factor} × 100`,`${factor} × ${number-100}`,'Total'],parts:[factor*100,factor*(number-100),factor*number],correct:factor*number,explanation:'Multiply the two parts, then add them together.'});
   const originals=[
     zero(201,'Q1(a)',1260,6),zero(202,'Q1(b) · unfinished',31500,5),zero(203,'Q1(c) · unfinished',792000,8),
     mc(204,'Q2(a)','Same quotient','Find the division that has the same quotient as 3,500 ÷ 50.',['350 ÷ 50','350 ÷ 5','3,500 ÷ 5','35 ÷ 5'],1,'Remove one ending zero from BOTH numbers: 3,500 ÷ 50 = 350 ÷ 5 = 70.'),
@@ -53,7 +54,24 @@
       {source:33,sourceLabel:'Similar · STAR Q33',skill:'Multiply three groups',prompt:'A school buys 6 cartons. Each carton holds 5 packs, and each pack has 7 pencils. How many pencils does the school buy?',choices:['35','210','18','30'],correct:1,explanation:'One carton: 5 × 7 = 35 pencils. Six cartons: 6 × 35 = 210 pencils.'}
     ]
   ];
-  ['oct1-original','oct1-a','oct1-b'].forEach((id,i)=>window.HARRY_SEPT_PRACTICE.push({id,group:'2026-10-01',original:i===0,title:`Session ${i+1} · October 1 ${i===0?'original retry':'similar check '+String.fromCharCode(64+i)}`,description:i===0?'18 missed or unfinished Lesson 14 parts, plus the top 4 review questions from the four September 27 sessions. Remainder problems use answer choices; all correct homework parts are omitted.':'18 fresh questions matching Lesson 14, plus 4 similar review questions. All 22 are shown on this page. Try independently.',questions:[...[originals,a,b][i],...reviews[i]]}));
+  const c=[
+    zero(205,'Q3(a)',630,90),zero(207,'Q4(a)',7200,800),zero(209,'Q5(a)',54000,90),zero(210,'Q5(b)',560,70),
+    rem(211,'Q7(a)',865,80,['10 R 65','11 R 15','10 R 55','9 R 145'],0),
+    mc(213,'Q9','Round up for containers','Each shelf holds 60 books. What is the minimum number of shelves needed for 745 books? Numerical expression: 745 ÷ 60 = 12 R 25.',['12','14','13','15'],2,'12 shelves are full, but 25 books still need a shelf. Add 1 more: 13 shelves.'),
+    dec(214,'Q10(c)',5.78,'+',3.64,9.42),dec(215,'Q10(d)',8.52,'−',4.67,3.85)
+  ];
+  const focusSources=new Set([205,207,209,210,211,213,214,215]);
+  const reviewC=[
+    {source:34,sourceLabel:'Similar · STAR Q34',skill:'Improper fractions',prompt:'31/9 = ____',choices:['3 5/9','4 4/9','3 4/9','2 4/9'],correct:2,explanation:'27/9 makes 3 wholes. There are 4/9 left: 3 4/9.'},
+    {source:33,sourceLabel:'Similar · STAR Q33',skill:'Multiply three groups',prompt:'A school buys 5 cartons. Each carton holds 4 packs, and each pack has 8 pencils. How many pencils does the school buy?',choices:['20','160','32','17'],correct:1,explanation:'One carton: 4 × 8 = 32 pencils. Five cartons: 5 × 32 = 160 pencils.'}
+  ];
+  const focused=[
+    [...a.filter(q=>focusSources.has(q.source)),split(102,25,112),split(219,25,104),...reviews[1].filter(q=>[34,27].includes(q.source))],
+    [...b.filter(q=>focusSources.has(q.source)),split(102,40,108),split(219,25,116),...reviews[2].filter(q=>[27,33].includes(q.source))],
+    [...c,split(102,25,124),split(219,50,107),...reviewC]
+  ];
+  window.HARRY_SEPT_PRACTICE.push({id:'oct1-original',group:'2026-10-01',original:true,title:'Session 1 · October 1 original retry',description:'18 missed or unfinished Lesson 14 parts, plus the top 4 review questions from the four September 27 sessions. Remainder problems use answer choices; all correct homework parts are omitted.',questions:[...originals,...reviews[0]]});
+  ['oct1-a','oct1-b','oct1-c'].forEach((id,i)=>window.HARRY_SEPT_PRACTICE.push({id,group:'2026-10-01',title:`Session ${i+2} · October 1 focused check ${String.fromCharCode(65+i)}`,description:'12 focused questions: 4 divisions with zeros, 2 friendly-number multiplications, 1 remainder, 1 shelves problem, 2 decimals, and 2 rotating reviews. For multiplication, fill both parts and the total: ___ + ___ = ___.',questions:focused[i]}));
   window.HARRY_STAR_GROUPS.forEach(g=>{if(g.id==='2026-09-27')g.label='Previous test';});
-  window.HARRY_STAR_GROUPS.unshift({id:'2026-10-01',title:'Thursday, October 1, 2026',label:'Latest practice',unit:'Session',description:'Lesson 14 + top 4 review questions. Three sessions of 22: original retry + two similar checks. Two tries per question; scores count only the first try.'});
+  window.HARRY_STAR_GROUPS.unshift({id:'2026-10-01',title:'Thursday, October 1, 2026',label:'Latest practice',unit:'Session',description:'Session 1 keeps its 22 original questions and saved score. Sessions 2, 3 and 4 have 12 focused questions each, including Q19-style multiplication in two steps. Two tries per question; scores count only the first try.'});
 })();

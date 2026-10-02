@@ -21,22 +21,27 @@
   function result(q,run){const e=run.answers[q.source];if(!e?.attempts.length)return '';if(engine.isCorrect(q,e.attempts[0].choice))return 'first';if(e.attempts[1]&&engine.isCorrect(q,e.attempts[1].choice))return 'retry';return e.attempts.length===2?'revealed':'pending';}
   function numberline(){return `<svg class="numberline" viewBox="0 0 600 145" role="img" aria-label="Number line from zero to one with eight equal intervals. A yellow star, blue circle, yellow square, and green triangle are positioned below ticks."><line x1="40" y1="45" x2="560" y2="45" stroke="#193c49" stroke-width="2"/>${Array.from({length:9},(_,i)=>`<line x1="${40+i*65}" x2="${40+i*65}" y1="${i===0||i===8?33:39}" y2="${i===0||i===8?57:51}" stroke="#193c49" stroke-width="2"/>`).join('')}<text x="40" y="85" text-anchor="middle" font-size="22">0</text><text x="560" y="85" text-anchor="middle" font-size="22">1</text><polygon points="170,65 175,77 189,77 178,85 182,99 170,91 158,99 162,85 151,77 165,77" fill="#ffdf4b" stroke="#193c49"/><circle cx="235" cy="83" r="15" fill="#28b8d1" stroke="#193c49"/><rect x="285" y="68" width="30" height="30" fill="#ffdf4b" stroke="#193c49"/><polygon points="430,65 448,98 412,98" fill="#85d452" stroke="#193c49"/></svg>`;}
   const sourceLabel=q=>q.sourceLabel||`STAR Q${q.source}`;
-  const chosenText=(q,choice)=>q.type==='number'?esc(choice):`${'ABCD'[choice]} (${esc(q.choices[choice])})`;
+  const chosenText=(q,choice)=>engine.typed(q)?esc(choice):`${'ABCD'[choice]} (${esc(q.choices[choice])})`;
+  const answerText=q=>q.type==='split-sum'?q.parts.map(n=>n.toLocaleString('en-US')).join(' + ').replace(/ \+ ([^+]*)$/,' = $1'):q.type==='number'?q.correct.toLocaleString('en-US'):`${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}`;
   function numericField(q,attempts,closed){
+    if(q.type==='split-sum'){
+      const recorded=closed?String(attempts.at(-1)?.choice||'').split(/ \+ | = /):[];
+      return `<div class="numeric-entry"><p class="split-help">Multiply each part, then add.</p><div class="split-equation"><b aria-hidden="true">=</b>${q.partLabels.map((label,i)=>`${i?`<b aria-hidden="true">${i===1?'+':'='}</b>`:''}<label for="part-${q.source}-${i}"><span>${math(label)}</span><input id="part-${q.source}-${i}" name="number-part" type="text" inputmode="numeric" autocomplete="off" placeholder="___" value="${esc(recorded[i]||'')}" ${closed?'disabled':''} aria-describedby="feedback-${q.source}"></label>`).join('')}</div>${attempts.length?`<ol class="numeric-attempts">${attempts.map((a,i)=>`<li>Try ${i+1}: ${esc(a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'}</li>`).join('')}</ol>`:''}</div>`;
+    }
     return `<div class="numeric-entry"><label for="number-${q.source}">Your answer</label><input id="number-${q.source}" name="number-answer" type="text" inputmode="${q.decimal?'decimal':'numeric'}" autocomplete="off" ${closed?'disabled':''} aria-describedby="feedback-${q.source}">${attempts.length?`<ol class="numeric-attempts">${attempts.map((a,i)=>`<li>Try ${i+1}: ${esc(a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'}</li>`).join('')}</ol>`:''}</div>`;
   }
   function card(q,i){
     const run=current(),entry=run.answers[q.source],attempts=entry?.attempts||[],closed=engine.done(q,entry),status=result(q,run);
-    let feedback=q.type==='number'?'Type your answer, then press Check answer.':'Choose an answer, then press Check answer.';
+    let feedback=engine.typed(q)?(q.type==='split-sum'?'Fill all three boxes, then press Check answer.':'Type your answer, then press Check answer.'):'Choose an answer, then press Check answer.';
     if(status==='first')feedback='Correct on your first try! 1 point earned.';
     if(status==='pending')feedback='Not quite. You have one more try. Your first-try score stays unchanged.';
     if(status==='retry')feedback='You got it on your second try! This correction is saved; the first-try score stays unchanged.';
     if(status==='revealed')feedback='Two tries completed. Read the explanation below to learn the method.';
-    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${(active.id==='original'||active.original)?'Original':'Matches'} ${esc(sourceLabel(q))} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${q.visual==='numberline'?numberline():(window.HarryStarVisuals?.draw(q.visual)||'')}<form data-source="${q.source}" novalidate>${q.type==='number'?numericField(q,attempts,closed):`<fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
+    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${(active.id==='original'||active.original)?'Original':'Matches'} ${esc(sourceLabel(q))} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${q.visual==='numberline'?numberline():(window.HarryStarVisuals?.draw(q.visual)||'')}<form data-source="${q.source}" novalidate>${engine.typed(q)?numericField(q,attempts,closed):`<fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
       const tried=attempts.findIndex(a=>a.choice===index),disabled=closed||tried>=0;
       const tag=tried>=0?`Try ${tried+1}${index===q.correct?' · correct':' · incorrect'}`:'';
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCD'[index]}</span><span class="choice-text">${math(choice)}${window.HarryStarVisuals?.draw(q.visual,index)||''}${tag?`<small>${tag}</small>`:''}</span></label>`;
-    }).join('')}</fieldset>`}${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form><p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${q.type==='number'?q.correct.toLocaleString('en-US'):`${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}`}</strong><p>${math(q.explanation)}</p></div>`:''}</article>`;
+    }).join('')}</fieldset>`}${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form><p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${answerText(q)}</strong><p>${math(q.explanation)}</p></div>`:''}</article>`;
   }
   function renderDays(){
     let completedDays=0;
@@ -95,9 +100,10 @@
   }
   document.querySelector('#questions').addEventListener('submit',event=>{
     event.preventDefault();const form=event.target,q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
-    const selected=form.querySelector(q.type==='number'?'input[name="number-answer"]:not(:disabled)':'input:checked:not(:disabled)'),feedback=document.querySelector(`#feedback-${q.source}`);
-    if(!selected||(q.type==='number'&&engine.normalizeFor(q,selected.value)===null)){feedback.textContent=q.type==='number'?`Type a ${q.decimal?'number':'whole-number'} answer before checking. No attempt has been used.`:'Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
-    const run=current();if(!engine.submit(run,q,q.type==='number'?selected.value:Number(selected.value),new Date().toISOString())){feedback.textContent='Try a different answer. No new attempt has been used.';feedback.focus();return;}
+    const selected=form.querySelector(q.type==='split-sum'?'input[name="number-part"]:not(:disabled)':q.type==='number'?'input[name="number-answer"]:not(:disabled)':'input:checked:not(:disabled)'),feedback=document.querySelector(`#feedback-${q.source}`);
+    const value=q.type==='split-sum'?Array.from(form.querySelectorAll('input[name="number-part"]:not(:disabled)'),input=>input.value):q.type==='number'?selected?.value:Number(selected?.value);
+    if(!selected||(engine.typed(q)&&engine.normalizeFor(q,value)===null)){feedback.textContent=q.type==='split-sum'?'Fill all three boxes with whole numbers. No attempt has been used.':q.type==='number'?`Type a ${q.decimal?'number':'whole-number'} answer before checking. No attempt has been used.`:'Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
+    const run=current();if(!engine.submit(run,q,value,new Date().toISOString())){feedback.textContent='Try a different answer. No new attempt has been used.';feedback.focus();return;}
     if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
     const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
@@ -115,7 +121,7 @@
     sync=window.HarrySeptSync.create({
       getState:()=>state,
       onRemote(remote){
-        const drafts=Array.from(document.querySelectorAll('input[name="number-answer"]:not(:disabled)')).map(input=>[input.id,input.value]);
+        const drafts=Array.from(document.querySelectorAll('input[name="number-answer"]:not(:disabled), input[name="number-part"]:not(:disabled)')).map(input=>[input.id,input.value]);
         const selected=Array.from(document.querySelectorAll('input:checked:not(:disabled)')).map(input=>[input.name,input.value]);
         state=remote;save(false);render();
         for(const [id,value] of drafts){const input=document.getElementById(id);if(input&&!input.disabled)input.value=value;}
