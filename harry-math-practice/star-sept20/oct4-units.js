@@ -4,7 +4,8 @@
   ['oct4-original','oct4-a','oct4-b','oct4-c'].forEach((id,i)=>{
     const session=window.HARRY_SEPT_PRACTICE.find(s=>s.id===id),index=session.questions.findIndex(q=>q.source===7),legacyQuestion=session.questions[index];
     const [feet,yardsFeet,yardsInches,pounds,quarts,gallons]=amounts[i];
-    const blank=(category,amount,from,to,factor)=>({category,label:`${amount} ${from} =`,unit:to,answer:amount*factor});
+    const names={ft:['foot','feet'],in:['inch','inches'],yd:['yard','yards'],lb:['pound','pounds'],oz:['ounce','ounces'],qt:['quart','quarts'],pt:['pint','pints'],gal:['gallon','gallons']};
+    const blank=(category,amount,from,to,factor)=>({category,label:`${amount} ${names[from][amount===1?0:1]} =`,unit:names[to][1],answer:amount*factor});
     session.questions[index]={source:7,sourceLabel:'Unit conversions',skill:'Length, weight and volume',type:'fill-blanks',legacyQuestion,
       prompt:'Fill in all six blanks. Write numbers only. This question earns 1 point when all six answers are correct on the first try.',
       blanks:[blank('Length',feet,'ft','in',12),blank('Length',yardsFeet,'yd','ft',3),blank('Length',yardsInches,'yd','in',36),blank('Weight',pounds,'lb','oz',16),blank('Volume',quarts,'qt','pt',2),blank('Volume',gallons,'gal','qt',4)],

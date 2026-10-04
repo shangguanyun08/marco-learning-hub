@@ -14,6 +14,14 @@ function boot(id='oct4-original',saved){
 function submit(t,values){t.d.querySelectorAll('#q2 input[name="unit-answer"]').forEach((el,i)=>el.value=values[i]??'');t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 const answers=[[12,3,36,16,2,4],[24,6,72,32,6,8],[36,12,108,48,10,12],[60,18,144,80,14,20]];
 const ids=['oct4-original','oct4-a','oct4-b','oct4-c'];
+test('All October 4 unit names are spelled out with correct singular and plural labels',()=>{
+ for(const [i,id] of ids.entries()){const t=boot(id),q=t.session.questions[1];
+ assert.deepEqual(Array.from(q.blanks,b=>b.unit),['inches','feet','inches','ounces','pints','quarts']);
+ assert.equal(q.blanks[0].label,i===0?'1 foot =':`${[1,2,3,5][i]} feet =`);
+ assert.equal(q.blanks[3].label,i===0?'1 pound =':`${[1,2,3,5][i]} pounds =`);
+ assert(!/\b(?:ft|yd|lb|oz|qt|pt|gal|hr|cm)\b/.test(t.d.querySelector('#questions').textContent));
+ assert.match(t.d.querySelector('[data-source="15"] .choice-text').textContent,/hours/);t.close();}
+});
 test('All four published sessions have one six-blank Q2 and 16 total questions',()=>{
  ids.forEach((id,i)=>{const t=boot(id),q=t.session.questions[1];assert.equal(q.source,7);assert.equal(q.type,'fill-blanks');assert.equal(t.session.questions.length,16);assert.equal(t.d.querySelectorAll('#q2 input').length,6);assert.equal(t.d.querySelectorAll('#q2 .submit').length,1);assert.equal(t.d.querySelectorAll('#q2 .answer').length,0);assert.deepEqual(Array.from(q.blanks,b=>b.answer),answers[i]);assert.equal(t.w.HARRY_SEPT_PRACTICE.filter(s=>s.group!=='2026-10-04').flatMap(s=>s.questions).filter(q=>q.type==='fill-blanks').length,0);submit(t,answers[i]);assert.match(t.d.querySelector('#score').textContent,/1 \/ 16/);assert.match(t.d.querySelector('#q2 .answer').textContent,/in/);t.close();});
 });
@@ -24,12 +32,12 @@ test('Six blanks require complete input; two attempts retain first score, reveal
  submit(t,answers[0]);assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 16/);
  const saved=JSON.parse(t.w.localStorage.getItem(KEY));assert(t.w.HarrySeptSync.valid(saved));assert.deepEqual(JSON.parse(JSON.stringify(t.w.HarrySeptSync.merge(saved,saved))),saved);
  const r=boot('oct4-original',saved);assert.match(r.d.querySelector('#q2 .feedback').textContent,/second try/);assert.equal(r.d.querySelectorAll('#q2 input:disabled').length,6);r.close();t.close();
- const wrong=boot();submit(wrong,[1,1,1,1,1,1]);submit(wrong,[2,2,2,2,2,2]);assert.match(wrong.d.querySelector('#q2 .feedback').textContent,/Two tries/);assert.match(wrong.d.querySelector('#q2 .answer').textContent,/12 in/);wrong.close();
+ const wrong=boot();submit(wrong,[1,1,1,1,1,1]);submit(wrong,[2,2,2,2,2,2]);assert.match(wrong.d.querySelector('#q2 .feedback').textContent,/Two tries/);assert.match(wrong.d.querySelector('#q2 .answer').textContent,/12 inches/);wrong.close();
 });
 test('Older multiple-choice unit attempts remain intact and can finish their original retry',()=>{
  const at='2026-10-04T18:30:00.000Z',saved={version:1,sessions:{'oct4-original':[{id:'legacy',startedAt:at,completedAt:null,answers:{7:{attempts:[{choice:0,correct:false,at}]}}}]}};
  const t=boot('oct4-original',saved);assert.match(t.d.querySelector('#q2 .prompt').textContent,/pints/);assert.equal(t.d.querySelectorAll('#q2 input[type=radio]').length,4);
- t.d.querySelector('#q2 input[value="1"]').checked=true;t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#history').textContent,/A \(4 pt\)/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 16/);t.close();
+ t.d.querySelector('#q2 input[value="1"]').checked=true;t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#history').textContent,/A \(4 pints\)/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 16/);t.close();
 });
 test('Every revised session completes at 16/16 with synchronized multi-blank work',()=>{
  for(const id of ids){const t=boot(id),run={id,startedAt:'2026-10-04T19:00:00.000Z',completedAt:null,answers:{}};
