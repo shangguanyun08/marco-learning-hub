@@ -33,7 +33,23 @@
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const read = key => { try { return JSON.parse(localStorage.getItem(key)); } catch { return null; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { return false; } };
-  let progress = Core.merge(read(STORAGE_KEY), read(TEST_KEY));
+  function mergeProgress(left, right) {
+    const untimedReviews = value => {
+      if (!Core.valid(value)) return value;
+      const copy = JSON.parse(JSON.stringify(value));
+      for (const session of review.sessions) {
+        for (const round of copy.sessions[session.number]?.rounds || []) {
+          if (round.number > 1) {
+            delete round.timeLimitSeconds;
+            delete round.deadlineAt;
+          }
+        }
+      }
+      return copy;
+    };
+    return Core.merge(untimedReviews(left), untimedReviews(right));
+  }
+  let progress = mergeProgress(read(STORAGE_KEY), read(TEST_KEY));
   let selected = Number(new URLSearchParams(location.search).get('session')) || Number(read(SELECTION_KEY)) || 5;
   if (!sessions.some(session => session.number === selected)) selected = 5;
   let view = location.hash === '#results' ? 'results' : 'practice';
@@ -45,7 +61,7 @@
   const range = number => `${info(number).words.length} questions`;
   const isReview = number => Boolean(info(number).cycle);
   const timeLimit = number => info(number).timeLimitSeconds || 1200;
-  const label = number => isReview(number) ? `${info(number).label} · 31 minutes` : `Session ${info(number).displayNumber}${number >= 13 ? ' · VR Test · 20 minutes' : number >= 9 ? ' · Sentence Completion' : ''}`;
+  const label = number => isReview(number) ? `${info(number).label} · Round 1: 31 minutes` : `Session ${info(number).displayNumber}${number >= 13 ? ' · VR Test · 20 minutes' : number >= 9 ? ' · Sentence Completion' : ''}`;
   const skills = ids => [['synonym','Synonyms'],['definition','Word meanings'],['completion','Sentence Completion']].map(([type,name]) => ({name,total:ids.filter(id => byId.get(id).quizType === type).length,type})).filter(group => group.total);
   const skillSummary = ids => skills(ids).map(group => `${group.total} ${group.type === 'definition' ? 'word meaning question' : group.type === 'completion' ? 'sentence completions' : 'synonyms'}`).join(' + ');
   const skillScores = round => skills(round.ids).map(group => `${group.name} ${round.ids.filter(id => byId.get(id).quizType === group.type && round.answers[id]?.correct).length}/${group.total}`).join(' · ');
@@ -81,7 +97,7 @@
     return `<section class="test-report"><div><h2>${isReview(selected) ? info(selected).label : 'VR Test'}: ${correct}/${first.ids.length}</h2><p>${skillScores(first)} · Time ${clockText(Date.parse(first.finishedAt)-Date.parse(first.startedAt))} / ${clockText(first.timeLimitSeconds*1000)}</p><p>Your submitted score is saved. Subsequent rounds are untimed.</p></div><button data-view="results">View answers &amp; explanations</button></section>`;
   }
   function save() {
-    progress = Core.merge(progress, read(STORAGE_KEY));
+    progress = mergeProgress(progress, read(STORAGE_KEY));
     storageError = !write(TEST_KEY, progress);
     storageError = !write(STORAGE_KEY, progress) || storageError;
     sync?.push(progress);
@@ -93,7 +109,7 @@
     expireTests();
   }
   function header() {
-    const intro = '331 questions across Sessions 1–14, plus Reviews 1A–3B repeating the 124 Round 1 mistakes. Each review has 62 questions and a 31-minute timed first round. Later rounds cover missed questions until mastered.';
+    const intro = '331 questions across Sessions 1–14, plus Reviews 1A–3B repeating the 124 Round 1 mistakes. Each review has 62 questions and a 31-minute timed first round. Rounds 2, 3, 4, and onward are untimed and cover missed questions until mastered.';
     return `<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Archived 250 ISEE word list →</a></p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
@@ -123,7 +139,7 @@
     }
     const savedRound = current();
     const round = {...savedRound, ids: Core.questionOrder(savedRound.ids, selected, savedRound.number)};
-    return testReport() + `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}">${timed(round) ? `<div class="timer-bar"><span>Time remaining</span><strong data-timer role="timer" aria-label="Time remaining">${clockText(Date.parse(round.deadlineAt)-Date.now())}</strong><span>${skillSummary(round.ids)}</span></div>` : ''}<div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}</h2><span>${round.number === 1 ? `All ${round.ids.length} questions on this page` : 'Previous round’s missed questions'}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
+    return testReport() + `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}">${timed(round) ? `<div class="timer-bar"><span>Time remaining</span><strong data-timer role="timer" aria-label="Time remaining">${clockText(Date.parse(round.deadlineAt)-Date.now())}</strong><span>${skillSummary(round.ids)}</span></div>` : ''}<div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}${isReview(selected) && round.number > 1 ? ' · Untimed' : ''}</h2><span>${round.number === 1 ? `All ${round.ids.length} questions on this page` : 'Previous round’s missed questions'}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
       <div class="progress" role="progressbar" aria-label="Round progress" aria-valuenow="${answered(round)}" aria-valuemin="0" aria-valuemax="${round.ids.length}"><span style="width:${answered(round) / round.ids.length * 100}%"></span></div>
       <p class="grid-label">Jump to a question</p><div class="number-grid" aria-label="Question progress">${round.ids.map((id,index) => {
         const value = round.answers[id];
@@ -272,7 +288,7 @@
       appId: APP_ID, studentName: 'Marco', validate: Core.valid,
       score: Core.score,
       onRemote(remote) {
-        const merged = Core.merge(progress, remote);
+        const merged = mergeProgress(progress, remote);
         const differs = JSON.stringify(merged) !== JSON.stringify(remote);
         progress = merged;
         write(STORAGE_KEY, progress); write(TEST_KEY, progress);
@@ -304,7 +320,7 @@
   window.addEventListener('focus', tick);
   window.addEventListener('storage', event => {
     if (event.key !== STORAGE_KEY) return;
-    progress = Core.merge(progress, read(STORAGE_KEY));
+    progress = mergeProgress(progress, read(STORAGE_KEY));
     expireTests(); render();
   });
 })();
