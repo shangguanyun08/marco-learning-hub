@@ -86,3 +86,11 @@ test('Typed Think Academy answers and retries restore on a second device',async(
  try{await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.equal(b.state.sessions['sept27-original'][0].answers[102].attempts[0].choice,'7200');assert.equal(b.status.kind,'live');}
  finally{a.close();b.close();}
 });
+
+test('October 4 records including seven-box multiplication restore beside prior dates',async()=>{
+ const api=server(),sessions={original:[run('old',{4:answer(1,true)})]};
+ for(const id of ['oct4-original','oct4-a','oct4-b','oct4-c'])sessions[id]=[run(id,{6:answer(0,true),3002:answer('7',true),3009:answer('40 × 100 + 40 × 8 = 4000 + 320 = 4320',true)})];
+ const a=client({version:1,sessions},api.fetch),b=client(empty(),api.fetch);
+ try{assert(a.w.HarrySeptSync.valid(a.state));await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.equal(Object.keys(b.state.sessions).length,5);assert.equal(b.status.kind,'live');}
+ finally{a.close();b.close();}
+});

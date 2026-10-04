@@ -1,5 +1,15 @@
 # Dated STAR Math follow-up groups
 
+## October 4 STAR Math
+
+User-requested addition: October 1 Session 3 (`oct1-b`) displayed Q2 (4,200 ÷ 600), Q5 (746 ÷ 70), and Q9 (40 × 108 using seven expansion/product/total boxes) are appended as Q14–16. Each fresh set has matching new problems. All four October 4 sessions therefore contain **16 questions**. `oct4-review-data.js` uses separate IDs 3002/3005/3009, without copying prior attempts or altering the older sessions. The initial 13-item STAR-only description below documents the extraction before this addition.
+
+`?group=2026-10-04` contains four 13-question sessions: `oct4-original`, `oct4-a`, `oct4-b`, `oct4-c`. Reviewed all 34 questions in `star math Renaissance - Google Chrome 2026-10-04 10-47-02.mp4`: 21 correct and 13 wrong. Independent raw-choice count, not an official STAR score. Misses: Q6, 7, 8, 12, 15, 17, 23, 25, 27, 29, 31, 32, 34.
+
+Selection-enabled intervals were decoded at 25 fps and the last selected frame checked for each question. All 34 midpoint and final selections were visually reviewed, with a separate question-counter montage confirming sequence. Private frame evidence and the timestamped audit stay in `tmp/star_oct4/math/`, outside the published repository. Q30 is correctly recorded as D; the pale B hover is not a selected answer.
+
+Session 1 preserves original prompts and answer order; tables, box plots, perpendicular-line choices and the fractional-weight line plot are rebuilt without showing test selections. Sessions 2–4 each have 13 fresh skill-matched items in fixed mixed order. Source question numbers stay stable within separate session IDs. Prior September 20/27 and October 1 data and saved records are unchanged. The same storage/sync ID is retained, with the four new IDs allowed and 13-question completion handling. Added tests independently verify arithmetic, every table row, box-plot summaries, perpendicular-vector dot products, fractional weights, retries/reveal, history, and old/new isolation.
+
 ## October 1 · Lesson 14 and targeted review
 
 `?group=2026-10-01` contains four sessions. Session 1 (`oct1-original`) keeps its 22 original questions and unchanged saved records. Sessions 2–4 (`oct1-a`, `oct1-b`, `oct1-c`) have 12 focused questions each. Sessions 2 and 3 had no synced attempts when shortened; Session 4 is new. Each focused set has four zero divisions matching unresolved patterns, two friendly-number multiplications, one remainder problem, one round-up shelves problem, two decimals, and two rotating review skills. Original Lesson 14 content was read from the report's own studentReport endpoint after the Chrome connection failed. The report identifies lesson 14, “Multi-digit Number Division.” Private report URLs, access tokens, student identifiers, and raw responses are not saved or published.
