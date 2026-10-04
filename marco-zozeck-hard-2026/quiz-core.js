@@ -39,7 +39,7 @@
     }
     return result;
   }
-  const questionOrder = (ids, session, number) => Number(session) >= 13 && number === 1 ? [...ids] : shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
+  const questionOrder = (ids, session, number) => [13,14].includes(Number(session)) && number === 1 ? [...ids] : shuffled([...ids].sort(), `isee-mixed-questions-v2:${session}:${number}`);
   function options(word, round, words, session) {
     const reviewSalt = Number(session) === 6 ? 'review:' : '';
     if (Array.isArray(word.choices)) {
@@ -105,11 +105,12 @@
     return true;
   }
   const current = session => session?.rounds?.at(-1);
-  function startTimed(progress, session, ids, at) {
+  function startTimed(progress, session, ids, at, timeLimitSeconds = 1200) {
+    if (!Number.isInteger(timeLimitSeconds) || timeLimitSeconds <= 0) return false;
     if (!start(progress, session, ids, at)) return false;
     Object.assign(current(progress.sessions[session]), {
-      timeLimitSeconds: 1200,
-      deadlineAt: new Date(Date.parse(at) + 1200000).toISOString()
+      timeLimitSeconds,
+      deadlineAt: new Date(Date.parse(at) + timeLimitSeconds * 1000).toISOString()
     });
     return true;
   }
@@ -174,8 +175,9 @@
         if (!target) { existing.rounds.push(copy(source)); continue; }
         if (target.timeLimitSeconds || source.timeLimitSeconds) {
           // The earliest start owns the deadline; opening another device cannot restart it.
-          const starts = [target, source].filter(r => r.timeLimitSeconds).map(r => r.startedAt).sort();
-          const deadline = new Date(Date.parse(starts[0]) + 1200000).toISOString();
+          const owner = [target, source].filter(r => r.timeLimitSeconds).sort((a,b) => a.startedAt.localeCompare(b.startedAt) || a.timeLimitSeconds-b.timeLimitSeconds)[0];
+          const startedAt = owner.startedAt, timeLimitSeconds = owner.timeLimitSeconds;
+          const deadline = new Date(Date.parse(startedAt) + timeLimitSeconds * 1000).toISOString();
           const submitted = [target, source].filter(r => r.finishedAt).sort((a,b) =>
             a.finishedAt.localeCompare(b.finishedAt) || JSON.stringify(a.answers).localeCompare(JSON.stringify(b.answers)));
           if (submitted.length) {
@@ -194,7 +196,7 @@
             }
             target.answers = Object.fromEntries(Object.entries(target.answers).filter(([id,value]) => target.ids.includes(id) && value.at < deadline));
           }
-          Object.assign(target, {startedAt:starts[0], deadlineAt:deadline, timeLimitSeconds:1200});
+          Object.assign(target, {startedAt, deadlineAt:deadline, timeLimitSeconds});
           continue;
         }
         for (const [id, value] of Object.entries(source.answers)) {

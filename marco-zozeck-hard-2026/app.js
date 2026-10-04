@@ -3,14 +3,21 @@
   const Core = window.VocabularyQuiz;
   const sourceWords = window.MARCO_ZOZECK_HARD_WORDS;
   const originalWords = sourceWords.map(word => ({...word, session: word.session - 6}));
-  const words = [...window.MARCO_ZOZECK_REDO_WORDS, ...originalWords, ...window.MARCO_ZOZECK_EXTENSION_WORDS];
+  const baseWords = [...window.MARCO_ZOZECK_REDO_WORDS, ...originalWords, ...window.MARCO_ZOZECK_EXTENSION_WORDS];
+  const review = window.MARCO_ZOZECK_REVIEW;
+  const originalById = new Map(baseWords.map(word => [word.id, word]));
+  const reviewWords = review.sessions.flatMap(session => review.parts[session.part].map((id,index) => ({
+    ...originalById.get(id), id: `review-${session.number}-${id}`, session: session.number,
+    number: index + 1, originalQuestionId: id
+  })));
+  const words = [...baseWords, ...reviewWords];
   Core.configureLayout(words);
   const byId = new Map(words.map(word => [word.id, word]));
   // Preserve the existing session keys and word IDs, including partial and finished rounds.
   const sessions = [5,6,7,8,1,2,3,4,9,10,11,12,13,14].map((number, index) => ({
     number, displayNumber: index + 1,
     words: words.filter(word => word.session === number)
-  }));
+  })).concat(review.sessions.map(session => ({...session, words: words.filter(word => word.session === session.number)})));
   const optionCache = new Map();
   function optionsFor(word, round) {
     const key = `${selected}:${word.id}:${round}`;
@@ -36,7 +43,17 @@
   const now = () => new Date().toISOString();
   const info = number => sessions.find(session => session.number === number);
   const range = number => `${info(number).words.length} questions`;
-  const label = number => `Session ${info(number).displayNumber}${number >= 13 ? ' · VR Test · 20 minutes' : number >= 9 ? ' · Sentence Completion' : ''}`;
+  const isReview = number => Boolean(info(number).cycle);
+  const timeLimit = number => info(number).timeLimitSeconds || 1200;
+  const label = number => isReview(number) ? `${info(number).label} · 31 minutes` : `Session ${info(number).displayNumber}${number >= 13 ? ' · VR Test · 20 minutes' : number >= 9 ? ' · Sentence Completion' : ''}`;
+  const skills = ids => [['synonym','Synonyms'],['definition','Word meanings'],['completion','Sentence Completion']].map(([type,name]) => ({name,total:ids.filter(id => byId.get(id).quizType === type).length,type})).filter(group => group.total);
+  const skillSummary = ids => skills(ids).map(group => `${group.total} ${group.type === 'definition' ? 'word meaning question' : group.type === 'completion' ? 'sentence completions' : 'synonyms'}`).join(' + ');
+  const skillScores = round => skills(round.ids).map(group => `${group.name} ${round.ids.filter(id => byId.get(id).quizType === group.type && round.answers[id]?.correct).length}/${group.total}`).join(' · ');
+  function firstRoundScore(number) {
+    const first = progress.sessions[number]?.rounds[0];
+    if (!first?.finishedAt) return '';
+    return `Round 1: ${first.ids.filter(id => first.answers[id]?.correct).length}/${first.ids.length} correct`;
+  }
   const date = value => value ? new Intl.DateTimeFormat(undefined, {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value)) : 'Not started';
   const answered = round => round ? round.ids.filter(id => round.answers[id]).length : 0;
   const current = () => Core.current(progress.sessions[selected]);
@@ -60,8 +77,8 @@
   function testReport() {
     const first = progress.sessions[selected]?.rounds[0];
     if (!first?.timeLimitSeconds || !first.finishedAt) return '';
-    const scores = ['synonym','completion'].map(type => first.ids.filter(id => byId.get(id).quizType === type && first.answers[id]?.correct).length);
-    return `<section class="test-report"><div><h2>VR Test: ${scores[0]+scores[1]}/40</h2><p>Synonyms ${scores[0]}/20 · Sentence Completion ${scores[1]}/20 · Time ${clockText(Date.parse(first.finishedAt)-Date.parse(first.startedAt))}</p><p>Your submitted score is saved. Subsequent rounds are untimed.</p></div><button data-view="results">View answers &amp; explanations</button></section>`;
+    const correct = first.ids.filter(id => first.answers[id]?.correct).length;
+    return `<section class="test-report"><div><h2>${isReview(selected) ? info(selected).label : 'VR Test'}: ${correct}/${first.ids.length}</h2><p>${skillScores(first)} · Time ${clockText(Date.parse(first.finishedAt)-Date.parse(first.startedAt))} / ${clockText(first.timeLimitSeconds*1000)}</p><p>Your submitted score is saved. Subsequent rounds are untimed.</p></div><button data-view="results">View answers &amp; explanations</button></section>`;
   }
   function save() {
     progress = Core.merge(progress, read(STORAGE_KEY));
@@ -76,7 +93,7 @@
     expireTests();
   }
   function header() {
-    const intro = '331 questions across Sessions 1–14. Sessions 9–12 each have 20 Sentence Completion questions. Sessions 13–14 are 20-minute VR tests: 20 synonyms + 20 sentence completions each. Later rounds cover missed questions.';
+    const intro = '331 questions across Sessions 1–14, plus Reviews 1A–3B repeating the 124 Round 1 mistakes. Each review has 62 questions and a 31-minute timed first round. Later rounds cover missed questions until mastered.';
     return `<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck Hard</h1><p class="course-intro">${intro}</p><p class="course-links"><a href="../marco-isee-words-250/?session=6">Archived 250 ISEE word list →</a></p></div>
       <nav aria-label="Main navigation"><button data-view="practice" class="${view === 'practice' ? 'active' : ''}" aria-pressed="${view === 'practice'}">Practice</button><button data-view="results" class="${view === 'results' ? 'active' : ''}" aria-pressed="${view === 'results'}">Results</button></nav></header>`;
   }
@@ -84,10 +101,10 @@
     const button = session => {
       const record = progress.sessions[session.number];
       const round = Core.current(record);
-      const status = record?.completedAt ? 'Mastered' : timed(round) ? `Test running · ${answered(round)}/40` : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
-      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><small>${status}</small></button>`;
+      const status = record?.completedAt ? 'Mastered' : timed(round) ? `Test running · ${answered(round)}/${round.ids.length}` : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
+      return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><strong class="first-round-score">${firstRoundScore(session.number) || (isReview(session.number) ? 'Round 1: —/62 correct' : '')}</strong><small>${status}</small></button>`;
     };
-    return `<section class="session-picker" aria-label="Choose a session"><div class="session-group-grid">${sessions.map(button).join('')}</div></section>`;
+    return `<section class="session-picker" aria-label="Choose a session"><h2>Sessions 1–14</h2><div class="session-group-grid">${sessions.filter(session => !isReview(session.number)).map(button).join('')}</div><h2>Round 1 mistake reviews</h2><p>Compare your Round 1 scores across 1A → 2A → 3A, then 1B → 2B → 3B. Each A/B pair repeats the same 124 missed questions. Each review saves its own rounds.</p><div class="session-group-grid review-session-grid">${sessions.filter(session => isReview(session.number)).map(button).join('')}</div></section>`;
   }
   function syncNote() {
     return `<div class="sync-note" data-online-sync="${APP_ID}" role="status" aria-live="polite"><span aria-hidden="true"></span>${local ? 'Preview · answers save on this device only.' : 'Connecting online…'}</div>`;
@@ -95,7 +112,8 @@
   function question() {
     const record = progress.sessions[selected];
     if (selected >= 13 && !record) {
-      return `<section class="test-start session-summary"><p class="eyebrow">Past-paper verbal reasoning</p><h2>${label(selected)}</h2><p>40 questions · 20 minutes total</p><p>Questions 1–20: Synonyms<br>Questions 21–40: Sentence Completion</p><p>Answer in any order and change your choices before submitting. Answers and explanations appear after submission. Unanswered questions count as incorrect.</p><p>The timer keeps running if you leave this page or refresh.</p><button class="finish-round" data-start-test>Start 20-minute test</button></section>`;
+      const ids = info(selected).words.map(word => word.id), minutes = timeLimit(selected)/60;
+      return `<section class="test-start session-summary"><p class="eyebrow">${isReview(selected) ? 'Round 1 mistake review' : 'Past-paper verbal reasoning'}</p><h2>${label(selected)}</h2><p>${ids.length} questions · ${minutes} minutes total</p><p>${isReview(selected) ? skillSummary(ids) : 'Questions 1–20: Synonyms<br>Questions 21–40: Sentence Completion'}</p><p>Answer in any order and change your choices before submitting. Answers and explanations appear after submission. Unanswered questions count as incorrect.</p><p>The timer keeps running if you leave this page or refresh. Round 2, 3, and onward are untimed and repeat only the previous round’s mistakes.</p><button class="finish-round" data-start-test>Start ${minutes}-minute test</button></section>`;
     }
     if (record?.completedAt) {
       const next = sessions[sessions.findIndex(session => session.number === selected) + 1]?.number;
@@ -105,7 +123,7 @@
     }
     const savedRound = current();
     const round = {...savedRound, ids: Core.questionOrder(savedRound.ids, selected, savedRound.number)};
-    return testReport() + `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}">${timed(round) ? `<div class="timer-bar"><span>Time remaining</span><strong data-timer role="timer" aria-label="Time remaining">${clockText(Date.parse(round.deadlineAt)-Date.now())}</strong><span>20 synonyms + 20 sentence completions</span></div>` : ''}<div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}</h2><span>${round.number === 1 ? `All ${round.ids.length} questions on this page` : 'Previous round’s missed questions'}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
+    return testReport() + `<section class="session-workspace" aria-label="${label(selected)}, Round ${round.number}">${timed(round) ? `<div class="timer-bar"><span>Time remaining</span><strong data-timer role="timer" aria-label="Time remaining">${clockText(Date.parse(round.deadlineAt)-Date.now())}</strong><span>${skillSummary(round.ids)}</span></div>` : ''}<div class="session-summary"><div class="session-summary-heading"><div><div class="round-heading"><span>${label(selected)}</span><small>${range(selected)}</small></div><div class="round-subheading"><h2>Round ${round.number}</h2><span>${round.number === 1 ? `All ${round.ids.length} questions on this page` : 'Previous round’s missed questions'}</span></div></div><div class="stats"><div><strong>${answered(round)}</strong><span>answered</span></div><div><strong>${round.ids.length - answered(round)}</strong><span>remaining</span></div></div>${finishButton(round)}</div>
       <div class="progress" role="progressbar" aria-label="Round progress" aria-valuenow="${answered(round)}" aria-valuemin="0" aria-valuemax="${round.ids.length}"><span style="width:${answered(round) / round.ids.length * 100}%"></span></div>
       <p class="grid-label">Jump to a question</p><div class="number-grid" aria-label="Question progress">${round.ids.map((id,index) => {
         const value = round.answers[id];
@@ -141,12 +159,12 @@
       <div class="live-progress-heading"><div><strong>Live session progress</strong><span>Updated after every answer</span></div></div><div class="live-progress-grid">${sessions.map(session => {
         const record = progress.sessions[session.number];
         const round = Core.current(record);
-        return `<article class="${record?.completedAt ? 'complete' : ''}"><span>${label(session.number)}</span><strong>${record?.completedAt ? 'Mastered' : `${answered(round)}/${round?.ids.length || session.words.length} answered`}</strong><small>${range(session.number)} · ${round ? `Round ${round.number}` : 'Not started'}</small></article>`;
+        return `<article class="${record?.completedAt ? 'complete' : ''}"><span>${label(session.number)}</span><strong>${record?.completedAt ? 'Mastered' : `${answered(round)}/${round?.ids.length || session.words.length} answered`}</strong>${firstRoundScore(session.number) ? `<strong class="first-round-score">${firstRoundScore(session.number)}</strong>` : ''}<small>${range(session.number)} · ${round ? `Round ${round.number}` : 'Not started'}</small></article>`;
       }).join('')}</div><div class="finished-heading"><strong>Finished rounds</strong><span>Scores and answer review</span></div>
       ${finished.length ? `<div class="session-list">${finished.map(session => `<article class="session-card"><div class="session-title"><div><strong>${label(session.number)} · ${range(session.number)}</strong><span>${progress.sessions[session.number].completedAt ? `Mastered ${date(progress.sessions[session.number].completedAt)}` : 'In progress'}</span></div><span>${progress.sessions[session.number].rounds.filter(round => round.finishedAt).length} finished rounds</span></div><div class="round-list">${progress.sessions[session.number].rounds.filter(round => round.finishedAt).map(round => {
         const correct = round.ids.filter(id => round.answers[id].correct).length;
-        const breakdown = round.timeLimitSeconds ? `<p class="test-breakdown">Synonyms ${round.ids.filter(id => byId.get(id).quizType === 'synonym' && round.answers[id].correct).length}/20 · Sentence Completion ${round.ids.filter(id => byId.get(id).quizType === 'completion' && round.answers[id].correct).length}/20 · Time ${clockText(Date.parse(round.finishedAt)-Date.parse(round.startedAt))} / 20:00</p>` : '';
-        return `<details data-result="${session.number}-${round.number}" ${session.number === selected && round.timeLimitSeconds ? 'open' : ''}><summary><span class="round-number">${round.number}</span><span><strong>Round ${round.number}${round.timeLimitSeconds ? ' · VR Test' : ''}</strong><small>${date(round.finishedAt)}</small></span><span class="score"><strong>${correct}/${round.ids.length}</strong><small>correct</small></span><span class="missed"><strong>${round.ids.length-correct}</strong><small>missed</small></span></summary>${breakdown}<div class="answer-review">${Core.questionOrder(round.ids,session.number,round.number).map((id,index) => {
+        const breakdown = round.timeLimitSeconds ? `<p class="test-breakdown">${skillScores(round)} · Time ${clockText(Date.parse(round.finishedAt)-Date.parse(round.startedAt))} / ${clockText(round.timeLimitSeconds*1000)}</p>` : '';
+        return `<details data-result="${session.number}-${round.number}" ${session.number === selected && round.timeLimitSeconds ? 'open' : ''}><summary><span class="round-number">${round.number}</span><span><strong>Round ${round.number}${round.timeLimitSeconds ? isReview(session.number) ? ' · Timed review' : ' · VR Test' : ''}</strong><small>${date(round.finishedAt)}</small></span><span class="score"><strong>${correct}/${round.ids.length}</strong><small>correct</small></span><span class="missed"><strong>${round.ids.length-correct}</strong><small>missed</small></span></summary>${breakdown}<div class="answer-review">${Core.questionOrder(round.ids,session.number,round.number).map((id,index) => {
           const word = byId.get(id), answer = round.answers[id];
           const prompt = word.quizType === 'definition' ? word.meaning : word.word;
           const correct = word.answer;
@@ -164,7 +182,7 @@
     app.innerHTML = header() + (view === 'practice' ? picker() : '') + syncNote() +
       (storageError ? '<div class="notice error" role="alert">This device could not save locally. Keep this page open until the online indicator confirms the save.</div>' : '') +
       (banner && view === 'practice' ? `<div class="result-banner" role="status">${escape(banner)}</div>` : '') +
-      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Archived 250 ISEE word list →</a><span>331 questions · Sessions 1–14</span></footer>';
+      (view === 'practice' ? question() : results()) + '<footer class="site-footer"><a href="../">← Learning Hub</a><a href="../marco-isee-words-250/?session=6">Archived 250 ISEE word list →</a><span>331 original questions · 6 reviews of 124 mistakes</span></footer>';
     if (badge) app.querySelector('[data-online-sync]').replaceWith(badge);
     expanded.forEach(key => { const detail = app.querySelector(`[data-result="${key}"]`); if (detail) detail.open = true; });
     const replacement = anchor && document.getElementById(anchor.id);
@@ -187,7 +205,7 @@
     if (!button || button.disabled) return;
     if (expireTests()) { render(); return; }
     if (button.hasAttribute('data-start-test')) {
-      if (selected >= 13 && Core.startTimed(progress, selected, info(selected).words.map(word => word.id), now())) {
+      if (selected >= 13 && Core.startTimed(progress, selected, info(selected).words.map(word => word.id), now(), timeLimit(selected))) {
         save(); render();
         app.querySelector('.session-workspace')?.scrollIntoView({block:'start'});
       }
