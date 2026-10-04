@@ -104,7 +104,7 @@
       const status = record?.completedAt ? 'Mastered' : timed(round) ? `Test running · ${answered(round)}/${round.ids.length}` : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
       return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><strong class="first-round-score">${firstRoundScore(session.number) || (isReview(session.number) ? 'Round 1: —/62 correct' : '')}</strong><small>${status}</small></button>`;
     };
-    return `<section class="session-picker" aria-label="Choose a session"><h2>Sessions 1–14</h2><div class="session-group-grid">${sessions.filter(session => !isReview(session.number)).map(button).join('')}</div><h2>Round 1 mistake reviews</h2><p>Compare your Round 1 scores across 1A → 2A → 3A, then 1B → 2B → 3B. Each A/B pair repeats the same 124 missed questions. Each review saves its own rounds.</p><div class="session-group-grid review-session-grid">${sessions.filter(session => isReview(session.number)).map(button).join('')}</div></section>`;
+    return `<section class="session-picker" aria-label="Choose a session"><div class="session-group-grid">${sessions.map(button).join('')}</div></section>`;
   }
   function syncNote() {
     return `<div class="sync-note" data-online-sync="${APP_ID}" role="status" aria-live="polite"><span aria-hidden="true"></span>${local ? 'Preview · answers save on this device only.' : 'Connecting online…'}</div>`;
