@@ -4,6 +4,7 @@
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c'];
   const validTyped=(id,source,value)=>typeof value==='string'&&(
+    (id.startsWith('oct4-')&&source==='7'&&/^\d{1,15}(?: \| \d{1,15}){5}$/.test(value))||
     (id.startsWith('oct4-')&&source==='3002'&&/^\d{1,15}$/.test(value))||
     (id.startsWith('oct4-')&&source==='3009'&&/^\d{1,15} × \d{1,15} \+ \d{1,15} × \d{1,15} = \d{1,15} \+ \d{1,15} = \d{1,15}$/.test(value))||
     (source==='102'&&/^\d{1,15}$/.test(value))||

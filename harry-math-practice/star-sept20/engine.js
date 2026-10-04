@@ -8,13 +8,19 @@
     const text=String(value).trim().replace(/[ ,]/g,'');
     return /^\d+(?:\.\d{1,8})?$/.test(text)&&Number.isFinite(Number(text))&&Number(text)<1e12?String(Number(text)):null;
   };
-  const typed = question => question.type==='number'||question.type==='decimal'||question.type==='split-sum';
+  const typed = question => question.type==='number'||question.type==='decimal'||question.type==='split-sum'||question.type==='fill-blanks';
   const splitValues = value => {
     if(Array.isArray(value))return value;
     const text=String(value);
     return text.match(/^(.*?) × (.*?) \+ (.*?) × (.*?) = (.*?) \+ (.*?) = (.*?)$/)?.slice(1)||text.match(/^(.*?)\s+\+\s+(.*?)\s+=\s+(.*?)$/)?.slice(1)||null;
   };
   const normalizeFor = (question,value) => {
+    if(question.type==='fill-blanks'){
+      const values=Array.isArray(value)?value:String(value).split(' | ');
+      if(values.length!==question.blanks.length)return null;
+      const parts=values.map(normalize);
+      return parts.some(p=>p===null)?null:parts.join(' | ');
+    }
     if(question.type!=='split-sum')return question.decimal?normalizeDecimal(value):normalize(value);
     const parts=splitValues(value);
     if(!parts||![3,7].includes(parts.length))return null;
@@ -23,6 +29,7 @@
     return normalized.length===7?`${normalized[0]} × ${normalized[1]} + ${normalized[2]} × ${normalized[3]} = ${normalized[4]} + ${normalized[5]} = ${normalized[6]}`:`${normalized[0]} + ${normalized[1]} = ${normalized[2]}`;
   };
   const isCorrect = (question,choice) => {
+    if(question.type==='fill-blanks')return typeof choice==='number'&&question.legacyQuestion?isCorrect(question.legacyQuestion,choice):normalizeFor(question,choice)===question.blanks.map(b=>String(b.answer)).join(' | ');
     if(question.type!=='split-sum')return typed(question)?normalizeFor(question,choice)!==null&&Number(normalizeFor(question,choice))===question.correct:choice===question.correct;
     const normalized=normalizeFor(question,choice);if(normalized===null)return false;
     const values=splitValues(normalized).map(Number);
@@ -35,6 +42,7 @@
   };
   const done = (question,entry) => !!entry && (entry.attempts.length >= 2 || entry.attempts.some(a=>isCorrect(question,a.choice)));
   function submit(run,question,choice,at) {
+    if(question.legacyQuestion&&typeof run.answers[question.source]?.attempts[0]?.choice==='number')question=question.legacyQuestion;
     if(question.type==='split-sum'&&splitValues(choice)?.length!==7)return false;
     if(typed(question)){choice=normalizeFor(question,choice);if(choice===null)return false;}
     else if (!Number.isInteger(choice) || choice<0 || choice>=question.choices.length) return false;

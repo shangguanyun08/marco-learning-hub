@@ -21,9 +21,13 @@
   function result(q,run){const e=run.answers[q.source];if(!e?.attempts.length)return '';if(engine.isCorrect(q,e.attempts[0].choice))return 'first';if(e.attempts[1]&&engine.isCorrect(q,e.attempts[1].choice))return 'retry';return e.attempts.length===2?'revealed':'pending';}
   function numberline(){return `<svg class="numberline" viewBox="0 0 600 145" role="img" aria-label="Number line from zero to one with eight equal intervals. A yellow star, blue circle, yellow square, and green triangle are positioned below ticks."><line x1="40" y1="45" x2="560" y2="45" stroke="#193c49" stroke-width="2"/>${Array.from({length:9},(_,i)=>`<line x1="${40+i*65}" x2="${40+i*65}" y1="${i===0||i===8?33:39}" y2="${i===0||i===8?57:51}" stroke="#193c49" stroke-width="2"/>`).join('')}<text x="40" y="85" text-anchor="middle" font-size="22">0</text><text x="560" y="85" text-anchor="middle" font-size="22">1</text><polygon points="170,65 175,77 189,77 178,85 182,99 170,91 158,99 162,85 151,77 165,77" fill="#ffdf4b" stroke="#193c49"/><circle cx="235" cy="83" r="15" fill="#28b8d1" stroke="#193c49"/><rect x="285" y="68" width="30" height="30" fill="#ffdf4b" stroke="#193c49"/><polygon points="430,65 448,98 412,98" fill="#85d452" stroke="#193c49"/></svg>`;}
   const sourceLabel=q=>q.sourceLabel||`STAR Q${q.source}`;
-  const chosenText=(q,choice)=>engine.typed(q)?esc(choice):`${'ABCD'[choice]} (${esc(q.choices[choice])})`;
-  const answerText=q=>q.type==='split-sum'?`${q.expansion[0]} × ${q.expansion[1]} + ${q.expansion[2]} × ${q.expansion[3]} = ${q.parts[0].toLocaleString('en-US')} + ${q.parts[1].toLocaleString('en-US')} = ${q.parts[2].toLocaleString('en-US')}`:q.type==='number'?q.correct.toLocaleString('en-US'):`${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}`;
+  const chosenText=(q,choice)=>q.legacyQuestion&&typeof choice==='number'?chosenText(q.legacyQuestion,choice):engine.typed(q)?esc(choice):`${'ABCD'[choice]} (${esc(q.choices[choice])})`;
+  const answerText=q=>q.type==='fill-blanks'?q.blanks.map(b=>`${esc(b.label)} ${b.answer} ${esc(b.unit)}`).join('<br>'):q.type==='split-sum'?`${q.expansion[0]} × ${q.expansion[1]} + ${q.expansion[2]} × ${q.expansion[3]} = ${q.parts[0].toLocaleString('en-US')} + ${q.parts[1].toLocaleString('en-US')} = ${q.parts[2].toLocaleString('en-US')}`:q.type==='number'?q.correct.toLocaleString('en-US'):`${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}`;
   function numericField(q,attempts,closed){
+    if(q.type==='fill-blanks'){
+      const recorded=String(attempts.at(-1)?.choice||'').split(' | ');
+      return `<div class="unit-blanks">${q.blanks.map((b,i)=>`${i===0||b.category!==q.blanks[i-1].category?`<h4>${esc(b.category)}</h4>`:''}<label class="unit-row" for="unit-${q.source}-${i}"><span>${esc(b.label)}</span><input id="unit-${q.source}-${i}" name="unit-answer" type="text" inputmode="numeric" autocomplete="off" placeholder="___" aria-label="${esc(b.label)} how many ${esc(b.unit)}" aria-describedby="feedback-${q.source}" value="${esc(recorded[i]||'')}" ${closed?'disabled':''}><span>${esc(b.unit)}</span></label>`).join('')}${attempts.length?`<ol class="numeric-attempts">${attempts.map((a,i)=>`<li>Try ${i+1}: ${esc(a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'}</li>`).join('')}</ol>`:''}</div>`;
+    }
     if(q.type==='split-sum'){
       let recorded=closed?(engine.splitValues(attempts.at(-1)?.choice||'')||[]):[];
       if(recorded.length===3)recorded=['','','','',...recorded];
@@ -34,8 +38,9 @@
     return `<div class="numeric-entry"><label for="number-${q.source}">Your answer</label><input id="number-${q.source}" name="number-answer" type="text" inputmode="${q.decimal?'decimal':'numeric'}" autocomplete="off" ${closed?'disabled':''} aria-describedby="feedback-${q.source}">${attempts.length?`<ol class="numeric-attempts">${attempts.map((a,i)=>`<li>Try ${i+1}: ${esc(a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'}</li>`).join('')}</ol>`:''}</div>`;
   }
   function card(q,i){
+    if(q.legacyQuestion&&typeof current().answers[q.source]?.attempts[0]?.choice==='number')q=q.legacyQuestion;
     const run=current(),entry=run.answers[q.source],attempts=entry?.attempts||[],closed=engine.done(q,entry),status=result(q,run);
-    let feedback=engine.typed(q)?(q.type==='split-sum'?'Fill all seven boxes, then press Check answer.':'Type your answer, then press Check answer.'):'Choose an answer, then press Check answer.';
+    let feedback=engine.typed(q)?(q.type==='fill-blanks'?'Fill all six blanks, then press Check answer.':q.type==='split-sum'?'Fill all seven boxes, then press Check answer.':'Type your answer, then press Check answer.'):'Choose an answer, then press Check answer.';
     if(status==='first')feedback='Correct on your first try! 1 point earned.';
     if(status==='pending')feedback='Not quite. You have one more try. Your first-try score stays unchanged.';
     if(status==='retry')feedback='You got it on your second try! This correction is saved; the first-try score stays unchanged.';
@@ -102,13 +107,21 @@
     document.querySelector('#questions').innerHTML=active.questions.map(card).join('');renderSummary();updateSaveNote();
   }
   document.querySelector('#questions').addEventListener('submit',event=>{
-    event.preventDefault();const form=event.target,q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
+    event.preventDefault();const form=event.target;let q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
+    if(q.legacyQuestion&&typeof current().answers[q.source]?.attempts[0]?.choice==='number')q=q.legacyQuestion;
+    if(q.type==='fill-blanks'){
+      const feedback=document.querySelector(`#feedback-${q.source}`),values=Array.from(form.querySelectorAll('input[name="unit-answer"]:not(:disabled)'),input=>input.value);
+      if(engine.normalizeFor(q,values)===null){feedback.textContent='Fill all six blanks with whole numbers. No attempt has been used.';feedback.focus();return;}
+      const run=current();if(!engine.submit(run,q,values,new Date().toISOString())){feedback.textContent='Change at least one answer before trying again. No new attempt has been used.';feedback.focus();return;}
+      if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
+      const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});return;
+    }
     const selected=form.querySelector(q.type==='split-sum'?'input[name="number-part"]:not(:disabled)':q.type==='number'?'input[name="number-answer"]:not(:disabled)':'input:checked:not(:disabled)'),feedback=document.querySelector(`#feedback-${q.source}`);
     const value=q.type==='split-sum'?Array.from(form.querySelectorAll('input[name="number-part"]:not(:disabled)'),input=>input.value):q.type==='number'?selected?.value:Number(selected?.value);
     if(!selected||(engine.typed(q)&&engine.normalizeFor(q,value)===null)){feedback.textContent=q.type==='split-sum'?'Fill all seven boxes with whole numbers. No attempt has been used.':q.type==='number'?`Type a ${q.decimal?'number':'whole-number'} answer before checking. No attempt has been used.`:'Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
     const run=current();if(!engine.submit(run,q,value,new Date().toISOString())){feedback.textContent='Try a different answer. No new attempt has been used.';feedback.focus();return;}
     if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
-    const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
+    const index=active.questions.findIndex(item=>item.source===q.source);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
   document.querySelector('#sessions').addEventListener('click',event=>{const link=event.target.closest('a');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>s.id===id);history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
   window.addEventListener('popstate',()=>{active=selectedDay();render();});
@@ -124,7 +137,7 @@
     sync=window.HarrySeptSync.create({
       getState:()=>state,
       onRemote(remote){
-        const drafts=Array.from(document.querySelectorAll('input[name="number-answer"]:not(:disabled), input[name="number-part"]:not(:disabled)')).map(input=>[input.id,input.value]);
+        const drafts=Array.from(document.querySelectorAll('input[name="number-answer"]:not(:disabled), input[name="number-part"]:not(:disabled), input[name="unit-answer"]:not(:disabled)')).map(input=>[input.id,input.value]);
         const selected=Array.from(document.querySelectorAll('input:checked:not(:disabled)')).map(input=>[input.name,input.value]);
         state=remote;save(false);render();
         for(const [id,value] of drafts){const input=document.getElementById(id);if(input&&!input.disabled)input.value=value;}
