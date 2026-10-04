@@ -7,8 +7,9 @@ function boot(id='oct4-original',saved){
  const html=read('./index.html'),dom=new JSDOM(html,{url:'http://localhost/?session='+id,runScripts:'outside-only'}),w=dom.window;
  w.HTMLElement.prototype.scrollIntoView=function(){};
  if(saved)w.localStorage.setItem(KEY,JSON.stringify(saved));
- for(const match of html.matchAll(/<script src="([^"]+)" defer>/g))w.eval(read(match[1].split('?')[0]));
- return {w,d:w.document,close:()=>w.close(),session:w.HARRY_SEPT_PRACTICE.find(s=>s.id===id)};
+ let beforeOrder;
+ for(const match of html.matchAll(/<script src="([^"]+)" defer>/g)){if(match[1].includes('oct4-order.js'))beforeOrder=JSON.parse(JSON.stringify(w.HARRY_SEPT_PRACTICE));w.eval(read(match[1].split('?')[0]));}
+ return {w,d:w.document,beforeOrder,close:()=>w.close(),session:w.HARRY_SEPT_PRACTICE.find(s=>s.id===id)};
 }
 function submit(t,values){t.d.querySelectorAll('#q2 input[name="unit-answer"]').forEach((el,i)=>el.value=values[i]??'');t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 const answers=[[12,3,36,16,2,4],[24,6,72,32,6,8],[36,12,108,48,10,12],[60,18,144,80,14,20]];
@@ -34,4 +35,22 @@ test('Every revised session completes at 16/16 with synchronized multi-blank wor
  for(const id of ids){const t=boot(id),run={id,startedAt:'2026-10-04T19:00:00.000Z',completedAt:null,answers:{}};
  for(const q of t.session.questions){const value=q.type==='fill-blanks'?q.blanks.map(b=>b.answer):q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct;assert(t.w.HarrySeptEngine.submit(run,q,value,run.startedAt));}
  assert.equal(t.w.HarrySeptEngine.stats(t.session,run).first,16);assert.equal(t.w.HarrySeptEngine.stats(t.session,run).finished,16);const state={version:1,sessions:{[id]:[run]}};assert(t.w.HarrySeptSync.valid(state));assert(t.w.HarrySeptSync.merge(state,state).sessions[id][0].completedAt);t.close();}
+});
+test('Easy-to-hard order changes presentation only, preserving question content and prior group ordering',()=>{
+ const t=boot(),expected=[3002,7,29,17,12,32,31,27,3005,3009,23,15,6,8,34,25];
+ for(const session of t.w.HARRY_SEPT_PRACTICE){const before=t.beforeOrder.find(s=>s.id===session.id);
+   if(session.group!=='2026-10-04'){assert.deepEqual(JSON.parse(JSON.stringify(session)),before);continue;}
+   assert.deepEqual(Array.from(session.questions,q=>q.source),expected);
+   for(const q of session.questions)assert.deepEqual(JSON.parse(JSON.stringify(q)),before.questions.find(old=>old.source===q.source));
+   assert(!session.description.includes('as Questions 14–16'));
+ }
+ assert.equal(t.d.querySelector('#q1').dataset.source,'3002');assert.equal(t.d.querySelector('#q16').dataset.source,'25');assert.equal(t.d.querySelector('#jump a:last-child').getAttribute('href'),'#q16');t.close();
+});
+test('Reordered questions retain saved scores, retry outcomes, timestamps, and completion',()=>{
+ const t=boot(),at='2026-10-04T19:00:00.000Z',run={id:'before-order',startedAt:at,completedAt:at,answers:{}};
+ for(const q of t.session.questions){const answer=q.type==='fill-blanks'?q.blanks.map(b=>b.answer):q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct;t.w.HarrySeptEngine.submit(run,q,answer,at);}
+ run.answers[3002].attempts=[{choice:'8',correct:false,at},{choice:'7',correct:true,at}];
+ const state={version:1,sessions:{'oct4-original':[run]}},r=boot('oct4-original',state);
+ assert.match(r.d.querySelector('#score').textContent,/15 \/ 16/);assert.match(r.d.querySelector('#q1 .feedback').textContent,/second try/);assert.equal(r.d.querySelector('#completion').hidden,false);
+ assert.deepEqual(JSON.parse(r.w.localStorage.getItem(KEY)),JSON.parse(JSON.stringify(state)));assert.match(r.d.querySelector('#history').textContent,/Try 1: 8 · incorrect/);r.close();t.close();
 });
