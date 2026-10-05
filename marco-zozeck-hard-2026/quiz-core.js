@@ -170,6 +170,9 @@
       if (!Array.isArray(incoming.rounds)) continue;
       const existing = result.sessions[key];
       if (!existing) { result.sessions[key] = copy(incoming); continue; }
+      // A parent can close a session without changing any scored answer history.
+      existing.manualCompletedAt ||= incoming.manualCompletedAt;
+      existing.manualCompletionReason ||= incoming.manualCompletionReason;
       for (const source of incoming.rounds) {
         const target = existing.rounds.find(r => r.number === source.number);
         if (!target) { existing.rounds.push(copy(source)); continue; }
@@ -227,6 +230,7 @@
           break;
         }
       }
+      if (existing.manualCompletedAt) existing.completedAt = existing.manualCompletedAt;
     }
     return result;
   }

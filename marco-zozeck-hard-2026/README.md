@@ -50,3 +50,5 @@ Each A/B pair covers those same 124 questions exactly once, split into two fixed
 Round 1 starts only after pressing **Start 31-minute test**. It permits changing answers, hides correctness, uses one persistent 1,860-second deadline for all 62 questions, and submits automatically at expiry (including on returning to an expired page). Unanswered items count as incorrect. Round 2, 3, and onward are untimed, lock each submitted answer, and repeat only the preceding round's misses until mastered. Results preserves all round scores, answers, explanations, and timed first-attempt durations. The existing 20-minute VR tests retain their original limits.
 
 Validation: `node --test marco-zozeck-hard-2026/review.test.cjs` checks the fixed bank, six independent sessions, repeat membership, preserved content, 31-minute synchronization and expiry, correction rounds, and original VR behavior.
+
+Parent-requested completion uses `manualCompletedAt` and `manualCompletionReason` in the shared session record. These survive stale-device merges and show a green **Completed** status, distinct from earned **Mastered** status. No answers, scores, or round history are changed.

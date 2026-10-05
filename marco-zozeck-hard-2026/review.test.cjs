@@ -13,6 +13,22 @@ const all = [...base,...words];
 Core.configureLayout(all);
 const at = '2026-10-04T16:00:00.000Z';
 const later = seconds => new Date(Date.parse(at)+seconds*1000).toISOString();
+
+test('parent completion survives stale-device merges without manufacturing correct answers',()=>{
+  const p = Core.blank();
+  Core.start(p,14,['one','two'],at);
+  p.sessions[14].rounds[0].answers.one = {choice:'wrong',correct:false,at};
+  const closed = JSON.parse(JSON.stringify(p));
+  Object.assign(closed.sessions[14],{manualCompletedAt:later(1),manualCompletionReason:'Parent requested completion',completedAt:later(1)});
+  for (const merged of [Core.merge(p,closed),Core.merge(closed,p),Core.merge(closed,closed)]) {
+    assert.equal(merged.sessions[14].completedAt,later(1));
+    assert.equal(merged.sessions[14].manualCompletedAt,later(1));
+    assert.deepEqual(merged.sessions[14].rounds,p.sessions[14].rounds);
+    assert.equal(merged.sessions[14].rounds[0].answers.one.correct,false);
+    assert.equal(merged.sessions[14].rounds[0].answers.two,undefined);
+    assert.equal(merged.sessions[13],undefined);
+  }
+});
 test('six independent reviews repeat the fixed 124 original questions as two balanced halves',()=>{
   assert.equal(base.length,331);
   assert.deepEqual(review.sessions.map(s=>s.label),['Review 1A','Review 2A','Review 3A','Review 1B','Review 2B','Review 3B']);

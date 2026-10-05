@@ -72,6 +72,7 @@
   }
   const date = value => value ? new Intl.DateTimeFormat(undefined, {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'}).format(new Date(value)) : 'Not started';
   const answered = round => round ? round.ids.filter(id => round.answers[id]).length : 0;
+  const completionLabel = record => record?.manualCompletedAt ? 'Completed' : 'Mastered';
   const current = () => Core.current(progress.sessions[selected]);
   const timed = round => Boolean(round?.timeLimitSeconds && !round.finishedAt);
   const clockText = milliseconds => {
@@ -117,7 +118,7 @@
     const button = session => {
       const record = progress.sessions[session.number];
       const round = Core.current(record);
-      const status = record?.completedAt ? 'Mastered' : timed(round) ? `Test running · ${answered(round)}/${round.ids.length}` : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
+      const status = record?.completedAt ? completionLabel(record) : timed(round) ? `Test running · ${answered(round)}/${round.ids.length}` : round ? `Round ${round.number} · ${answered(round)}/${round.ids.length}` : 'Not started';
       return `<button data-session="${session.number}" class="${selected === session.number ? 'selected' : ''} ${record?.completedAt ? 'mastered' : ''}" aria-pressed="${selected === session.number}"><span>${label(session.number)}</span><strong>${range(session.number)}</strong><strong class="first-round-score">${firstRoundScore(session.number) || (isReview(session.number) ? 'Round 1: —/62 correct' : '')}</strong><small>${status}</small></button>`;
     };
     return `<section class="session-picker" aria-label="Choose a session"><div class="session-group-grid">${sessions.map(button).join('')}</div></section>`;
@@ -135,7 +136,8 @@
       const next = sessions[sessions.findIndex(session => session.number === selected) + 1]?.number;
       const nextLabel = next ? `Continue to ${label(next)}` : '';
       const itemName = 'questions';
-      return testReport() + `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} mastered</h2><p>All ${info(selected).words.length} ${itemName} in this session have been answered correctly. Every round is preserved in Results.</p><div class="complete-actions">${next ? `<button data-session="${next}">${nextLabel}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
+      const summary = record.manualCompletedAt ? 'Marked completed at your parent’s request. Existing scores and answers are unchanged; every saved round remains in Results.' : `All ${info(selected).words.length} ${itemName} in this session have been answered correctly. Every round is preserved in Results.`;
+      return testReport() + `<section class="complete-card"><div><div class="checkmark">✓</div><h2>${label(selected)} ${completionLabel(record).toLowerCase()}</h2><p>${summary}</p><div class="complete-actions">${next ? `<button data-session="${next}">${nextLabel}</button>` : ''}<button class="secondary" data-view="results">View results</button></div></div></section>`;
     }
     const savedRound = current();
     const round = {...savedRound, ids: Core.questionOrder(savedRound.ids, selected, savedRound.number)};
@@ -175,9 +177,9 @@
       <div class="live-progress-heading"><div><strong>Live session progress</strong><span>Updated after every answer</span></div></div><div class="live-progress-grid">${sessions.map(session => {
         const record = progress.sessions[session.number];
         const round = Core.current(record);
-        return `<article class="${record?.completedAt ? 'complete' : ''}"><span>${label(session.number)}</span><strong>${record?.completedAt ? 'Mastered' : `${answered(round)}/${round?.ids.length || session.words.length} answered`}</strong>${firstRoundScore(session.number) ? `<strong class="first-round-score">${firstRoundScore(session.number)}</strong>` : ''}<small>${range(session.number)} · ${round ? `Round ${round.number}` : 'Not started'}</small></article>`;
+        return `<article class="${record?.completedAt ? 'complete' : ''}"><span>${label(session.number)}</span><strong>${record?.completedAt ? completionLabel(record) : `${answered(round)}/${round?.ids.length || session.words.length} answered`}</strong>${firstRoundScore(session.number) ? `<strong class="first-round-score">${firstRoundScore(session.number)}</strong>` : ''}<small>${range(session.number)} · ${round ? `Round ${round.number}` : 'Not started'}</small></article>`;
       }).join('')}</div><div class="finished-heading"><strong>Finished rounds</strong><span>Scores and answer review</span></div>
-      ${finished.length ? `<div class="session-list">${finished.map(session => `<article class="session-card"><div class="session-title"><div><strong>${label(session.number)} · ${range(session.number)}</strong><span>${progress.sessions[session.number].completedAt ? `Mastered ${date(progress.sessions[session.number].completedAt)}` : 'In progress'}</span></div><span>${progress.sessions[session.number].rounds.filter(round => round.finishedAt).length} finished rounds</span></div><div class="round-list">${progress.sessions[session.number].rounds.filter(round => round.finishedAt).map(round => {
+      ${finished.length ? `<div class="session-list">${finished.map(session => `<article class="session-card"><div class="session-title"><div><strong>${label(session.number)} · ${range(session.number)}</strong><span>${progress.sessions[session.number].completedAt ? `${completionLabel(progress.sessions[session.number])} ${date(progress.sessions[session.number].completedAt)}` : 'In progress'}</span></div><span>${progress.sessions[session.number].rounds.filter(round => round.finishedAt).length} finished rounds</span></div><div class="round-list">${progress.sessions[session.number].rounds.filter(round => round.finishedAt).map(round => {
         const correct = round.ids.filter(id => round.answers[id].correct).length;
         const breakdown = round.timeLimitSeconds ? `<p class="test-breakdown">${skillScores(round)} · Time ${clockText(Date.parse(round.finishedAt)-Date.parse(round.startedAt))} / ${clockText(round.timeLimitSeconds*1000)}</p>` : '';
         return `<details data-result="${session.number}-${round.number}" ${session.number === selected && round.timeLimitSeconds ? 'open' : ''}><summary><span class="round-number">${round.number}</span><span><strong>Round ${round.number}${round.timeLimitSeconds ? isReview(session.number) ? ' · Timed review' : ' · VR Test' : ''}</strong><small>${date(round.finishedAt)}</small></span><span class="score"><strong>${correct}/${round.ids.length}</strong><small>correct</small></span><span class="missed"><strong>${round.ids.length-correct}</strong><small>missed</small></span></summary>${breakdown}<div class="answer-review">${Core.questionOrder(round.ids,session.number,round.number).map((id,index) => {
