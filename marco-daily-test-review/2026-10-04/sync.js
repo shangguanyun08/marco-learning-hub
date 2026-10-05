@@ -4,7 +4,7 @@
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const BANK=[...root.MARCO_ISEE_PRACTICE,...(root.MARCO_ISEE_LEGACY||[])];
   const IDS=BANK.map(s=>s.id);
-  const sourceQuestions=id=>BANK.find(s=>s.id===id).questions;
+  const sourceQuestions=(id,run)=>root.MarcoIseeEngine.questions(BANK.find(s=>s.id===id),run);
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
@@ -27,6 +27,7 @@
   function valid(state){
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
+        (!run.questionVersion||run.questionVersion==='original-vr-v1')&&
         (!run.questionSources||(Array.isArray(run.questionSources)&&run.questionSources.every(source=>sourceQuestions(id).some(q=>q.source===source))))&&
         (!run.pending||(object(run.pending)&&Object.entries(run.pending).every(([source,p])=>sourceQuestions(id).some(q=>String(q.source)===source&&Number.isInteger(p.choice)&&p.choice>=0&&p.choice<q.choices.length)&&time(p.at))))&&
         (!run.deadlineAt||time(run.deadlineAt))&&(!run.timedOutAt||time(run.timedOutAt))&&
@@ -67,7 +68,7 @@
         const versions=[];
         candidates.sort((x,y)=>signature(x).localeCompare(signature(y)));
         for(const run of candidates){
-          const target=versions.find(v=>JSON.stringify(v.questionSources)===JSON.stringify(run.questionSources)&&compatible(v,run));
+          const target=versions.find(v=>v.questionVersion===run.questionVersion&&JSON.stringify(v.questionSources)===JSON.stringify(run.questionSources)&&compatible(v,run));
           if(!target){versions.push(run);continue;}
           if(target.pending||run.pending){target.pending||={};for(const [key,p]of Object.entries(run.pending||{})){const old=target.pending[key];if(!old||p.at>old.at||(p.at===old.at&&p.choice>old.choice))target.pending[key]=clone(p);}}
           if(target.work||run.work)target.work=mergeWork(target.work,run.work);
@@ -89,7 +90,7 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.values(run.answers);
-          if(!run.completedAt&&!run.deadlineAt&&BANK.find(s=>s.id===id).questions.filter(q=>!run.questionSources||run.questionSources.includes(q.source)).every(q=>{const e=run.answers[q.source];return e&&(e.attempts.length===2||e.attempts.some(a=>a.choice===q.correct));}))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
+          if(!run.completedAt&&!run.deadlineAt&&sourceQuestions(id,run).every(q=>{const e=run.answers[q.source];return e&&(e.attempts.length===2||e.attempts.some(a=>a.choice===q.correct));}))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });
       }

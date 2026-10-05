@@ -1,8 +1,11 @@
 (function(root){
   'use strict';
   const done=(q,e,r)=>!!r?.completedAt||!!e&&(e.attempts.length>=2||e.attempts.some(a=>a.choice===q.correct));
-  const questions=(s,r)=>s.questions.filter(q=>!r?.questionSources||r.questionSources.includes(q.source));
-  function start(s,at=new Date().toISOString()){return {id:root.crypto.randomUUID(),startedAt:at,completedAt:null,answers:{},pending:{},questionSources:s.questions.map(q=>q.source),restart:true,...(s.timeLimitSeconds?{deadlineAt:new Date(Date.parse(at)+s.timeLimitSeconds*1000).toISOString()}: {})};}
+  const questions=(s,r)=>{
+    const previous=r&&!r.questionVersion?root.MARCO_ISEE_PREVIOUS_PRACTICE?.find(b=>b.id===s.id):null;
+    return s.questions.map(q=>previous?.questions.find(p=>p.source===q.source)||q).filter(q=>!r?.questionSources||r.questionSources.includes(q.source));
+  };
+  function start(s,at=new Date().toISOString()){return {id:root.crypto.randomUUID(),startedAt:at,completedAt:null,answers:{},pending:{},questionSources:s.questions.map(q=>q.source),questionVersion:'original-vr-v1',restart:true,...(s.timeLimitSeconds?{deadlineAt:new Date(Date.parse(at)+s.timeLimitSeconds*1000).toISOString()}: {})};}
   function submit(r,q,choice,at=new Date().toISOString()){
     if(r.completedAt||r.deadlineAt||done(q,r.answers[q.source])||!Number.isInteger(choice)||!q.choices[choice])return false;
     const e=r.answers[q.source]||={attempts:[]};if(e.attempts.some(a=>a.choice===choice))return false;

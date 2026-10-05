@@ -1,5 +1,9 @@
 # October 4, 2026 · Practice Test 2
 
+## October 5 update: original VR, preserved results
+
+At the user's request, new runs in Sessions 1–3 use the exact original seven synonym questions and two sentence completions, with unchanged original choices, answer keys, tricks, and explanations. QR/MA variations remain unchanged. The separately added Session 4 timed challenge is preserved. Earlier runs use `MARCO_ISEE_PREVIOUS_PRACTICE` to retain the questions and answer keys they actually answered; new runs carry `questionVersion: original-vr-v1`. The scoring engine, saved history, completion checks, and live-sync merge distinguish these revisions. Existing completed results are not regraded or discarded. Use “Start another run” to open the updated original-VR set after an earlier run.
+
 Source: the user's open Test Innovators ISEE Middle #2 analysis and View Your Answers screens, inspected October 4 (Pacific). VR was the selected **2nd Attempt | Oct. 04, 2026**. QR displayed **Completed: Oct. 04, 2026**. Account identifiers and private source URLs are deliberately excluded.
 
 - VR: 31/40 correct, 9 incorrect, no blanks. Misses: 8, 9, 10, 11, 12, 17, 18, 31, 34. Synonyms 13/20; sentence completion 18/20. Easy 13/13, medium 9/13, hard 9/14.
