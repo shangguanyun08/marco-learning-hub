@@ -2,7 +2,7 @@
   'use strict';
   const APP_ID='marco-isee-middle-oct04-test2-v1';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
-  const BANK=root.MARCO_ISEE_PRACTICE;
+  const BANK=[...root.MARCO_ISEE_PRACTICE,...(root.MARCO_ISEE_LEGACY||[])];
   const IDS=BANK.map(s=>s.id);
   const sourceQuestions=id=>BANK.find(s=>s.id===id).questions;
   const clone=value=>JSON.parse(JSON.stringify(value));
@@ -49,9 +49,15 @@
       const groups=new Map();
       for(const state of [a,b])for(const [index,raw] of (state?.sessions?.[id]||[]).entries()){
         const run=clone(raw);
+        // Snapshot scope so adding MA does not change the denominator of an old run.
+        run.questionSources||=id==='similar-c'?sourceQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
+        // Session 2 is now untimed. Keep its selections as unsubmitted drafts.
+        if(!BANK.find(s=>s.id===id).timeLimitSeconds&&!run.completedAt&&run.deadlineAt){
+          run.previousDeadlineAt=run.deadlineAt;delete run.deadlineAt;
+        }
         // Opening an untouched page is not a new practice run. Explicit repeat
         // runs (including older, already-saved repeats) remain part of history.
-        if(!Object.values(run.answers).some(e=>e.attempts.length)&&!Object.keys(run.work||{}).length&&!run.restart&&!run.deadlineAt&&!index)continue;
+        if(!Object.values(run.answers).some(e=>e.attempts.length)&&!Object.keys(run.pending||{}).length&&!Object.keys(run.work||{}).length&&!run.restart&&!run.deadlineAt&&!index)continue;
         const base=run.id.split('~')[0];
         if(!groups.has(base))groups.set(base,[]);
         groups.get(base).push(run);
@@ -61,7 +67,7 @@
         const versions=[];
         candidates.sort((x,y)=>signature(x).localeCompare(signature(y)));
         for(const run of candidates){
-          const target=versions.find(v=>compatible(v,run));
+          const target=versions.find(v=>JSON.stringify(v.questionSources)===JSON.stringify(run.questionSources)&&compatible(v,run));
           if(!target){versions.push(run);continue;}
           if(target.pending||run.pending){target.pending||={};for(const [key,p]of Object.entries(run.pending||{})){const old=target.pending[key];if(!old||p.at>old.at||(p.at===old.at&&p.choice>old.choice))target.pending[key]=clone(p);}}
           if(target.work||run.work)target.work=mergeWork(target.work,run.work);
@@ -73,7 +79,7 @@
           });
           target.startedAt=[target.startedAt,run.startedAt].sort()[0];
           target.completedAt=[target.completedAt,run.completedAt].filter(Boolean).sort()[0]||null;
-          for(const field of ['deadlineAt','timedOutAt']){const value=[target[field],run[field]].filter(Boolean).sort()[0];if(value)target[field]=value;}
+          for(const field of ['deadlineAt','timedOutAt','previousDeadlineAt']){const value=[target[field],run[field]].filter(Boolean).sort()[0];if(value)target[field]=value;}
           if(run.restart)target.restart=true;
         }
         versions.sort((x,y)=>signature(x).localeCompare(signature(y)));
@@ -124,14 +130,14 @@
           const data=await request(),record=data.progress;
           const empty={version:1,sessions:{}},remote=record?.state||empty;
           const next=apply(remote);
-          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · QR and VR progress saved online and on this device.':'Live online sync connected · All three practice sessions sync across your devices.');return;}
+          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · VR, QR, and MA progress saved online and on this device.':'Live online sync connected · All three practice sessions sync across your devices.');return;}
           onStatus('saving','Saving online… Your answers are saved on this device.');
           const saved=await request({appId:APP_ID,studentName:'Marco',deviceId:device,state:next,
             progressScore:Object.values(next.sessions).flat().reduce((sum,run)=>sum+Object.values(run.answers).reduce((n,e)=>n+e.attempts.length,0),0),
             baseVersion:record?.version??null,clientUpdatedAt:new Date().toISOString()});
           if(!saved.progress)throw new Error('Online save was not confirmed');
           apply(saved.progress.state);
-          if(saved.accepted&&same(normalized(getState()),normalized(saved.progress.state))){onStatus('live','Live online sync · QR and VR progress saved online and on this device.');return;}
+          if(saved.accepted&&same(normalized(getState()),normalized(saved.progress.state))){onStatus('live','Live online sync · VR, QR, and MA progress saved online and on this device.');return;}
         }
         onStatus('saving','Syncing changes from another device…');
       }catch{onStatus('offline','Not synced · Saved on this device. Sync will retry automatically.');}
