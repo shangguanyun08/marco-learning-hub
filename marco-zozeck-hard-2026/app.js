@@ -27,6 +27,9 @@
   const APP_ID = 'marco-zozeck-hard-2026';
   const STORAGE_KEY = 'marco-zozeck-hard-2026-v1';
   const TEST_KEY = 'marco-zozeck-hard-2026-tests-v1';
+  // Keep this parent-requested closure durable even if an older open client
+  // saves a record that predates support for manual completion metadata.
+  const parentCompletions = {14: {at:'2026-10-05T20:20:36.000Z',reason:'Parent requested Session 14 marked done and green'}};
   const SELECTION_KEY = 'marco-zozeck-hard-2026-redo-selection-v2';
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) || location.protocol === 'file:';
   const app = document.getElementById('app');
@@ -47,7 +50,12 @@
       }
       return copy;
     };
-    return Core.merge(untimedReviews(left), untimedReviews(right));
+    const merged = Core.merge(untimedReviews(left), untimedReviews(right));
+    for (const [number,completion] of Object.entries(parentCompletions)) {
+      const record = merged.sessions[number];
+      if (record) Object.assign(record,{manualCompletedAt:completion.at,manualCompletionReason:completion.reason,completedAt:completion.at});
+    }
+    return merged;
   }
   let progress = mergeProgress(read(STORAGE_KEY), read(TEST_KEY));
   let selected = Number(new URLSearchParams(location.search).get('session')) || Number(read(SELECTION_KEY)) || 5;

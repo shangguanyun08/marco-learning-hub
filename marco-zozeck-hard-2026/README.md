@@ -52,3 +52,5 @@ Round 1 starts only after pressing **Start 31-minute test**. It permits changing
 Validation: `node --test marco-zozeck-hard-2026/review.test.cjs` checks the fixed bank, six independent sessions, repeat membership, preserved content, 31-minute synchronization and expiry, correction rounds, and original VR behavior.
 
 Parent-requested completion uses `manualCompletedAt` and `manualCompletionReason` in the shared session record. These survive stale-device merges and show a green **Completed** status, distinct from earned **Mastered** status. No answers, scores, or round history are changed.
+
+Session 14's October 5 parent-requested closure is also retained in the app's `parentCompletions` override so clients predating this feature cannot undo its display by saving old progress. The override is reapplied when records merge; scores and answers remain unchanged.
