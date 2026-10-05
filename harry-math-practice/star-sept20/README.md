@@ -64,6 +64,8 @@ Run all old and new regression tests with `npm test` in `harry-math-practice/`. 
 
 ## October 4 easy-to-hard display order
 
+Parent-requested removal: the perpendicular-lines question (previously Q3, stable source 29) is no longer active in any of the four October 4 sessions. Each session now contains 15 questions. The remaining order and Q2 conversions stay intact. Archived question metadata is retained in `retiredQuestions`, and raw saved attempts remain in exports/sync; source 29 is excluded from current scores and completion checks. The original recording audit remains 13 mistakes out of 34—only the practice selection changes.
+
 `oct4-order.js` applies the same skill progression to all four October 4 sessions: division with zeros; unit conversions (kept at Q2); perpendicular lines; expanded decimals; equivalent ratios; mixed numbers; fraction addition; simple multiplicative equations; division with remainders; friendly-number multiplication; decimal division; earnings/hours; equations from words; equation tables; fraction line plots; box plots. This is an instructional estimate, not an official STAR difficulty ranking. Only display order changes: question identities, choices, correct answers, scores, and timestamps are preserved. Earlier date groups are unchanged. The three October 1 review items now appear at Q1, Q9, and Q10; their original source labels remain visible.
 
 ## October 4 unit-conversion update

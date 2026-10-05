@@ -22,14 +22,14 @@ test('All October 4 unit names are spelled out with correct singular and plural 
  assert(!/\b(?:ft|yd|lb|oz|qt|pt|gal|hr|cm)\b/.test(t.d.querySelector('#questions').textContent));
  assert.match(t.d.querySelector('[data-source="15"] .choice-text').textContent,/hours/);t.close();}
 });
-test('All four published sessions have one six-blank Q2 and 16 total questions',()=>{
- ids.forEach((id,i)=>{const t=boot(id),q=t.session.questions[1];assert.equal(q.source,7);assert.equal(q.type,'fill-blanks');assert.equal(t.session.questions.length,16);assert.equal(t.d.querySelectorAll('#q2 input').length,6);assert.equal(t.d.querySelectorAll('#q2 .submit').length,1);assert.equal(t.d.querySelectorAll('#q2 .answer').length,0);assert.deepEqual(Array.from(q.blanks,b=>b.answer),answers[i]);assert.equal(t.w.HARRY_SEPT_PRACTICE.filter(s=>s.group!=='2026-10-04').flatMap(s=>s.questions).filter(q=>q.type==='fill-blanks').length,0);submit(t,answers[i]);assert.match(t.d.querySelector('#score').textContent,/1 \/ 16/);assert.match(t.d.querySelector('#q2 .answer').textContent,/in/);t.close();});
+test('All four published sessions have one six-blank Q2 and 15 total questions',()=>{
+ ids.forEach((id,i)=>{const t=boot(id),q=t.session.questions[1];assert.equal(q.source,7);assert.equal(q.type,'fill-blanks');assert.equal(t.session.questions.length,15);assert.equal(t.d.querySelectorAll('#q2 input').length,6);assert.equal(t.d.querySelectorAll('#q2 .submit').length,1);assert.equal(t.d.querySelectorAll('#q2 .answer').length,0);assert.deepEqual(Array.from(q.blanks,b=>b.answer),answers[i]);assert.equal(t.w.HARRY_SEPT_PRACTICE.filter(s=>s.group!=='2026-10-04').flatMap(s=>s.questions).filter(q=>q.type==='fill-blanks').length,0);submit(t,answers[i]);assert.match(t.d.querySelector('#score').textContent,/1 \/ 15/);assert.match(t.d.querySelector('#q2 .answer').textContent,/in/);t.close();});
 });
 test('Six blanks require complete input; two attempts retain first score, reveal, reload and sync',()=>{
  const t=boot();submit(t,[12]);assert.match(t.d.querySelector('#q2 .feedback').textContent,/No attempt/);assert.equal(t.d.querySelector('#q2 .answer'),null);
  submit(t,[12,3,36,16,2,5]);assert.match(t.d.querySelector('#q2 .feedback').textContent,/one more/);assert.equal(t.d.querySelector('#q2 .answer'),null);assert.equal(t.d.querySelector('#unit-7-0').value,'12');
  submit(t,[12,3,36,16,2,5]);assert.match(t.d.querySelector('#q2 .feedback').textContent,/No new attempt/);
- submit(t,answers[0]);assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 16/);
+ submit(t,answers[0]);assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 15/);
  const saved=JSON.parse(t.w.localStorage.getItem(KEY));assert(t.w.HarrySeptSync.valid(saved));assert.deepEqual(JSON.parse(JSON.stringify(t.w.HarrySeptSync.merge(saved,saved))),saved);
  const r=boot('oct4-original',saved);assert.match(r.d.querySelector('#q2 .feedback').textContent,/second try/);assert.equal(r.d.querySelectorAll('#q2 input:disabled').length,6);r.close();t.close();
  const wrong=boot();submit(wrong,[1,1,1,1,1,1]);submit(wrong,[2,2,2,2,2,2]);assert.match(wrong.d.querySelector('#q2 .feedback').textContent,/Two tries/);assert.match(wrong.d.querySelector('#q2 .answer').textContent,/12 inches/);wrong.close();
@@ -37,28 +37,34 @@ test('Six blanks require complete input; two attempts retain first score, reveal
 test('Older multiple-choice unit attempts remain intact and can finish their original retry',()=>{
  const at='2026-10-04T18:30:00.000Z',saved={version:1,sessions:{'oct4-original':[{id:'legacy',startedAt:at,completedAt:null,answers:{7:{attempts:[{choice:0,correct:false,at}]}}}]}};
  const t=boot('oct4-original',saved);assert.match(t.d.querySelector('#q2 .prompt').textContent,/pints/);assert.equal(t.d.querySelectorAll('#q2 input[type=radio]').length,4);
- t.d.querySelector('#q2 input[value="1"]').checked=true;t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#history').textContent,/A \(4 pints\)/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 16/);t.close();
+ t.d.querySelector('#q2 input[value="1"]').checked=true;t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));assert.match(t.d.querySelector('#q2 .feedback').textContent,/second try/);assert.match(t.d.querySelector('#history').textContent,/A \(4 pints\)/);assert.match(t.d.querySelector('#score').textContent,/0 \/ 15/);t.close();
 });
-test('Every revised session completes at 16/16 with synchronized multi-blank work',()=>{
+test('Every revised session completes at 15/15 with synchronized multi-blank work',()=>{
  for(const id of ids){const t=boot(id),run={id,startedAt:'2026-10-04T19:00:00.000Z',completedAt:null,answers:{}};
  for(const q of t.session.questions){const value=q.type==='fill-blanks'?q.blanks.map(b=>b.answer):q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct;assert(t.w.HarrySeptEngine.submit(run,q,value,run.startedAt));}
- assert.equal(t.w.HarrySeptEngine.stats(t.session,run).first,16);assert.equal(t.w.HarrySeptEngine.stats(t.session,run).finished,16);const state={version:1,sessions:{[id]:[run]}};assert(t.w.HarrySeptSync.valid(state));assert(t.w.HarrySeptSync.merge(state,state).sessions[id][0].completedAt);t.close();}
+ assert.equal(t.w.HarrySeptEngine.stats(t.session,run).first,15);assert.equal(t.w.HarrySeptEngine.stats(t.session,run).finished,15);const state={version:1,sessions:{[id]:[run]}};assert(t.w.HarrySeptSync.valid(state));assert(t.w.HarrySeptSync.merge(state,state).sessions[id][0].completedAt);t.close();}
 });
-test('Easy-to-hard order changes presentation only, preserving question content and prior group ordering',()=>{
- const t=boot(),expected=[3002,7,29,17,12,32,31,27,3005,3009,23,15,6,8,34,25];
+test('Remaining questions keep easy-to-hard order and unchanged content; prior groups are untouched',()=>{
+ const t=boot(),expected=[3002,7,17,12,32,31,27,3005,3009,23,15,6,8,34,25];
  for(const session of t.w.HARRY_SEPT_PRACTICE){const before=t.beforeOrder.find(s=>s.id===session.id);
    if(session.group!=='2026-10-04'){assert.deepEqual(JSON.parse(JSON.stringify(session)),before);continue;}
    assert.deepEqual(Array.from(session.questions,q=>q.source),expected);
    for(const q of session.questions)assert.deepEqual(JSON.parse(JSON.stringify(q)),before.questions.find(old=>old.source===q.source));
    assert(!session.description.includes('as Questions 14–16'));
  }
- assert.equal(t.d.querySelector('#q1').dataset.source,'3002');assert.equal(t.d.querySelector('#q16').dataset.source,'25');assert.equal(t.d.querySelector('#jump a:last-child').getAttribute('href'),'#q16');t.close();
+ assert.equal(t.d.querySelector('#q1').dataset.source,'3002');assert.equal(t.d.querySelector('#q15').dataset.source,'25');assert.equal(t.d.querySelector('#jump a:last-child').getAttribute('href'),'#q15');t.close();
+});
+test('Removed perpendicular-line questions and saved attempts do not count toward active scores or completion',()=>{
+ for(const id of ids){const t=boot(id),at='2026-10-04T20:00:00.000Z',run={id:'retired-source',startedAt:at,completedAt:null,answers:{29:{attempts:[{choice:0,correct:false,at}]}}};
+ assert(!t.session.questions.some(q=>q.source===29));assert.equal(t.session.retiredQuestions[0].source,29);assert.equal(t.d.querySelectorAll('.question').length,15);assert.equal(t.d.querySelector('#q3').dataset.source,'17');
+ for(const q of t.session.questions){const value=q.type==='fill-blanks'?q.blanks.map(b=>b.answer):q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct;t.w.HarrySeptEngine.submit(run,q,value,at);}
+ const state={version:1,sessions:{[id]:[run]}},merged=t.w.HarrySeptSync.merge(state,state);assert.equal(t.w.HarrySeptEngine.stats(t.session,run).total,15);assert.equal(t.w.HarrySeptEngine.stats(t.session,run).first,15);assert(merged.sessions[id][0].completedAt);assert.deepEqual(JSON.parse(JSON.stringify(merged.sessions[id][0].answers[29])),run.answers[29]);t.close();}
 });
 test('Reordered questions retain saved scores, retry outcomes, timestamps, and completion',()=>{
  const t=boot(),at='2026-10-04T19:00:00.000Z',run={id:'before-order',startedAt:at,completedAt:at,answers:{}};
  for(const q of t.session.questions){const answer=q.type==='fill-blanks'?q.blanks.map(b=>b.answer):q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct;t.w.HarrySeptEngine.submit(run,q,answer,at);}
  run.answers[3002].attempts=[{choice:'8',correct:false,at},{choice:'7',correct:true,at}];
  const state={version:1,sessions:{'oct4-original':[run]}},r=boot('oct4-original',state);
- assert.match(r.d.querySelector('#score').textContent,/15 \/ 16/);assert.match(r.d.querySelector('#q1 .feedback').textContent,/second try/);assert.equal(r.d.querySelector('#completion').hidden,false);
+ assert.match(r.d.querySelector('#score').textContent,/14 \/ 15/);assert.match(r.d.querySelector('#q1 .feedback').textContent,/second try/);assert.equal(r.d.querySelector('#completion').hidden,false);
  assert.deepEqual(JSON.parse(r.w.localStorage.getItem(KEY)),JSON.parse(JSON.stringify(state)));assert.match(r.d.querySelector('#history').textContent,/Try 1: 8 · incorrect/);r.close();t.close();
 });
