@@ -1,11 +1,10 @@
-.mixed-picker{grid-template-columns:repeat(3,minmax(0,1fr))}
-.archive-callout{width:min(1460px,100% - 32px);margin:22px auto 0;padding:18px 22px;border:1px solid #cbdcf8;border-radius:15px;background:var(--blue-soft);display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.archive-callout div{flex:1 1 460px}
-.archive-callout strong{color:var(--blue-dark);font-size:18px}
-.archive-callout p{margin:6px 0 0;color:var(--muted);line-height:1.5}
-.archive-callout a{color:var(--blue-dark);font-weight:800;text-underline-offset:4px;line-height:1.5}
-.archive-callout a:focus-visible{outline:3px solid var(--blue);outline-offset:5px}
-.course-intro{color:var(--muted);line-height:1.6;margin:18px 0}
+.mixed-picker{grid-template-columns:1fr}
+.mixed-picker button.mastered{background:#dcfce7;border:2px solid #16a34a;box-shadow:0 3px 12px #16a34a18}
+.mixed-picker button.mastered.selected{background:#bbf7d0;border-color:#15803d;box-shadow:0 0 0 2px #16a34a33}
+.mixed-picker button.mastered span,.mixed-picker button.mastered strong{color:#166534}
+.mixed-picker button.mastered small{color:#246641}
+.course-intro{color:var(--muted);line-height:1.6;margin:12px 0 0}
+.mixed-picker .first-round-score{font-size:14px;color:var(--ink)}
 .primary-action,.check-answer{background:var(--blue);color:white;border:0;border-radius:11px;padding:13px 20px;font-weight:800;cursor:pointer}
 .check-answer{margin-top:15px}
 .options button.picked{border-color:var(--blue);background:var(--blue-soft)}
@@ -15,14 +14,10 @@
 .solution p{margin:5px 0}
 .source-note{color:var(--muted);font-size:12px;margin-top:18px}
 .source-note summary,.bank-note summary{cursor:pointer}
-.mixed-bottom{text-align:center;margin:25px 0}
-.mixed-bottom p,.bank-note{color:var(--muted);font-size:14px;line-height:1.6}
+.bank-note{color:var(--muted);font-size:14px;line-height:1.6}
 .bank-note{margin-top:24px;max-width:900px}
-.timer-bar button{color:var(--blue-dark);background:#fff;border:0;border-radius:9px;padding:10px 14px;font-weight:800;cursor:pointer}
-.timer-bar [data-clock]{font-size:inherit}
 .result-question{padding:20px;border-top:1px solid var(--line)}
 .result-question.wrong{border-left:4px solid var(--red)}
 .result-question.correct{border-left:4px solid var(--green)}
 .answer-locked{color:var(--muted);font-style:italic}
-@media(width<=850px){.mixed-picker{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(width<=560px){.mixed-picker{grid-template-columns:1fr}.session-questions{grid-template-columns:1fr}.question-item .options{grid-template-columns:1fr}.timer-bar{flex-wrap:wrap}.question-item-topline{flex-wrap:wrap}}
+@media(width<=560px){.session-questions{grid-template-columns:1fr}.question-item .options{grid-template-columns:1fr}.question-item-topline{flex-wrap:wrap}}

@@ -5,6 +5,7 @@
   const clone = value => JSON.parse(JSON.stringify(value));
   const same = (a,b) => JSON.stringify(a) === JSON.stringify(b);
   window.MarcoOnlineSync = {create(options) {
+    const merge=options.merge || ((left,right)=>window.VocabularyQuiz.merge(left,right));
     let desired, running=false, timer, stopped=false;
     const deviceKey=options.appId+':device-v1';
     let device;
@@ -26,7 +27,7 @@
     function absorb(record) {
       if(!record)return;
       if(!options.validate(record.state))throw Error('Unrecognized saved progress');
-      desired=window.VocabularyQuiz.merge(desired,record.state);
+      desired=merge(desired,record.state);
       options.onRemote(clone(desired));
     }
     async function tick() {
@@ -52,8 +53,8 @@
     }
     window.addEventListener('online',()=>void tick());
     return {
-      start(state){desired=window.VocabularyQuiz.merge(desired,state);timer=setInterval(tick,2500);return tick();},
-      push(state){desired=window.VocabularyQuiz.merge(desired,state);void tick();},
+      start(state){desired=merge(desired,state);timer=setInterval(tick,2500);return tick();},
+      push(state){desired=merge(desired,state);void tick();},
       refresh:tick,
       stop(){stopped=true;clearInterval(timer);}
     };
