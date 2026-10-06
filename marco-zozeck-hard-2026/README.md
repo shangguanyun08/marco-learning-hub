@@ -1,4 +1,18 @@
-# 2026 Zozeck Hard
+# Marco’s Mixed VR Practice — October 5 rebuild
+
+The root page now offers **360 unique historical questions in nine mixed sessions of 40**. Each session mixes provisional medium, medium-hard, and hard difficulty labels, with 33–34 synonyms and 6–7 sentence completions; two sessions also contain one definition-to-word question. These are practice estimates, not official ISEE difficulty ratings.
+
+Arithmetic: 124 + 227 = 351. The new bank keeps 121 of the original 124 review questions (excluding Diligent, Envisage, Assurance because of multiple acceptable choices), all 227 curated historical misses, and 12 additional verified historical misses, totaling 360. Those twelve are Merit, Amiable, Affluent, Commend, Focal, Accumulate, Feat, Primitive, Appliance, Breadth, Spouse, and Revise. The latest October 4 nine VR misses remain excluded. The final totals are 300 synonyms, 58 completions, and 2 definition questions.
+
+`mixed-data.js` retains source labels, difficulty, explanations, and tricks. Nine retained questions receive editorial repairs: competing distractors in Fascinate, Facet, Excursion, Project, Intermittent, Compatible, Munificent, and Quip; the noun answer for Parsimony is corrected from miserly to miserliness. Reprieve's definition is clarified as delayed/suspended punishment, not necessarily a pardon. Small spelling fixes are applied only in the new copies. Archived content and scored history are not regraded.
+
+Round 1 starts explicitly and has a persistent 20-minute deadline. Choices may be changed until submission; unanswered items count as misses. Submitted scores are immutable. Rounds 2, 3, and onward are untimed and repeat only the preceding round's misses until all are correct. Untimed choices use an explicit Check answer button and then lock. A first miss does not disclose the key or trick, even in Results; these unlock after a second actual submitted choice (or a correct answer). Merely leaving a timed item blank is not counted as a first real try.
+
+New progress uses `marco-zozeck-mixed-360-v1`, with independent local storage and live online synchronization. Existing Sessions 1–14, Reviews 1A–3B, and their scores remain at `archive/`, using their original app ID and keys. Session 14's parent-requested green closure remains in the old application. Old root links with a saved session key above 9 redirect to the archive. New session numbers 1–9 refer to the new mixed course; use the archive for old sessions with those keys.
+
+Validation: `node --test marco-zozeck-hard-2026/mixed.test.cjs marco-zozeck-hard-2026/review.test.cjs` checks bank allocation, retry membership, timing, submission preservation, second-try disclosure, mocked online updates, and old archive behavior.
+
+## Archived course documentation
 
 331 questions across fourteen displayed sessions, presented together in one continuous session grid:
 
