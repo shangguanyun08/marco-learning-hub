@@ -5,6 +5,8 @@
   const BANK=[...root.MARCO_ISEE_PRACTICE,...(root.MARCO_ISEE_LEGACY||[])];
   const IDS=BANK.map(s=>s.id);
   const sourceQuestions=(id,run)=>root.MarcoIseeEngine.questions(BANK.find(s=>s.id===id),run);
+  // Validation must include historical full-set scopes, not just today's default 15.
+  const allQuestions=id=>BANK.find(s=>s.id===id).questions;
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
@@ -28,13 +30,13 @@
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
         (!run.questionVersion||run.questionVersion==='original-vr-v1')&&
-        (!run.questionSources||(Array.isArray(run.questionSources)&&run.questionSources.every(source=>sourceQuestions(id).some(q=>q.source===source))))&&
-        (!run.pending||(object(run.pending)&&Object.entries(run.pending).every(([source,p])=>sourceQuestions(id).some(q=>String(q.source)===source&&Number.isInteger(p.choice)&&p.choice>=0&&p.choice<q.choices.length)&&time(p.at))))&&
+        (!run.questionSources||(Array.isArray(run.questionSources)&&run.questionSources.every(source=>allQuestions(id).some(q=>q.source===source))))&&
+        (!run.pending||(object(run.pending)&&Object.entries(run.pending).every(([source,p])=>allQuestions(id).some(q=>String(q.source)===source&&Number.isInteger(p.choice)&&p.choice>=0&&p.choice<q.choices.length)&&time(p.at))))&&
         (!run.deadlineAt||time(run.deadlineAt))&&(!run.timedOutAt||time(run.timedOutAt))&&
         (!run.work||(object(run.work)&&Object.entries(run.work).every(([source,work])=>BANK.find(s=>s.id===id).subject==='math'&&BANK.find(s=>s.id===id).questions.some(q=>String(q.source)===source)&&validWork(work))))&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
-          sourceQuestions(id).some(q=>String(q.source)===source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
-            object(a)&&(a.choice===null||(Number.isInteger(a.choice)&&a.choice>=0&&a.choice<sourceQuestions(id).find(q=>String(q.source)===source).choices.length))&&typeof a.correct==='boolean'&&time(a.at)&&(!a.work||validWork(a.work))))));
+          allQuestions(id).some(q=>String(q.source)===source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
+            object(a)&&(a.choice===null||(Number.isInteger(a.choice)&&a.choice>=0&&a.choice<allQuestions(id).find(q=>String(q.source)===source).choices.length))&&typeof a.correct==='boolean'&&time(a.at)&&(!a.work||validWork(a.work))))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
   const compatible=(a,b)=>Object.keys(a.answers).every(key=>{
@@ -51,7 +53,7 @@
       for(const state of [a,b])for(const [index,raw] of (state?.sessions?.[id]||[]).entries()){
         const run=clone(raw);
         // Snapshot scope so adding MA does not change the denominator of an old run.
-        run.questionSources||=id==='similar-c'?sourceQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
+        run.questionSources||=id==='similar-c'||id==='targeted-followup-5'?allQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
         // Session 2 is now untimed. Keep its selections as unsubmitted drafts.
         if(!BANK.find(s=>s.id===id).timeLimitSeconds&&!run.completedAt&&run.deadlineAt){
           run.previousDeadlineAt=run.deadlineAt;delete run.deadlineAt;
@@ -131,7 +133,7 @@
           const data=await request(),record=data.progress;
           const empty={version:1,sessions:{}},remote=record?.state||empty;
           const next=apply(remote);
-          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · VR, QR, and MA progress saved online and on this device.':'Live online sync connected · All four practice sessions sync across your devices.');return;}
+          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · VR, QR, and MA progress saved online and on this device.':'Live online sync connected · All five practice sessions sync across your devices.');return;}
           onStatus('saving','Saving online… Your answers are saved on this device.');
           const saved=await request({appId:APP_ID,studentName:'Marco',deviceId:device,state:next,
             progressScore:Object.values(next.sessions).flat().reduce((sum,run)=>sum+Object.values(run.answers).reduce((n,e)=>n+e.attempts.length,0),0),
