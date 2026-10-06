@@ -121,3 +121,20 @@ test('archive retains old app, old data, base-relative scripts and old storage n
   assert.ok(old.includes("const APP_ID = 'marco-zozeck-hard-2026'"));
   assert.ok(old.includes('parentCompletions = {14:'));
 });
+
+test('original course archive is prominent on the new course and listed in the hub archive',()=>{
+  const {JSDOM}=require('C:/Users/A/Documents/Marco ISEE all tests/tmp/daily-sync-qa/node_modules/jsdom');
+  const course=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'));
+  const callout=course.window.document.querySelector('.archive-callout');
+  assert.equal(callout.querySelector('a').getAttribute('href'),'./archive/');
+  assert.match(callout.textContent,/Sessions 1–14 and Reviews 1A–3B/);
+  assert.ok(callout.compareDocumentPosition(course.window.document.querySelector('#app')) & 4);
+  const hub=new JSDOM(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'));
+  const card=hub.window.document.querySelector('#marco-zozeck-original-archive');
+  assert.ok(card.closest('.archive-section'));
+  assert.equal(card.querySelector('a').getAttribute('href'),'./marco-zozeck-hard-2026/archive/');
+  const group=card.closest('.archive-group');
+  assert.equal(group.querySelectorAll('.site-card').length,14);
+  assert.match(group.querySelector('.archive-group-heading').textContent,/14 sites/);
+  course.window.close();hub.window.close();
+});

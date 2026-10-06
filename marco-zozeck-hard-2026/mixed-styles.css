@@ -1,4 +1,10 @@
 .mixed-picker{grid-template-columns:repeat(3,minmax(0,1fr))}
+.archive-callout{width:min(1460px,100% - 32px);margin:22px auto 0;padding:18px 22px;border:1px solid #cbdcf8;border-radius:15px;background:var(--blue-soft);display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.archive-callout div{flex:1 1 460px}
+.archive-callout strong{color:var(--blue-dark);font-size:18px}
+.archive-callout p{margin:6px 0 0;color:var(--muted);line-height:1.5}
+.archive-callout a{color:var(--blue-dark);font-weight:800;text-underline-offset:4px;line-height:1.5}
+.archive-callout a:focus-visible{outline:3px solid var(--blue);outline-offset:5px}
 .course-intro{color:var(--muted);line-height:1.6;margin:18px 0}
 .primary-action,.check-answer{background:var(--blue);color:white;border:0;border-radius:11px;padding:13px 20px;font-weight:800;cursor:pointer}
 .check-answer{margin-top:15px}
