@@ -68,8 +68,11 @@
       'Radius = 10 ÷ 2 = 5 inches. Therefore h = 150π ÷ (25π) = 6 inches. Using the diameter as the radius would incorrectly give 1.5 inches.',
       {diagram:'ma-cylinder',diameter:10,check:{type:'cylinder',volume:150,diameter:10}})
   ];
+  const questions=[...originals.filter(q=>q.section==='VR'&&sources.includes(q.source)).map(q=>({...q,practiceKind:'Original VR question'})),...math];
+  // Keep earlier adaptive/untimed attempts under their original ID and scope.
+  root.MARCO_ISEE_LEGACY.push({id:'targeted-followup-5',number:5,label:'Earlier untimed follow-up',questions});
   root.MARCO_ISEE_PRACTICE.push({
-    id:'targeted-followup-5',number:5,label:'Remaining misses · fresh follow-up',adaptive:true,
-    questions:[...originals.filter(q=>q.section==='VR'&&sources.includes(q.source)).map(q=>({...q,practiceKind:'Original VR question'})),...math]
+    id:'targeted-timed-5',number:5,label:'Similar timed check · 15 questions',
+    defaultSources:sources,timeLimitSeconds:780,questions
   });
 })(window);

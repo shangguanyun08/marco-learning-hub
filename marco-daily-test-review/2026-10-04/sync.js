@@ -53,7 +53,7 @@
       for(const state of [a,b])for(const [index,raw] of (state?.sessions?.[id]||[]).entries()){
         const run=clone(raw);
         // Snapshot scope so adding MA does not change the denominator of an old run.
-        run.questionSources||=id==='similar-c'||id==='targeted-followup-5'?allQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
+        run.questionSources||=['similar-c','targeted-followup-5','targeted-timed-5'].includes(id)?allQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
         // Session 2 is now untimed. Keep its selections as unsubmitted drafts.
         if(!BANK.find(s=>s.id===id).timeLimitSeconds&&!run.completedAt&&run.deadlineAt){
           run.previousDeadlineAt=run.deadlineAt;delete run.deadlineAt;
