@@ -1,7 +1,7 @@
 // Original historical misses, rebalanced into nine mixed sessions. New IDs keep archived scores separate.
 window.MARCO_MIXED_VR = {
   "metadata": {
-    "version": "20261005-mixed360-v1",
+    "version": "20261007-editorial-review-v1",
     "questionCount": 360,
     "sessionCount": 9,
     "questionsPerSession": 40,
@@ -267,12 +267,388 @@ window.MARCO_MIXED_VR = {
           "hard": 17
         }
       }
+    ],
+    "contentReview": {
+      "date": "2026-10-07",
+      "scope": "All 360 active questions in sessions 1–9",
+      "reviewedQuestions": 360,
+      "revisedQuestions": 73,
+      "preservedQuestionIds": true,
+      "preservedSessionOrder": true,
+      "notes": "Revised weak synonyms, competing answers, unclear clues, and awkward grammar. Existing scored attempts remain stored unchanged."
+    },
+    "contentRepairs": [
+      {
+        "id": "mixed360-307",
+        "session": 1,
+        "number": 1
+      },
+      {
+        "id": "mixed360-304",
+        "session": 1,
+        "number": 4
+      },
+      {
+        "id": "mixed360-242",
+        "session": 1,
+        "number": 13
+      },
+      {
+        "id": "mixed360-252",
+        "session": 1,
+        "number": 19
+      },
+      {
+        "id": "mixed360-051",
+        "session": 1,
+        "number": 26
+      },
+      {
+        "id": "mixed360-344",
+        "session": 1,
+        "number": 29
+      },
+      {
+        "id": "mixed360-301",
+        "session": 1,
+        "number": 34
+      },
+      {
+        "id": "mixed360-305",
+        "session": 2,
+        "number": 5
+      },
+      {
+        "id": "mixed360-216",
+        "session": 2,
+        "number": 6
+      },
+      {
+        "id": "mixed360-219",
+        "session": 2,
+        "number": 14
+      },
+      {
+        "id": "mixed360-345",
+        "session": 2,
+        "number": 15
+      },
+      {
+        "id": "mixed360-123",
+        "session": 2,
+        "number": 17
+      },
+      {
+        "id": "mixed360-333",
+        "session": 2,
+        "number": 21
+      },
+      {
+        "id": "mixed360-057",
+        "session": 2,
+        "number": 23
+      },
+      {
+        "id": "mixed360-285",
+        "session": 2,
+        "number": 29
+      },
+      {
+        "id": "mixed360-025",
+        "session": 2,
+        "number": 32
+      },
+      {
+        "id": "mixed360-268",
+        "session": 2,
+        "number": 38
+      },
+      {
+        "id": "mixed360-294",
+        "session": 2,
+        "number": 39
+      },
+      {
+        "id": "mixed360-313",
+        "session": 3,
+        "number": 25
+      },
+      {
+        "id": "mixed360-124",
+        "session": 3,
+        "number": 31
+      },
+      {
+        "id": "mixed360-052",
+        "session": 3,
+        "number": 32
+      },
+      {
+        "id": "mixed360-054",
+        "session": 3,
+        "number": 36
+      },
+      {
+        "id": "mixed360-037",
+        "session": 3,
+        "number": 37
+      },
+      {
+        "id": "mixed360-090",
+        "session": 4,
+        "number": 2
+      },
+      {
+        "id": "mixed360-284",
+        "session": 4,
+        "number": 3
+      },
+      {
+        "id": "mixed360-297",
+        "session": 4,
+        "number": 4
+      },
+      {
+        "id": "mixed360-267",
+        "session": 4,
+        "number": 13
+      },
+      {
+        "id": "mixed360-283",
+        "session": 4,
+        "number": 14
+      },
+      {
+        "id": "mixed360-247",
+        "session": 4,
+        "number": 15
+      },
+      {
+        "id": "mixed360-139",
+        "session": 4,
+        "number": 24
+      },
+      {
+        "id": "mixed360-269",
+        "session": 4,
+        "number": 31
+      },
+      {
+        "id": "mixed360-178",
+        "session": 4,
+        "number": 35
+      },
+      {
+        "id": "mixed360-278",
+        "session": 5,
+        "number": 9
+      },
+      {
+        "id": "mixed360-184",
+        "session": 5,
+        "number": 11
+      },
+      {
+        "id": "mixed360-062",
+        "session": 5,
+        "number": 16
+      },
+      {
+        "id": "mixed360-058",
+        "session": 5,
+        "number": 17
+      },
+      {
+        "id": "mixed360-088",
+        "session": 5,
+        "number": 18
+      },
+      {
+        "id": "mixed360-251",
+        "session": 5,
+        "number": 19
+      },
+      {
+        "id": "mixed360-273",
+        "session": 5,
+        "number": 23
+      },
+      {
+        "id": "mixed360-021",
+        "session": 5,
+        "number": 29
+      },
+      {
+        "id": "mixed360-084",
+        "session": 5,
+        "number": 33
+      },
+      {
+        "id": "mixed360-325",
+        "session": 5,
+        "number": 38
+      },
+      {
+        "id": "mixed360-342",
+        "session": 6,
+        "number": 5
+      },
+      {
+        "id": "mixed360-315",
+        "session": 6,
+        "number": 6
+      },
+      {
+        "id": "mixed360-211",
+        "session": 6,
+        "number": 7
+      },
+      {
+        "id": "mixed360-324",
+        "session": 6,
+        "number": 9
+      },
+      {
+        "id": "mixed360-138",
+        "session": 6,
+        "number": 15
+      },
+      {
+        "id": "mixed360-318",
+        "session": 6,
+        "number": 16
+      },
+      {
+        "id": "mixed360-323",
+        "session": 6,
+        "number": 20
+      },
+      {
+        "id": "mixed360-309",
+        "session": 6,
+        "number": 24
+      },
+      {
+        "id": "mixed360-107",
+        "session": 6,
+        "number": 31
+      },
+      {
+        "id": "mixed360-125",
+        "session": 6,
+        "number": 38
+      },
+      {
+        "id": "mixed360-065",
+        "session": 7,
+        "number": 2
+      },
+      {
+        "id": "mixed360-048",
+        "session": 7,
+        "number": 9
+      },
+      {
+        "id": "mixed360-359",
+        "session": 7,
+        "number": 15
+      },
+      {
+        "id": "mixed360-254",
+        "session": 7,
+        "number": 18
+      },
+      {
+        "id": "mixed360-164",
+        "session": 7,
+        "number": 25
+      },
+      {
+        "id": "mixed360-091",
+        "session": 7,
+        "number": 27
+      },
+      {
+        "id": "mixed360-341",
+        "session": 7,
+        "number": 37
+      },
+      {
+        "id": "mixed360-271",
+        "session": 8,
+        "number": 2
+      },
+      {
+        "id": "mixed360-230",
+        "session": 8,
+        "number": 10
+      },
+      {
+        "id": "mixed360-224",
+        "session": 8,
+        "number": 11
+      },
+      {
+        "id": "mixed360-334",
+        "session": 8,
+        "number": 12
+      },
+      {
+        "id": "mixed360-009",
+        "session": 8,
+        "number": 17
+      },
+      {
+        "id": "mixed360-311",
+        "session": 8,
+        "number": 25
+      },
+      {
+        "id": "mixed360-349",
+        "session": 8,
+        "number": 26
+      },
+      {
+        "id": "mixed360-233",
+        "session": 8,
+        "number": 29
+      },
+      {
+        "id": "mixed360-192",
+        "session": 8,
+        "number": 32
+      },
+      {
+        "id": "mixed360-343",
+        "session": 9,
+        "number": 1
+      },
+      {
+        "id": "mixed360-244",
+        "session": 9,
+        "number": 4
+      },
+      {
+        "id": "mixed360-099",
+        "session": 9,
+        "number": 14
+      },
+      {
+        "id": "mixed360-131",
+        "session": 9,
+        "number": 29
+      },
+      {
+        "id": "mixed360-312",
+        "session": 9,
+        "number": 30
+      }
     ]
   },
   "questions": [
     {
       "id": "mixed360-307",
-      "word": "Judging by Max's ------- stare, Mrs. Wilson could tell he had not understood how serious the problem was.",
+      "word": "Max's face showed no emotion as he stared silently ahead; Mrs. Wilson described his expression as _____.",
       "quizType": "completion",
       "choices": [
         "Devious",
@@ -282,8 +658,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Impassive",
       "meaning": "Impassive",
-      "explanation": "An impassive stare shows no emotion or visible response, matching the lack of reaction.",
-      "trick": "Look for the visible response described by stare.",
+      "explanation": "Impassive means showing no emotion or visible reaction.",
+      "trick": "The clue is that his face shows no emotion.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #18 · Day 7",
@@ -338,14 +714,14 @@ window.MARCO_MIXED_VR = {
       "word": "SENSIBLE",
       "quizType": "synonym",
       "choices": [
-        "Balanced",
+        "Reasonable",
         "Olfactory",
         "Tangible",
         "Legal"
       ],
-      "answer": "Balanced",
-      "meaning": "Balanced",
-      "explanation": "SENSIBLE means reasonable and showing good judgment. “Balanced” is the closest choice here.",
+      "answer": "Reasonable",
+      "meaning": "Reasonable",
+      "explanation": "Sensible means reasonable and showing good judgment.",
       "trick": "Reasonable judgment is tested, not the ability to sense something.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -527,14 +903,14 @@ window.MARCO_MIXED_VR = {
       "word": "LANGUID",
       "quizType": "synonym",
       "choices": [
-        "unhurried",
+        "Sluggish",
         "remorseful",
         "branded",
         "lamenting"
       ],
-      "answer": "unhurried",
-      "meaning": "unhurried",
-      "explanation": "LANGUID means lacking energy or moving slowly. “unhurried” is the closest choice here.",
+      "answer": "Sluggish",
+      "meaning": "Sluggish",
+      "explanation": "Languid means lacking energy or moving slowly.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -653,14 +1029,14 @@ window.MARCO_MIXED_VR = {
       "word": "QUIP",
       "quizType": "synonym",
       "choices": [
-        "repartee",
+        "Witty remark",
         "deposit",
         "silence",
         "clean"
       ],
-      "answer": "repartee",
-      "meaning": "repartee",
-      "explanation": "QUIP means a witty remark or reply. “repartee” is the closest choice here.",
+      "answer": "Witty remark",
+      "meaning": "Witty remark",
+      "explanation": "A quip is a short, witty remark.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -797,18 +1173,18 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-051",
-      "word": "The musician's ability to play a melody _____ was impressive, as he had never seen the sheet music before.",
+      "word": "Asked to perform without any preparation, the musician gave an _____ performance.",
       "quizType": "completion",
       "choices": [
         "impromptu",
-        "improvise",
-        "imprudent",
-        "impudent"
+        "rehearsed",
+        "scheduled",
+        "premeditated"
       ],
       "answer": "impromptu",
       "meaning": "impromptu",
-      "explanation": "Impromptu means without preparation and can function as an adverb. Improvise is a verb and does not fit this position.",
-      "trick": "Predict a simple word for the blank from the sentence clues; then check meaning and grammar.",
+      "explanation": "An impromptu performance is given without preparation.",
+      "trick": "Without preparation means spontaneous or unplanned.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
       "sourceLabel": "Zozeck 2026 Mock Test · Sentence Completion",
@@ -863,15 +1239,15 @@ window.MARCO_MIXED_VR = {
       "word": "PRESTIGIOUS",
       "quizType": "synonym",
       "choices": [
-        "influential",
+        "Esteemed",
         "laden",
         "subordinate",
         "varsity"
       ],
-      "answer": "influential",
-      "meaning": "influential",
-      "explanation": "Prestigious means highly respected or distinguished. Of these choices, influential is the closest match: a respected person or institution often has influence.",
-      "trick": "Highly respected is the exact idea; influential is the closest of these original choices.",
+      "answer": "Esteemed",
+      "meaning": "Esteemed",
+      "explanation": "Prestigious means highly respected or admired.",
+      "trick": "Think of a person or institution held in high regard.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Daily original missed VR 2026-09-27 · #12",
@@ -965,7 +1341,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-301",
-      "word": "BASE",
+      "word": "BASE (adjective)",
       "quizType": "synonym",
       "choices": [
         "Footstool",
@@ -976,7 +1352,7 @@ window.MARCO_MIXED_VR = {
       "answer": "Immoral",
       "meaning": "Immoral",
       "explanation": "BASE means morally low or dishonorable when used as an adjective. “Immoral” is the closest choice here.",
-      "trick": "Choose the adjective meaning morally low, not a foundation.",
+      "trick": "Read base as an adjective describing character, rather than as a noun.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #10 · Day 6",
@@ -1199,14 +1575,14 @@ window.MARCO_MIXED_VR = {
       "word": "BLUNT",
       "quizType": "synonym",
       "choices": [
-        "Honest",
+        "Direct",
         "Nasty",
         "Fraying",
         "Sharpened"
       ],
-      "answer": "Honest",
-      "meaning": "Honest",
-      "explanation": "BLUNT means direct and frank in speech; it can also mean not sharp. “Honest” is the closest choice here.",
+      "answer": "Direct",
+      "meaning": "Direct",
+      "explanation": "Blunt can mean direct or frank in speech, without softening what is said.",
       "trick": "Direct or frank is the tested sense, not a dull cutting edge.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -1220,14 +1596,14 @@ window.MARCO_MIXED_VR = {
       "word": "ICONOCLAST",
       "quizType": "synonym",
       "choices": [
-        "critic",
+        "Challenger of tradition",
         "author",
         "scribe",
         "messenger"
       ],
-      "answer": "critic",
-      "meaning": "critic",
-      "explanation": "ICONOCLAST means a person who challenges established beliefs or traditions. “critic” is the closest choice here.",
+      "answer": "Challenger of tradition",
+      "meaning": "Challenger of tradition",
+      "explanation": "An iconoclast challenges established beliefs or traditions.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -1388,14 +1764,14 @@ window.MARCO_MIXED_VR = {
       "word": "HARBINGER",
       "quizType": "synonym",
       "choices": [
-        "foreshadowing",
+        "Forerunner",
         "message",
         "doom",
         "weapon"
       ],
-      "answer": "foreshadowing",
-      "meaning": "foreshadowing",
-      "explanation": "HARBINGER means a sign or person announcing what is to come. “foreshadowing” is the closest choice here.",
+      "answer": "Forerunner",
+      "meaning": "Forerunner",
+      "explanation": "A harbinger is someone or something that signals what is coming.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -1411,13 +1787,13 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "amusement",
         "narrative",
-        "pursuit",
+        "Occupation",
         "steeple"
       ],
-      "answer": "pursuit",
-      "meaning": "pursuit",
-      "explanation": "A vocation is a profession or calling. Pursuit can mean an occupation or an activity to which someone devotes time.",
-      "trick": "Think career or calling; pursuit can mean a devoted occupation.",
+      "answer": "Occupation",
+      "meaning": "Occupation",
+      "explanation": "A vocation is an occupation or calling, especially one a person feels suited to.",
+      "trick": "Think career or calling.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Daily original missed VR 2026-09-27 · #15",
@@ -1448,17 +1824,17 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-123",
-      "word": "Periodical",
+      "word": "Periodical (adjective)",
       "quizType": "synonym",
       "choices": [
-        "Daily",
-        "Regular",
-        "Annual",
-        "Continuous"
+        "Unscheduled",
+        "Recurring",
+        "Permanent",
+        "Unceasing"
       ],
-      "answer": "Regular",
-      "meaning": "Regular",
-      "explanation": "Periodical means occurring at regular intervals. “Regular” is the closest choice here.",
+      "answer": "Recurring",
+      "meaning": "Recurring",
+      "explanation": "Periodical as an adjective means recurring at intervals. Daily and annual specify particular intervals, so they are not used as distractors.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -1532,7 +1908,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-333",
-      "word": "He won a large fortune on the lottery, but he soon ------- it and was reduced to poverty.",
+      "word": "He won a large fortune in the lottery but soon _____ it on needless luxuries and was reduced to poverty.",
       "quizType": "completion",
       "choices": [
         "Invested",
@@ -1542,8 +1918,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Squandered",
       "meaning": "Squandered",
-      "explanation": "Squandered means wasted; losing a fortune and becoming poor shows wasteful spending.",
-      "trick": "Trace cause and result: fortune lost, then poverty.",
+      "explanation": "Squandered means wasted recklessly. Spending a fortune on needless luxuries is squandering it.",
+      "trick": "Needless luxuries and resulting poverty show wasteful spending.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #19 · Day 13",
@@ -1574,7 +1950,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-057",
-      "word": "Ian took the opportunity because he saw new hope despite the _____ uncertainties of moving into a new city.",
+      "word": "Ian welcomed the opportunity, despite the _____ uncertainties that came with moving to a new city.",
       "quizType": "completion",
       "choices": [
         "discreet",
@@ -1584,8 +1960,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "concomitant",
       "meaning": "concomitant",
-      "explanation": "Concomitant means accompanying something. Uncertainty accompanies the move even though Ian sees hope.",
-      "trick": "Mark the contrast word, predict the direction of the blank, and then check the whole sentence.",
+      "explanation": "Concomitant means accompanying something or occurring along with it. The uncertainties accompanied the move.",
+      "trick": "That came with points to accompanying circumstances.",
       "difficulty": "hard",
       "sourceGroup": "review-124",
       "sourceLabel": "Past Paper · Test 10 · Sentence Completion",
@@ -1700,18 +2076,18 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-285",
-      "word": "The delicate fabric felt like_____, it was so light and airy against her skin.",
+      "word": "The nearly weightless, gauzy fabric looked like _____, as delicate as a spiderweb.",
       "quizType": "completion",
       "choices": [
-        "wool",
+        "canvas",
         "gossamer",
-        "cotton",
-        "silk"
+        "denim",
+        "leather"
       ],
       "answer": "gossamer",
       "meaning": "gossamer",
-      "explanation": "Gossamer is very fine, light material, matching the light and airy fabric.",
-      "trick": "Match the physical description, not just any fabric-related word.",
+      "explanation": "Gossamer is extremely fine, light material, like the threads of a spiderweb.",
+      "trick": "Gauzy and as delicate as a spiderweb point to very fine material.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "July combined 172 missed-question compilation · #89",
@@ -1766,14 +2142,14 @@ window.MARCO_MIXED_VR = {
       "word": "steward",
       "quizType": "synonym",
       "choices": [
-        "baby-sitter",
+        "spectator",
         "cleaner",
         "manager",
-        "guardian"
+        "customer"
       ],
       "answer": "manager",
       "meaning": "manager",
-      "explanation": "steward means a person who manages or looks after something. “manager” is the closest choice here.",
+      "explanation": "A steward manages property or affairs on behalf of someone else.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium",
       "sourceGroup": "review-124",
@@ -1894,12 +2270,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "guilty",
         "disagreeing",
-        "conceited",
+        "Self-satisfied",
         "miserable"
       ],
-      "answer": "conceited",
-      "meaning": "conceited",
-      "explanation": "COMPLACENT means self-satisfied and unaware of possible problems. “conceited” is the closest choice here.",
+      "answer": "Self-satisfied",
+      "meaning": "Self-satisfied",
+      "explanation": "Complacent means too satisfied with oneself to notice problems or make improvements.",
       "trick": "Self-satisfaction can make someone overlook risks; this is not the same as compliant.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -1910,7 +2286,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-294",
-      "word": "He felt ------- about accepting the award, unsure if he truly deserved it.",
+      "word": "He felt _____ about accepting the award: he was pleased to be recognized but uneasy because he thought someone else deserved it more.",
       "quizType": "completion",
       "choices": [
         "ambivalent",
@@ -1920,8 +2296,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "ambivalent",
       "meaning": "ambivalent",
-      "explanation": "Unsure whether he deserved it suggests mixed feelings: ambivalent.",
-      "trick": "Name the attitude created by uncertainty.",
+      "explanation": "Ambivalent means having mixed or conflicting feelings. He feels both pleasure and uneasiness.",
+      "trick": "Look for two conflicting feelings about the same decision.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #18 · Day 4",
@@ -2456,17 +2832,17 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-313",
-      "word": "EXACT",
+      "word": "EXACT (verb)",
       "quizType": "synonym",
       "choices": [
-        "Inimitable",
-        "Imprecise",
-        "Unavoidable",
-        "Extract"
+        "Demand",
+        "Forgive",
+        "Donate",
+        "Refuse"
       ],
-      "answer": "Extract",
-      "meaning": "Extract",
-      "explanation": "EXACT means to demand and obtain something when used as a verb. “Extract” is the closest choice here.",
+      "answer": "Demand",
+      "meaning": "Demand",
+      "explanation": "To exact something is to demand and obtain it, as in exacting payment.",
       "trick": "Read exact as a verb: “exact payment” means demand and obtain it.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -2586,14 +2962,14 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "Theoretically",
-        "Actually",
+        "In practice",
         "Hypothetically",
         "Supposedly"
       ],
-      "answer": "Actually",
-      "meaning": "Actually",
-      "explanation": "Practically means in practice or in actual use, rather than in theory. “Actually” is the closest choice here.",
-      "trick": "Opposition to theoretically tells you the tested sense is “in actual practice,” not “almost.”",
+      "answer": "In practice",
+      "meaning": "In practice",
+      "explanation": "Practically can mean in practice, as opposed to in theory. It can also mean almost; that sense is not tested here.",
+      "trick": "Think of actual practice rather than theory.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Zozeck mock synonym bank · #23; July combined 172 missed-question compilation · #171",
@@ -2603,18 +2979,18 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-052",
-      "word": "The missionary traveled abroad to _____ people to his faith, hoping to gain new followers.",
+      "word": "The missionary hoped to _____ among people who had never heard of his faith, persuading them to become followers.",
       "quizType": "completion",
       "choices": [
-        "teach",
-        "persuade",
         "proselytize",
-        "preach"
+        "hesitate",
+        "retreat",
+        "abstain"
       ],
       "answer": "proselytize",
       "meaning": "proselytize",
-      "explanation": "Proselytize means seek to convert others to a religion or belief. Gaining new followers makes it the most specific choice.",
-      "trick": "Predict a simple word for the blank from the sentence clues; then check meaning and grammar.",
+      "explanation": "To proselytize is to try to convert people to a religion or belief.",
+      "trick": "Persuading people to become followers signals an attempt to convert them.",
       "difficulty": "hard",
       "sourceGroup": "review-124",
       "sourceLabel": "Zozeck 2026 Mock Test · Sentence Completion",
@@ -2687,7 +3063,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-054",
-      "word": "The favorable weather conditions were _____ for the success of the outdoor event.",
+      "word": "Clear skies and mild temperatures were _____ for the outdoor celebration.",
       "quizType": "completion",
       "choices": [
         "propitious",
@@ -2697,8 +3073,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "propitious",
       "meaning": "propitious",
-      "explanation": "Propitious means favorable for success. The helpful weather supplies the clue.",
-      "trick": "Predict a simple word for the blank from the sentence clues; then check meaning and grammar.",
+      "explanation": "Propitious means favorable or likely to help something succeed.",
+      "trick": "Decide whether the weather helps or hinders the celebration.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
       "sourceLabel": "Zozeck 2026 Mock Test · Sentence Completion",
@@ -2712,13 +3088,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "purify",
-        "mourn",
+        "Fret",
         "cleanse",
         "filter"
       ],
-      "answer": "mourn",
-      "meaning": "mourn",
-      "explanation": "REPINE means to feel discontent or mournfully complain. “mourn” is the closest choice here.",
+      "answer": "Fret",
+      "meaning": "Fret",
+      "explanation": "To repine is to fret or complain about a situation.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "review-124",
@@ -2819,11 +3195,11 @@ window.MARCO_MIXED_VR = {
         "local",
         "native",
         "domestic",
-        "external"
+        "non-native"
       ],
-      "answer": "external",
-      "meaning": "external",
-      "explanation": "foreign means coming from outside one's own country or surroundings. “external” is the closest choice here.",
+      "answer": "non-native",
+      "meaning": "non-native",
+      "explanation": "Foreign means from or relating to another country.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium",
       "sourceGroup": "review-124",
@@ -2834,7 +3210,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-284",
-      "word": "The decision to invest heavily in a new, untested market was_____, as it carried a great deal of financial risk.",
+      "word": "Ignoring clear warnings and investing all their savings in an untested market was _____; the decision showed poor judgment.",
       "quizType": "completion",
       "choices": [
         "prudent",
@@ -2844,8 +3220,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "imprudent",
       "meaning": "imprudent",
-      "explanation": "A great deal of financial risk makes the decision imprudent, or lacking good judgment.",
-      "trick": "Use the reason after “as” to judge the decision.",
+      "explanation": "Imprudent means unwise or lacking good judgment. Ignoring clear warnings supplies the clue.",
+      "trick": "Poor judgment calls for the opposite of prudent.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "July combined 172 missed-question compilation · #88",
@@ -2855,18 +3231,18 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-297",
-      "word": "The author liked to ------- ancient legends to give her novels a deeper meaning.",
+      "word": "To support her argument, the lawyer chose to _____ a law that directly protected her client.",
       "quizType": "completion",
       "choices": [
         "provoke",
-        "contemplate",
+        "repeal",
         "invoke",
         "elude"
       ],
       "answer": "invoke",
       "meaning": "invoke",
-      "explanation": "Invoke can mean bring something to mind or call upon it; the author draws on legends.",
-      "trick": "Use the literary sense of invoke, not only its religious sense.",
+      "explanation": "To invoke a law is to cite or call upon it as authority or support.",
+      "trick": "Using a law to support an argument means calling upon its authority.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #11 · Day 5",
@@ -3048,13 +3424,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "power",
-        "pardon",
+        "mercy",
         "disgrace",
         "vengeance"
       ],
-      "answer": "pardon",
-      "meaning": "pardon",
-      "explanation": "CLEMENCY means mercy toward someone facing punishment. “pardon” is the closest choice here.",
+      "answer": "mercy",
+      "meaning": "mercy",
+      "explanation": "Clemency is mercy or leniency shown when deciding a punishment.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -3065,7 +3441,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-283",
-      "word": "The playwright received_____reviews from critics, praising her innovative storytelling.",
+      "word": "The playwright received _____ reviews from critics, who praised her innovative storytelling.",
       "quizType": "completion",
       "choices": [
         "laudable",
@@ -3075,8 +3451,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "laudatory",
       "meaning": "laudatory",
-      "explanation": "Praising her innovative storytelling points to laudatory: full of praise.",
-      "trick": "Find the words that explain the blank: praising is the clue.",
+      "explanation": "Laudatory means expressing praise. Laudable means deserving praise; here, the reviews express praise.",
+      "trick": "Ask whether the reviews express praise or themselves deserve praise.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "July combined 172 missed-question compilation · #84",
@@ -3086,17 +3462,17 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-247",
-      "word": "PATENT",
+      "word": "PATENT (adjective)",
       "quizType": "synonym",
       "choices": [
-        "closed",
-        "open",
+        "hidden",
+        "uncertain",
         "obvious",
         "affable"
       ],
       "answer": "obvious",
       "meaning": "obvious",
-      "explanation": "PATENT means clear or obvious when used as an adjective. “obvious” is the closest choice here.",
+      "explanation": "Patent as an adjective means obvious or plainly evident.",
       "trick": "The adjective meaning is obvious; a patent for an invention is a different use.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -3279,13 +3655,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "arouse",
-        "believe",
+        "assume",
         "defy",
         "elevate"
       ],
-      "answer": "believe",
-      "meaning": "believe",
-      "explanation": "PRESUME means to suppose or believe something without definite proof. “believe” is the closest choice here.",
+      "answer": "assume",
+      "meaning": "assume",
+      "explanation": "To presume is to assume something is true without definite proof.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -3425,14 +3801,14 @@ window.MARCO_MIXED_VR = {
       "word": "URBANE",
       "quizType": "synonym",
       "choices": [
-        "civilized",
+        "sophisticated",
         "modern",
         "relevant",
         "realistic"
       ],
-      "answer": "civilized",
-      "meaning": "civilized",
-      "explanation": "URBANE means polished and courteous in manner. “civilized” is the closest choice here.",
+      "answer": "sophisticated",
+      "meaning": "sophisticated",
+      "explanation": "Urbane means polished and sophisticated in social manners.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -3511,12 +3887,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "lopsided",
         "nearby",
-        "good-natured",
+        "Unclelike",
         "regal"
       ],
-      "answer": "good-natured",
-      "meaning": "good-natured",
-      "explanation": "AVUNCULAR means kind and friendly in the manner of an uncle. “good-natured” is the closest choice here.",
+      "answer": "Unclelike",
+      "meaning": "Unclelike",
+      "explanation": "Avuncular means like an uncle, especially in being kindly and helpful.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -3804,13 +4180,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "generous",
-        "malicious",
+        "Reckless",
         "foolish",
         "graceful"
       ],
-      "answer": "malicious",
-      "meaning": "malicious",
-      "explanation": "WANTON means deliberately cruel or harmful, without restraint. “malicious” is the closest choice here.",
+      "answer": "Reckless",
+      "meaning": "Reckless",
+      "explanation": "Wanton means reckless and showing disregard for consequences.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -3847,12 +4223,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "thoughtfulness",
         "gesture",
-        "willingness",
+        "eagerness",
         "fulfillment"
       ],
-      "answer": "willingness",
-      "meaning": "willingness",
-      "explanation": "ALACRITY means eager and cheerful readiness. “willingness” is the closest choice here.",
+      "answer": "eagerness",
+      "meaning": "eagerness",
+      "explanation": "Alacrity means eager and cheerful readiness to act.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -3951,13 +4327,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "sizeable",
-        "cumbersome",
+        "weightless",
         "boring",
         "weak"
       ],
       "answer": "sizeable",
       "meaning": "sizeable",
-      "explanation": "Large, heavy, or substantial in size.",
+      "explanation": "Hefty means large, heavy, or substantial.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
@@ -3968,7 +4344,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-058",
-      "word": "Initially standing by his _____ alibi, the main suspect in the scandal later retracted it and agreed to cooperate with the prosecution.",
+      "word": "The suspect initially stood by his _____ alibi, but it lacked supporting evidence and fell apart under questioning.",
       "quizType": "completion",
       "choices": [
         "feasible",
@@ -3978,8 +4354,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "tenuous",
       "meaning": "tenuous",
-      "explanation": "Tenuous means weak or poorly supported. Retracting the alibi fits that weakness; incontrovertible would mean impossible to dispute.",
-      "trick": "Predict a simple word for the blank from the sentence clues; then check meaning and grammar.",
+      "explanation": "Tenuous means weak or poorly supported. The lack of evidence and collapse under questioning identify a weak alibi.",
+      "trick": "Lacked supporting evidence points to a weak claim.",
       "difficulty": "hard",
       "sourceGroup": "review-124",
       "sourceLabel": "Past Paper · Test 9 · Sentence Completion",
@@ -3992,14 +4368,14 @@ window.MARCO_MIXED_VR = {
       "word": "facilitate",
       "quizType": "synonym",
       "choices": [
-        "promote",
+        "ease",
         "market",
         "criticize",
         "block"
       ],
-      "answer": "promote",
-      "meaning": "promote",
-      "explanation": "facilitate means to make an action easier. “promote” is the closest choice here.",
+      "answer": "ease",
+      "meaning": "ease",
+      "explanation": "To facilitate something is to make it easier to do.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
@@ -4015,12 +4391,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "happy",
         "gregarious",
-        "irascible",
+        "complaining",
         "outgoing"
       ],
-      "answer": "irascible",
-      "meaning": "irascible",
-      "explanation": "QUERULOUS means complaining in an irritable manner. “irascible” is the closest choice here.",
+      "answer": "complaining",
+      "meaning": "complaining",
+      "explanation": "Querulous means habitually complaining in an irritable manner.",
       "trick": "Listen for complaining and irritability, not just volume.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -4097,14 +4473,14 @@ window.MARCO_MIXED_VR = {
       "word": "TRUCULENCE",
       "quizType": "synonym",
       "choices": [
-        "virulence",
-        "vengeance",
-        "obstinance",
-        "irritability"
+        "belligerence",
+        "patience",
+        "courtesy",
+        "tranquility"
       ],
-      "answer": "virulence",
-      "meaning": "virulence",
-      "explanation": "TRUCULENCE means fierce or aggressively hostile behavior. “virulence” is the closest choice here.",
+      "answer": "belligerence",
+      "meaning": "belligerence",
+      "explanation": "Truculence means aggressive hostility or readiness to fight.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -4224,13 +4600,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "Diminish",
-        "Rise",
+        "Strengthen",
         "Maintain",
         "Reduce"
       ],
-      "answer": "Rise",
-      "meaning": "Rise",
-      "explanation": "Intensify means to increase in strength or degree. “Rise” is the closest choice here.",
+      "answer": "Strengthen",
+      "meaning": "Strengthen",
+      "explanation": "To intensify something is to make it stronger or more extreme.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium",
       "sourceGroup": "review-124",
@@ -4307,14 +4683,14 @@ window.MARCO_MIXED_VR = {
       "word": "plague",
       "quizType": "synonym",
       "choices": [
-        "disease",
+        "remedy",
         "pestilence",
         "health",
         "safety"
       ],
       "answer": "pestilence",
       "meaning": "pestilence",
-      "explanation": "plague means a widespread serious disease when used as a noun. “pestilence” is the closest choice here.",
+      "explanation": "A plague is a pestilence: a widespread, devastating disease.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
@@ -4409,7 +4785,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-325",
-      "word": "Sally showing up to school on Friday with no dramatic change in her appearance ------- the rumors that she had dyed her hair bright pink for the school play that was premiering that night.",
+      "word": "When Sally arrived at school on Friday with her hair unchanged, her appearance _____ the rumors that she had dyed it bright pink for that evening's play.",
       "quizType": "completion",
       "choices": [
         "Quashed",
@@ -4419,8 +4795,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Quashed",
       "meaning": "Quashed",
-      "explanation": "Her unchanged appearance quashed, or put an end to, the pink-hair rumors.",
-      "trick": "Evidence against a rumor defeats it.",
+      "explanation": "Quashed means put an end to or suppressed. Her unchanged hair disproved the rumors.",
+      "trick": "Unchanged hair contradicts the claim that she dyed it pink.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #11 · Day 11",
@@ -4556,7 +4932,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-342",
-      "word": "Whilst her best friend was able to live in a gorgeous and distinctive apartment building; the best she could afford was a ------- building way out of town.",
+      "word": "Although her best friend lived in a striking, ornate apartment building, she could afford only a _____ building with no distinctive features.",
       "quizType": "completion",
       "choices": [
         "Elegant",
@@ -4566,8 +4942,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Nondescript",
       "meaning": "Nondescript",
-      "explanation": "Nondescript means plain or lacking distinctive features, contrasting with gorgeous and distinctive.",
-      "trick": "“Whilst” introduces a contrast in the buildings.",
+      "explanation": "Nondescript means ordinary and lacking distinctive features.",
+      "trick": "No distinctive features directly identifies the missing adjective.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #16 · Day 15",
@@ -4577,7 +4953,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-315",
-      "word": "He had always assumed he was a better than average basketball player, but as soon as he stepped on the court, his ------- was displayed for all to see.",
+      "word": "He had assumed he was an outstanding basketball player, but his merely average performance revealed his _____.",
       "quizType": "completion",
       "choices": [
         "Misery",
@@ -4587,8 +4963,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Mediocrity",
       "meaning": "Mediocrity",
-      "explanation": "Mediocrity means being only average; actual play exposed the gap between his belief and his skill.",
-      "trick": "Compare what he assumed with what the court revealed.",
+      "explanation": "Mediocrity means being ordinary or only average rather than excellent.",
+      "trick": "Merely average rules out superiority.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #16 · Day 9",
@@ -4602,14 +4978,14 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "dialogue",
-        "slang",
+        "Specialized language",
         "container",
         "connotation"
       ],
-      "answer": "slang",
-      "meaning": "slang",
-      "explanation": "JARGON means specialized language used by a particular group. “slang” is the closest choice here.",
-      "trick": "The core idea is group-specific language; slang is only the closest available option.",
+      "answer": "Specialized language",
+      "meaning": "Specialized language",
+      "explanation": "Jargon is specialized language used by a particular profession or group.",
+      "trick": "Think of vocabulary used by members of a particular profession.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Zozeck dedicated synonym bank · #459",
@@ -4643,14 +5019,14 @@ window.MARCO_MIXED_VR = {
       "word": "PRESCIENT",
       "quizType": "synonym",
       "choices": [
-        "Sentient",
-        "Do",
-        "Foreknowing",
-        "Science"
+        "Forgetful",
+        "Impulsive",
+        "Foreseeing",
+        "Unaware"
       ],
-      "answer": "Foreknowing",
-      "meaning": "Foreknowing",
-      "explanation": "PRESCIENT means knowing or anticipating events before they happen. “Foreknowing” is the closest choice here.",
+      "answer": "Foreseeing",
+      "meaning": "Foreseeing",
+      "explanation": "Prescient means able to foresee what will happen.",
       "trick": "Pre- points to before: knowing ahead of time.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -4769,14 +5145,14 @@ window.MARCO_MIXED_VR = {
       "word": "LENIENT",
       "quizType": "synonym",
       "choices": [
-        "compassionate",
+        "forgiving",
         "prehistoric",
         "unavoidable",
         "well-mannered"
       ],
-      "answer": "compassionate",
-      "meaning": "compassionate",
-      "explanation": "LENIENT means not strict or harsh, especially in punishment. “compassionate” is the closest choice here.",
+      "answer": "forgiving",
+      "meaning": "forgiving",
+      "explanation": "Lenient means less strict or severe than expected.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -4787,17 +5163,17 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-318",
-      "word": "FIELD",
+      "word": "FIELD (verb)",
       "quizType": "synonym",
       "choices": [
         "Answer",
         "Publish",
-        "Recreation",
-        "Joy"
+        "Avoid",
+        "Invent"
       ],
       "answer": "Answer",
       "meaning": "Answer",
-      "explanation": "FIELD means to handle or answer, as in fielding a question. “Answer” is the closest choice here.",
+      "explanation": "To field a question is to receive it and answer it.",
       "trick": "Think “field questions”: answer or handle them, not a grassy area.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -4875,13 +5251,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "Acceptance",
-        "Denunciation",
+        "Celebration",
         "Encouragement",
         "Renunciation"
       ],
       "answer": "Renunciation",
       "meaning": "Renunciation",
-      "explanation": "DISAVOWAL means a denial of responsibility or connection. “Renunciation” is the closest choice here.",
+      "explanation": "Disavowal is a denial of responsibility, support, or connection. Renunciation means formally rejecting or giving up a claim or connection.",
       "trick": "Renunciation denies a connection; denunciation publicly condemns something.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -4955,18 +5331,18 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-309",
-      "word": "After she completed her first dance performance and experienced the nerves of competition, every ------- performance for Jessica seemed easier.",
+      "word": "After Jessica gained confidence during her first dance competition, every _____ performance seemed easier.",
       "quizType": "completion",
       "choices": [
         "Prior",
-        "Latter",
+        "Simultaneous",
         "Preceding",
         "Subsequent"
       ],
       "answer": "Subsequent",
       "meaning": "Subsequent",
-      "explanation": "Subsequent means coming later; performances after the first one seemed easier.",
-      "trick": "Use the time sequence: first, then later.",
+      "explanation": "Subsequent means coming afterward. Her later performances followed the first competition.",
+      "trick": "The blank describes performances after the first one.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #12 · Day 8",
@@ -5102,7 +5478,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-107",
-      "word": "The change in the stock price was_____enough to be noticed by investors.",
+      "word": "The stock price changed by an _____ amount, large enough for investors to notice.",
       "quizType": "completion",
       "choices": [
         "appreciable",
@@ -5112,8 +5488,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "appreciable",
       "meaning": "appreciable",
-      "explanation": "\"appreciable\" means \"(quantity, degree, etc. ) being large enough to be noticed or measured\", which best fits the sentence's meaning and grammar.",
-      "trick": "Predict a simple word for the blank from the sentence clues; then check meaning and grammar.",
+      "explanation": "Appreciable means large enough to be noticed or considered significant.",
+      "trick": "Large enough to notice defines appreciable.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
       "sourceLabel": "July review · original #96",
@@ -5252,14 +5628,14 @@ window.MARCO_MIXED_VR = {
       "word": "Glacial",
       "quizType": "synonym",
       "choices": [
-        "Ocean",
+        "Warm",
         "Seething",
-        "Chill",
+        "Icy",
         "Boiling"
       ],
-      "answer": "Chill",
-      "meaning": "Chill",
-      "explanation": "Glacial means extremely cold or icy. “Chill” is the closest choice here.",
+      "answer": "Icy",
+      "meaning": "Icy",
+      "explanation": "Glacial means icy or extremely cold. It can also describe something moving very slowly.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -5337,13 +5713,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "abandon",
-        "compare",
+        "Place side by side",
         "sell",
         "neglect"
       ],
-      "answer": "compare",
-      "meaning": "compare",
-      "explanation": "To place things side by side, often to compare them.",
+      "answer": "Place side by side",
+      "meaning": "Place side by side",
+      "explanation": "To juxtapose things is to place them side by side, often for comparison.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "review-124",
@@ -5480,18 +5856,18 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-048",
-      "word": "The team's success was due to their_____efforts, with each member contributing effectively.",
+      "word": "The team worked as a unified group; its _____ efforts helped every member contribute toward the same goal.",
       "quizType": "completion",
       "choices": [
         "cohesive",
-        "colossal",
-        "coeval",
-        "coerce"
+        "divided",
+        "isolated",
+        "conflicting"
       ],
       "answer": "cohesive",
       "meaning": "cohesive",
-      "explanation": "\"cohesive\" means \"forming a united and harmonious whole\", which best fits the sentence's meaning and grammar.",
-      "trick": "Mark the contrast word, predict the direction of the blank, and then check the whole sentence.",
+      "explanation": "Cohesive means united and working well together.",
+      "trick": "Unified group and the same goal show unity.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
       "sourceLabel": "July review · original #99",
@@ -5611,12 +5987,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "Child",
         "Sibling",
-        "Partner",
+        "Husband or wife",
         "Parent"
       ],
-      "answer": "Partner",
-      "meaning": "Partner",
-      "explanation": "Spouse means a husband, wife, or marriage partner. “Partner” is the closest choice here.",
+      "answer": "Husband or wife",
+      "meaning": "Husband or wife",
+      "explanation": "A spouse is a husband or wife.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium",
       "sourceGroup": "historical-top-up",
@@ -5674,12 +6050,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "forthright",
         "imperious",
-        "aloof",
+        "restrained",
         "incessant"
       ],
-      "answer": "aloof",
-      "meaning": "aloof",
-      "explanation": "RESERVED means restrained or not openly expressing feelings. “aloof” is the closest choice here.",
+      "answer": "restrained",
+      "meaning": "restrained",
+      "explanation": "Reserved means restrained in expressing feelings or opinions.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -5819,14 +6195,14 @@ window.MARCO_MIXED_VR = {
       "word": "CONGENIAL",
       "quizType": "synonym",
       "choices": [
-        "pleasurable",
+        "agreeable",
         "frustrating",
         "looming",
         "together"
       ],
-      "answer": "pleasurable",
-      "meaning": "pleasurable",
-      "explanation": "CONGENIAL means pleasant or agreeable. “pleasurable” is the closest choice here.",
+      "answer": "agreeable",
+      "meaning": "agreeable",
+      "explanation": "Congenial means pleasant or agreeable, especially in temperament or surroundings.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
@@ -5862,13 +6238,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "Incompatible",
-        "Agreeable",
+        "Well-matched",
         "Contradictory",
         "Hostile"
       ],
-      "answer": "Agreeable",
-      "meaning": "Agreeable",
-      "explanation": "Compatible means able to exist or work together without conflict. “Agreeable” is the closest choice here.",
+      "answer": "Well-matched",
+      "meaning": "Well-matched",
+      "explanation": "Compatible means able to exist or work together without conflict.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
@@ -6068,7 +6444,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-341",
-      "word": "My grandmother went to the doctor for a routine check-up, but it turns out she has lung cancer; the ------- is less than a year.",
+      "word": "The doctor gave an encouraging _____: with treatment, the patient was expected to make a full recovery.",
       "quizType": "completion",
       "choices": [
         "Prognosis",
@@ -6078,8 +6454,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Prognosis",
       "meaning": "Prognosis",
-      "explanation": "Prognosis is the expected course or outcome of an illness; less than a year describes the outlook.",
-      "trick": "A diagnosis identifies the disease; a prognosis predicts its course.",
+      "explanation": "A prognosis predicts the likely course or outcome of an illness. A diagnosis identifies the illness.",
+      "trick": "An expected recovery is a future outcome, not the name of a disease.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #14 · Day 15",
@@ -6176,14 +6552,14 @@ window.MARCO_MIXED_VR = {
       "word": "VENALITY",
       "quizType": "synonym",
       "choices": [
-        "bribery",
+        "Corruptibility",
         "activity",
         "depression",
         "familiarity"
       ],
-      "answer": "bribery",
-      "meaning": "bribery",
-      "explanation": "VENALITY means willingness to be bribed. “bribery” is the closest choice here.",
+      "answer": "Corruptibility",
+      "meaning": "Corruptibility",
+      "explanation": "Venality is willingness to accept bribes or misuse a position for money.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -6346,12 +6722,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "governing",
         "authoritarian",
-        "giving",
+        "generous",
         "stingy"
       ],
-      "answer": "giving",
-      "meaning": "giving",
-      "explanation": "MUNIFICENT means very generous. “giving” is the closest choice here.",
+      "answer": "generous",
+      "meaning": "generous",
+      "explanation": "Munificent means very generous.",
       "trick": "Generosity, not merely expensive appearance, is the key idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -6367,12 +6743,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "fashionable",
         "emboldened",
-        "superficial",
+        "Smooth but insincere",
         "intelligent"
       ],
-      "answer": "superficial",
-      "meaning": "superficial",
-      "explanation": "GLIB means smooth and fluent but shallow or insincere. “superficial” is the closest choice here.",
+      "answer": "Smooth but insincere",
+      "meaning": "Smooth but insincere",
+      "explanation": "Glib means speaking smoothly and easily but without sincerity or careful thought.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -6383,7 +6759,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-334",
-      "word": "Her doctor told her that due to her condition, she would be ------- to infection for the rest of her life, so she was going to have to become accustomed to hospitals.",
+      "word": "Because her treatment weakened her immune defenses, she became more _____ to infections.",
       "quizType": "completion",
       "choices": [
         "Immutable",
@@ -6393,8 +6769,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Susceptible",
       "meaning": "Susceptible",
-      "explanation": "Susceptible to infection means likely to be affected by it.",
-      "trick": "The phrase “to infection” calls for vulnerability.",
+      "explanation": "Susceptible means vulnerable or likely to be affected. Weakened immune defenses increase vulnerability to infection.",
+      "trick": "Weak defenses make infection more likely.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #20 · Day 13",
@@ -6493,12 +6869,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "capture",
         "clutter",
-        "perform",
+        "carry out",
         "surround"
       ],
-      "answer": "perform",
-      "meaning": "perform",
-      "explanation": "To conduct or carry out business.",
+      "answer": "carry out",
+      "meaning": "carry out",
+      "explanation": "To transact business is to carry out or conduct it.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium-hard",
       "sourceGroup": "review-124",
@@ -6656,7 +7032,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-311",
-      "word": "GORGE",
+      "word": "GORGE (verb)",
       "quizType": "synonym",
       "choices": [
         "Stuff",
@@ -6667,7 +7043,7 @@ window.MARCO_MIXED_VR = {
       "answer": "Stuff",
       "meaning": "Stuff",
       "explanation": "GORGE means to eat or stuff oneself excessively. “Stuff” is the closest choice here.",
-      "trick": "Think “gorge on food,” not a valley.",
+      "trick": "Think of eating far more than necessary.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #6 · Day 9",
@@ -6681,13 +7057,13 @@ window.MARCO_MIXED_VR = {
       "quizType": "synonym",
       "choices": [
         "correspondence",
-        "distinction",
+        "worth",
         "excursion",
         "plaque"
       ],
-      "answer": "distinction",
-      "meaning": "distinction",
-      "explanation": "Merit means worth or excellence. Distinction can mean excellence that sets someone or something apart.",
+      "answer": "worth",
+      "meaning": "worth",
+      "explanation": "Merit is worth or excellence that deserves recognition.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "medium",
       "sourceGroup": "historical-top-up",
@@ -6746,11 +7122,11 @@ window.MARCO_MIXED_VR = {
         "induce",
         "suggest",
         "lecture",
-        "alleviate"
+        "appease"
       ],
-      "answer": "alleviate",
-      "meaning": "alleviate",
-      "explanation": "MOLLIFY means to soothe anger or lessen distress. “alleviate” is the closest choice here.",
+      "answer": "appease",
+      "meaning": "appease",
+      "explanation": "To mollify someone is to soothe their anger or make them less upset.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -6806,14 +7182,14 @@ window.MARCO_MIXED_VR = {
       "word": "ABJECT",
       "quizType": "synonym",
       "choices": [
-        "depressed",
+        "wretched",
         "argumentative",
         "abstract",
         "merry"
       ],
-      "answer": "depressed",
-      "meaning": "depressed",
-      "explanation": "ABJECT means extremely miserable or degraded. “depressed” is the closest choice here.",
+      "answer": "wretched",
+      "meaning": "wretched",
+      "explanation": "Abject means extremely wretched or miserable, as in abject poverty.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -6992,7 +7368,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-343",
-      "word": "\"Listen son,\" admonished the Captain, \"you need to toughen up, the battlefield is no place for the -------.”",
+      "word": "The captain warned that the dangerous mission was no place for the _____, who would lose courage at the first sign of trouble.",
       "quizType": "completion",
       "choices": [
         "Abrasive",
@@ -7002,8 +7378,8 @@ window.MARCO_MIXED_VR = {
       ],
       "answer": "Fainthearted",
       "meaning": "Fainthearted",
-      "explanation": "Fainthearted means timid or lacking courage; the captain says the battlefield requires toughness.",
-      "trick": "Infer the opposite of tough or courageous.",
+      "explanation": "Fainthearted means lacking courage or easily frightened.",
+      "trick": "Losing courage identifies someone who is fainthearted.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #18 · Day 15",
@@ -7060,12 +7436,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "imperceptible",
         "confounding",
-        "discernable",
+        "perceptible",
         "disguised"
       ],
-      "answer": "discernable",
-      "meaning": "discernable",
-      "explanation": "PALPABLE means able to be felt or clearly noticed. “discernable” is the closest choice here.",
+      "answer": "perceptible",
+      "meaning": "perceptible",
+      "explanation": "Palpable means able to be felt or readily perceived.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "curated-227",
@@ -7270,12 +7646,12 @@ window.MARCO_MIXED_VR = {
       "choices": [
         "thrifty",
         "cautious",
-        "generous",
+        "restrained",
         "wasteful"
       ],
       "answer": "wasteful",
       "meaning": "wasteful",
-      "explanation": "PRODIGAL means wastefully extravagant. “wasteful” is the closest choice here.",
+      "explanation": "Prodigal means recklessly wasteful, especially with money.",
       "trick": "Say the meaning in your own words first, then compare all four choices. Choose a synonym, not merely a related idea.",
       "difficulty": "hard",
       "sourceGroup": "review-124",
@@ -7580,7 +7956,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-131",
-      "word": "bid",
+      "word": "bid (verb)",
       "quizType": "synonym",
       "choices": [
         "command",
@@ -7591,7 +7967,7 @@ window.MARCO_MIXED_VR = {
       "answer": "command",
       "meaning": "command",
       "explanation": "bid means to order or command, as in bidding someone enter. “command” is the closest choice here.",
-      "trick": "Here bid is a verb meaning order, not an auction offer.",
+      "trick": "In the sense of bidding someone to do something, think of giving an order.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Zozeck mock synonym bank · #299",
@@ -7601,7 +7977,7 @@ window.MARCO_MIXED_VR = {
     },
     {
       "id": "mixed360-312",
-      "word": "BUFF",
+      "word": "BUFF (verb)",
       "quizType": "synonym",
       "choices": [
         "Invited",
@@ -7612,7 +7988,7 @@ window.MARCO_MIXED_VR = {
       "answer": "Polish",
       "meaning": "Polish",
       "explanation": "BUFF means to polish by rubbing. “Polish” is the closest choice here.",
-      "trick": "Think of buffing a floor or shoe until it shines.",
+      "trick": "Think of what you do to a surface to make it shine.",
       "difficulty": "medium-hard",
       "sourceGroup": "curated-227",
       "sourceLabel": "Summer VR homework · #7 · Day 9",
