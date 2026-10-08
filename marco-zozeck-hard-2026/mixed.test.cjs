@@ -58,7 +58,7 @@ test('legacy core preserves the archived deadline and submitted snapshot',()=>{
   assert.equal(Core.current(merged.sessions[2]).ids.length,40);
 });
 function browser(progress,url='https://shangguanyun08.github.io/marco-learning-hub/marco-zozeck-hard-2026/?session=1'){
-  const {JSDOM}=require('C:/Users/A/Documents/Marco ISEE all tests/tmp/daily-sync-qa/node_modules/jsdom');
+  const {JSDOM}=require('jsdom');
   const dom=new JSDOM('<main id="app"></main>',{url,runScripts:'outside-only'}),w=dom.window;
   w.HTMLElement.prototype.scrollIntoView=()=>{};
   w.confirm=()=>true;
@@ -135,7 +135,7 @@ test('archive retains old app, old data, base-relative scripts and old storage n
 });
 
 test('no archive banner at the top; original course remains listed in the hub archive',()=>{
-  const {JSDOM}=require('C:/Users/A/Documents/Marco ISEE all tests/tmp/daily-sync-qa/node_modules/jsdom');
+  const {JSDOM}=require('jsdom');
   const course=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'));
   assert.equal(course.window.document.querySelector('.archive-callout'),null);
   const hub=new JSDOM(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'));

@@ -1,3 +1,11 @@
+# October 7: Round 1 Missed Questions · Review
+
+The new section follows original Session 9 and contains **202** verified first-round misses: **40 / 40 / 40 / 40 / 42** in Review Sessions 1–5. Counts by original session are 24, 23, 19, 22, 21, 25, 23, 19, and 26. Extraction uses the saved first-round Missed status, never the current corrected state. The reviewed copies are frozen in `round1-review-data.js` and link back to source question IDs and session numbers. Every source miss appears exactly once.
+
+Review keys 101–105 and question IDs `r1-review-001` through `r1-review-202` keep attempts independent under the existing synchronized app ID. URLs use `?review=1` through `?review=5`; old `?session=10` and higher archive redirects are preserved. Nothing automatically starts a review. Round 1 covers the full set; Round 2 and later contain only the preceding round’s misses. All rounds are untimed. Correct first tries are green, mistakes red, and later corrections yellow. Completed cards turn green. Existing questions, saved choices, scores, and earlier archives are unchanged.
+
+All 202 copied prompts, keys, distractors, explanations, and tricks were reviewed. 73 copies have editorial improvements: more precise synonyms (for example assess → evaluate, collateral → security for a loan), explicit senses/parts of speech, parallel answer choices, clearer sentence clues, and removal of competing meanings. These edits affect only the independent review copies. Word meanings cross-checked where needed against Merriam-Webster and Cambridge (antinomy, arcane, commonwealth, nosh) and Dictionary.com (antediluvian, precursory).
+
 # Marco’s Mixed VR Practice — October 5 rebuild
 
 The root page now offers **360 unique historical questions in nine mixed sessions of 40**. Each session mixes provisional medium, medium-hard, and hard difficulty labels, with 33–34 synonyms and 6–7 sentence completions; two sessions also contain one definition-to-word question. These are practice estimates, not official ISEE difficulty ratings.

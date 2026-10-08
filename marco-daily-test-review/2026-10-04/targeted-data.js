@@ -4,10 +4,12 @@
   // A retry correction remains a target: it is not a correct independent first try.
   const sources=[1008,1010,1018,1034,2016,2018,2026,2029,2032,3025,3026,3041,3042,3044,3045];
   root.MARCO_OCT04_TARGETS={sources,basis:'Session 1: 12/25; Session 2: 19/25 first-try points',counts:{VR:4,QR:5,MA:6}};
+  // Preserve old Session 4 runs under their existing ID; the reset starts only on click.
+  root.MARCO_ISEE_LEGACY.push({...root.MARCO_ISEE_PRACTICE.find(s=>s.number===4),label:'Session 4 before the October 7 reset'});
   root.MARCO_ISEE_PRACTICE=root.MARCO_ISEE_PRACTICE.map(s=>s.number===3?{
     ...s,label:'Targeted practice · 15 questions',defaultSources:sources
   }:s.number===4?{
-    ...s,label:'Targeted timed check · 15 questions',defaultSources:sources,timeLimitSeconds:780
+    ...s,id:'similar-d-untimed-reset-20261007',label:'Targeted practice · 15 questions',defaultSources:sources,timeLimitSeconds:undefined
   }:s);
   const originals=root.MARCO_ISEE_REVIEW;
   const make=(source,prompt,choices,correct,tip,explanation,extra={})=>({
@@ -72,7 +74,7 @@
   // Keep earlier adaptive/untimed attempts under their original ID and scope.
   root.MARCO_ISEE_LEGACY.push({id:'targeted-followup-5',number:5,label:'Earlier untimed follow-up',questions});
   root.MARCO_ISEE_PRACTICE.push({
-    id:'targeted-timed-5',number:5,label:'Similar timed check · 15 questions',
-    defaultSources:sources,timeLimitSeconds:780,questions
+    id:'targeted-timed-5',number:5,label:'Similar practice · 15 questions',
+    defaultSources:sources,questions
   });
 })(window);

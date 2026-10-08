@@ -1,3 +1,7 @@
+# October 7 update
+
+Sessions 4 and 5 are untimed. Session 4 uses a new independent ID (`similar-d-untimed-reset-20261007`) so it shows Not started and requires an explicit Start. Earlier `similar-d` runs remain available in history and cannot reappear as the new attempt during sync. Session 5 retains `targeted-timed-5` for compatibility: saved answers and pending selections remain intact; an unfinished deadline is removed by the existing merge normalization. Both sessions use the standard two-try flow.
+
 # October 4, 2026 · Practice Test 2
 
 ## October 5 update: targeted Sessions 3–5

@@ -54,7 +54,7 @@
         const run=clone(raw);
         // Snapshot scope so adding MA does not change the denominator of an old run.
         run.questionSources||=['similar-c','targeted-followup-5','targeted-timed-5'].includes(id)?allQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
-        // Session 2 is now untimed. Keep its selections as unsubmitted drafts.
+        // Untimed sessions retain active selections as unsubmitted drafts; remove only their deadline.
         if(!BANK.find(s=>s.id===id).timeLimitSeconds&&!run.completedAt&&run.deadlineAt){
           run.previousDeadlineAt=run.deadlineAt;delete run.deadlineAt;
         }
