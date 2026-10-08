@@ -1,3 +1,7 @@
+# First-answer visibility
+
+Keep every checked answer visible in completed questions and saved history, for existing and future runs. Label the first answer explicitly; a wrong first answer stays pink/red even after a correction. Correct retries are yellow; correct first answers are green. Presentation reads the saved attempts and does not change scores or answer history. Preserve this behavior when adding future sessions.
+
 # October 7 update
 
 Sessions 4 and 5 are untimed. Session 4 uses a new independent ID (`similar-d-untimed-reset-20261007`) so it shows Not started and requires an explicit Start. Earlier `similar-d` runs remain available in history and cannot reappear as the new attempt during sync. Session 5 retains `targeted-timed-5` for compatibility: saved answers and pending selections remain intact; an unfinished deadline is removed by the existing merge normalization. Both sessions use the standard two-try flow.

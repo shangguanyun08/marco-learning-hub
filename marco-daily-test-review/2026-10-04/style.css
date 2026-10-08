@@ -4,3 +4,6 @@
 
 /* Completed sessions retain their green highlight, including when selected. */
 .session-card.is-complete{background:#d5f0df;border-color:#206a4d;color:#154b35}.session-card.is-complete[aria-current=page]{background:#c2e9cf;border-color:#206a4d}.session-card.is-complete small:last-child{font-weight:750}
+
+/* Keep each submitted answer visible, including a first miss after correction. */
+.choice.wrong,.recorded-attempt.incorrect{background:#ffe0e0;border-color:#b83232;color:#882020}.choice.corrected,.recorded-attempt.corrected{background:#ffed9c;border-color:#ac7e0a;color:#604600}.recorded-attempt.first-correct{background:#d5f0df;border-color:#206a4d;color:#154b35}.attempt-label{display:block;font-size:13px;font-weight:750;margin-top:4px}.recorded-attempt{display:inline-block;border:1px solid;border-radius:6px;padding:3px 7px;margin:2px 3px 2px 0}
