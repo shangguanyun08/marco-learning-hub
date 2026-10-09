@@ -54,6 +54,13 @@
         const run=clone(raw);
         // Snapshot scope so adding MA does not change the denominator of an old run.
         run.questionSources||=['similar-c','targeted-followup-5','targeted-timed-5'].includes(id)?allQuestions(id).map(q=>q.source):[...root.MARCO_ISEE_LEGACY_SOURCES];
+        // Session 6 now keeps only conceived and math; finished history keeps its original scope.
+        if(id==='targeted-final-timed-6'&&!run.completedAt){
+          const session=BANK.find(s=>s.id===id),sources=session.defaultSources;
+          if(run.deadlineAt)run.deadlineAt=new Date(Date.parse(run.startedAt)+session.timeLimitSeconds*1000).toISOString();
+          run.questionSources=run.questionSources.filter(source=>sources.includes(source));
+          if(run.pending)run.pending=Object.fromEntries(Object.entries(run.pending).filter(([source])=>sources.includes(Number(source))));
+        }
         // Untimed sessions retain active selections as unsubmitted drafts; remove only their deadline.
         if(!BANK.find(s=>s.id===id).timeLimitSeconds&&!run.completedAt&&run.deadlineAt){
           run.previousDeadlineAt=run.deadlineAt;delete run.deadlineAt;

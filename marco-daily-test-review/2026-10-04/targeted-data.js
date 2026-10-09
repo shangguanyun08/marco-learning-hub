@@ -130,8 +130,8 @@
       {diagram:'ma-cylinder',diameter:12,check:{type:'cylinder',volume:324,diameter:12}})
   ];
   root.MARCO_ISEE_PRACTICE.push({
-    id:'targeted-final-timed-6',number:6,label:'Final timed practice · 15 questions',
-    defaultSources:sources,timeLimitSeconds:780,
+    id:'targeted-final-timed-6',number:6,label:'Final timed practice · 12 questions',
+    defaultSources:sources.filter(source=>source===1034||source>=2000),timeLimitSeconds:600,
     questions:[...questions.filter(q=>q.section==='VR'),...finalMath]
   });
 })(window);

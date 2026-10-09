@@ -134,32 +134,39 @@ for(const n of [4,5])test(`Session ${n} synchronizes untimed first tries, retrie
  }finally{a.close();b.close();}
 });
 test('Session 6 starts explicitly, keeps its deadline and selections after reload, and reveals scored first answers only on finish',()=>{
- const s=bank[5],clock={now:Date.parse('2026-10-09T03:00:00Z')},p=page(6,undefined,{clock});let saved;
+ const s={...bank[5],questions:scope(bank[5])},clock={now:Date.parse('2026-10-09T03:00:00Z')},p=page(6,undefined,{clock});let saved;
  try{
-  assert.equal(s.number,6);assert.equal(s.timeLimitSeconds,780);assert.deepEqual(s.defaultSources,targets);
-  assert.deepEqual(['VR','QR','MA'].map(section=>s.questions.filter(q=>q.section===section).length),[4,5,6]);
+  assert.equal(s.number,6);assert.equal(s.timeLimitSeconds,600);assert.deepEqual(s.defaultSources,targets.filter(source=>source===1034||source>=2000));
+  assert.deepEqual(['VR','QR','MA'].map(section=>s.questions.filter(q=>q.section===section).length),[1,5,6]);
   for(const q of s.questions){if(q.section==='VR'){const original=review.find(x=>x.source===q.source);for(const field of ['prompt','choices','correct','tip','explanation'])assert.deepEqual(q[field],original[field]);}else{for(const prior of bank.slice(0,5)){const old=prior.questions.find(x=>x.source===q.source);assert.notEqual(JSON.stringify([q.prompt,q.choices,q.columns,q.imagePoints]),JSON.stringify([old.prompt,old.choices,old.columns,old.imagePoints]));}}}
-  assert.equal(p.d.querySelectorAll('.question').length,0);assert.deepEqual(p.state().sessions,{});assert.match(p.d.querySelector('[data-action=start]').textContent,/13:00/);
-  start(p);assert.equal(p.d.querySelectorAll('.question').length,15);assert.equal(p.d.querySelectorAll('form button').length,0);assert.equal(p.d.querySelector('#timers').hidden,false);assert.equal(p.d.querySelectorAll('.solution').length,0);
-  pick(p,s.questions[0],s.questions[0].correct);pick(p,s.questions[1],(s.questions[1].correct+1)%4);saved=p.state();assert.equal(saved.sessions[s.id][0].deadlineAt,'2026-10-09T03:13:00.000Z');assert.deepEqual(saved.sessions[s.id][0].answers,{});
+  assert.equal(p.d.querySelectorAll('.question').length,0);assert.deepEqual(p.state().sessions,{});assert.match(p.d.querySelector('[data-action=start]').textContent,/10:00/);
+  start(p);assert.equal(p.d.querySelectorAll('.question').length,12);assert.equal(p.d.querySelectorAll('form button').length,0);assert.equal(p.d.querySelector('#timers').hidden,false);assert.equal(p.d.querySelectorAll('.solution').length,0);
+  pick(p,s.questions[0],s.questions[0].correct);pick(p,s.questions[1],(s.questions[1].correct+1)%4);saved=p.state();assert.equal(saved.sessions[s.id][0].deadlineAt,'2026-10-09T03:10:00.000Z');assert.deepEqual(saved.sessions[s.id][0].answers,{});
  }finally{p.close();}
  clock.now+=60000;const r=page(6,saved,{clock});try{
-  assert.equal(r.d.querySelector('#timers strong').textContent,'12:00');assert.equal(r.d.querySelectorAll('input:checked').length,2);assert.equal(r.d.querySelectorAll('.solution').length,0);
-  r.d.querySelector('[data-action=finish]').click();r.d.querySelector('#confirm-finish').click();assert.equal(r.d.querySelectorAll('.solution').length,15);assert.match(r.d.querySelector('.scorebar').textContent,/1\/15/);assert.equal(r.d.querySelectorAll('.choice.wrong').length,1);assert.match(r.d.querySelector('.choice.wrong').textContent,/First answer · Incorrect/);assert.ok(r.d.querySelector('a[href="?session=6"]').classList.contains('is-complete'));assert.equal(r.d.querySelector('#timers').hidden,true);
+  assert.equal(r.d.querySelector('#timers strong').textContent,'9:00');assert.equal(r.d.querySelectorAll('input:checked').length,2);assert.equal(r.d.querySelectorAll('.solution').length,0);
+  r.d.querySelector('[data-action=finish]').click();r.d.querySelector('#confirm-finish').click();assert.equal(r.d.querySelectorAll('.solution').length,12);assert.match(r.d.querySelector('.scorebar').textContent,/1\/12/);assert.equal(r.d.querySelectorAll('.choice.wrong').length,1);assert.match(r.d.querySelector('.choice.wrong').textContent,/First answer · Incorrect/);assert.ok(r.d.querySelector('a[href="?session=6"]').classList.contains('is-complete'));assert.equal(r.d.querySelector('#timers').hidden,true);
   const done=r.state();assert.equal(done.sessions[s.id][0].answers[s.questions[2].source].attempts[0].choice,null);assert.ok(r.w.MarcoIseeSync.valid(done));
-  const reload=page(6,done,{clock});try{assert.deepEqual(reload.state(),done);assert.equal(reload.d.querySelectorAll('.solution').length,15);}finally{reload.close();}
+  const reload=page(6,done,{clock});try{assert.deepEqual(reload.state(),done);assert.equal(reload.d.querySelectorAll('.solution').length,12);}finally{reload.close();}
  }finally{r.close();}
 });
 test('Session 6 expires on reload and preserves existing session scores',()=>{
- const s=bank[5],clock={now:Date.parse('2026-10-09T03:00:00Z')},p=page(6,undefined,{clock});let saved;
+ const s={...bank[5],questions:scope(bank[5])},clock={now:Date.parse('2026-10-09T03:00:00Z')},p=page(6,undefined,{clock});let saved;
  try{start(p);pick(p,s.questions[0],s.questions[0].correct);saved=p.state();const earlier=completedTargets(p);Object.assign(saved.sessions,clone(earlier.sessions));}finally{p.close();}
- clock.now+=781000;const r=page(6,saved,{clock});try{assert.match(r.d.querySelector('.complete').textContent,/Time is up/);assert.equal(r.d.querySelectorAll('.solution').length,15);assert.equal(r.state().sessions[s.id][0].timedOutAt,'2026-10-09T03:13:00.000Z');assert.match(r.d.querySelector('.scorebar').textContent,/1\/15/);for(const id of Object.keys(saved.sessions).filter(id=>id!==s.id))assert.deepEqual(r.state().sessions[id],saved.sessions[id]);}finally{r.close();}
+ clock.now+=601000;const r=page(6,saved,{clock});try{assert.match(r.d.querySelector('.complete').textContent,/Time is up/);assert.equal(r.d.querySelectorAll('.solution').length,12);assert.equal(r.state().sessions[s.id][0].timedOutAt,'2026-10-09T03:10:00.000Z');assert.match(r.d.querySelector('.scorebar').textContent,/1\/12/);for(const id of Object.keys(saved.sessions).filter(id=>id!==s.id))assert.deepEqual(r.state().sessions[id],saved.sessions[id]);}finally{r.close();}
+});
+test('revised Session 6 narrows an existing run and retimes it without changing completed history',()=>{
+ const s=bank[5],at='2026-10-09T03:00:00.000Z',clock={now:Date.parse(at)+60000},p=page();let seed;
+ try{const run=p.w.MarcoIseeEngine.start(s,at,targets);run.deadlineAt='2026-10-09T03:13:00.000Z';run.pending={1008:{choice:0,at},1034:{choice:0,at},2016:{choice:0,at}};seed={version:1,sessions:{[s.id]:[clone(run)]}};}finally{p.close();}
+ const active=page(6,seed,{clock});try{pick(active,s.questions.find(q=>q.source===2016),0);const run=active.state().sessions[s.id][0];assert.equal(active.d.querySelectorAll('.question').length,12);assert.equal(active.d.querySelector('#q1008'),null);assert.ok(active.d.querySelector('#q1034'));assert.equal(run.startedAt,at);assert.equal(run.deadlineAt,'2026-10-09T03:10:00.000Z');assert.deepEqual(Object.keys(run.pending),['1034','2016']);assert.equal(active.d.querySelector('#timers strong').textContent,'9:00');}finally{active.close();}
+ const finished=clone(seed);const old=finished.sessions[s.id][0];old.completedAt=at;old.answers=Object.fromEntries(s.questions.map(q=>[q.source,{attempts:[{choice:q.correct,correct:true,at}]}]));
+ const done=page(6,finished,{clock});try{assert.equal(done.d.querySelectorAll('.question').length,15);assert.match(done.d.querySelector('.scorebar').textContent,/15\/15/);assert.equal(done.state().sessions[s.id][0].deadlineAt,old.deadlineAt);}finally{done.close();}
 });
 test('Session 6 synchronizes its timer, pending choices and completed score across devices',async()=>{
  let progress=null;const remote=async(url,opts={})=>{if(opts.method==='POST'){const body=JSON.parse(opts.body),accepted=body.baseVersion===(progress?.version??null);if(accepted)progress={state:clone(body.state),version:(progress?.version||0)+1};return {ok:true,json:async()=>({accepted,progress:clone(progress)})};}return {ok:true,json:async()=>({progress:clone(progress)})};};
- const a=page(6,undefined,{live:true,fetcher:remote}),b=page(6,undefined,{live:true,fetcher:remote}),s=bank[5];try{
-  await until(()=>a.d.querySelector('#save-note').dataset.kind==='live'&&b.d.querySelector('#save-note').dataset.kind==='live');start(a);await until(()=>progress?.state.sessions[s.id]);await b.client.refresh();assert.equal(b.d.querySelectorAll('.question').length,15);assert.equal(a.state().sessions[s.id][0].deadlineAt,b.state().sessions[s.id][0].deadlineAt);
+ const a=page(6,undefined,{live:true,fetcher:remote}),b=page(6,undefined,{live:true,fetcher:remote}),s={...bank[5],questions:scope(bank[5])};try{
+  await until(()=>a.d.querySelector('#save-note').dataset.kind==='live'&&b.d.querySelector('#save-note').dataset.kind==='live');start(a);await until(()=>progress?.state.sessions[s.id]);await b.client.refresh();assert.equal(b.d.querySelectorAll('.question').length,12);assert.equal(a.state().sessions[s.id][0].deadlineAt,b.state().sessions[s.id][0].deadlineAt);
   const q=s.questions[0];pick(a,q,q.correct);await until(()=>progress.state.sessions[s.id][0].pending[q.source]);await b.client.refresh();assert.equal(b.d.querySelector('input:checked').value,String(q.correct));assert.equal(b.d.querySelectorAll('.solution').length,0);
-  b.d.querySelector('[data-action=finish]').click();b.d.querySelector('#confirm-finish').click();await until(()=>progress.state.sessions[s.id][0].completedAt);await a.client.refresh();assert.equal(a.d.querySelectorAll('.solution').length,15);assert.equal(a.d.querySelector('#timers').hidden,true);assert.match(a.d.querySelector('.scorebar').textContent,/1\/15/);
+  b.d.querySelector('[data-action=finish]').click();b.d.querySelector('#confirm-finish').click();await until(()=>progress.state.sessions[s.id][0].completedAt);await a.client.refresh();assert.equal(a.d.querySelectorAll('.solution').length,12);assert.equal(a.d.querySelector('#timers').hidden,true);assert.match(a.d.querySelector('.scorebar').textContent,/1\/12/);
  }finally{a.close();b.close();}
 });
