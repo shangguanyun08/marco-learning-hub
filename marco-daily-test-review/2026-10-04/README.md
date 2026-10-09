@@ -1,3 +1,7 @@
+# October 8 update: final timed Session 6
+
+Session 6 adds 15 questions on the same fixed targets (4 original VR + 5 fresh QR + 6 fresh MA), with a 780-second (13-minute) timer. It uses the independent ID `targeted-final-timed-6`; previous session definitions and learner records are unchanged. Start is explicit, the deadline persists across reloads/devices, and solutions remain hidden until finish or expiry. Completed attempts retain the existing first-answer labels, pink/red wrong answers, and green completion.
+
 # First-answer visibility
 
 Keep every checked answer visible in completed questions and saved history, for existing and future runs. Label the first answer explicitly; a wrong first answer stays pink/red even after a correction. Correct retries are yellow; correct first answers are green. Presentation reads the saved attempts and does not change scores or answer history. Preserve this behavior when adding future sessions.

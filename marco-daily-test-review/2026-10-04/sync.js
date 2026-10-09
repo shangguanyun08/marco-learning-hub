@@ -133,7 +133,7 @@
           const data=await request(),record=data.progress;
           const empty={version:1,sessions:{}},remote=record?.state||empty;
           const next=apply(remote);
-          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · VR, QR, and MA progress saved online and on this device.':'Live online sync connected · All five practice sessions sync across your devices.');return;}
+          if(same(next,normalized(remote))){onStatus('live',record?'Live online sync · VR, QR, and MA progress saved online and on this device.':'Live online sync connected · All practice sessions sync across your devices.');return;}
           onStatus('saving','Saving online… Your answers are saved on this device.');
           const saved=await request({appId:APP_ID,studentName:'Marco',deviceId:device,state:next,
             progressScore:Object.values(next.sessions).flat().reduce((sum,run)=>sum+Object.values(run.answers).reduce((n,e)=>n+e.attempts.length,0),0),
