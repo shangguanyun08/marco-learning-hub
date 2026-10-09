@@ -1,3 +1,7 @@
+# October 8: Review 2
+
+Review 2 repeats the same five Review 1 sessions: **40 / 40 / 40 / 40 / 42** questions, including all 202 questions regardless of later corrections. `mixed-app.js` derives these copies directly from the frozen review bank, preserving prompts, choices, keys, explanations, tricks, and session grouping. Session keys 201–205 and question IDs `r2-review-001` through `r2-review-202` keep scores independent of Review 1 and the original sessions under the existing synchronized app ID. Direct links use `?review2=1` through `?review2=5`. Every session waits for an explicit start, all rounds are untimed, and correction rounds repeat only that session's preceding misses. Saved Review 1 results are preserved.
+
 # October 7: Round 1 Missed Questions · Review
 
 The new section follows original Session 9 and contains **202** verified first-round misses: **40 / 40 / 40 / 40 / 42** in Review Sessions 1–5. Counts by original session are 24, 23, 19, 22, 21, 25, 23, 19, and 26. Extraction uses the saved first-round Missed status, never the current corrected state. The reviewed copies are frozen in `round1-review-data.js` and link back to source question IDs and session numbers. Every source miss appears exactly once.
