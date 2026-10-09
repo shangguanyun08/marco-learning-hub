@@ -4,7 +4,7 @@ const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
 const c={window:{}};for(const f of ['mixed-data.js','round1-review-data.js'])vm.runInNewContext(read(f),c);
 const original=c.window.MARCO_MIXED_VR.questions,review=c.window.MARCO_ROUND1_REVIEW,words=[...original,...review.questions],Core=require('./quiz-core.js'),KEY='marco-zozeck-mixed-360-v1:progress';
 const clone=x=>JSON.parse(JSON.stringify(x));
-function browser(n=1,progress,cycle=1){const dom=new JSDOM('<main id="app"></main>',{url:'https://example.org/?'+(cycle===2?'review2':'review')+'='+n,runScripts:'outside-only'}),w=dom.window;w.HTMLElement.prototype.scrollIntoView=()=>{};let options;w.MarcoOnlineSync={create:o=>(options=o,{start:()=>{},push:()=>{},stop:()=>{}})};if(progress)w.localStorage.setItem(KEY,JSON.stringify(progress));for(const f of ['mixed-data.js','round1-review-data.js','quiz-core.js','mixed-app.js'])w.eval(read(f));return {w,d:w.document,state:()=>JSON.parse(w.localStorage.getItem(KEY)),get options(){return options;},close:()=>w.close()};}
+function browser(n=1,progress,cycle=1){const dom=new JSDOM('<main id="app"></main>',{url:'https://example.org/?'+(cycle===1?'review':'review'+cycle)+'='+n,runScripts:'outside-only'}),w=dom.window;w.HTMLElement.prototype.scrollIntoView=()=>{};let options;w.MarcoOnlineSync={create:o=>(options=o,{start:()=>{},push:()=>{},stop:()=>{}})};if(progress)w.localStorage.setItem(KEY,JSON.stringify(progress));for(const f of ['mixed-data.js','round1-review-data.js','quiz-core.js','mixed-app.js'])w.eval(read(f));return {w,d:w.document,state:()=>JSON.parse(w.localStorage.getItem(KEY)),get options(){return options;},close:()=>w.close()};}
 function answer(b,q,choice){const card=b.d.getElementById('q-'+q.id);[...card.querySelectorAll('[data-choice]')].find(e=>e.dataset.choice===choice).click();card.querySelector('[data-check]').click();}
 test('202 exact unique source misses in 40/40/40/40/42 independent copies',()=>{
  assert.equal(review.questions.length,202);assert.deepEqual(clone(review.metadata.sessions.map(s=>s.questionCount)),[40,40,40,40,42]);assert.equal(new Set(review.questions.map(q=>q.sourceQuestionId)).size,202);assert.equal(new Set(words.map(q=>q.id)).size,562);
@@ -12,7 +12,7 @@ test('202 exact unique source misses in 40/40/40/40/42 independent copies',()=>{
  for(const q of review.questions){const source=original.find(x=>x.id===q.sourceQuestionId);assert.ok(source);assert.equal(source.session,q.sourceSession);assert.equal(q.choices.length,4);assert.equal(new Set(q.choices.map(x=>x.toLowerCase())).size,4);assert.equal(q.choices.filter(x=>x===q.answer).length,1);assert.ok(q.explanation.length>15);assert.ok(q.trick.length>15);assert.ok(q.session>=101&&q.session<=105);}
 });
 test('five review buttons follow Session 9; all wait for Start; final review has 42 questions',()=>{
- for(let n=1;n<=5;n++){const b=browser(n);try{assert.deepEqual([...b.d.querySelectorAll('.session-picker [data-session]')].map(e=>+e.dataset.session),[1,2,3,4,5,6,7,8,9,101,102,103,104,105,201,202,203,204,205]);assert.equal(b.d.querySelectorAll('.question-item').length,0);assert.deepEqual(b.state().sessions,{});b.d.querySelector('[data-start]').click();assert.equal(b.d.querySelectorAll('.question-item').length,n===5?42:40);assert.equal(b.state().sessions[100+n].rounds[0].timeLimitSeconds,undefined);assert.match(b.d.querySelector('.round-heading').textContent,new RegExp('Review Session '+n));assert.equal(b.w.location.search,'?review='+n);}finally{b.close();}}
+ for(let n=1;n<=5;n++){const b=browser(n);try{assert.deepEqual([...b.d.querySelectorAll('.session-picker [data-session]')].map(e=>+e.dataset.session),[1,2,3,4,5,6,7,8,9,101,102,103,104,105,201,202,203,204,205,301,302,303,304,305,401,402,403,404,405]);assert.equal(b.d.querySelectorAll('.question-item').length,0);assert.deepEqual(b.state().sessions,{});b.d.querySelector('[data-start]').click();assert.equal(b.d.querySelectorAll('.question-item').length,n===5?42:40);assert.equal(b.state().sessions[100+n].rounds[0].timeLimitSeconds,undefined);assert.match(b.d.querySelector('.round-heading').textContent,new RegExp('Review Session '+n));assert.equal(b.w.location.search,'?review='+n);}finally{b.close();}}
 });
 test('review rounds 1–4 retry only misses, keep original history, and save first score with red/yellow/green feedback',()=>{
  const before=Core.blank(),base=original.filter(q=>q.session===1);Core.start(before,1,base.map(q=>q.id),'2026-10-07T01:00:00Z');for(const q of base)Core.answer(before,1,q.answer,original,'2026-10-07T01:01:00Z',q.id);Core.finishRound(before,1,'2026-10-07T01:02:00Z');const frozen=JSON.stringify(before.sessions[1]);const b=browser(1,before),qs=review.questions.filter(q=>q.session===101);
@@ -79,4 +79,41 @@ test('Review 2 keeps mastered Review 1 intact, corrects only its own misses, and
   const reload=browser(1,b.state(),2);
   try{assert.match(reload.d.querySelector('.complete-card').textContent,/Review 2 · Session 1 mastered/);}finally{reload.close();}
  }finally{b.close();}
+});
+test('Reviews 3 and 4 preserve all five groups, shuffle questions and every A–D layout, and keep order on reload',()=>{
+ const snapshot=b=>[...b.d.querySelectorAll('.question-item')].map(card=>({id:card.id.replace(/q-r\d+-/,'').replace(/^q-/,''),prompt:card.querySelector('h3').textContent,choices:[...card.querySelectorAll('[data-choice]')].map(e=>e.dataset.choice)}));
+ for(let n=1;n<=5;n++){
+  const prior=[],qs=review.questions.filter(q=>q.session===100+n);
+  for(let cycle=1;cycle<=4;cycle++){
+   const b=browser(n,undefined,cycle);
+   try{
+    assert.deepEqual(b.state().sessions,{});assert.equal(b.d.querySelectorAll('.question-item').length,0);
+    b.d.querySelector('[data-start]').click();const cards=snapshot(b);assert.equal(cards.length,n===5?42:40);
+    for(const q of qs){const card=cards.find(c=>c.id===q.id.replace(/^r1-/,''));assert(card);assert.equal(card.prompt,q.word);assert.deepEqual([...card.choices].sort(),[...q.choices].sort());}
+    if(cycle>=3){
+     for(const previous of prior){assert.notDeepEqual(cards.map(c=>c.id),previous.map(c=>c.id));for(const card of cards)assert.notDeepEqual(card.choices,previous.find(c=>c.id===card.id).choices);}
+     assert.equal(b.state().sessions[100*cycle+n].rounds[0].timeLimitSeconds,undefined);
+     assert.equal(b.w.location.search,`?review${cycle}=${n}`);
+     const reloaded=browser(n,b.state(),cycle);try{assert.deepEqual(snapshot(reloaded),cards);}finally{reloaded.close();}
+    }
+    prior.push(cards);
+   }finally{b.close();}
+  }
+ }
+});
+test('Reviews 3 and 4 score by answer text after shuffling, sync separately, and preserve earlier history',()=>{
+ const seed=browser(1,undefined,2);seed.d.querySelector('[data-start]').click();const source=review.questions.find(q=>q.session===101);answer(seed,{...source,id:source.id.replace(/^r1-/,'r2-')},source.answer);let saved=seed.state();const frozen=JSON.stringify(saved.sessions[201]);seed.close();
+ for(const cycle of [3,4]){
+  const b=browser(1,saved,cycle),qs=review.questions.filter(q=>q.session===101).map(q=>({...q,id:q.id.replace(/^r1-/,`r${cycle}-`)})),key=cycle*100+1;
+  try{
+   b.d.querySelector('[data-start]').click();
+   for(const [i,q]of qs.entries())answer(b,q,i===0?q.choices.find(c=>c!==q.answer):q.answer);
+   b.d.querySelector('[data-submit]').click();assert.equal(b.d.querySelectorAll('.question-item').length,1);
+   assert.equal(b.state().sessions[key].rounds[1].ids[0],qs[0].id);answer(b,qs[0],qs[0].answer);b.d.querySelector('[data-submit]').click();
+   assert.match(b.d.querySelector(`[data-session="${key}"]`).textContent,/39\/40 correct/);assert(b.d.querySelector(`[data-session="${key}"]`).classList.contains('mastered'));
+   saved=b.state();assert.equal(JSON.stringify(saved.sessions[201]),frozen);
+   const remote=browser(1,undefined,cycle);try{remote.options.onRemote(saved);assert.match(remote.d.querySelector('.complete-card').textContent,new RegExp(`Review ${cycle} · Session 1 mastered`));assert.equal(JSON.stringify(remote.state()),JSON.stringify(saved));remote.d.querySelector('[data-view="results"]').click();assert.equal(remote.w.location.search,`?review${cycle}=1`);assert.equal(remote.w.location.hash,'#results');remote.d.querySelector(`[data-session="${key+1}"]`).click();assert.equal(remote.w.location.search,`?review${cycle}=2`);assert.equal(remote.state().sessions[key+1],undefined);}finally{remote.close();}
+  }finally{b.close();}
+ }
+ assert(saved.sessions[301].completedAt);assert(saved.sessions[401].completedAt);
 });

@@ -1,3 +1,7 @@
+# October 8: Reviews 3 and 4
+
+Each new review repeats the same five groups of **40 / 40 / 40 / 40 / 42** questions, with independent scores under session keys 301–305 and 401–405 and question prefixes `r3-review-` and `r4-review-`. Links use `?review3=1` through `?review3=5` and `?review4=1` through `?review4=5`. Question order uses the existing deterministic per-session/per-round shuffle. First-round A–D layouts are shuffled and checked against all earlier reviews so each new layout differs; seeded ordering stays stable on refresh and across devices. All prompts, answer texts, explanations, tricks, and session membership are preserved. Sessions wait for Start, remain untimed, and retry only misses. Reviews 1 and 2 and their history are unchanged.
+
 # October 8: Review 2
 
 Review 2 repeats the same five Review 1 sessions: **40 / 40 / 40 / 40 / 42** questions, including all 202 questions regardless of later corrections. `mixed-app.js` derives these copies directly from the frozen review bank, preserving prompts, choices, keys, explanations, tricks, and session grouping. Session keys 201–205 and question IDs `r2-review-001` through `r2-review-202` keep scores independent of Review 1 and the original sessions under the existing synchronized app ID. Direct links use `?review2=1` through `?review2=5`. Every session waits for an explicit start, all rounds are untimed, and correction rounds repeat only that session's preceding misses. Saved Review 1 results are preserved.

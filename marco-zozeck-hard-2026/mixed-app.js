@@ -8,8 +8,23 @@
     questions:review.questions.map(q=>({...q,id:q.id.replace(/^r1-/, 'r2-'),session:q.session+100,choices:[...q.choices]})),
     sessions:review.metadata.sessions.map(s=>({...s,number:s.number+100,label:`Review 2 · Session ${s.reviewNumber}`}))
   };
-  const words = [...originalWords,...review.questions,...review2.questions];
-  const sessions = [...metadata.sessions,...review.metadata.sessions,...review2.sessions];
+  const repeats = [{...review2,cycle:2}];
+  for(const cycle of [3,4]) {
+    const previousBanks=[review.questions,...repeats.map(r=>r.questions)];
+    const questions=review.questions.map((q,index)=>{
+      const copy={...q,id:q.id.replace(/^r1-/,`r${cycle}-`),session:q.session+(cycle-1)*100,choices:[...q.choices]};
+      const previousOrders=previousBanks.map(bank=>JSON.stringify(Core.options(bank[index],1,[],bank[index].session)));
+      // Keep the seeded shuffle stable on reload; avoid repeating an earlier A–D layout.
+      for(let shift=0;shift<4;shift++) {
+        copy.choices=[...q.choices.slice(shift),...q.choices.slice(0,shift)];
+        if(!previousOrders.includes(JSON.stringify(Core.options(copy,1,[],copy.session))))break;
+      }
+      return copy;
+    });
+    repeats.push({cycle,questions,sessions:review.metadata.sessions.map(s=>({...s,number:s.number+(cycle-1)*100,label:`Review ${cycle} · Session ${s.reviewNumber}`}))});
+  }
+  const words = [...originalWords,...review.questions,...repeats.flatMap(r=>r.questions)];
+  const sessions = [...metadata.sessions,...review.metadata.sessions,...repeats.flatMap(r=>r.sessions)];
   const sessionInfo = number => sessions.find(s=>s.number===number);
   const sessionLabel = number => sessionInfo(number)?.label || `Session ${number}`;
   const sessionSize = number => words.filter(q=>q.session===number).length;
@@ -40,7 +55,8 @@
   }
   let progress = mergeProgress(read(STORAGE_KEY),null);
   const params = new URLSearchParams(location.search);
-  let selected = params.has('review2') ? 200+Number(params.get('review2')) : params.has('review') ? 100+Number(params.get('review')) : Number(params.get('session')) || Number(read(SELECTION_KEY)) || 1;
+  const reviewCycle=[4,3,2,1].find(cycle=>params.has(cycle===1?'review':'review'+cycle));
+  let selected = reviewCycle ? reviewCycle*100+Number(params.get(reviewCycle===1?'review':'review'+reviewCycle)) : Number(params.get('session')) || Number(read(SELECTION_KEY)) || 1;
   if (!sessionInfo(selected)) selected = 1;
   let view = location.hash === '#results' ? 'results' : 'practice';
   let sync = null, notice = '', storageError = false;
@@ -69,7 +85,7 @@
       const status=record?.completedAt?'Mastered ✓':r?`Round ${r.number} · ${count(r)}/${r.ids.length} answered`:'Not started';
       return `<button data-session="${s.number}" class="${selected===s.number?'selected':''} ${record?.completedAt?'mastered':''}" aria-pressed="${selected===s.number}" ${selected===s.number?'aria-current="page"':''}><span>${esc(sessionLabel(s.number))}</span><strong>${size} questions</strong><strong class="first-round-score">${first?.finishedAt?`Round 1: ${correct(first)}/${size} correct`:`Round 1: —/${size} correct`}</strong><small>${s.types.synonym} synonyms · ${s.types.completion} completions${s.types.definition?` · ${s.types.definition} meaning`:''}</small><small>${esc(status)}</small></button>`;
     }).join('');
-    return `<section class="session-picker mixed-picker" aria-label="Practice and review sessions"><div class="session-group"><h2>Mixed Practice · Sessions 1–9</h2><div class="session-group-grid">${cards(metadata.sessions)}</div></div>${review.questions.length?`<div class="session-group review-session-group"><h2>Review 1 · Round 1 Missed Questions</h2><p>${review.metadata.questionCount} questions missed in the first round of Sessions 1–9. Four sessions of 40, then 42 in Session 5. New review scores start here; earlier results stay saved.</p><div class="session-group-grid">${cards(review.metadata.sessions)}</div></div><div class="session-group review-session-group"><h2>Review 2 · Repeat the Same 5 Sessions</h2><p>Repeat all ${review.metadata.questionCount} questions from Review 1 in the same five groups: 40, 40, 40, 40, and 42 questions. Every round is untimed, with fresh scores for Review 2.</p><div class="session-group-grid">${cards(review2.sessions)}</div></div>`:''}</section>`;
+    return `<section class="session-picker mixed-picker" aria-label="Practice and review sessions"><div class="session-group"><h2>Mixed Practice · Sessions 1–9</h2><div class="session-group-grid">${cards(metadata.sessions)}</div></div>${review.questions.length?`<div class="session-group review-session-group"><h2>Review 1 · Round 1 Missed Questions</h2><p>${review.metadata.questionCount} questions missed in the first round of Sessions 1–9. Four sessions of 40, then 42 in Session 5. New review scores start here; earlier results stay saved.</p><div class="session-group-grid">${cards(review.metadata.sessions)}</div></div>${repeats.map(r=>`<div class="session-group review-session-group"><h2>Review ${r.cycle} · ${r.cycle===2?'Repeat the Same 5 Sessions':'Shuffled Practice'}</h2><p>Repeat all ${review.metadata.questionCount} questions from Review 1 in the same five groups: 40, 40, 40, 40, and 42 questions. ${r.cycle>=3?'Question order and A–D choices are shuffled within each session. ':''}Every round is untimed, with fresh scores for Review ${r.cycle}.</p><div class="session-group-grid">${cards(r.sessions)}</div></div>`).join('')}`:''}</section>`;
   }
   function questionStatus(number,id) {
     const attempts=(progress.sessions[number]?.rounds||[]).map(r=>r.answers[id]).filter(Boolean);
@@ -103,9 +119,9 @@
   }
   function render() {
     const priorStatus=document.querySelector('[data-online-sync]')?.textContent;
-    app.innerHTML=`<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck · Mixed Practice &amp; Review</h1><p class="course-intro">360 questions across 9 sessions of 40, mixing topics and difficulty. Every round is untimed. Rounds 2, 3, and onward repeat only missed questions until mastered. Completed sessions turn green. Review 1 revisits first-round misses; Review 2 repeats the same five sessions with independent scores.</p></div><nav aria-label="Practice and results"><button data-view="practice" class="${view==='practice'?'active':''}" aria-pressed="${view==='practice'}">Practice</button><button data-view="results" class="${view==='results'?'active':''}" aria-pressed="${view==='results'}">Results &amp; tricks</button></nav></header>${sessionPicker()}<p class="sync-note" role="status" aria-live="polite"><span aria-hidden="true"></span><b data-online-sync="${APP_ID}">${esc(priorStatus||'Connecting to live online sync…')}</b></p>${storageError?'<p class="notice error">This browser could not save locally. Keep the page open and check the online-sync status.</p>':''}${notice?`<p class="notice" role="status">${esc(notice)}</p>`:''}<div id="workspace">${view==='results'?results():practice()}</div><footer class="site-footer"><a href="../">← Main Learning Hub</a><a href="./archive/">Previous Sessions 1–14 &amp; Reviews 1A–3B</a><span>360 original questions${review.questions.length?` + ${review.questions.length} questions in each of 2 reviews`:""} · difficulty labels are practice estimates</span></footer><details class="bank-note"><summary>How this bank was assembled</summary><p>121 clean questions retained from the 124-question review bank, plus all 227 curated historical misses, plus 12 other recorded historical misses. Three ambiguous review targets were excluded; competing distractors and one grammar mismatch were cleaned up in nine retained items. The latest October 4 nine VR misses are excluded. Old answers and scores remain in the archive, unchanged.</p></details>`;
+    app.innerHTML=`<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck · Mixed Practice &amp; Review</h1><p class="course-intro">360 questions across 9 sessions of 40, mixing topics and difficulty. Every round is untimed. Rounds 2, 3, and onward repeat only missed questions until mastered. Completed sessions turn green. Review 1 revisits first-round misses. Reviews 2, 3, and 4 repeat the same five sessions with independent scores; Reviews 3 and 4 shuffle question order and A–D choices.</p></div><nav aria-label="Practice and results"><button data-view="practice" class="${view==='practice'?'active':''}" aria-pressed="${view==='practice'}">Practice</button><button data-view="results" class="${view==='results'?'active':''}" aria-pressed="${view==='results'}">Results &amp; tricks</button></nav></header>${sessionPicker()}<p class="sync-note" role="status" aria-live="polite"><span aria-hidden="true"></span><b data-online-sync="${APP_ID}">${esc(priorStatus||'Connecting to live online sync…')}</b></p>${storageError?'<p class="notice error">This browser could not save locally. Keep the page open and check the online-sync status.</p>':''}${notice?`<p class="notice" role="status">${esc(notice)}</p>`:''}<div id="workspace">${view==='results'?results():practice()}</div><footer class="site-footer"><a href="../">← Main Learning Hub</a><a href="./archive/">Previous Sessions 1–14 &amp; Reviews 1A–3B</a><span>360 original questions${review.questions.length?` + ${review.questions.length} questions in each of 4 reviews`:""} · difficulty labels are practice estimates</span></footer><details class="bank-note"><summary>How this bank was assembled</summary><p>121 clean questions retained from the 124-question review bank, plus all 227 curated historical misses, plus 12 other recorded historical misses. Three ambiguous review targets were excluded; competing distractors and one grammar mismatch were cleaned up in nine retained items. The latest October 4 nine VR misses are excluded. Old answers and scores remain in the archive, unchanged.</p></details>`;
   }
-  function setView(next) {view=next;history.replaceState(null,'',`${selected>200?'?review2='+(selected-200):selected>100?'?review='+(selected-100):'?session='+selected}${view==='results'?'#results':''}`);render();}
+  function setView(next) {view=next;const cycle=Math.floor(selected/100);const query=cycle?`?review${cycle===1?'':cycle}=${selected%100}`:`?session=${selected}`;history.replaceState(null,'',`${query}${view==='results'?'#results':''}`);render();}
   app.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button||button.disabled)return;
     if(button.dataset.session){selected=Number(button.dataset.session);notice='';write(SELECTION_KEY,selected);setView('practice');document.getElementById('workspace').scrollIntoView({block:'start'});return;}
