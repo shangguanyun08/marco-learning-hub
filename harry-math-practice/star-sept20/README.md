@@ -1,3 +1,7 @@
+# October 8: Two more October 4 practice sessions
+
+The October 4 group now has six sessions. Sessions 5 and 6 (`oct4-d`, `oct4-e`) each add 15 fresh questions covering the same skills, in the existing easy-to-hard order. `oct4-extra-data.js` retains the six conversion blanks at Q2, seven multiplication boxes, input/output tables, fractional-weight line plots, and box plots. Perpendicular lines remain excluded. All sessions are untimed with first-try scoring, one retry, explanations, and independent synced records. Earlier question banks and saved attempts are unchanged.
+
 # Dated STAR Math follow-up groups
 
 ## October 4 STAR Math

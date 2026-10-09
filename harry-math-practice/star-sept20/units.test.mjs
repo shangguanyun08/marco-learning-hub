@@ -14,6 +14,53 @@ function boot(id='oct4-original',saved){
 function submit(t,values){t.d.querySelectorAll('#q2 input[name="unit-answer"]').forEach((el,i)=>el.value=values[i]??'');t.d.querySelector('#q2 form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 const answers=[[12,3,36,16,2,4],[24,6,72,32,6,8],[36,12,108,48,10,12],[60,18,144,80,14,20]];
 const ids=['oct4-original','oct4-a','oct4-b','oct4-c'];
+test('Sessions 5 and 6 have 15 fresh skill-matched questions and independently checked answer keys',()=>{
+ const rational=s=>{const m=s.match(/^(?:(\d+) )?(\d+)\/(\d+)/);return m?Number(m[1]||0)+Number(m[2])/Number(m[3]):parseFloat(s);};
+ const configs=[
+  {id:'oct4-d',zero:12,units:[48,21,180,64,12,16],decimal:64.715,ratio:[24,40],mixed:[4,5,6],sum:[7,9,40],scale:12,remainder:[785,60],product:3100,division:[4.68,.6],earn:[282,12],equation:'g = 5r − 6',rule:[3,-2],scores:[34,20,44,28,40,24,36]},
+  {id:'oct4-e',zero:16,units:[72,24,216,96,16,24],decimal:91.638,ratio:[45,60],mixed:[7,4,5],sum:[5,7,28],scale:11,remainder:[926,80],product:4640,division:[5.76,.8],earn:[294,12],equation:'s = 7g − 4',rule:[5,1],scores:[64,54,72,48,68,52,60]}
+ ];
+ for(const c of configs){const t=boot(c.id),s=t.session,q=n=>s.questions.find(q=>q.source===n),key=n=>q(n).choices[q(n).correct];
+  assert.equal(t.d.querySelectorAll('.session-link').length,6);assert.equal(t.d.querySelectorAll('.question').length,15);
+  assert.match(t.d.querySelector('#group-description').textContent,/6 sessions of 15/);
+  assert.deepEqual(Array.from(s.questions,q=>q.source),[3002,7,17,12,32,31,27,3005,3009,23,15,6,8,34,25]);
+  assert.equal(t.d.querySelectorAll('#q2 input').length,6);assert.equal(t.d.querySelectorAll('#q9 input').length,7);
+  assert.equal(t.d.querySelectorAll('.oct4-choice-table').length,4);assert.equal(t.d.querySelectorAll('.oct4-diagram').length,5);
+  assert.equal(t.d.querySelectorAll('.answer,.correct-option,.wrong-option').length,0);
+  for(const item of s.questions){assert(item.explanation.length>20);if(item.choices){assert.equal(new Set(item.choices).size,4);assert(item.correct>=0&&item.correct<4);}if(![7,3009].includes(item.source))assert(!t.w.HARRY_SEPT_PRACTICE.filter(other=>other.id!==c.id).some(other=>other.questions.some(old=>old.prompt===item.prompt)));}
+  assert.equal(q(3002).correct,c.zero);assert.deepEqual(Array.from(q(7).blanks,b=>b.answer),c.units);
+  assert.equal(Number(key(17)),c.decimal);
+  q(12).choices.forEach((choice,i)=>{const [a,b]=choice.split(':').map(Number);assert.equal(a*c.ratio[1]===b*c.ratio[0],i===q(12).correct);});
+  assert.equal(key(32),(c.mixed[0]*c.mixed[2]+c.mixed[1])+'/'+c.mixed[2]);
+  q(31).choices.forEach((choice,i)=>assert.equal(Math.abs(rational(choice)-(c.sum[0]+c.sum[1])/c.sum[2])<1e-10,i===q(31).correct));
+  assert.equal(key(27),'y = '+c.scale+'n');
+  q(3005).choices.forEach((choice,i)=>{const [quot,rem]=choice.split(' R ').map(Number);assert.equal(quot*c.remainder[1]+rem===c.remainder[0]&&rem<c.remainder[1],i===q(3005).correct);});
+  assert.equal(q(3009).correct,c.product);assert.equal(q(3009).parts[0]+q(3009).parts[1],c.product);
+  assert(Math.abs(Number(key(23))-c.division[0]/c.division[1])<1e-10);assert.equal(parseFloat(key(15)),c.earn[0]/c.earn[1]);assert.equal(key(6),c.equation);
+  const table=q(8).visual;table.ys.forEach((ys,i)=>assert.equal(ys.every((y,j)=>y===c.rule[0]*table.xs[j]+c.rule[1]),i===q(8).correct));
+  const plot=q(34).visual,all=plot.labels.flatMap((label,i)=>Array(plot.counts[i]).fill(rational(label))).sort((a,b)=>b-a);
+  q(34).choices.forEach((choice,i)=>assert.equal(rational(choice)===all[0]+all[1],i===q(34).correct));
+  const sorted=c.scores.toSorted((a,b)=>a-b),five=[sorted[0],sorted[1],sorted[3],sorted[5],sorted[6]];
+  q(25).visual.sets.forEach((set,i)=>assert.equal(JSON.stringify(set)===JSON.stringify(five),i===q(25).correct));t.close();
+ }
+});
+test('New sessions complete, retain retries on reload, and merge without changing earlier records',()=>{
+ const at='2026-10-09T04:00:00.000Z',old={version:1,sessions:{'oct4-c':[{id:'existing',startedAt:at,completedAt:null,answers:{3002:{attempts:[{choice:'18',correct:true,at}]}}}]}};
+ const submitQuestion=(t,q,value)=>{const form=t.d.querySelector(`form[data-source="${q.source}"]`);if(q.type==='fill-blanks'||q.type==='split-sum')form.querySelectorAll('input').forEach((el,i)=>el.value=value[i]);else if(q.type==='number')form.querySelector('input').value=value;else form.querySelector(`input[value="${value}"]`).checked=true;form.dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));};
+ let saved=old;
+ for(const id of ['oct4-d','oct4-e']){const t=boot(id,saved);
+  for(const q of t.session.questions){const value=q.type==='fill-blanks'?q.blanks.map(b=>b.answer):q.type==='split-sum'?[...q.expansion,...q.parts]:q.correct;
+   if(id==='oct4-e'&&q.source===3002)submitQuestion(t,q,'15');
+   submitQuestion(t,q,value);
+  }
+  const score=id==='oct4-d'?15:14;assert.equal(t.d.querySelector('#score').textContent,score+' / 15');assert.equal(t.d.querySelector('#completion').hidden,false);
+  assert(t.d.querySelector(`a[href="?session=${id}"]`).classList.contains('completed'));
+  saved=JSON.parse(t.w.localStorage.getItem(KEY));assert(t.w.HarrySeptSync.valid(saved));
+  const merged=JSON.parse(JSON.stringify(t.w.HarrySeptSync.merge(saved,old)));assert.deepEqual(merged.sessions['oct4-c'],old.sessions['oct4-c']);assert(merged.sessions[id][0].completedAt);
+  const reloaded=boot(id,merged);assert.equal(reloaded.d.querySelector('#score').textContent,score+' / 15');if(id==='oct4-e'){assert.match(reloaded.d.querySelector('#q1 .feedback').textContent,/second try/);assert.equal(merged.sessions[id][0].answers[3002].attempts[0].choice,'15');}reloaded.close();t.close();
+ }
+ assert.equal(saved.sessions['oct4-d'][0].answers[3002].attempts[0].choice,'12');assert.equal(saved.sessions['oct4-e'][0].answers[3002].attempts[1].choice,'16');
+});
 test('All October 4 unit names are spelled out with correct singular and plural labels',()=>{
  for(const [i,id] of ids.entries()){const t=boot(id),q=t.session.questions[1];
  assert.deepEqual(Array.from(q.blanks,b=>b.unit),['inches','feet','inches','ounces','pints','quarts']);

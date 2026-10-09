@@ -12,5 +12,5 @@
     session.questions=order.map(source=>bySource.get(source));
     session.description=session.description.replace(' as Questions 14–16','').replace('13 original wrong questions','12 selected wrong questions').replace('16 fresh questions: 13 matching','15 fresh questions: 12 matching')+' The perpendicular-lines question has been removed. Ordered from easier skills to harder multi-step questions and graphs.';
   }
-  window.HARRY_STAR_GROUPS.find(g=>g.id==='2026-10-04').description='STAR Math: 34 checked, 21 correct choices and 13 wrong. Practice now includes 12 of those skills plus 3 requested October 1 reviews. Four sessions of 15 questions; perpendicular lines removed.';
+  window.HARRY_STAR_GROUPS.find(g=>g.id==='2026-10-04').description=`STAR Math: 34 checked, 21 correct choices and 13 wrong. Practice now includes 12 of those skills plus 3 requested October 1 reviews. ${window.HARRY_SEPT_PRACTICE.filter(s=>s.group==='2026-10-04').length} sessions of 15 questions; perpendicular lines removed.`;
 })();
