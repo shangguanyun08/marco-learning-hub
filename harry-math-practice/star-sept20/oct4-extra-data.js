@@ -5,9 +5,9 @@
   const division=(a,b)=>({source:3002,sourceLabel:'October 1 review · Division with zeros',skill:'Division with zeros',type:'number',prompt:`Calculate with the hidden zero method: ${a.toLocaleString('en-US')} ÷ ${b.toLocaleString('en-US')} = ____`,correct:a/b,explanation:`Divide both numbers by 100: ${a/100} ÷ ${b/100} = ${a/b}. Check: ${a/b} × ${b.toLocaleString('en-US')} = ${a.toLocaleString('en-US')}.`});
   const units=amounts=>{
     const base=reference.questions.find(q=>q.source===7);
-    const from=['feet','yards','yards','pounds','quarts','gallons'],factors=[12,3,36,16,2,4];
-    return {source:7,sourceLabel:base.sourceLabel,skill:base.skill,type:'fill-blanks',prompt:base.prompt,explanation:base.explanation,
-      blanks:base.blanks.map((blank,i)=>({...blank,label:`${amounts[i]} ${from[i]} =`,answer:amounts[i]*factors[i]}))};
+    const from=['feet','yards','yards','pounds','quarts','gallons'],singular=['foot','yard','yard','pound','quart','gallon'],factors=[12,3,36,16,2,4];
+    return {source:7,sourceLabel:base.sourceLabel,skill:base.skill,type:'fill-blanks',prompt:base.prompt,explanation:amounts.every(amount=>amount===1)?'Length: 1 foot = 12 inches; 1 yard = 3 feet = 36 inches. Weight: 1 pound = 16 ounces. Volume: 1 quart = 2 pints; 1 gallon = 4 quarts.':base.explanation,
+      blanks:base.blanks.map((blank,i)=>({...blank,label:`${amounts[i]} ${amounts[i]===1?singular[i]:from[i]} =`,answer:amounts[i]*factors[i]}))};
   };
   const remainder=(a,b,choices,correct)=>({...q(3005,`Calculate: ${a} ÷ ${b} = ____`,choices,correct,`${b} × ${Math.floor(a/b)} = ${b*Math.floor(a/b)}. Subtract from ${a}: ${a%b} remains. The remainder must be smaller than ${b}. Answer: ${choices[correct]}.`),sourceLabel:'October 1 review · Division with a remainder'});
   const split=(factor,number)=>({source:3009,sourceLabel:'October 1 review · Friendly-number multiplication',skill:'Friendly-number multiplication',type:'split-sum',prompt:`Use friendly numbers: ${factor} × ${number} = ${factor} × (100 + ${number-100})`,expansion:[factor,100,factor,number-100],parts:[factor*100,factor*(number-100),factor*number],correct:factor*number,explanation:'Multiply the two parts, then add them together. Fill all seven boxes to show your method.'});
@@ -33,7 +33,7 @@
   ];
   const e=[
     division(9600,600),
-    units([6,8,6,6,8,6]),
+    units([1,1,1,1,1,1]),
     q(17,'Write (9 × 10) + (1 × 1) + (6 × 1/10) + (3 × 1/100) + (8 × 1/1000) in standard form.',['91.638','91.683','910.638','91.368'],0,'90 + 1 + 0.6 + 0.03 + 0.008 = 91.638. The 6 is in the tenths place, 3 in hundredths, and 8 in thousandths.'),
     q(12,'Which ratio is equivalent to 45:60?',['12:9','9:15','15:12','9:12'],3,'Divide both parts by 5: 45 ÷ 5 = 9 and 60 ÷ 5 = 12. Keep the same order: 9:12.'),
     q(32,'Which improper fraction is equal to 7 4/5?',['35/5','39/5','28/5','42/5'],1,'Seven wholes make 7 × 5 = 35 fifths. Add 4 fifths to get 39/5.'),
