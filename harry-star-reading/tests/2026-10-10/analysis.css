@@ -1,0 +1,8 @@
+.analysis{border:1px solid var(--line);border-radius:13px;padding:22px 26px;margin:0 0 28px;font-size:17px}
+.analysis h2{font:700 27px Georgia,serif;margin:0 0 12px}.analysis h3{font-size:19px;margin:26px 0 8px}
+.analysis summary{cursor:pointer;font-weight:700;padding:12px 0;color:var(--teal)}.analysis details{border-top:1px solid var(--line);margin-top:14px}
+.analysis p{margin:12px 0}.practice-plan{padding-left:25px}.practice-plan li{margin:12px 0}
+.table-scroll{overflow-x:auto;margin:20px 0}table{width:100%;border-collapse:collapse;text-align:left}caption{text-align:left;font-weight:650;margin-bottom:12px}th,td{border:1px solid var(--line);padding:12px;vertical-align:top}th{font-weight:700}td a{display:inline-block;padding:3px 5px}
+.question-skill{font-size:14px;color:var(--muted);margin:-10px 0 15px}.comparison-table{font-size:var(--question-size);margin:22px 0}
+.large-text .analysis{font-size:20px}.large-text .explanation{font-size:21px}
+@media(max-width:600px){.analysis{padding:18px 16px}th,td{padding:9px 7px}.skill-table{font-size:15px}.comparison-table{font-size:18px}}
