@@ -93,7 +93,7 @@ test('Every revised session completes at 15/15 with synchronized multi-blank wor
 });
 test('Remaining questions keep easy-to-hard order and unchanged content; prior groups are untouched',()=>{
  const t=boot(),expected=[3002,7,17,12,32,31,27,3005,3009,23,15,6,8,34,25];
- for(const session of t.w.HARRY_SEPT_PRACTICE){const before=t.beforeOrder.find(s=>s.id===session.id);
+ for(const before of t.beforeOrder){const session=t.w.HARRY_SEPT_PRACTICE.find(s=>s.id===before.id);assert(session);
    if(session.group!=='2026-10-04'){assert.deepEqual(JSON.parse(JSON.stringify(session)),before);continue;}
    assert.deepEqual(Array.from(session.questions,q=>q.source),expected);
    for(const q of session.questions)assert.deepEqual(JSON.parse(JSON.stringify(q)),before.questions.find(old=>old.source===q.source));

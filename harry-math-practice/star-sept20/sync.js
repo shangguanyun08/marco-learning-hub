@@ -2,7 +2,7 @@
   'use strict';
   const APP_ID='harry-star-sept20-four-sessions-v1';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
-  const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c','oct4-d','oct4-e'];
+  const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c','oct4-d','oct4-e','oct10-original','oct10-a','oct10-b'];
   const validTyped=(id,source,value)=>typeof value==='string'&&(
     (id.startsWith('oct4-')&&source==='7'&&/^\d{1,15}(?: \| \d{1,15}){5}$/.test(value))||
     (id.startsWith('oct4-')&&source==='3002'&&/^\d{1,15}$/.test(value))||
@@ -60,7 +60,7 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.entries(run.answers).filter(([source])=>!id.startsWith('oct4-')||source!=='29').map(([,entry])=>entry);
-          const expected=id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          const expected=id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
           if(!run.completedAt&&entries.length===expected&&entries.every(e=>e.attempts.length===2||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });

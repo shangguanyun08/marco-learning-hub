@@ -66,6 +66,16 @@ Attempts include timestamps and are saved under the isolated localStorage key `h
 
 Run all old and new regression tests with `npm test` in `harry-math-practice/`. Tests cover 84-item coverage, unchanged originals, independently calculated keys, first-try scoring, retries and reveal, reload persistence, separate session scores, completed runs, and retained history. Browser QA additionally covers mobile layout, navigation, and actual radio-button submissions. Test submissions are made only on localhost; published learner scores remain untouched.
 
+## October 10 STAR Math
+
+Added `oct10-original`, `oct10-a`, and `oct10-b` under October 10, 2026. Each session contains 14 questions. Checked all 34 question counters and final selected options in the recording `star math Renaissance - Google Chrome 2026-10-10 15-47-08.mp4` (19:26). Frames were decoded densely around each selected-answer interval, retaining the last highlighted frame before advancing; exact-seek boundary frames were not trusted. Q8 changed to the correct answer before advancing and is excluded. No unanswered questions were inferred. Confirmed misses: 1, 6, 10, 14, 17, 19, 22, 25, 27, 29, 30, 32, 33, 34. The review count is 20 correct / 14 wrong, not an official STAR score.
+
+Original prompts and choices are transcribed, unit abbreviations expanded, and angle/number-line/radius diagrams rebuilt without selected-answer highlights. Similar sets use fresh numbers and answer positions, matched by stable original question number. The same estimated easy-to-hard progression is used in all three sets. Earlier sessions, identifiers and saved attempts are unchanged. Sync recognizes the three new IDs and their 14-question completion count. Private video, screenshots and full answer audit stay outside the public repository.
+
+`oct10.test.mjs` checks independent calculations for all 42 items, visuals, original-source coverage, prior-bank preservation, navigation, blank/duplicate submission handling, first-try scoring, second-try reveal, completion, sync and reload persistence. Browser checks are performed on localhost so learner records are not modified.
+
+Known pre-existing regression-test mismatch: `units.test.mjs` still expects the older Session 6 October 4 conversion quantities and multirow table, while the committed `oct4-extra-data.js` already uses single-unit conversions and a single-row table. October 10 does not change that session's content.
+
 ## October 4 easy-to-hard display order
 
 Parent-requested removal: the perpendicular-lines question (previously Q3, stable source 29) is no longer active in any of the four October 4 sessions. Each session now contains 15 questions. The remaining order and Q2 conversions stay intact. Archived question metadata is retained in `retiredQuestions`, and raw saved attempts remain in exports/sync; source 29 is excluded from current scores and completion checks. The original recording audit remains 13 mistakes out of 34—only the practice selection changes.

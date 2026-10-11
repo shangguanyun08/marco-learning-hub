@@ -6,7 +6,7 @@
   const visibleBank=()=>groups?bank.filter(s=>s.group===groupId()):bank;
   const KEY='harry-star-sept20-four-sessions-v1';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const math=s=>esc(s).replace(/\b(\d+)\/(\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>');
+  const math=s=>esc(s).replace(/\b(\d+|[a-zA-Z])\/(\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>');
   const date=s=>new Date(s).toLocaleString(undefined,{dateStyle:'medium',timeStyle:'short'});
   let sync=null, syncKind='connecting', syncMessage='Connecting… Your saved answers will sync automatically.';
   let storageOK=true, state={version:1,sessions:{}};
