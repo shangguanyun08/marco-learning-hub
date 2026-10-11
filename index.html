@@ -142,7 +142,7 @@
 
 
 
-      <section class="archive-section" aria-labelledby="archive-heading">
+      <section id="archives" class="archive-section" aria-labelledby="archive-heading">
         <details class="archive-disclosure">
           <summary class="section-heading">
             <div>
@@ -156,6 +156,19 @@
           </summary>
 
           <div class="archive-content">
+            <section class="archive-group" aria-labelledby="reading-archive-heading">
+              <div class="archive-group-heading"><div><span class="archive-owner">Reference reading</span><h3 id="reading-archive-heading">Archived reading</h3></div><span>1 book</span></div>
+              <div class="card-grid archive-grid">
+                <article class="site-card archived" id="how-to-live-better-archive">
+                  <div class="card-topline"><span>ARCHIVED · 中文阅读</span><small>34 sections · 677 entries</small></div>
+                  <div class="icon">34</div>
+                  <h3 lang="zh-CN">高性价比人生指南</h3>
+                  <p>The complete book with each section folded to its title. Open any section independently, search the full text, or expand and collapse all sections.</p>
+                  <ul><li>All original content and citations</li><li>Mobile-friendly reading</li><li>Source attribution preserved</li></ul>
+                  <a href="./how-to-live-better/">Read the archived book <span>→</span></a>
+                </article>
+              </div>
+            </section>
             <section class="archive-group" aria-labelledby="marco-archive-heading">
               <div class="archive-group-heading">
                 <div>
@@ -384,5 +397,15 @@
     </main>
     <script src="./shared-math-mastery.js?v=1" defer></script>
     <script src="./shared-activity-dashboard.js?v=5" defer></script>
+  <script>
+      function revealArchives(){
+        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive'].includes(location.hash)){
+          document.querySelector('.archive-disclosure').open=true;
+          requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
+        }
+      }
+      addEventListener('hashchange',revealArchives);
+      revealArchives();
+    </script>
   </body>
 </html>
