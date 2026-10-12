@@ -35,7 +35,7 @@
       }
       if(!q)throw new Error('No fresh-number variant for '+id);
       // Change the answer position too, except for standard quantitative comparisons.
-      if(!q.columns){const old=q.correct;q.choices.push(q.choices.shift());if(q.choiceGraphs)q.choiceGraphs.push(q.choiceGraphs.shift());if(q.audit.order)q.audit.order.push(q.audit.order.shift());q.correct=(old+3)%4;}
+      if(!q.columns){const old=q.correct;q.choices.push(q.choices.shift());if(q.choiceGraphs){q.choiceGraphs.push(q.choiceGraphs.shift());q.choices=q.choices.map((_,i)=>'Graph '+'ABCD'[i]);}if(q.audit.order)q.audit.order.push(q.audit.order.shift());q.correct=(old+3)%4;}
     }
     q.id='r2:'+id;q.sourceQuestionId=id;return q;
   };

@@ -61,7 +61,7 @@ console.log(JSON.stringify({checkedQuestions:checked,coreQuestions:90,allocation
 
 const givens=q=>JSON.stringify([q.prompt,q.table,q.graph,q.series,q.diagram,q.columns,q.choiceGraphs,q.concept==='direction'?q.choices:null]);
 for(const kind of Object.keys(C.group))for(let seed=1;seed<=500;seed++){
- const q=C.question(kind,seed),review=C.round2Question(q.id);checkQuestion(review);
+ const q=C.question(kind,seed),review=C.round2Question(q.id);checkQuestion(review);if(review.choiceGraphs)assert.deepEqual(copy(review.choices),['Graph A','Graph B','Graph C','Graph D']);
  assert.equal(review.concept,q.concept);assert.equal(review.audit.v,q.audit.v);assert.notEqual(givens(review),givens(q),q.id+' needs different numbers');
  assert.deepEqual(review,C.round2Question(q.id));
 }
