@@ -54,16 +54,18 @@
   function renderDays(){
     let completedDays=0;
     document.querySelector('#sessions').innerHTML=visibleBank().map((session,i)=>{
-      const history=state.sessions[session.id]||[],latest=history.at(-1),r=latest?engine.stats(session,latest):null;
+      const savedHistory=state.sessions[session.id]||[],history=session.weekly?[window.HarryWeekProgress.firstRun(savedHistory)].filter(Boolean):savedHistory,latest=history.at(-1),r=latest?engine.stats(session,latest):null;
       const completed=history.filter(run=>engine.stats(session,run).finished===session.questions.length)
         .sort((a,b)=>(a.completedAt||a.startedAt).localeCompare(b.completedAt||b.startedAt)).at(-1);
       const score=completed?engine.stats(session,completed):null;
       const status=completed?'completed':r?.attempted?'in-progress':'not-started';
       if(completed)completedDays++;
       const repeat=completed&&latest!==completed&&r.finished!==r.total;
-      return `<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}</b><span>${i?'Fresh check '+String.fromCharCode(64+i):'Original retry'}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>Latest completed first-try score</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;
+      return `<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}</b><span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;
     }).join('');
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
+    window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
+    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Each day has its own score out of 12. Weekly cards and the comparison keep the first run; retries are recorded separately. Scores sync across your devices.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=`${s.first} / ${s.total}`;

@@ -13,8 +13,8 @@ function boot(query='?session=oct10-original',saved){
 function answer(t,q,n){const f=t.d.querySelector(`form[data-source="${q.source}"]`);if(n!==null)f.querySelector(`input[value="${n}"]`).checked=true;f.dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 const ids=['oct10-original','oct10-a','oct10-b'],sources=[1,6,10,14,17,19,22,25,27,29,30,32,33,34];
 test('Three new sets of 14 verified misses; previous question banks unchanged',()=>{
- const t=boot(),sets=t.w.HARRY_SEPT_PRACTICE.filter(s=>s.group==='2026-10-10');assert.equal(sets.length,3);assert.equal(t.w.HARRY_STAR_GROUPS[0].id,'2026-10-10');
- assert.equal(JSON.stringify(t.w.HARRY_SEPT_PRACTICE.filter(s=>s.group!=='2026-10-10')),t.before);
+ const t=boot(),sets=t.w.HARRY_SEPT_PRACTICE.filter(s=>s.group==='2026-10-10');assert.equal(sets.length,3);assert(t.w.HARRY_STAR_GROUPS.some(g=>g.id==='2026-10-10'));
+ for(const before of JSON.parse(t.before))assert.deepEqual(JSON.parse(JSON.stringify(t.w.HARRY_SEPT_PRACTICE.find(s=>s.id===before.id))),before);
  for(const s of sets){assert.equal(s.questions.length,14);assert.deepEqual(Array.from(s.questions,q=>q.source).sort((a,b)=>a-b),sources);for(const q of s.questions){assert.equal(new Set(q.choices).size,q.choices.length);assert(q.correct>=0&&q.correct<q.choices.length);assert(q.explanation.length>25);}}
  for(const source of sources){assert.equal(new Set(sets.map(s=>{const q=s.questions.find(q=>q.source===source);return JSON.stringify([q.prompt,q.visual]);})).size,3);}
  assert.equal(t.d.querySelectorAll('.question').length,14);assert.equal(t.d.querySelectorAll('.answer,.correct-option').length,0);assert.equal(t.d.querySelectorAll('.oct10-diagram').length,3);assert(t.d.querySelector('.fraction[aria-label="s over 5"]'));t.close();
