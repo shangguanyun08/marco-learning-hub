@@ -35,6 +35,7 @@
   }
   function reveal(run,id){const e=run.answers[id];return done(e)&&(!set(run.setNumber).check||firstPass(run));}
   function stats(run){const total=run?.questionIds.length||0;let attempted=0,first=0,corrected=0,closed=0;for(const id of run?.questionIds||[]){const e=run.answers[id];if(e?.attempts.length){attempted++;first+=e.attempts[0].correct?1:0;corrected+=!e.attempts[0].correct&&e.attempts[1]?.correct?1:0;}if(done(e))closed++;}return{total,attempted,first,corrected,closed};}
+  function dailyScores(state){return C.sets.slice(0,6).map(s=>{const r=state.sessions[s.id]?.[0],st=stats(r),final=!!r&&firstPass(r),hidden=!!r&&s.check&&!final;return {number:s.number,day:s.day,label:s.label,check:!!s.check,started:!!r,total:s.questionIds.length,attempted:st.attempted,correct:hidden?null:st.first,percent:!hidden&&st.attempted?Math.round(st.first/st.attempted*100):null,final,completed:!!r?.completedAt,firstFinishedAt:final?Object.values(r.answers).map(e=>e.attempts[0].at).sort().at(-1):null};});}
   function skillStats(state){
     const result=Object.fromEntries(Object.keys(C.skills).map(k=>[k,{attempted:0,first:0,checks:0,checkCorrect:0,checkTimes:[]}]));
     for(const s of C.sets){const r=state.sessions[s.id]?.[0];if(!r||(s.check&&!firstPass(r)))continue;for(const id of r.questionIds){const e=r.answers[id];if(!e?.attempts.length)continue;const x=result[resolve(id).skill];x.attempted++;if(e.attempts[0].correct)x.first++;if(s.check){x.checks++;x.checkTimes.push(e.attempts[0].at);if(e.attempts[0].correct)x.checkCorrect++;}}}
@@ -66,5 +67,5 @@
       results.sort((x,y)=>x.startedAt.localeCompare(y.startedAt)||x.id.localeCompare(y.id));if(results.length)out.sessions[s.id]=results;
     }return out;
   }
-  root.MarcoSkillEngine={empty,set,resolve,done,firstPass,finished,plan,start,submit,reveal,stats,skillStats,valid,merge};
+  root.MarcoSkillEngine={empty,set,resolve,done,firstPass,finished,plan,start,submit,reveal,stats,dailyScores,skillStats,valid,merge};
 })(typeof window==='undefined'?globalThis:window);

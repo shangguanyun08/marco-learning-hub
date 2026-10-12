@@ -3,6 +3,7 @@
 This is a separate course, not a replacement for dated mock-test reviews.
 
 - Sets 1–6: 15 questions each, 90 core questions total.
+- Daily scoreboard: original-run first-try correct counts, percentage bars, day-to-day score changes, actual first-pass finish dates, and a week-to-date total. Corrected/repeated answers never raise a daily score. In-progress independent-check scores remain hidden. Different daily sets are not difficulty-equated, so their score changes alone do not establish improvement.
 - Core weighting: graphs/data 24, percentages 20, rates/proportions 16, absolute value/signs 12, algebra 8, other checks 10.
 - Set 7: up to three missed concepts, five unused variants each; 5–15 questions. Selection uses original-run first-attempt misses and deprioritizes concepts with five recent correct fresh follow-ups. A run’s selected question IDs are immutable. New follow-up runs recalculate targets and use unused IDs.
 - Set 8: optional 25-question mixed challenge; balances independent-check coverage across the five main skills.
