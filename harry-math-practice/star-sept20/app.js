@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const bank=window.HARRY_SEPT_PRACTICE, engine=window.HarrySeptEngine;
-  const groups=window.HARRY_STAR_GROUPS||null;
+  const groups=window.HARRY_STAR_GROUPS||null,R=window.HarryWeekRound2;
   const groupId=()=>active?.group || (groups?.find(g=>g.id===new URLSearchParams(location.search).get('group'))?.id||null);
   const visibleBank=()=>groups?bank.filter(s=>s.group===groupId()):bank;
   const KEY='harry-star-sept20-four-sessions-v1';
@@ -11,9 +11,10 @@
   let sync=null, syncKind='connecting', syncMessage='Connecting… Your saved answers will sync automatically.';
   let storageOK=true, state={version:1,sessions:{}};
   try {const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1&&saved.sessions)state=saved;} catch {storageOK=false;}
-  const selectedDay=()=>bank.find(s=>s.id===new URLSearchParams(location.search).get('session'))||null;
+  const findSession=id=>bank.find(s=>s.id===id)||R?.resolve(id,state)||null;
+  const selectedDay=()=>findSession(new URLSearchParams(location.search).get('session'));
   let active=selectedDay();
-  function newRun(restart=false){return {restart,id:crypto.randomUUID(),startedAt:new Date().toISOString(),answers:{},completedAt:null};}
+  function newRun(restart=false){return {...(active?.round2?{round2Sources:active.questions.map(q=>q.source),sourceRunId:active.sourceRunId}:{}),restart,id:crypto.randomUUID(),startedAt:new Date().toISOString(),answers:{},completedAt:null};}
   function runs(session){return state.sessions[session.id] ||= [newRun()];}
   function current(){return runs(active).at(-1);}
   function save(upload=true){try{if(!storageOK)throw new Error('Storage unavailable');localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}updateSaveNote();if(upload)void sync?.push();}
@@ -51,6 +52,7 @@
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCD'[index]}</span><span class="choice-text">${math(choice)}${window.HarryStarVisuals?.draw(q.visual,index)||''}${tag?`<small>${tag}</small>`:''}</span></label>`;
     }).join('')}</fieldset>`}${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form><p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${answerText(q)}</strong><p>${math(q.explanation)}</p></div>`:''}</article>`;
   }
+  function round2Link(session){const review=R.resolve(session.id+'-round2',state),run=state.sessions[review.id]?.at(-1),st=run?engine.stats(review,run):null;return `<a class="round2-link${st?.finished===st?.total&&st?' completed':''}" href="?session=${review.id}" ${active?.id===review.id?'aria-current="page"':''}><b>Round 2</b><small>${st?`${st.finished===st.total?'✓ Done · ':''}${st.first}/${st.total} first-try points`:!review.ready?'Finish Round 1 first answers':review.questions.length?`${review.questions.length} first-try misses · new numbers`:'✓ No first-try misses'}</small></a>`;}
   function renderDays(){
     let completedDays=0;
     document.querySelector('#sessions').innerHTML=visibleBank().map((session,i)=>{
@@ -61,7 +63,7 @@
       const status=completed?'completed':r?.attempted?'in-progress':'not-started';
       if(completed)completedDays++;
       const repeat=completed&&latest!==completed&&r.finished!==r.total;
-      return `<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}</b><span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;
+      const card=`<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}</b><span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;return session.weekly?`<div class="session-pair">${card}${round2Link(session)}</div>`:card;
     }).join('');
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
@@ -73,8 +75,8 @@
     renderDays();
     document.querySelector('#jump').innerHTML=active.questions.map((q,i)=>`<a href="#q${i+1}" class="${result(q,current())}" aria-label="Question ${i+1}">${i+1}</a>`).join('');
     const completion=document.querySelector('#completion');completion.hidden=s.finished!==s.total;
-    completion.innerHTML=s.finished===s.total?`<h2>${s.first===s.total?`${s.total} out of ${s.total} on your first tries!`:'Day complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/${s.total} (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.id===visibleBank().at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next day’s fresh questions.'}</p>`:'';
-    document.querySelector('#new-run').hidden=s.finished!==s.total;
+    completion.innerHTML=s.finished===s.total?`<h2>${s.first===s.total?`${s.total} out of ${s.total} on your first tries!`:active.round2?'Round 2 complete. Well done for working through it.':'Day complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/${s.total} (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.round2?'Your Round 2 score is separate. Your original daily score stays unchanged.':active.id===visibleBank().at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next day’s fresh questions.'}</p>`:'';
+    document.querySelector('#new-run').hidden=s.finished!==s.total;document.querySelector('#new-run').textContent=active.round2?'Repeat these Round 2 questions':'Start another run of this session';
     renderHistory();
   }
   function renderHistory(){
@@ -100,11 +102,18 @@
     document.querySelector('#group-description').textContent=group?.description||'';
   }
   function render(){
+    if(active?.round2)active=R.resolve(active.id,state);
     renderGroups();
     document.querySelector('#questions').setAttribute('aria-label',active?`${active.questions.length} practice questions`:'Practice questions');
     document.querySelector('#practice-content').hidden=!active;
     document.title=active?`${active.title} · Harry’s Daily Math`:'Harry’s Daily Math · Test groups';
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderDays();updateSaveNote();return;}
+    let nav=document.querySelector('#round-navigation');if(!nav){nav=document.createElement('nav');nav.id='round-navigation';nav.className='round-navigation';document.querySelector('.session-intro').append(nav);}
+    nav.hidden=!(active.weekly||active.round2);const baseId=active.baseId||active.id;
+    nav.innerHTML=nav.hidden?'':`<a href="?session=${baseId}" ${!active.round2?'aria-current="page"':''}>Round 1</a><a href="?session=${baseId}-round2" ${active.round2?'aria-current="page"':''}>Round 2 · new numbers</a>`;
+    const emptyReview=active.round2&&!active.questions.length;
+    for(const selector of ['.scorebar','#jump','.records'])document.querySelector(selector).hidden=emptyReview;
+    if(emptyReview){document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent=active.description;document.querySelector('#questions').innerHTML=`<section class="completion"><h2>${active.ready?'No Round 2 needed':'Round 2 is waiting'}</h2><p>${active.ready?'Every Round 1 answer was correct on the first try.':'Finish every first answer in Round 1 to build this review.'}</p><a href="?session=${active.baseId}">Back to Round 1</a></section>`;document.querySelector('#completion').hidden=true;renderDays();updateSaveNote();return;}
     runs(active);document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent=active.description;
     document.querySelector('#questions').innerHTML=active.questions.map(card).join('');renderSummary();updateSaveNote();
   }
@@ -125,13 +134,13 @@
     if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
     const index=active.questions.findIndex(item=>item.source===q.source);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
-  document.querySelector('#sessions').addEventListener('click',event=>{const link=event.target.closest('a');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=bank.find(s=>s.id===id);history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
+  document.addEventListener('click',event=>{const link=event.target.closest('a[href^="?session="]');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=findSession(id);history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
   window.addEventListener('popstate',()=>{active=selectedDay();render();});
   window.addEventListener('storage',event=>{if(event.key!==KEY||!event.newValue)return;try{const remote=JSON.parse(event.newValue);if(remote.version===1&&remote.sessions){state=window.HarrySeptSync?window.HarrySeptSync.merge(state,remote):remote;render();void sync?.push();}}catch{}});
   document.querySelector('#large-text').addEventListener('click',event=>{event.currentTarget.setAttribute('aria-pressed',String(document.body.classList.toggle('large')));});
   document.querySelector('#new-run').addEventListener('click',()=>{if(engine.stats(active,current()).finished!==active.questions.length)return;runs(active).push(newRun(true));save();render();document.querySelector('#session-title').scrollIntoView();});
   document.querySelector('#download').addEventListener('click',()=>{
-    const payload={exportedAt:new Date().toISOString(),testDates:groups?.map(g=>g.id)||['2026-09-20'],scoring:'One point only for a correct first try. Second tries do not change the score.',sessions:bank.map(session=>({...session,runs:state.sessions[session.id]||[]}))};
+    const payload={exportedAt:new Date().toISOString(),testDates:groups?.map(g=>g.id)||['2026-09-20'],scoring:'One point only for a correct first try. Second tries do not change the score.',sessions:[...bank,...(R?.sessions(state)||[]).filter(s=>state.sessions[s.id])].map(session=>({...session,runs:state.sessions[session.id]||[]}))};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='harry-star-math-practice-records.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
   const isLocalPreview=location.hostname==='localhost'||location.hostname==='127.0.0.1';

@@ -1,7 +1,7 @@
 (function(root){
   'use strict';
   const C=root.MarcoSkillCourse,clone=x=>JSON.parse(JSON.stringify(x)),time=x=>typeof x==='string'&&Number.isFinite(Date.parse(x)),object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
-  const empty=()=>({version:1,sessions:{}}),set=n=>C.sets.find(s=>s.number===n),resolve=id=>{const [kind,s]=String(id).split('@');const q=C.question(kind,Number(s));if(q.id!==id)throw new Error('Invalid question ID');return q;};
+  const empty=()=>({version:1,sessions:{}}),set=n=>C.sets.find(s=>s.number===n),resolve=id=>{if(String(id).startsWith('r2:'))return C.round2Question(String(id).slice(3));const [kind,s]=String(id).split('@');const q=C.question(kind,Number(s));if(q.id!==id)throw new Error('Invalid question ID');return q;};
   const done=e=>!!e&&(e.attempts[0]?.correct||e.attempts.length===2);
   const firstPass=r=>r.questionIds.every(id=>r.answers[id]?.attempts.length);
   function finished(r){return r.questionIds.every(id=>done(r.answers[id]));}
@@ -27,13 +27,34 @@
     const ids=p?p.questionIds:s.questionIds;if(!ids.length)throw new Error('No unused follow-up questions remain.');
     return {id,setNumber:number,startedAt:at,completedAt:null,questionIds:[...ids],answers:{},pending:{},notes:{},targeted:p?.targeted||false,reasons:p?.reasons||[]};
   }
+  const sessionId=(number,round=1)=>set(number).id+(round===2?'-round2':'');
+  const definitions=()=>C.sets.flatMap(s=>[s,{...s,id:sessionId(s.number,2),round:2,check:false}]);
+  const isCheck=r=>r.round!==2&&set(r.setNumber).check;
+  function round2Plan(number,state){
+    const source=state.sessions[sessionId(number)]?.[0],ready=!!source&&firstPass(source);
+    const missed=ready?source.questionIds.filter(id=>source.answers[id].attempts[0].correct===false):[];
+    return {ready,source,sourceQuestionIds:missed,questionIds:missed.map(id=>'r2:'+id)};
+  }
+  function startRound2(number,state,at=new Date().toISOString(),id=root.crypto.randomUUID()){
+    const p=round2Plan(number,state);
+    if(!p.ready)throw new Error('Finish all Round 1 first answers before starting Round 2.');
+    if(!p.questionIds.length)throw new Error('No first-try mistakes. Round 2 is not needed.');
+    return {id,setNumber:number,round:2,sourceRunId:p.source.id,sourceQuestionIds:[...p.sourceQuestionIds],startedAt:at,completedAt:null,questionIds:[...p.questionIds],answers:{},pending:{},notes:{},targeted:true,reasons:[]};
+  }
+  function validReview(r,s,state){
+    if(r.round!==2||typeof r.sourceRunId!=='string'||!Array.isArray(r.sourceQuestionIds))return false;
+    const sources=state.sessions[sessionId(s.number)]||[];
+    return sources.some(source=>source.id.split('~')[0]===r.sourceRunId.split('~')[0]&&firstPass(source)&&
+      JSON.stringify(source.questionIds.filter(id=>source.answers[id].attempts[0].correct===false))===JSON.stringify(r.sourceQuestionIds))&&
+      JSON.stringify(r.questionIds)===JSON.stringify(r.sourceQuestionIds.map(id=>'r2:'+id));
+  }
   function submit(run,id,choice,at=new Date().toISOString()){
     if(run.completedAt||!run.questionIds.includes(id))return false;const q=resolve(id),entry=run.answers[id]||{attempts:[]};
     if(done(entry)||!Number.isInteger(choice)||choice<0||choice>=4||entry.attempts.some(a=>a.choice===choice))return false;
-    if(set(run.setNumber).check&&entry.attempts.length&&!firstPass(run))return false;
+    if(isCheck(run)&&entry.attempts.length&&!firstPass(run))return false;
     entry.attempts.push({choice,correct:choice===q.correct,at});run.answers[id]=entry;delete run.pending[id];if(finished(run))run.completedAt=at;return true;
   }
-  function reveal(run,id){const e=run.answers[id];return done(e)&&(!set(run.setNumber).check||firstPass(run));}
+  function reveal(run,id){const e=run.answers[id];return done(e)&&(!isCheck(run)||firstPass(run));}
   function stats(run){const total=run?.questionIds.length||0;let attempted=0,first=0,corrected=0,closed=0;for(const id of run?.questionIds||[]){const e=run.answers[id];if(e?.attempts.length){attempted++;first+=e.attempts[0].correct?1:0;corrected+=!e.attempts[0].correct&&e.attempts[1]?.correct?1:0;}if(done(e))closed++;}return{total,attempted,first,corrected,closed};}
   function dailyScores(state){return C.sets.slice(0,6).map(s=>{const r=state.sessions[s.id]?.[0],st=stats(r),final=!!r&&firstPass(r),hidden=!!r&&s.check&&!final;return {number:s.number,day:s.day,label:s.label,check:!!s.check,started:!!r,total:s.questionIds.length,attempted:st.attempted,correct:hidden?null:st.first,percent:!hidden&&st.attempted?Math.round(st.first/st.attempted*100):null,final,completed:!!r?.completedAt,firstFinishedAt:final?Object.values(r.answers).map(e=>e.attempts[0].at).sort().at(-1):null};});}
   function skillStats(state){
@@ -43,9 +64,9 @@
   }
   function valid(state){
     try{return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([sid,runs])=>{
-      const s=C.sets.find(x=>x.id===sid);if(!s||!Array.isArray(runs))return false;
+      const s=definitions().find(x=>x.id===sid);if(!s||!Array.isArray(runs))return false;
       return runs.every(r=>object(r)&&typeof r.id==='string'&&r.id.length<200&&r.setNumber===s.number&&time(r.startedAt)&&(r.completedAt===null||time(r.completedAt))&&Array.isArray(r.questionIds)&&r.questionIds.length>0&&r.questionIds.length<=(s.number===8?25:15)&&new Set(r.questionIds).size===r.questionIds.length&&
-        (s.adaptive?r.questionIds.every(id=>{const q=resolve(id);return q.seed>=401;}):JSON.stringify(r.questionIds)===JSON.stringify(s.questionIds))&&object(r.answers)&&object(r.pending)&&object(r.notes)&&Array.isArray(r.reasons)&&
+        (s.round===2?validReview(r,s,state):r.round!==2&&(s.adaptive?r.questionIds.every(id=>{const q=resolve(id);return q.seed>=401;}):JSON.stringify(r.questionIds)===JSON.stringify(s.questionIds)))&&object(r.answers)&&object(r.pending)&&object(r.notes)&&Array.isArray(r.reasons)&&
         Object.entries(r.answers).every(([id,e])=>r.questionIds.includes(id)&&object(e)&&Array.isArray(e.attempts)&&e.attempts.length>0&&e.attempts.length<=2&&new Set(e.attempts.map(a=>a.choice)).size===e.attempts.length&&(!e.attempts[0].correct||e.attempts.length===1)&&e.attempts.every(a=>object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4&&a.correct===(a.choice===resolve(id).correct)&&time(a.at)))&&
         (!r.completedAt||finished(r))&&(!s.check||firstPass(r)||Object.values(r.answers).every(e=>e.attempts.length===1))&&Object.entries(r.pending).every(([id,p])=>r.questionIds.includes(id)&&object(p)&&Number.isInteger(p.choice)&&p.choice>=0&&p.choice<4&&time(p.at))&&
         Object.entries(r.notes).every(([id,n])=>r.questionIds.includes(id)&&object(n)&&typeof n.text==='string'&&n.text.length<=2500&&time(n.at))&&
@@ -56,7 +77,7 @@
   const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return(h>>>0).toString(16);};
   function compatible(a,b){return JSON.stringify(a.questionIds)===JSON.stringify(b.questionIds)&&Object.keys(a.answers).every(id=>{const x=a.answers[id].attempts,y=b.answers[id]?.attempts||[];return x.slice(0,Math.min(x.length,y.length)).every((t,i)=>t.choice===y[i].choice&&t.at===y[i].at);});}
   function merge(a,b){
-    const out=empty();for(const s of C.sets){const groups=new Map();for(const state of [a,b])for(const r of state?.sessions?.[s.id]||[]){const base=r.id.split('~')[0];if(!groups.has(base))groups.set(base,[]);groups.get(base).push(clone(r));}
+    const out=empty();for(const s of definitions()){const groups=new Map();for(const state of [a,b])for(const r of state?.sessions?.[s.id]||[]){const base=r.id.split('~')[0];if(!groups.has(base))groups.set(base,[]);groups.get(base).push(clone(r));}
       const results=[];for(const [base,candidates] of groups){const versions=[];candidates.sort((x,y)=>signature(x).localeCompare(signature(y)));for(const r of candidates){const target=versions.find(v=>compatible(v,r));if(!target){versions.push(r);continue;}
           for(const [id,e]of Object.entries(r.answers))if((target.answers[id]?.attempts.length||0)<e.attempts.length)target.answers[id]=e;
           for(const key of ['pending','notes'])for(const [id,value]of Object.entries(r[key])){const old=target[key][id];if(!old||value.at>old.at||(value.at===old.at&&JSON.stringify(value)>JSON.stringify(old)))target[key][id]=value;}
@@ -67,5 +88,5 @@
       results.sort((x,y)=>x.startedAt.localeCompare(y.startedAt)||x.id.localeCompare(y.id));if(results.length)out.sessions[s.id]=results;
     }return out;
   }
-  root.MarcoSkillEngine={empty,set,resolve,done,firstPass,finished,plan,start,submit,reveal,stats,dailyScores,skillStats,valid,merge};
+  root.MarcoSkillEngine={empty,set,resolve,done,firstPass,finished,plan,start,sessionId,isCheck,round2Plan,startRound2,submit,reveal,stats,dailyScores,skillStats,valid,merge};
 })(typeof window==='undefined'?globalThis:window);

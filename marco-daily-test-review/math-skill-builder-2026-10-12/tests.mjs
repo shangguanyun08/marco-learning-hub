@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {randomUUID} from 'node:crypto';
 const dir=new URL('.',import.meta.url),context={crypto:{randomUUID},setTimeout,clearTimeout,setInterval,clearInterval,AbortController,fetch,addEventListener(){},removeEventListener(){},document:{visibilityState:'visible',addEventListener(){},removeEventListener(){}},localStorage:{getItem(){return null;},setItem(){}}};
-for(const file of ['data.js','engine.js','sync.js'])vm.runInNewContext(fs.readFileSync(new URL(file,dir),'utf8'),context,{filename:file});
+for(const file of ['data.js','round2.js','engine.js','sync.js'])vm.runInNewContext(fs.readFileSync(new URL(file,dir),'utf8'),context,{filename:file});
 const C=context.MarcoSkillCourse,E=context.MarcoSkillEngine,S=context.MarcoSkillSync,copy=x=>JSON.parse(JSON.stringify(x));
 const number=s=>{const text=String(s).replace(/[°%]/g,'');if(text.includes('/')){const [a,b]=text.split('/').map(Number);return a/b;}return Number(text);};
 const close=(a,b)=>Math.abs(a-b)<1e-8;
@@ -58,3 +58,28 @@ const dailyBefore=copy(E.dailyScores(clean));const dailyRepeat=E.start(5,clean,a
 const held=E.empty(),heldRun=E.start(6,held,at(17),'held-score');held.sessions['set-6']=[heldRun];E.submit(heldRun,heldRun.questionIds[0],E.resolve(heldRun.questionIds[0]).correct,at(17,1));assert.equal(E.dailyScores(held)[5].correct,null);assert.equal(E.dailyScores(held)[5].percent,null);
 assert.equal(E.dailyScores(state)[0].correct,0);assert.equal(E.dailyScores(state)[4].correct,14);assert.equal(E.dailyScores(state)[4].final,true);assert.equal(E.dailyScores(state)[4].percent,93);
 console.log(JSON.stringify({checkedQuestions:checked,coreQuestions:90,allocation,optionalFollowup:'up to 15 per run',optionalMixedCheck:25,tests:'math answers, unique options, 2-try gates, delayed feedback, adaptation, fresh IDs, state validation, conflict-safe sync, repeat-proof daily/check scores: PASS'},null,2));
+
+const givens=q=>JSON.stringify([q.prompt,q.table,q.graph,q.series,q.diagram,q.columns,q.choiceGraphs,q.concept==='direction'?q.choices:null]);
+for(const kind of Object.keys(C.group))for(let seed=1;seed<=500;seed++){
+ const q=C.question(kind,seed),review=C.round2Question(q.id);checkQuestion(review);
+ assert.equal(review.concept,q.concept);assert.equal(review.audit.v,q.audit.v);assert.notEqual(givens(review),givens(q),q.id+' needs different numbers');
+ assert.deepEqual(review,C.round2Question(q.id));
+}
+for(let n=1;n<=8;n++){
+ const state=E.empty(),first=E.start(1,state,at(12),'setup');state.sessions['set-1']=[first];
+ E.submit(first,first.questionIds[0],(E.resolve(first.questionIds[0]).correct+1)%4,at(12,1));
+ let source=n===1?first:E.start(n,state,at(12),'source');state.sessions[E.sessionId(n)]=[source];
+ assert.throws(()=>E.startRound2(n,state));
+ for(const [i,id] of source.questionIds.entries())if(!source.answers[id])E.submit(source,id,(E.resolve(id).correct+(i<2?1:0))%4,at(12,2));
+ for(const id of source.questionIds.slice(0,2))E.submit(source,id,E.resolve(id).correct,at(12,3));
+ const before=copy(E.dailyScores(state)),evidence=copy(E.skillStats(state)),original=copy(source),r=E.startRound2(n,state,at(13),'round2');state.sessions[E.sessionId(n,2)]=[r];
+ assert.equal(r.questionIds.length,2);assert.ok(E.valid(state));
+ for(const id of r.questionIds)E.submit(r,id,E.resolve(id).correct,at(13,1));
+ assert.equal(E.stats(r).first,2);assert.ok(r.completedAt);assert.ok(E.valid(state));
+ const restored=E.merge(E.empty(),copy(state));assert.deepEqual(copy(restored.sessions[E.sessionId(n,2)]),copy([r]));assert.ok(E.valid(restored));
+ assert.deepEqual(copy(source),original);assert.deepEqual(copy(E.dailyScores(state)),before);assert.deepEqual(copy(E.skillStats(state)),evidence);
+ const bad=copy(state);bad.sessions[E.sessionId(n,2)][0].questionIds.push('r2:'+source.questionIds[2]);assert.equal(E.valid(bad),false);
+ const conflict=copy(state),qid=r.questionIds[0];conflict.sessions[E.sessionId(n,2)][0].answers[qid].attempts[0]={choice:(E.resolve(qid).correct+1)%4,correct:false,at:at(13,1)};conflict.sessions[E.sessionId(n,2)][0].completedAt=null;
+ const merged=E.merge(state,conflict);assert.equal(merged.sessions[E.sessionId(n,2)].length,2);assert.ok(E.valid(merged));assert.deepEqual(E.merge(state,conflict),E.merge(conflict,state));
+}
+console.log('PASS: 12,500 fresh-number Round 2 variants; all 8 sets; first-miss selection, corrected misses, independent scores, reload and conflict-safe sync.');

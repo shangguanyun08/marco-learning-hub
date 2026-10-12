@@ -3,6 +3,9 @@
   const APP_ID='harry-star-sept20-four-sessions-v1';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c','oct4-d','oct4-e','oct10-original','oct10-a','oct10-b','week-oct12-1','week-oct12-2','week-oct12-3','week-oct12-4','week-oct12-5','week-oct12-6'];
+  IDS.push(...Array.from({length:6},(_,i)=>'week-oct12-'+(i+1)+'-round2'));
+  const reviewId=id=>/^week-oct12-[1-6]-round2$/.test(id);
+  const validReview=(id,run)=>!reviewId(id)||(typeof run.sourceRunId==='string'&&Array.isArray(run.round2Sources)&&run.round2Sources.length>0&&run.round2Sources.length<=12&&new Set(run.round2Sources).size===run.round2Sources.length&&run.round2Sources.every(n=>Number.isInteger(n)&&n>=1&&n<=12)&&Object.keys(run.answers).every(n=>run.round2Sources.includes(Number(n))));
   const validTyped=(id,source,value)=>typeof value==='string'&&(
     (id.startsWith('oct4-')&&source==='7'&&/^\d{1,15}(?: \| \d{1,15}){5}$/.test(value))||
     (id.startsWith('oct4-')&&source==='3002'&&/^\d{1,15}$/.test(value))||
@@ -17,16 +20,16 @@
   function valid(state){
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
-        (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&Object.entries(run.answers).every(([source,entry])=>
+        (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&validReview(id,run)&&Object.entries(run.answers).every(([source,entry])=>
           /^\d+$/.test(source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
             object(a)&&((Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)||validTyped(id,source,a.choice))&&typeof a.correct==='boolean'&&time(a.at)))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
-  const compatible=(a,b)=>Object.keys(a.answers).every(key=>{
+  const compatible=(a,b)=>JSON.stringify(a.round2Sources)===JSON.stringify(b.round2Sources)&&a.sourceRunId===b.sourceRunId&&Object.keys(a.answers).every(key=>{
     const x=a.answers[key].attempts,y=b.answers[key]?.attempts||[];
     return x.slice(0,Math.min(x.length,y.length)).every((attempt,i)=>sameAttempt(attempt,y[i]));
   });
-  function signature(run){return JSON.stringify(Object.keys(run.answers).sort().map(key=>[key,run.answers[key].attempts.map(a=>[a.choice,a.at])]));}
+  function signature(run){return JSON.stringify([run.round2Sources,run.sourceRunId,Object.keys(run.answers).sort().map(key=>[key,run.answers[key].attempts.map(a=>[a.choice,a.at])])]);}
   function hash(text){let h=2166136261;for(const c of text){h^=c.charCodeAt(0);h=Math.imul(h,16777619);}return (h>>>0).toString(16);}
   function merge(a,b){
     const result={version:1,sessions:{}};
@@ -60,7 +63,7 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.entries(run.answers).filter(([source])=>!id.startsWith('oct4-')||source!=='29').map(([,entry])=>entry);
-          const expected=id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          const expected=reviewId(id)?run.round2Sources.length:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
           if(!run.completedAt&&entries.length===expected&&entries.every(e=>e.attempts.length===2||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });
