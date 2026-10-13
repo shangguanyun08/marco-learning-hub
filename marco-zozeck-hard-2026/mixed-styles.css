@@ -32,3 +32,5 @@
 .question-item.answered-corrected{border-left:4px solid #eab308}
 .review-color-legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:12px;font-weight:700}
 .legend-green{color:#166534}.legend-red{color:#b91c1c}.legend-yellow{color:#854d0e}
+
+.session-rule{margin-top:14px;padding:14px 18px;border-left:4px solid #2d67d7;background:#edf3ff;color:#173957;line-height:1.6}.session-locked:not(.mastered){background:#f2f4f7;border-color:#aab5c3}.session-locked small:last-child{font-weight:700;color:#41536b}.session-lock p{line-height:1.6}

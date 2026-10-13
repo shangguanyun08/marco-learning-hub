@@ -117,7 +117,7 @@ test('UI: all nine sessions and every round are untimed; all 40 choices availabl
   assert.equal(chosen.dataset.choice,q.answer);
   b.w.close();
   for(let session=2;session<=9;session++){
-    const c=browser(null,`https://shangguanyun08.github.io/marco-learning-hub/marco-zozeck-hard-2026/?session=${session}`);
+    const c=browser(require('./test-session-fixtures.cjs').earlier(Core.blank(),session),`https://shangguanyun08.github.io/marco-learning-hub/marco-zozeck-hard-2026/?session=${session}`);
     c.w.document.querySelector('[data-start]').click();
     const saved=JSON.parse(c.w.localStorage.getItem('marco-zozeck-mixed-360-v1:progress'));
     assert.ok(!saved.sessions[session].rounds[0].timeLimitSeconds);
