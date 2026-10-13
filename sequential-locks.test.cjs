@@ -91,3 +91,14 @@ test('Math: stale controls and storage sync cannot bypass a locked future set',t
 test('Both pages show the exact rule and specific prerequisite guidance',t=>{
   for(const course of ['vr','math']){const b=browser(t,course,course==='vr'?'?session=2':'?set=2');assert.ok(b.d.querySelector('.session-rule').textContent.includes('Finish your earlier sessions to unlock the next one.'));assert.ok(b.d.querySelector('.session-lock'));}
 });
+test('Both pages give every locked card a visible SVG padlock and readable Locked label',t=>{
+  for(const course of ['vr','math']){const b=browser(t,course,course==='vr'?'?review4=5':'?set=8&round=2'),selector=course==='vr'?'.session-picker [data-session]':'#sets a';let locked=0;
+    for(const card of b.d.querySelectorAll(selector)){const badge=card.querySelector('[data-lock-badge]');if(card.classList.contains('session-locked')){locked++;assert.ok(badge);assert.equal(badge.textContent,'Locked');assert.equal(badge.querySelector('svg').getAttribute('aria-hidden'),'true');assert.equal(badge.querySelector('svg').getAttribute('focusable'),'false');}else assert.equal(badge,null);}
+    assert.equal(locked,course==='vr'?28:15);assert.ok(b.d.querySelector('.session-lock > [data-lock-badge]'));
+  }
+});
+test('Lock icons follow synchronization readiness and unlocks without changing saved results',async t=>{
+  for(const course of ['vr','math']){const b=browser(t,course,course==='vr'?'?session=2':'?set=2',undefined,{online:true,delayed:true});assert.equal(b.d.querySelector('[data-lock-badge]'),null);let p;if(course==='vr')p=F.complete(Core.blank(),1);else{p=E.empty();completeMath(p,1);}b.remote(p);assert.equal(b.d.querySelector('[data-lock-badge]'),null);await b.ready();const next=b.d.querySelector(course==='vr'?'[data-session="2"]':'#sets a[href="?set=2"]');assert.equal(next.querySelector('[data-lock-badge]'),null);same(b.state(),p);
+    const done=course==='vr'?F.complete(Core.blank(),4):E.empty();if(course==='math')completeMath(done,4);const saved=browser(t,course,course==='vr'?'?session=4':'?set=4',done);const completedCard=saved.d.querySelector(course==='vr'?'[data-session="4"]':'#sets a[href="?set=4"]');assert.ok(completedCard.querySelector('[data-lock-badge]'));assert.ok(completedCard.classList.contains(course==='vr'?'mastered':'complete'));same(saved.state()||done,done);
+  }
+});
