@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
+import {prerequisites} from './weekly-test-helpers.mjs';
 const dir=new URL('.',import.meta.url),marco=new URL('../../marco-daily-test-review/math-skill-builder-2026-10-12/',dir);
 const read=(folder,file)=>readFileSync(new URL(file,folder),'utf8'),copy=x=>JSON.parse(JSON.stringify(x));
 const HKEY='harry-star-sept20-four-sessions-v1',MKEY='marco-math-skill-builder-oct12-v1';
@@ -9,7 +10,7 @@ function boot(folder,query,key,state){
  const html=read(folder,'index.html'),dom=new JSDOM(html,{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;
  w.HTMLElement.prototype.scrollIntoView=function(){};w.scrollTo=function(){};
  if(state)w.localStorage.setItem(key,JSON.stringify(state));
- for(const tag of w.document.querySelectorAll('script[defer][src]'))w.eval(read(folder,tag.getAttribute('src').split('?')[0]));
+ for(const tag of w.document.querySelectorAll('script[defer][src]')){const src=tag.getAttribute('src');if(key===HKEY&&src.includes('/app.js')){const seeded=prerequisites(w,query,state);if(seeded)w.localStorage.setItem(key,JSON.stringify(seeded));}w.eval(read(folder,src.split('?')[0]));}
  return {w,d:w.document,close:()=>w.close(),saved:()=>JSON.parse(w.localStorage.getItem(key))};
 }
 function click(t,selector){const el=t.d.querySelector(selector);assert.ok(el,selector);el.click();}
@@ -56,7 +57,7 @@ test('Harry: all 6 days select only first misses, including corrected ones; save
  }
 });
 test('Harry: no misses and incomplete first passes show an empty state without saving a review run',()=>{
- let t=boot(dir,'?session=week-oct12-1-round2',HKEY);assert.match(t.d.querySelector('#questions').textContent,/waiting/);assert.equal(t.saved(),null);t.close();
+ let t=boot(dir,'?session=week-oct12-1-round2',HKEY);assert.match(t.d.querySelector('#questions').textContent,/locked/);assert.equal(t.saved().sessions['week-oct12-1-round2'],undefined);t.close();
  t=boot(dir,'?group=week-2026-10-12',HKEY);const state=harryState(t,1,[]);t.close();
  t=boot(dir,'?session=week-oct12-1-round2',HKEY,state);assert.match(t.d.querySelector('#questions').textContent,/No Round 2 needed/);assert.equal(t.d.querySelector('.scorebar').hidden,true);assert.equal(t.saved().sessions['week-oct12-1-round2'],undefined);
  click(t,'#round-navigation a');assert.equal(t.d.querySelector('.scorebar').hidden,false);assert.equal(t.d.querySelectorAll('.question').length,12);t.close();
@@ -73,7 +74,7 @@ test('Marco: Round 2 links, new questions, independent score, first-miss color a
  t.close();t=boot(marco,'?set=1&round=2',MKEY,saved);assert.match(t.d.querySelector('.scorebar').textContent,/1\/1/);assert.match(t.d.querySelector('#daily-scores').textContent,/14\/15/);t.close();
 });
 test('Marco: direct Round 2 URL handles waiting and perfect first pass without starting empty runs',()=>{
- let t=boot(marco,'?set=5&round=2',MKEY);assert.match(t.d.querySelector('#content').textContent,/waiting/);assert.equal(t.saved(),null);t.close();
- t=boot(marco,'?set=5',MKEY);const E=t.w.MarcoSkillEngine,state=E.empty(),r=E.start(5,state);state.sessions['set-5']=[r];for(const id of r.questionIds)E.submit(r,id,E.resolve(id).correct);t.close();
- t=boot(marco,'?set=5&round=2',MKEY,state);assert.match(t.d.querySelector('#content').textContent,/No Round 2 needed/);assert.equal(t.saved().sessions['set-5-round2'],undefined);t.close();
+ let t=boot(marco,'?set=1&round=2',MKEY);assert.match(t.d.querySelector('#content').textContent,/Locked/);assert.equal(t.saved(),null);t.close();
+ t=boot(marco,'?set=1',MKEY);const E=t.w.MarcoSkillEngine,state=E.empty(),r=E.start(1,state);state.sessions['set-1']=[r];for(const id of r.questionIds)E.submit(r,id,E.resolve(id).correct);t.close();
+ t=boot(marco,'?set=1&round=2',MKEY,state);assert.match(t.d.querySelector('#content').textContent,/No Round 2 needed/);assert.equal(t.saved().sessions['set-1-round2'],undefined);t.close();
 });

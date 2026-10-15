@@ -3,8 +3,9 @@
   const APP_ID='harry-star-sept20-four-sessions-v1';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c','oct4-d','oct4-e','oct10-original','oct10-a','oct10-b','week-oct12-1','week-oct12-2','week-oct12-3','week-oct12-4','week-oct12-5','week-oct12-6'];
+  IDS.push('week-oct12-3-2','week-oct12-3-3','week-oct12-3-2-round2','week-oct12-3-3-round2');
   IDS.push(...Array.from({length:6},(_,i)=>'week-oct12-'+(i+1)+'-round2'));
-  const reviewId=id=>/^week-oct12-[1-6]-round2$/.test(id);
+  const reviewId=id=>/^week-oct12-(?:[1-6]|3-[23])-round2$/.test(id);
   const validReview=(id,run)=>!reviewId(id)||(typeof run.sourceRunId==='string'&&Array.isArray(run.round2Sources)&&run.round2Sources.length>0&&run.round2Sources.length<=12&&new Set(run.round2Sources).size===run.round2Sources.length&&run.round2Sources.every(n=>Number.isInteger(n)&&n>=1&&n<=12)&&Object.keys(run.answers).every(n=>run.round2Sources.includes(Number(n))));
   const validTyped=(id,source,value)=>typeof value==='string'&&(
     (id.startsWith('oct4-')&&source==='7'&&/^\d{1,15}(?: \| \d{1,15}){5}$/.test(value))||

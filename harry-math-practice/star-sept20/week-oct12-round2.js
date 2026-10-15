@@ -73,7 +73,7 @@
   return {...q,prompt,choices,correct,explanation,visual};
  }
  const originals=bank.filter(s=>s.group===group);
- const variants=new Map(originals.map((s,i)=>[s.id,s.questions.map(q=>variant(q,i+1))]));
+ const variants=new Map(originals.map((s,i)=>[s.id,s.reviewVariants||s.questions.map(q=>variant(q,Number(s.id.split('-')[2])))]));
  const firstRun=runs=>(runs||[]).filter(r=>Object.values(r.answers).some(e=>e.attempts?.length)).slice().sort((a,b)=>a.startedAt.localeCompare(b.startedAt)||a.id.localeCompare(b.id))[0];
  function plan(base,state){const source=firstRun(state.sessions[base.id]),E=root.HarrySeptEngine,ready=!!source&&E.stats(base,source).attempted===base.questions.length;return {ready,source,sources:ready?base.questions.filter(q=>!E.isCorrect(q,source.answers[q.source].attempts[0].choice)).map(q=>q.source):[]};}
  function resolve(id,state){
