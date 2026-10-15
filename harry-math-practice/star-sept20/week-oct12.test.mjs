@@ -2,11 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
+import {prerequisites} from './weekly-test-helpers.mjs';
 const read=f=>readFileSync(new URL(f,import.meta.url),'utf8'),KEY='harry-star-sept20-four-sessions-v1';
 function boot(query='?group=week-2026-10-12',saved){
  const html=read('./index.html'),dom=new JSDOM(html,{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;w.HTMLElement.prototype.scrollIntoView=function(){};if(saved)w.localStorage.setItem(KEY,JSON.stringify(saved));let before;
- for(const [,src] of html.matchAll(/<script src="([^"]+)" defer>/g)){if(src.includes('week-oct12-data'))before=JSON.stringify(w.HARRY_SEPT_PRACTICE);w.eval(read(src.split('?')[0]));}
- return {w,d:w.document,before,sets:w.HARRY_SEPT_PRACTICE.filter(s=>s.weekly),close:()=>w.close()};
+ for(const [,src] of html.matchAll(/<script src="([^"]+)" defer>/g)){if(src.includes('week-oct12-data'))before=JSON.stringify(w.HARRY_SEPT_PRACTICE);if(src.includes('/app.js')){const seeded=prerequisites(w,query,saved);if(seeded)w.localStorage.setItem(KEY,JSON.stringify(seeded));}w.eval(read(src.split('?')[0]));}
+ return {w,d:w.document,before,sets:w.HARRY_SEPT_PRACTICE.filter(s=>s.weekly&&!s.retest),close:()=>w.close()};
 }
 function answer(t,q,n){const f=t.d.querySelector(`form[data-source="${q.source}"]`);if(n!==null)f.querySelector(`input[value="${n}"]`).checked=true;f.dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 function run(s,first,id='initial'){
@@ -14,7 +15,7 @@ function run(s,first,id='initial'){
  s.questions.forEach((q,i)=>r.answers[q.source]={attempts:[{choice:i<first?q.correct:(q.correct+1)%4,correct:i<first,at:'2026-10-12T16:01:00.000Z'},...(i<first?[]:[{choice:q.correct,correct:true,at:'2026-10-12T16:02:00.000Z'}])]});return r;
 }
 test('Six dates, 72 fresh questions, equal skill blueprint; older content unchanged',()=>{
- const t=boot();assert.equal(t.sets.length,6);assert.equal(t.d.querySelectorAll('.session-link').length,6);assert.equal(JSON.stringify(t.w.HARRY_SEPT_PRACTICE.filter(s=>!s.weekly)),t.before);
+ const t=boot();assert.equal(t.sets.length,6);assert.equal(t.d.querySelectorAll('.session-link').length,8);assert.equal(JSON.stringify(t.w.HARRY_SEPT_PRACTICE.filter(s=>!s.weekly)),t.before);
  const signatures=new Set();for(const s of t.sets){assert.equal(s.questions.length,12);assert.equal(new Set(s.questions.map(q=>q.source)).size,12);for(const q of s.questions){assert.equal(q.choices.length,4);assert.equal(new Set(q.choices).size,4);assert(q.correct>=0&&q.correct<4);assert(q.explanation.length>25);signatures.add(JSON.stringify([q.prompt,q.choices,q.visual]));}assert.deepEqual(Array.from(s.questions,q=>q.skill).sort(),Array.from(t.sets[0].questions,q=>q.skill).sort());}assert.equal(signatures.size,72);assert(!t.d.querySelector('#weekly-progress').hidden);assert(!t.d.querySelector('#weekly-progress').textContent.includes('0/12'));t.close();
 });
 test('Independent answer key for all 72 items, with diagram and arithmetic checks',()=>{

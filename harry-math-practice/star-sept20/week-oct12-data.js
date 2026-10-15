@@ -84,13 +84,13 @@
  q('A rectangle is 14 inches long and 6 inches wide. What is its perimeter?','40 inches',['84 inches','20 inches','28 inches'],'Add all four sides: 14 + 6 + 14 + 6 = 40 inches.')
  ]
  ];
- const labels=['Monday · Oct 12','Tuesday · Oct 13','Wednesday · Oct 14','Thursday · Oct 15','Friday · Oct 16','Saturday · Oct 17'];
+ const labels=Array.from({length:6},(_,i)=>'Day '+(i+1));
  // Fixed blueprint, with rotating positions to avoid a repeated answer-letter pattern.
  sets.forEach((items,day)=>{
   const questions=items.map((item,i)=>{const correct=(day*3+i)%4,choices=[...item.wrong];choices.splice(correct,0,item.answer);return {source:i+1,sourceLabel:'Original STAR mistake skills',skill:skills[i],prompt:item.prompt,choices,correct,explanation:item.explanation,visual:item.visual};});
   // Mix topics, keeping the same blueprint on all six days.
   const orders=[[0,2,5,10,3,6,1,8,4,11,7,9],[2,0,10,5,3,8,6,1,11,4,9,7],[5,3,0,8,10,2,7,11,1,6,9,4],[0,5,2,10,8,3,11,6,1,9,4,7],[3,0,5,11,2,8,10,6,4,1,7,9],[2,5,0,10,3,8,1,11,6,4,9,7]];
-  window.HARRY_SEPT_PRACTICE.push({id:'week-oct12-'+(day+1),group:'week-2026-10-12',cardLabel:labels[day],weekly:true,title:`Day ${day+1} · ${labels[day]}`,description:'12 fresh questions based on recurring original STAR Math mistakes. Work on paper, then choose an answer. One point for a correct first answer; one retry after a miss. No timer.',questions:orders[day].map(i=>questions[i])});
+  window.HARRY_SEPT_PRACTICE.push({id:'week-oct12-'+(day+1),group:'week-2026-10-12',cardLabel:labels[day],weekly:true,title:labels[day],description:'12 fresh questions based on recurring original STAR Math mistakes. Work on paper, then choose an answer. One point for a correct first answer; one retry after a miss. No timer.',questions:orders[day].map(i=>questions[i])});
  });
  window.HARRY_STAR_GROUPS.unshift({id:'week-2026-10-12',title:'October 12–17 · Accuracy week',label:'New · Six daily sets',unit:'Day',description:'12 questions each day, with the same core skill mix and broadly similar difficulty. See daily first-try scores side by side. These are practice indicators, not standardized STAR scores.'});
 })();

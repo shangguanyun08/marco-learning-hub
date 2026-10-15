@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   const bank=window.HARRY_SEPT_PRACTICE, engine=window.HarrySeptEngine;
-  const groups=window.HARRY_STAR_GROUPS||null,R=window.HarryWeekRound2;
+  const groups=window.HARRY_STAR_GROUPS||null,R=window.HarryWeekRound2,W=window.HarryWeekRules;
   const groupId=()=>active?.group || (groups?.find(g=>g.id===new URLSearchParams(location.search).get('group'))?.id||null);
   const visibleBank=()=>groups?bank.filter(s=>s.group===groupId()):bank;
   const KEY='harry-star-sept20-four-sessions-v1';
@@ -13,10 +13,11 @@
   try {const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1&&saved.sessions)state=saved;} catch {storageOK=false;}
   const findSession=id=>bank.find(s=>s.id===id)||R?.resolve(id,state)||null;
   const selectedDay=()=>findSession(new URLSearchParams(location.search).get('session'));
-  let active=selectedDay();
+  let active=selectedDay(),onlyMistakes=false;
+  const locked=session=>W?.lockReason(session,state)||'';
   function newRun(restart=false){return {...(active?.round2?{round2Sources:active.questions.map(q=>q.source),sourceRunId:active.sourceRunId}:{}),restart,id:crypto.randomUUID(),startedAt:new Date().toISOString(),answers:{},completedAt:null};}
   function runs(session){return state.sessions[session.id] ||= [newRun()];}
-  function current(){return runs(active).at(-1);}
+  function current(){const history=runs(active);return active.weekly?(R.firstRun(history)||history.at(-1)):history.at(-1);}
   function save(upload=true){try{if(!storageOK)throw new Error('Storage unavailable');localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}updateSaveNote();if(upload)void sync?.push();}
   function updateSaveNote(){const el=document.querySelector('#save-note');el.dataset.syncStatus=syncKind;el.classList.toggle('warning',!storageOK||syncKind==='offline');el.textContent=storageOK?syncMessage:'Progress could not be saved in this browser. Keep this page open and download your records before leaving.';}
   function result(q,run){const e=run.answers[q.source];if(!e?.attempts.length)return '';if(engine.isCorrect(q,e.attempts[0].choice))return 'first';if(e.attempts[1]&&engine.isCorrect(q,e.attempts[1].choice))return 'retry';return e.attempts.length===2?'revealed':'pending';}
@@ -52,7 +53,20 @@
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCD'[index]}</span><span class="choice-text">${math(choice)}${window.HarryStarVisuals?.draw(q.visual,index)||''}${tag?`<small>${tag}</small>`:''}</span></label>`;
     }).join('')}</fieldset>`}${closed?'':`<button class="submit" type="submit">${attempts.length?'Check second try':'Check answer'}</button>`}</form><p class="feedback" id="feedback-${q.source}" tabindex="-1" role="status">${feedback}</p>${closed?`<div class="answer"><strong>Answer: ${answerText(q)}</strong><p>${math(q.explanation)}</p></div>`:''}</article>`;
   }
-  function round2Link(session){const review=R.resolve(session.id+'-round2',state),run=state.sessions[review.id]?.at(-1),st=run?engine.stats(review,run):null;return `<a class="round2-link${st?.finished===st?.total&&st?' completed':''}" href="?session=${review.id}" ${active?.id===review.id?'aria-current="page"':''}><b>Round 2</b><small>${st?`${st.finished===st.total?'✓ Done · ':''}${st.first}/${st.total} first-try points`:!review.ready?'Finish Round 1 first answers':review.questions.length?`${review.questions.length} first-try misses · new numbers`:'✓ No first-try misses'}</small></a>`;}
+  function round2Link(session){
+    const review=R.resolve(session.id+'-round2',state),run=state.sessions[review.id]?.at(-1),st=run?engine.stats(review,run):null,reason=locked(review);
+    return `<a class="round2-link${reason?' locked':st?.finished===st?.total&&st?' completed':''}" href="?session=${review.id}" ${active?.id===review.id?'aria-current="page"':''}><b>${reason?'🔒 ':''}Round 2</b><small>${reason?esc(reason):st?`${st.finished===st.total?'✓ Done · ':''}${st.first}/${st.total} first-try points`:!review.ready?'Finish Round 1 first answers':review.questions.length?`${review.questions.length} first-try misses · new numbers`:'✓ No first-try misses'}</small></a>`;
+  }
+  function applyMistakeFilter(){
+    const control=document.querySelector('#mistake-filter');
+    if(!active||!(active.weekly||active.round2)||locked(active)||!active.questions.length){control.hidden=true;return;}
+    control.hidden=false;const run=current();let count=0;
+    active.questions.forEach((q,i)=>{const attempt=run.answers[q.source]?.attempts[0],miss=!!attempt&&!engine.isCorrect(q,attempt.choice);if(miss)count++;
+      const question=document.getElementById('q'+(i+1)),jump=document.querySelector(`#jump a[href="#q${i+1}"]`);if(question)question.hidden=onlyMistakes&&!miss;if(jump)jump.hidden=onlyMistakes&&!miss;
+    });
+    const button=document.querySelector('#toggle-mistakes');button.setAttribute('aria-pressed',String(onlyMistakes));button.textContent=onlyMistakes?'Show all questions':'Show first-try mistakes only';
+    document.querySelector('#mistake-count').textContent=onlyMistakes?(count?`Showing ${count} first-try mistakes, including those corrected later.`:'No first-try mistakes recorded yet. Show all questions to continue.'):`${count} first-try mistakes recorded.`;
+  }
   function renderDays(){
     let completedDays=0;
     document.querySelector('#sessions').innerHTML=visibleBank().map((session,i)=>{
@@ -60,14 +74,14 @@
       const completed=history.filter(run=>engine.stats(session,run).finished===session.questions.length)
         .sort((a,b)=>(a.completedAt||a.startedAt).localeCompare(b.completedAt||b.startedAt)).at(-1);
       const score=completed?engine.stats(session,completed):null;
-      const status=completed?'completed':r?.attempted?'in-progress':'not-started';
-      if(completed)completedDays++;
+      const reason=locked(session),status=reason?'locked':completed?'completed':r?.attempted?'in-progress':'not-started';
+      if(completed&&!session.retest)completedDays++;
       const repeat=completed&&latest!==completed&&r.finished!==r.total;
-      const card=`<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}</b><span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span><span class="day-status">${completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;return session.weekly?`<div class="session-pair">${card}${round2Link(session)}</div>`:card;
+      const card=`<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${reason?'🔒 ':''}${session.weekly?esc(session.cardLabel):`${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}`}</b>${session.weekly?'':`<span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span>`}<span class="day-status">${reason?'Locked':completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${reason?`<small class="lock-hint">${esc(reason)}</small>`:''}${session.weekly&&session.id.startsWith('week-oct12-3')?'<small class="mastery-target">Goal: 10/12 to unlock Day 4</small>':''}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;return session.weekly?`<div class="session-pair">${card}${round2Link(session)}</div>`:card;
     }).join('');
-    document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
+    document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().filter(s=>!s.retest).length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
-    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Each day has its own score out of 12. Weekly cards and the comparison keep the first run; retries are recorded separately. Scores sync across your devices.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
+    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Finish each day’s questions, second tries and Round 2 before starting the next. Day 4 stays locked until you score at least 10/12 on Day 3, Day 3.2 or Day 3.3 and finish that practice. First-run scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=`${s.first} / ${s.total}`;
@@ -75,9 +89,18 @@
     renderDays();
     document.querySelector('#jump').innerHTML=active.questions.map((q,i)=>`<a href="#q${i+1}" class="${result(q,current())}" aria-label="Question ${i+1}">${i+1}</a>`).join('');
     const completion=document.querySelector('#completion');completion.hidden=s.finished!==s.total;
-    completion.innerHTML=s.finished===s.total?`<h2>${s.first===s.total?`${s.total} out of ${s.total} on your first tries!`:active.round2?'Round 2 complete. Well done for working through it.':'Day complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/${s.total} (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${active.round2?'Your Round 2 score is separate. Your original daily score stays unchanged.':active.id===visibleBank().at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next day’s fresh questions.'}</p>`:'';
-    document.querySelector('#new-run').hidden=s.finished!==s.total;document.querySelector('#new-run').textContent=active.round2?'Repeat these Round 2 questions':'Start another run of this session';
-    renderHistory();
+    completion.innerHTML=s.finished===s.total?`<h2>${s.first===s.total?`${s.total} out of ${s.total} on your first tries!`:active.round2?'Round 2 complete. Well done for working through it.':'Day complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/${s.total} (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${(active.weekly||active.round2)?weeklyNextStep():active.id===visibleBank().at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next day’s fresh questions.'}</p>`:'';
+    document.querySelector('#new-run').hidden=active.weekly||s.finished!==s.total;document.querySelector('#new-run').textContent=active.round2?'Repeat these Round 2 questions':'Start another run of this session';
+    renderHistory();applyMistakeFilter();
+  }
+  function weeklyNextStep(){
+    const base=bank.find(s=>s.id===(active.baseId||active.id)),reason=W.unfinished(base,state);
+    if(reason)return esc(reason)+` <a href="?session=${base.id}-round2">Open Round 2</a>`;
+    if(base.id.startsWith('week-oct12-3')&&!W.day3Passed(state)){
+      const next=base.id==='week-oct12-3'?'week-oct12-3-2':base.id==='week-oct12-3-2'?'week-oct12-3-3':null;
+      return `Stay on Day 3. You need at least <strong>10/12 on first tries</strong> to unlock Day 4. ${next?`<a href="?session=${next}">Start ${esc(bank.find(s=>s.id===next).cardLabel)}</a>`:'Review the explanations with a parent before more fresh practice.'}`;
+    }
+    return base.id==='week-oct12-6'?'Your practice record is below.':`Practice complete. ${base.id.startsWith('week-oct12-3')?'Day 4 is unlocked.':'The next day is unlocked.'}`;
   }
   function renderHistory(){
     document.querySelector('#history').innerHTML=runs(active).map((run,i)=>{
@@ -91,7 +114,7 @@
     const container=document.querySelector('#groups');if(!container)return;
     container.hidden=!groups||!!groupId();
     container.innerHTML=(groups||[]).map(g=>{
-      const sessions=bank.filter(s=>s.group===g.id);
+      const sessions=bank.filter(s=>s.group===g.id&&!s.retest);
       const completed=sessions.filter(s=>(state.sessions[s.id]||[]).some(r=>engine.stats(s,r).finished===s.questions.length)).length;
       return `<a class="group-card" href="?group=${g.id}"><span class="eyebrow">${esc(g.label)}</span><h2>${esc(g.title)}</h2><p>${esc(g.description)}</p><strong>${completed} / ${sessions.length} ${g.unit==='Day'?'days':'sessions'} completed</strong><span class="group-open">Open this test group →</span></a>`;
     }).join('');
@@ -107,10 +130,19 @@
     document.querySelector('#questions').setAttribute('aria-label',active?`${active.questions.length} practice questions`:'Practice questions');
     document.querySelector('#practice-content').hidden=!active;
     document.title=active?`${active.title} · Harry’s Daily Math`:'Harry’s Daily Math · Test groups';
+    document.querySelector('#mistake-filter').hidden=true;
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderDays();updateSaveNote();return;}
     let nav=document.querySelector('#round-navigation');if(!nav){nav=document.createElement('nav');nav.id='round-navigation';nav.className='round-navigation';document.querySelector('.session-intro').append(nav);}
     nav.hidden=!(active.weekly||active.round2);const baseId=active.baseId||active.id;
     nav.innerHTML=nav.hidden?'':`<a href="?session=${baseId}" ${!active.round2?'aria-current="page"':''}>Round 1</a><a href="?session=${baseId}-round2" ${active.round2?'aria-current="page"':''}>Round 2 · new numbers</a>`;
+    const reason=locked(active);
+    if(reason){
+      document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent='Your earlier answers and scores are saved.';
+      for(const selector of ['.scorebar','#jump','.records'])document.querySelector(selector).hidden=true;
+      const next=bank.find(s=>s.weekly&&!locked(s)&&W.unfinished(s,state)),nextId=next?(W.stats(next,state)?.finished===12?next.id+'-round2':next.id):'week-oct12-3';
+      document.querySelector('#questions').innerHTML=`<section class="session-lock"><h2>🔒 Practice locked</h2><p>${esc(reason)}</p><a href="?session=${active.round2?active.baseId:nextId}">${active.round2?'Back to Round 1':'Open required practice'}</a></section>`;
+      document.querySelector('#completion').hidden=true;renderDays();updateSaveNote();return;
+    }
     const emptyReview=active.round2&&!active.questions.length;
     for(const selector of ['.scorebar','#jump','.records'])document.querySelector(selector).hidden=emptyReview;
     if(emptyReview){document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent=active.description;document.querySelector('#questions').innerHTML=`<section class="completion"><h2>${active.ready?'No Round 2 needed':'Round 2 is waiting'}</h2><p>${active.ready?'Every Round 1 answer was correct on the first try.':'Finish every first answer in Round 1 to build this review.'}</p><a href="?session=${active.baseId}">Back to Round 1</a></section>`;document.querySelector('#completion').hidden=true;renderDays();updateSaveNote();return;}
@@ -118,7 +150,7 @@
     document.querySelector('#questions').innerHTML=active.questions.map(card).join('');renderSummary();updateSaveNote();
   }
   document.querySelector('#questions').addEventListener('submit',event=>{
-    event.preventDefault();const form=event.target;let q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
+    event.preventDefault();if(!active||locked(active))return;const form=event.target;let q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
     if(q.legacyQuestion&&typeof current().answers[q.source]?.attempts[0]?.choice==='number')q=q.legacyQuestion;
     if(q.type==='fill-blanks'){
       const feedback=document.querySelector(`#feedback-${q.source}`),values=Array.from(form.querySelectorAll('input[name="unit-answer"]:not(:disabled)'),input=>input.value);
@@ -134,11 +166,12 @@
     if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
     const index=active.questions.findIndex(item=>item.source===q.source);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
-  document.addEventListener('click',event=>{const link=event.target.closest('a[href^="?session="]');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=findSession(id);history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
-  window.addEventListener('popstate',()=>{active=selectedDay();render();});
+  document.addEventListener('click',event=>{const link=event.target.closest('a[href^="?session="]');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=findSession(id);onlyMistakes=false;history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
+  window.addEventListener('popstate',()=>{active=selectedDay();onlyMistakes=false;render();});
   window.addEventListener('storage',event=>{if(event.key!==KEY||!event.newValue)return;try{const remote=JSON.parse(event.newValue);if(remote.version===1&&remote.sessions){state=window.HarrySeptSync?window.HarrySeptSync.merge(state,remote):remote;render();void sync?.push();}}catch{}});
+  document.querySelector('#toggle-mistakes').addEventListener('click',()=>{onlyMistakes=!onlyMistakes;applyMistakeFilter();});
   document.querySelector('#large-text').addEventListener('click',event=>{event.currentTarget.setAttribute('aria-pressed',String(document.body.classList.toggle('large')));});
-  document.querySelector('#new-run').addEventListener('click',()=>{if(engine.stats(active,current()).finished!==active.questions.length)return;runs(active).push(newRun(true));save();render();document.querySelector('#session-title').scrollIntoView();});
+  document.querySelector('#new-run').addEventListener('click',()=>{if(!active||active.weekly||locked(active))return;if(engine.stats(active,current()).finished!==active.questions.length)return;runs(active).push(newRun(true));save();render();document.querySelector('#session-title').scrollIntoView();});
   document.querySelector('#download').addEventListener('click',()=>{
     const payload={exportedAt:new Date().toISOString(),testDates:groups?.map(g=>g.id)||['2026-09-20'],scoring:'One point only for a correct first try. Second tries do not change the score.',sessions:[...bank,...(R?.sessions(state)||[]).filter(s=>state.sessions[s.id])].map(session=>({...session,runs:state.sessions[session.id]||[]}))};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='harry-star-math-practice-records.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
