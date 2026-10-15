@@ -40,14 +40,14 @@ test('Second tries and separate Round 2 must finish before the next day or retes
  complete(b,state,s.id,4,false);assert.match(b.w.HarryWeekRules.lockReason(b.session('week-oct12-3-2'),state),/Round 2/);
  complete(b,state,s.id,4,true);assert.equal(b.w.HarryWeekRules.lockReason(b.session('week-oct12-3-2'),state),'');assert.match(b.w.HarryWeekRules.lockReason(b.session('week-oct12-3-3'),state),/Day 3.2/);
 });
-test('9/12 stays on Day 3; a repeat of old questions cannot raise the immutable first score',t=>{
- const b=boot(t),state=early(b);complete(b,state,'week-oct12-3',9);state.sessions['week-oct12-3'].push({...completedRun(b.session('week-oct12-3'),12,'repeat'),startedAt:'2026-10-15T18:00:00Z'});
- assert.match(b.w.HarryWeekRules.lockReason(b.session('week-oct12-4'),state),/at least 10\/12/);
- const view=boot(t,'?session=week-oct12-3',state);assert.equal(view.d.querySelector('#score').textContent,'9 / 12');assert.ok(view.d.querySelector('#new-run').hidden);
+test('8/12 stays on Day 3; a repeat of old questions cannot raise the immutable first score',t=>{
+ const b=boot(t),state=early(b);complete(b,state,'week-oct12-3',8);state.sessions['week-oct12-3'].push({...completedRun(b.session('week-oct12-3'),12,'repeat'),startedAt:'2026-10-15T18:00:00Z'});
+ assert.match(b.w.HarryWeekRules.lockReason(b.session('week-oct12-4'),state),/at least 9\/12/);
+ const view=boot(t,'?session=week-oct12-3',state);assert.equal(view.d.querySelector('#score').textContent,'8 / 12');assert.ok(view.d.querySelector('#new-run').hidden);
 });
-test('A fresh 10/12 retest unlocks Day 4 only after Round 2, and retest records survive sync and reload',t=>{
- const b=boot(t),state=early(b);complete(b,state,'week-oct12-3',4);complete(b,state,'week-oct12-3-2',10,false);
- assert.match(b.w.HarryWeekRules.lockReason(b.session('week-oct12-4'),state),/10\/12/);complete(b,state,'week-oct12-3-2',10,true);
+test('A fresh 9/12 retest unlocks Day 4 only after Round 2, and retest records survive sync and reload',t=>{
+ const b=boot(t),state=early(b);complete(b,state,'week-oct12-3',4);complete(b,state,'week-oct12-3-2',9,false);
+ assert.match(b.w.HarryWeekRules.lockReason(b.session('week-oct12-4'),state),/9\/12/);complete(b,state,'week-oct12-3-2',9,true);
  assert.equal(b.w.HarryWeekRules.lockReason(b.session('week-oct12-4'),state),'');assert.ok(b.w.HarrySeptSync.valid(state));
  const merged=b.w.HarrySeptSync.merge(state,{version:1,sessions:{}});assert.deepEqual(copy(merged.sessions['week-oct12-3-2']),state.sessions['week-oct12-3-2']);assert.deepEqual(copy(merged.sessions['week-oct12-3-2-round2']),copy(state.sessions['week-oct12-3-2-round2']));
  const view=boot(t,'?session=week-oct12-4',merged);assert.equal(view.d.querySelectorAll('.question').length,12);assert.match(view.d.querySelector('a[href="?session=week-oct12-5"]').className,/locked/);
