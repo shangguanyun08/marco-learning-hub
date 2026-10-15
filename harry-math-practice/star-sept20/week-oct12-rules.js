@@ -9,12 +9,12 @@
   if(review.questions.length&&!(state.sessions[review.id]||[]).some(r=>E.stats(review,r).finished===review.questions.length))return `Finish ${s.cardLabel} Round 2 before moving on.`;
   return '';
  }
- function day3Passed(state){for(const id of ids){const s=base(id);if(unfinished(s,state))return false;if(stats(s,state)?.first>=10)return true;}return false;}
+ function day3Passed(state){for(const id of ids){const s=base(id);if(unfinished(s,state))return false;if(stats(s,state)?.first>=9)return true;}return false;}
  function lockReason(session,state){
   if(!session||!(session.weekly||session.round2))return '';
   const s=base(session.baseId||session.id),day=Number(s.id.split('-')[2]);
   for(let i=1;i<day;i++){
-   if(i===3){if(!day3Passed(state))return 'Stay on Day 3: score at least 10/12 on Day 3, Day 3.2 or Day 3.3, then finish its second tries and Round 2 to unlock Day 4.';}
+   if(i===3){if(!day3Passed(state))return 'Stay on Day 3: score at least 9/12 on Day 3, Day 3.2 or Day 3.3, then finish its second tries and Round 2 to unlock Day 4.';}
    else{const reason=unfinished(base('week-oct12-'+i),state);if(reason)return reason;}
   }
   if(s.retest){const previous=base(s.id.endsWith('-2')?ids[0]:ids[1]),reason=unfinished(previous,state);if(reason)return reason;}

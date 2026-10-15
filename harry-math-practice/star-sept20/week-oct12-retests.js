@@ -38,6 +38,6 @@
   add(12,'The segment shown goes from the center to the edge. What is the diameter?',`${radius*2} inches`,[radius/2,radius,radius*4].map(n=>`${n} inches`),`The radius is ${radius} inches. The diameter is twice the radius: 2 × ${radius} = ${radius*2} inches.`,{type:'oct10-radius',radius});
   return base.questions.map(q=>rows.find(r=>r.source===q.source));
  }
- const retries=[2,3].map((attempt,i)=>({...base,id:`week-oct12-3-${attempt}`,retest:true,cardLabel:`Day 3.${attempt}`,title:`Day 3.${attempt}`,description:'Fresh Day 3 practice. Score at least 10/12 on first tries and finish your retries and Round 2 before moving to Day 4.',questions:questions(i+1),reviewVariants:questions(i+3)}));
+ const retries=[2,3].map((attempt,i)=>({...base,id:`week-oct12-3-${attempt}`,retest:true,cardLabel:`Day 3.${attempt}`,title:`Day 3.${attempt}`,description:'Fresh Day 3 practice. Score at least 9/12 on first tries and finish your retries and Round 2 before moving to Day 4.',questions:questions(i+1),reviewVariants:questions(i+3)}));
  bank.splice(bank.indexOf(base)+1,0,...retries);
 })(window);
