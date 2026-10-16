@@ -98,6 +98,41 @@ test('Math: optional sets require every core review and do not require each othe
   for(const n of [7,8])for(const round of [1,2]){const b=browser(t,'math',`?set=${n}&round=${round}`,p);assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 6, Round 2/);}
   completeMath(p,6,2);for(const n of [7,8]){const b=browser(t,'math',`?set=${n}`,p);assert.ok(b.d.querySelector('[data-action="start"]'));assert.equal(b.state().sessions['set-'+n],undefined);}
 });
+
+function savedMathScore(state,n,firstCorrect,round=1,startedAt=at){
+  const r=round===2?E.startRound2(n,state,startedAt):E.start(n,state,startedAt);(state.sessions[E.sessionId(n,round)]||=[]).push(r);
+  for(const [i,id]of r.questionIds.entries())E.submit(r,id,(E.resolve(id).correct+(i<firstCorrect?0:1))%4,startedAt);
+  for(const id of r.questionIds)if(!E.done(r.answers[id]))E.submit(r,id,(E.resolve(id).correct+2)%4,startedAt);
+  assert.ok(r.completedAt);assert.ok(E.valid(state));return r;
+}
+
+test('Math: all locked completed sets retain accurate original first-try counts on cards, scoreboard and direct pages',t=>{
+  const p=E.empty();for(let n=1;n<=8;n++)savedMathScore(p,n,n);
+  savedMathScore(p,2,15,1,'2026-10-14T02:00:00.000Z');const review=savedMathScore(p,2,4,2);
+  const snapshot=clone(p),b=browser(t,'math','?set=5',p);
+  for(let n=1;n<=8;n++){
+    const card=b.d.querySelector(`#sets .set-card[href="?set=${n}"]`),total=p.sessions['set-'+n][0].questionIds.length;
+    assert.match(card.querySelector('.saved-first-score').textContent,new RegExp(`First try right: ${n}/${total}(?:$| )`));
+    assert.equal(card.classList.contains('session-locked'),n>1);
+    card.click();assert.match(b.d.querySelector('#content .saved-first-score')?.textContent||b.d.querySelector('#content .scorebar').textContent,new RegExp(n>1?`First try right: ${n}/${total}`:`First-attempt score: ${n}/${total}`));
+    if(n>1){assert.ok(b.d.querySelector('.session-lock'));assert.equal(b.d.querySelector('form[data-question]'),null);assert.equal(b.d.querySelector('[data-action="start"]'),null);}
+  }
+  for(const [i,row]of [...b.d.querySelectorAll('#daily-scores tbody tr')].entries())assert.equal(row.querySelector('td b').textContent,`${i+1}/15`);
+  b.d.querySelector('#sets .round2-link[href="?set=2&round=2"]').click();assert.match(b.d.querySelector('#content .saved-first-score').textContent,new RegExp(`First try right: 4/${review.questionIds.length}`));assert.ok(b.d.querySelector('.session-lock'));
+  assert.doesNotMatch(b.d.body.textContent,/\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday|Mon|Tue|Tues|Wed|Thu|Thurs|Fri|Sat|Sun)\b/i);same(b.state(),snapshot);
+});
+
+test('Math: partial and unstarted sets do not invent final scores; independent-check first passes stay hidden',t=>{
+  const p=E.empty();savedMathScore(p,1,4);
+  const partial=E.start(2,p,at);p.sessions['set-2']=[partial];for(const [i,id]of partial.questionIds.slice(0,3).entries())E.submit(partial,id,(E.resolve(id).correct+(i===2?1:0))%4,at);
+  p.sessions['set-3']=[E.start(3,p,at)];const check=E.start(5,p,at);p.sessions['set-5']=[check];E.submit(check,check.questionIds[0],E.resolve(check.questionIds[0]).correct,at);
+  const snapshot=clone(p),b=browser(t,'math','?set=2',p),summary=n=>b.d.querySelector(`#sets .set-card[href="?set=${n}"] .saved-first-score`).textContent;
+  assert.equal(summary(2),'First try right: 2/3 answered so far');assert.equal(b.d.querySelector('#content .saved-first-score').textContent,summary(2));
+  for(const n of [3,4,6,7,8])assert.equal(summary(n),'No first-try score yet.');
+  assert.match(summary(5),/First-try score hidden until all first answers are recorded \(1\/15\)/);assert.doesNotMatch(summary(5),/First try right/);
+  const rows=b.d.querySelectorAll('#daily-scores tbody tr');assert.equal(rows[1].querySelector('td b').textContent,'2/3 answered');assert.equal(rows[2].querySelector('td b').textContent,'—');assert.equal(rows[4].querySelector('td b').textContent,'Hidden until first pass ends');
+  assert.doesNotMatch(b.d.body.textContent,/\b(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b/i);assert.equal(b.d.querySelector('form[data-question]'),null);same(b.state(),snapshot);
+});
 test('Math: optional sets open independently after six core sets; Round 2 creates no circular dependency',t=>{
   const p=E.empty();for(let n=1;n<=6;n++){completeMath(p,n);completeMath(p,n,2);}
   for(const n of [7,8]){const b=browser(t,'math',`?set=${n}`,p);assert.ok(b.d.querySelector('[data-action="start"]'),String(n));}
