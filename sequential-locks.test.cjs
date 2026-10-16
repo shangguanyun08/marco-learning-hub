@@ -48,8 +48,8 @@ test('VR: initial sync loading, same-page remote unlock, reload and storage upda
 test('VR: stale start/answer/check/finish controls cannot mutate a locked session',t=>{
   const b=browser(t,'vr','?review4=5'),before=b.state();for(const attrs of ['data-start','data-id="r4-review-001" data-choice="x"','data-check="r4-review-001"','data-submit']){b.d.getElementById('workspace').insertAdjacentHTML('beforeend',`<button ${attrs}>stale</button>`);b.d.getElementById('workspace').lastChild.click();}same(b.state(),before);assert.equal(b.pushes,0);
 });
-test('Math: correct or two-attempt closure unlocks in order without a perfect-score requirement',t=>{
-  const p=E.empty(),r=completeMath(p,1);assert.equal(E.stats(r).first,0);assert.equal(E.stats(r).corrected,0);const b=browser(t,'math','?set=2',p);assert.ok(b.d.querySelector('[data-action="start"]'));b.d.querySelector('[data-action="start"]').click();assert.equal(b.d.querySelectorAll('.question').length,15);
+test('Math: both rounds must close before the next set opens, without a perfect-score requirement',t=>{
+  const p=E.empty(),r=completeMath(p,1);assert.equal(E.stats(r).first,0);assert.equal(E.stats(r).corrected,0);const locked=browser(t,'math','?set=2',p);assert.match(locked.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);assert.equal(locked.d.querySelector('[data-action="start"]'),null);completeMath(p,1,2);const b=browser(t,'math','?set=2',p);assert.ok(b.d.querySelector('[data-action="start"]'));b.d.querySelector('[data-action="start"]').click();assert.equal(b.d.querySelectorAll('.question').length,15);
   const repeat=E.start(1,p,at);p.sessions['set-1'].push(repeat);const c=browser(t,'math','?set=2',p);assert.ok(c.d.querySelector('[data-action="start"]'),'an unfinished repeat does not undo an earlier completion');
 });
 test('Math: first-pass scores alone do not unlock; partial future answers and notes stay saved',t=>{
@@ -66,11 +66,43 @@ test('Math: core Round 2 waits for own completed Round 1 and earlier Round 2, wi
   const noMiss=E.empty();completeMath(noMiss,1,1,true);completeMath(noMiss,2);const d=browser(t,'math','?set=2&round=2',noMiss);assert.ok(d.d.querySelector('[data-action="start"]'));
   const none=browser(t,'math','?set=1&round=2',noMiss);assert.match(none.d.getElementById('content').textContent,/No Round 2 needed/);assert.equal(none.d.querySelector('[data-action="start"]'),null);
 });
+
+test('Math: missing, partial and unclosed Round 2 block direct links, clicks and stale controls without changing saved work',t=>{
+  const p=E.empty();completeMath(p,1);const future=completeMath(p,2);future.notes[future.questionIds[0]]={text:'Preserve this setup',at};
+  const before=clone(p),scores=clone(E.dailyScores(p));
+  const deep=browser(t,'math','?set=4',p);assert.match(deep.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/,'direct links point to the earliest actionable prerequisite');
+  const b=browser(t,'math','?set=2',p);assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);assert.match(b.d.querySelector('.records').textContent,/Preserve this setup/);same(b.state(),before);
+  b.d.querySelector('#sets a[href="?set=2&round=2"]').click();assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);
+  const content=b.d.getElementById('content'),id='r2:'+future.questionIds[0];content.insertAdjacentHTML('beforeend',`<button data-action="start">stale</button><form data-question="${id}"><input type="radio" value="0" checked><p class="feedback"></p></form><textarea data-note="${id}">erase</textarea>`);
+  content.querySelector('button').click();content.querySelector('input').dispatchEvent(new b.w.Event('change',{bubbles:true}));content.querySelector('textarea').dispatchEvent(new b.w.Event('input',{bubbles:true}));content.querySelector('form').dispatchEvent(new b.w.Event('submit',{bubbles:true,cancelable:true}));same(b.state(),before);assert.equal(b.pushes,0);
+  const review=E.startRound2(1,p,at);p.sessions['set-1-round2']=[review];
+  for(const id of review.questionIds.slice(1))E.submit(review,id,E.resolve(id).correct,at);
+  const partial=browser(t,'math','?set=2',p);assert.match(partial.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);
+  const q=E.resolve(review.questionIds[0]);E.submit(review,q.id,(q.correct+1)%4,at);assert.ok(E.firstPass(review));assert.equal(review.completedAt,null);
+  const unclosed=browser(t,'math','?set=2',p);assert.match(unclosed.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);
+  E.submit(review,q.id,(q.correct+2)%4,at);assert.ok(review.completedAt);
+  b.w.localStorage.setItem(MATHKEY,JSON.stringify(p));b.w.dispatchEvent(new b.w.StorageEvent('storage',{key:MATHKEY,newValue:JSON.stringify(p)}));assert.equal(b.d.querySelector('.session-lock'),null);assert.ok(b.d.querySelector('[data-action="start"]'));
+  same(b.state().sessions['set-2'],before.sessions['set-2']);same(E.dailyScores(b.state()),scores);
+  const repeat=E.startRound2(1,p,at);p.sessions['set-1-round2'].push(repeat);const reloaded=browser(t,'math','?set=2',p);assert.equal(reloaded.d.querySelector('.session-lock'),null,'unfinished repeats do not revoke a completed required review');
+});
+
+test('Math: zero wrong answers skips Round 2 and preserves original scores, while an earlier review gap still blocks',t=>{
+  const p=E.empty();completeMath(p,1,1,true);const snapshot=clone(p),b=browser(t,'math','?set=2',p);assert.ok(b.d.querySelector('[data-action="start"]'));same(b.state(),snapshot);assert.equal(b.state().sessions['set-1-round2'],undefined);
+  const overview=browser(t,'math','',p);assert.equal(overview.d.querySelector('#content .primary').getAttribute('href'),'?set=2');
+  const gap=E.empty();completeMath(gap,1);completeMath(gap,2,1,true);const locked=browser(t,'math','?set=2&round=2',gap);assert.match(locked.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);
+  const next=browser(t,'math','',gap);assert.equal(next.d.querySelector('#content .primary').getAttribute('href'),'?set=1&round=2');assert.match(next.d.querySelector('.session-rule').textContent,/required Round 2 before opening the next set/);
+});
+
+test('Math: optional sets require every core review and do not require each other',t=>{
+  const p=E.empty();for(let n=1;n<=6;n++)completeMath(p,n);for(let n=1;n<=5;n++)completeMath(p,n,2);
+  for(const n of [7,8])for(const round of [1,2]){const b=browser(t,'math',`?set=${n}&round=${round}`,p);assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 6, Round 2/);}
+  completeMath(p,6,2);for(const n of [7,8]){const b=browser(t,'math',`?set=${n}`,p);assert.ok(b.d.querySelector('[data-action="start"]'));assert.equal(b.state().sessions['set-'+n],undefined);}
+});
 test('Math: optional sets open independently after six core sets; Round 2 creates no circular dependency',t=>{
-  const p=E.empty();for(let n=1;n<=6;n++)completeMath(p,n);
+  const p=E.empty();for(let n=1;n<=6;n++){completeMath(p,n);completeMath(p,n,2);}
   for(const n of [7,8]){const b=browser(t,'math',`?set=${n}`,p);assert.ok(b.d.querySelector('[data-action="start"]'),String(n));}
   const waiting=browser(t,'math','?set=8&round=2',p);assert.match(waiting.d.querySelector('.session-lock').textContent,/Finish Set 8, Round 1/);
-  const gap=clone(p);delete gap.sessions['set-2'];const c=browser(t,'math','?set=8',gap);assert.match(c.d.querySelector('.session-lock').textContent,/Finish Set 2, Round 1/);
+  const gap=clone(p);delete gap.sessions['set-2'];delete gap.sessions['set-2-round2'];const c=browser(t,'math','?set=8',gap);assert.match(c.d.querySelector('.session-lock').textContent,/Finish Set 2, Round 1/);
 });
 test('Math: out-of-order completed work stays read-only, downloadable and preserves notes and scores',t=>{
   const p=E.empty(),r=completeMath(p,4);r.notes[r.questionIds[0]]={text:'Saved setup',at};const b=browser(t,'math','?set=4',p);assert.match(b.d.querySelector('.records').textContent,/Saved setup/);assert.equal(b.d.querySelector('form[data-question]'),null);assert.equal(b.d.querySelector('[data-action="start"]'),null);assert.ok(b.d.getElementById('download'));same(b.state()||p,p);
@@ -78,7 +110,7 @@ test('Math: out-of-order completed work stays read-only, downloadable and preser
 test('Math: initial sync loading, same-page remote unlock, back/forward deep links and offline fallback',async t=>{
   const b=browser(t,'math','?set=2&round=2',undefined,{online:true,delayed:true});assert.match(b.d.querySelector('.session-lock').textContent,/Checking saved progress/);
   const p=E.empty();completeMath(p,1,1,true);completeMath(p,2);b.remote(p);assert.equal(b.d.querySelector('[data-action="start"]'),null);await b.ready();assert.ok(b.d.querySelector('[data-action="start"]'));
-  b.w.history.pushState(null,'','?set=3');b.w.dispatchEvent(new b.w.PopStateEvent('popstate'));assert.ok(b.d.querySelector('[data-action="start"]'));
+  b.w.history.pushState(null,'','?set=3');b.w.dispatchEvent(new b.w.PopStateEvent('popstate'));assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 2, Round 2/);completeMath(p,2,2);b.remote(p);assert.ok(b.d.querySelector('[data-action="start"]'));
   b.w.history.pushState(null,'','?set=5');b.w.dispatchEvent(new b.w.PopStateEvent('popstate'));assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 3, Round 1/);
   const offline=browser(t,'math','?set=2',p,{online:true,delayed:true});await offline.fail();assert.ok(offline.d.querySelector('[data-action="start"]'));
 });
@@ -86,7 +118,7 @@ test('Math: stale controls and storage sync cannot bypass a locked future set',t
   const p=E.empty(),r=E.start(3,p,at);p.sessions['set-3']=[r];const id=r.questionIds[0],b=browser(t,'math','?set=3',p),content=b.d.getElementById('content');
   content.insertAdjacentHTML('beforeend',`<button data-action="start">stale</button><form data-question="${id}"><input type="radio" value="0" checked><p class="feedback"></p></form><textarea data-note="${id}">erase</textarea>`);
   content.querySelector('button').click();content.querySelector('input').dispatchEvent(new b.w.Event('change',{bubbles:true}));content.querySelector('textarea').dispatchEvent(new b.w.Event('input',{bubbles:true}));content.querySelector('form').dispatchEvent(new b.w.Event('submit',{bubbles:true,cancelable:true}));same(b.state()||p,p);assert.equal(b.pushes,0);
-  completeMath(p,1);b.w.localStorage.setItem(MATHKEY,JSON.stringify(p));b.w.dispatchEvent(new b.w.StorageEvent('storage',{key:MATHKEY,newValue:JSON.stringify(p)}));assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 2, Round 1/);same(b.state().sessions['set-3'],p.sessions['set-3']);
+  completeMath(p,1);b.w.localStorage.setItem(MATHKEY,JSON.stringify(p));b.w.dispatchEvent(new b.w.StorageEvent('storage',{key:MATHKEY,newValue:JSON.stringify(p)}));assert.match(b.d.querySelector('.session-lock').textContent,/Finish Set 1, Round 2/);same(b.state().sessions['set-3'],p.sessions['set-3']);
 });
 test('Both pages show the exact rule and specific prerequisite guidance',t=>{
   for(const course of ['vr','math']){const b=browser(t,course,course==='vr'?'?session=2':'?set=2');assert.ok(b.d.querySelector('.session-rule').textContent.includes('Finish your earlier sessions to unlock the next one.'));assert.ok(b.d.querySelector('.session-lock'));}
@@ -98,7 +130,7 @@ test('Both pages give every locked card a visible SVG padlock and readable Locke
   }
 });
 test('Lock icons follow synchronization readiness and unlocks without changing saved results',async t=>{
-  for(const course of ['vr','math']){const b=browser(t,course,course==='vr'?'?session=2':'?set=2',undefined,{online:true,delayed:true});assert.equal(b.d.querySelector('[data-lock-badge]'),null);let p;if(course==='vr')p=F.complete(Core.blank(),1);else{p=E.empty();completeMath(p,1);}b.remote(p);assert.equal(b.d.querySelector('[data-lock-badge]'),null);await b.ready();const next=b.d.querySelector(course==='vr'?'[data-session="2"]':'#sets a[href="?set=2"]');assert.equal(next.querySelector('[data-lock-badge]'),null);same(b.state(),p);
+  for(const course of ['vr','math']){const b=browser(t,course,course==='vr'?'?session=2':'?set=2',undefined,{online:true,delayed:true});assert.equal(b.d.querySelector('[data-lock-badge]'),null);let p;if(course==='vr')p=F.complete(Core.blank(),1);else{p=E.empty();completeMath(p,1,1,true);}b.remote(p);assert.equal(b.d.querySelector('[data-lock-badge]'),null);await b.ready();const next=b.d.querySelector(course==='vr'?'[data-session="2"]':'#sets a[href="?set=2"]');assert.equal(next.querySelector('[data-lock-badge]'),null);same(b.state(),p);
     const done=course==='vr'?F.complete(Core.blank(),4):E.empty();if(course==='math')completeMath(done,4);const saved=browser(t,course,course==='vr'?'?session=4':'?set=4',done);const completedCard=saved.d.querySelector(course==='vr'?'[data-session="4"]':'#sets a[href="?set=4"]');assert.ok(completedCard.querySelector('[data-lock-badge]'));assert.ok(completedCard.classList.contains(course==='vr'?'mastered':'complete'));same(saved.state()||done,done);
   }
 });
