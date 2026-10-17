@@ -13,7 +13,7 @@ function course(t,query='',state){
 test('Review is placed between Set 6 and Set 7, including direct set pages',t=>{
  for(const query of ['', '?set=6','?set=7']){
   const {d}=course(t,query),cards=[...d.querySelectorAll('#sets .set-card')],index=cards.findIndex(a=>a.getAttribute('href')==='review.html');
-  assert.equal(cards[index-1].getAttribute('href'),'?set=6');assert.equal(cards[index+1].getAttribute('href'),'?set=7');
+  assert.equal(cards[index-1].getAttribute('href'),'?set=6');assert.equal(cards[index+1].getAttribute('href'),'review2.html');assert.equal(cards[index+2].getAttribute('href'),'?set=7');
  }
 });
 test('Completing core practice leads to review without changing saved answers',t=>{
@@ -47,7 +47,7 @@ test('Review lists only wrong first answers, sorts by accuracy, and hides each a
  const toggle=d.querySelector('.answer-reveal'),summary=toggle.querySelector('summary');
  summary.click();assert.equal(toggle.open,true);summary.click();assert.equal(toggle.open,false);
  assert.equal(d.querySelector('.review-nav a').getAttribute('href'),'./?set=6');
- assert.equal(d.querySelector('.review-next a').getAttribute('href'),'./?set=7');
+ assert.equal(d.querySelector('.review-next a').getAttribute('href'),'review2.html');
 });
 
 test('Review practice checks new selections independently and preserves original scores and saved work',t=>{

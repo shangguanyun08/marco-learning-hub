@@ -14,3 +14,5 @@ This is a separate course, not a replacement for dated mock-test reviews.
 - Graphs, tables, and net/angle diagrams are rebuilt with real text and SVG; no question screenshots.
 
 Run `node tests.mjs` for independent numerical/key checks and state/sync tests. QA must not write fake records to the production progress API.
+
+- Review Session 2 (`review2.html`) follows the original Review and precedes Set 7. It contains 52 fresh questions: 4 for each of the 13 listed subtopics, preserving topic/subtopic order. Feedback waits for the four first answers in each subtopic; at least 3/4 meets that subtopic’s goal. Retries never change the first-try result. Progress uses its own `marco-math-skill-builder-oct12-review2-v1` app ID and does not overwrite course results. Existing set access rules stay unchanged. `?demo=1` and localhost never call the progress API.
