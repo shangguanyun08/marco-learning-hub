@@ -54,7 +54,7 @@
   questions.push({source:6,sourceLabel:'Targeted fraction review',skill:'Equivalent fractions',type:'number',retryUntilCorrect:true,prompt:`Complete the equivalent fraction: ${c}/${d} = ${c*k}/____. Fill in the missing denominator.`,answerLabel:'Missing denominator (bottom number)',correct:d*k,hint:'Find what the numerator was multiplied by. Multiply the denominator by the same number.',explanation:`${c} × ${k} = ${c*k}, so multiply the denominator by ${k} too: ${d} × ${k} = ${d*k}.`});
   return questions;
  }
- const focused={...base,id:'week-oct12-3-4',retest:true,targeted:true,practiceOnly:true,cardLabel:'Day 3.4',title:'Day 3.4 · Fraction check',description:'6 fill-in questions: 4 mixed-number conversions and 2 equivalent-fraction checks. Type the missing number and keep trying until correct. A method hint appears after two mistakes. Progress shows questions completed, with no score or separate second round.',questions:fractionReview(),reviewVariants:fractionReview(true)};
+ const focused={...base,id:'week-oct12-3-4',retest:true,targeted:true,practiceOnly:true,cardLabel:'Day 3.4',title:'Day 3.4 · Fraction check',description:'6 fill-in questions: 4 mixed-number conversions and 2 equivalent-fraction checks. Type the missing number and keep trying until correct. A method hint appears after two mistakes. Your first-try percentage is recorded separately; retries do not change it. No separate second round.',questions:fractionReview(),reviewVariants:fractionReview(true)};
  bank.splice(bank.indexOf(retries.at(-1))+1,0,focused);
 })(window);
 

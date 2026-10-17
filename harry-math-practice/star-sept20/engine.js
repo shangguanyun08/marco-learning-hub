@@ -80,7 +80,7 @@
       else if(!q.retryUntilCorrect&&e.attempts.length===2)revealed++;
       if(done(q,e))finished++;
     });
-    return {first,attempted,corrected,revealed,finished,total:session.questions.length,percent:Math.round(first/session.questions.length*100)};
+    return {first,attempted,corrected,revealed,finished,total:session.questions.length,percent:Math.round(first/session.questions.length*100),firstTryPercent:attempted?Math.round(first/attempted*1000)/10:null};
   }
   root.HarrySeptEngine={done,submit,stats,isCorrect,normalize,normalizeFor,typed,splitValues};
 })(typeof window==='undefined'?globalThis:window);

@@ -80,8 +80,11 @@
           // Conflicting first tries stay in separate runs, never become retries.
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
-          const entries=Object.entries(run.answers).filter(([source])=>!id.startsWith('oct4-')||source!=='29').map(([,entry])=>entry);
-          const expected=reviewId(id)?run.round2Sources.length:id==='week-oct12-3-4'?6:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          // Shortened sessions count only their current questions. Preserve any
+          // answers to removed questions in history without blocking completion.
+          const practice=(root.HARRY_SEPT_PRACTICE||[]).find(s=>s.id===id&&s.practiceOnly);
+          const entries=practice?practice.questions.map(q=>run.answers[q.source]).filter(Boolean):Object.entries(run.answers).filter(([source])=>!id.startsWith('oct4-')||source!=='29').map(([,entry])=>entry);
+          const expected=practice?practice.questions.length:reviewId(id)?run.round2Sources.length:id==='week-oct12-3-4'?6:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
           if(unlimitedId(id)&&!(entries.length===expected&&entries.every(e=>e.attempts.some(a=>a.correct))))run.completedAt=null;
           if(!run.completedAt&&entries.length===expected&&entries.every(e=>(!unlimitedId(id)&&e.attempts.length===2)||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
