@@ -1,7 +1,7 @@
 (function(root){
   'use strict';
   const C=root.MarcoSkillCourse,clone=x=>JSON.parse(JSON.stringify(x)),time=x=>typeof x==='string'&&Number.isFinite(Date.parse(x)),object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
-  const empty=()=>({version:1,sessions:{}}),set=n=>C.sets.find(s=>s.number===n),resolve=id=>{if(String(id).startsWith('r2:'))return C.round2Question(String(id).slice(3));const [kind,s]=String(id).split('@');const q=C.question(kind,Number(s));if(q.id!==id)throw new Error('Invalid question ID');return q;};
+  const empty=()=>({version:1,sessions:{}}),set=n=>C.sets.find(s=>s.number===n),resolve=id=>{if(C.checkpointQuestions?.[id])return clone(C.checkpointQuestions[id]);if(String(id).startsWith('r2:'))return C.round2Question(String(id).slice(3));const [kind,s]=String(id).split('@');const q=C.question(kind,Number(s));if(q.id!==id)throw new Error('Invalid question ID');return q;};
   const done=e=>!!e&&(e.attempts[0]?.correct||e.attempts.length===2);
   const firstPass=r=>r.questionIds.every(id=>r.answers[id]?.attempts.length);
   function finished(r){return r.questionIds.every(id=>done(r.answers[id]));}
@@ -24,18 +24,22 @@
   }
   function start(number,state,at=new Date().toISOString(),id=root.crypto.randomUUID()){
     const s=set(number),p=s.adaptive?plan(state):null;if(s.adaptive&&!p.hasEvidence)throw new Error('Answer a core set before using targeted practice.');
+    if(s.checkpoint&&state.sessions[s.id]?.length)throw new Error('This check already has a saved attempt. Continue that attempt; its first-try score stays fixed.');
+    if(s.checkpoint&&number===8&&!state.sessions[set(7).id]?.[0]?.completedAt)throw new Error('Finish the new Set 7 before opening Set 8.');
     const ids=p?p.questionIds:s.questionIds;if(!ids.length)throw new Error('No unused follow-up questions remain.');
-    return {id,setNumber:number,startedAt:at,completedAt:null,questionIds:[...ids],answers:{},pending:{},notes:{},targeted:p?.targeted||false,reasons:p?.reasons||[]};
+    return {id,setNumber:number,...(s.contentVersion?{contentVersion:s.contentVersion}:{}),startedAt:at,completedAt:null,questionIds:[...ids],answers:{},pending:{},notes:{},targeted:p?.targeted||false,reasons:p?.reasons||[]};
   }
   const sessionId=(number,round=1)=>set(number).id+(round===2?'-round2':'');
-  const definitions=()=>C.sets.flatMap(s=>[s,{...s,id:sessionId(s.number,2),round:2,check:false}]);
-  const isCheck=r=>r.round!==2&&set(r.setNumber).check;
+  const definitions=()=>[...C.sets,...(C.legacySets||[])].flatMap(s=>s.noRound2?[s]:[s,{...s,id:s.id+'-round2',sourceId:s.id,round:2,check:false}]);
+  const isCheck=r=>{const current=set(r.setNumber),definition=current.contentVersion&&r.contentVersion!==current.contentVersion?(C.legacySets||[]).find(s=>s.number===r.setNumber):current;return r.round!==2&&!!definition?.check;};
   function round2Plan(number,state){
+    if(set(number).noRound2)return {ready:false,source:null,sourceQuestionIds:[],questionIds:[]};
     const source=state.sessions[sessionId(number)]?.[0],ready=!!source&&firstPass(source);
     const missed=ready?source.questionIds.filter(id=>source.answers[id].attempts[0].correct===false):[];
     return {ready,source,sourceQuestionIds:missed,questionIds:missed.map(id=>'r2:'+id)};
   }
   function startRound2(number,state,at=new Date().toISOString(),id=root.crypto.randomUUID()){
+    if(set(number).noRound2)throw new Error('Sets 7 and 8 use one check with an in-question retry; there is no separate Round 2.');
     const p=round2Plan(number,state);
     if(!p.ready)throw new Error('Finish all Round 1 first answers before starting Round 2.');
     if(!p.questionIds.length)throw new Error('No first-try mistakes. Round 2 is not needed.');
@@ -43,7 +47,7 @@
   }
   function validReview(r,s,state){
     if(r.round!==2||typeof r.sourceRunId!=='string'||!Array.isArray(r.sourceQuestionIds))return false;
-    const sources=state.sessions[sessionId(s.number)]||[];
+    const sources=state.sessions[s.sourceId||sessionId(s.number)]||[];
     return sources.some(source=>source.id.split('~')[0]===r.sourceRunId.split('~')[0]&&firstPass(source)&&
       JSON.stringify(source.questionIds.filter(id=>source.answers[id].attempts[0].correct===false))===JSON.stringify(r.sourceQuestionIds))&&
       JSON.stringify(r.questionIds)===JSON.stringify(r.sourceQuestionIds.map(id=>'r2:'+id));
@@ -59,13 +63,13 @@
   function dailyScores(state){return C.sets.slice(0,6).map(s=>{const r=state.sessions[s.id]?.[0],st=stats(r),final=!!r&&firstPass(r),hidden=!!r&&s.check&&!final;return {number:s.number,day:s.day,label:s.label,check:!!s.check,started:!!r,total:s.questionIds.length,attempted:st.attempted,correct:hidden?null:st.first,percent:!hidden&&st.attempted?Math.round(st.first/st.attempted*100):null,final,completed:!!r?.completedAt,firstFinishedAt:final?Object.values(r.answers).map(e=>e.attempts[0].at).sort().at(-1):null};});}
   function skillStats(state){
     const result=Object.fromEntries(Object.keys(C.skills).map(k=>[k,{attempted:0,first:0,checks:0,checkCorrect:0,checkTimes:[]}]));
-    for(const s of C.sets){const r=state.sessions[s.id]?.[0];if(!r||(s.check&&!firstPass(r)))continue;for(const id of r.questionIds){const e=r.answers[id];if(!e?.attempts.length)continue;const x=result[resolve(id).skill];x.attempted++;if(e.attempts[0].correct)x.first++;if(s.check){x.checks++;x.checkTimes.push(e.attempts[0].at);if(e.attempts[0].correct)x.checkCorrect++;}}}
+    for(const s of [...C.sets,...(C.legacySets||[])]){const r=state.sessions[s.id]?.[0];if(!r||(s.check&&!firstPass(r)))continue;for(const id of r.questionIds){const e=r.answers[id];if(!e?.attempts.length)continue;const x=result[resolve(id).skill];x.attempted++;if(e.attempts[0].correct)x.first++;if(s.check){x.checks++;x.checkTimes.push(e.attempts[0].at);if(e.attempts[0].correct)x.checkCorrect++;}}}
     return result;
   }
   function valid(state){
     try{return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([sid,runs])=>{
       const s=definitions().find(x=>x.id===sid);if(!s||!Array.isArray(runs))return false;
-      return runs.every(r=>object(r)&&typeof r.id==='string'&&r.id.length<200&&r.setNumber===s.number&&time(r.startedAt)&&(r.completedAt===null||time(r.completedAt))&&Array.isArray(r.questionIds)&&r.questionIds.length>0&&r.questionIds.length<=(s.number===8?25:15)&&new Set(r.questionIds).size===r.questionIds.length&&
+      return runs.every(r=>object(r)&&typeof r.id==='string'&&r.id.length<200&&r.setNumber===s.number&&(s.contentVersion?r.contentVersion===s.contentVersion:r.contentVersion===undefined)&&time(r.startedAt)&&(r.completedAt===null||time(r.completedAt))&&Array.isArray(r.questionIds)&&r.questionIds.length>0&&r.questionIds.length<=(s.maxQuestions||s.questionIds?.length||15)&&new Set(r.questionIds).size===r.questionIds.length&&
         (s.round===2?validReview(r,s,state):r.round!==2&&(s.adaptive?r.questionIds.every(id=>{const q=resolve(id);return q.seed>=401;}):JSON.stringify(r.questionIds)===JSON.stringify(s.questionIds)))&&object(r.answers)&&object(r.pending)&&object(r.notes)&&Array.isArray(r.reasons)&&
         Object.entries(r.answers).every(([id,e])=>r.questionIds.includes(id)&&object(e)&&Array.isArray(e.attempts)&&e.attempts.length>0&&e.attempts.length<=2&&new Set(e.attempts.map(a=>a.choice)).size===e.attempts.length&&(!e.attempts[0].correct||e.attempts.length===1)&&e.attempts.every(a=>object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4&&a.correct===(a.choice===resolve(id).correct)&&time(a.at)))&&
         (!r.completedAt||finished(r))&&(!s.check||firstPass(r)||Object.values(r.answers).every(e=>e.attempts.length===1))&&Object.entries(r.pending).every(([id,p])=>r.questionIds.includes(id)&&object(p)&&Number.isInteger(p.choice)&&p.choice>=0&&p.choice<4&&time(p.at))&&

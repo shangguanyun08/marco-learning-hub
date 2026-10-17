@@ -1,13 +1,13 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{randomUUID}=require('node:crypto');
 const {JSDOM}=require('jsdom');
 const read=file=>fs.readFileSync(path.join(__dirname,file),'utf8');
-const ctx={crypto:{randomUUID}};for(const file of ['data.js','round2.js','engine.js'])vm.runInNewContext(read(file),ctx);
+const ctx={crypto:{randomUUID}};for(const file of ['data.js','round2.js','checkpoint-data.js','engine.js'])vm.runInNewContext(read(file),ctx);
 const E=ctx.MarcoSkillEngine,KEY='marco-math-skill-builder-oct12-v1';
 function course(t,query='',state){
  const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;
  t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};
  w.MarcoSkillSync={APP_ID:KEY};if(state)w.localStorage.setItem(KEY,JSON.stringify(state));
- for(const file of ['data.js','round2.js','engine.js','app.js'])w.eval(read(file));
+ for(const file of ['data.js','round2.js','checkpoint-data.js','engine.js','app.js'])w.eval(read(file));
  return {w,d:w.document};
 }
 test('Review is placed between Set 6 and Set 7, including direct set pages',t=>{
