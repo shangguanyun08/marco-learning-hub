@@ -11,6 +11,7 @@
   let sync=null, syncKind='connecting', syncMessage='Connecting… Your saved answers will sync automatically.';
   let storageOK=true, state={version:1,sessions:{}};
   try {const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1&&saved.sessions)state=saved;} catch {storageOK=false;}
+  if(window.HarrySeptSync)state=window.HarrySeptSync.applyResets(state);
   const findSession=id=>bank.find(s=>s.id===id)||R?.resolve(id,state)||null;
   const selectedDay=()=>findSession(new URLSearchParams(location.search).get('session'));
   let active=selectedDay(),onlyMistakes=false;

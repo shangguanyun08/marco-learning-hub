@@ -18,6 +18,19 @@
   const clone=value=>JSON.parse(JSON.stringify(value));
   const object=value=>value!==null&&typeof value==='object'&&!Array.isArray(value);
   const time=value=>typeof value==='string'&&Number.isFinite(Date.parse(value));
+  // Parent-requested reset: discard attempts from before this reset, including
+  // copies later uploaded by another device. Fresh attempts remain untouched.
+  const RESET_BEFORE={'week-oct12-4':'2026-10-17T15:16:52.000Z','week-oct12-5':'2026-10-17T15:16:52.000Z','week-oct12-6':'2026-10-17T15:16:52.000Z'};
+  const resetRun=(id,run)=>{const cutoff=RESET_BEFORE[id.replace(/-round2$/,'')];return !!cutoff&&Date.parse(run.startedAt)<Date.parse(cutoff);};
+  const hasResetRuns=state=>Object.entries(state?.sessions||{}).some(([id,runs])=>runs.some(run=>resetRun(id,run)));
+  function applyResets(state){
+    const next=clone(state);
+    for(const [id,runs] of Object.entries(next.sessions)){
+      const kept=runs.filter(run=>!resetRun(id,run));
+      if(kept.length)next.sessions[id]=kept;else if(runs.length)delete next.sessions[id];
+    }
+    return next;
+  }
   function valid(state){
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
@@ -37,6 +50,7 @@
     for(const id of IDS){
       const groups=new Map();
       for(const state of [a,b])for(const [index,raw] of (state?.sessions?.[id]||[]).entries()){
+        if(resetRun(id,raw))continue;
         const run=clone(raw);
         // Opening an untouched page is not a new practice run. Explicit repeat
         // runs (including older, already-saved repeats) remain part of history.
@@ -106,7 +120,7 @@
           const data=await request(),record=data.progress;
           const empty={version:1,sessions:{}},remote=record?.state||empty;
           const next=apply(remote);
-          if(same(next,normalized(remote))){onStatus('live',record?'Synced · Saved online and on this device.':'Connected · Answers will sync across your devices.');return;}
+          if(!hasResetRuns(remote)&&same(next,normalized(remote))){onStatus('live',record?'Synced · Saved online and on this device.':'Connected · Answers will sync across your devices.');return;}
           onStatus('saving','Saving online… Your answers are saved on this device.');
           const saved=await request({appId:APP_ID,studentName:'Harry',deviceId:device,state:next,
             progressScore:Object.values(next.sessions).flat().reduce((sum,run)=>sum+Object.values(run.answers).reduce((n,e)=>n+e.attempts.length,0),0),
@@ -126,5 +140,5 @@
       stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.document.removeEventListener('visibilitychange',visible);}
     };
   }
-  root.HarrySeptSync={valid,merge,create};
+  root.HarrySeptSync={valid,merge,create,applyResets};
 })(typeof window==='undefined'?globalThis:window);
