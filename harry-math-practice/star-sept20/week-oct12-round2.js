@@ -79,7 +79,8 @@
  function resolve(id,state){
   const base=originals.find(s=>s.id+suffix===id);if(!base)return null;
   const p=plan(base,state),saved=state.sessions[id]?.at(-1),sources=saved?.round2Sources||p.sources;
-  return {id,group,round2:true,baseId:base.id,cardLabel:base.cardLabel,title:base.title+' · Round 2',description:'Only Round 1 first-try mistakes, with different numbers. One retry per question. Your original daily score stays unchanged.',ready:!!saved||p.ready,sourceRunId:saved?.sourceRunId||p.source?.id,questions:sources.map(source=>variants.get(base.id).find(q=>q.source===source)).filter(Boolean)};
+  return {id,group,round2:true,practiceOnly:!!base.practiceOnly,baseId:base.id,cardLabel:base.cardLabel,title:base.title+' · Round 2',description:base.questions.some(q=>q.retryUntilCorrect)?'Only Round 1 first-try mistakes, with different numbers. Keep trying fill-in questions until correct; multiple-choice questions allow one retry. Your first-try score stays unchanged.':'Only Round 1 first-try mistakes, with different numbers. One retry per question. Your original daily score stays unchanged.',ready:!!saved||p.ready,sourceRunId:saved?.sourceRunId||p.source?.id,questions:sources.map(source=>variants.get(base.id).find(q=>q.source===source)).filter(Boolean)};
  }
  root.HarryWeekRound2={plan,resolve,firstRun,variants,sessions:state=>originals.map(s=>resolve(s.id+suffix,state))};
 })(window);
+

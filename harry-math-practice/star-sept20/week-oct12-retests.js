@@ -38,6 +38,23 @@
   add(12,'The segment shown goes from the center to the edge. What is the diameter?',`${radius*2} inches`,[radius/2,radius,radius*4].map(n=>`${n} inches`),`The radius is ${radius} inches. The diameter is twice the radius: 2 × ${radius} = ${radius*2} inches.`,{type:'oct10-radius',radius});
   return base.questions.map(q=>rows.find(r=>r.source===q.source));
  }
- const retries=[2,3].map((attempt,i)=>({...base,id:`week-oct12-3-${attempt}`,retest:true,cardLabel:`Day 3.${attempt}`,title:`Day 3.${attempt}`,description:'Fresh Day 3 practice. Score at least 9/12 on first tries and finish your retries and Round 2 before moving to Day 4.',questions:questions(i+1),reviewVariants:questions(i+3)}));
+ const retries=[2,3].map((attempt,i)=>({...base,id:`week-oct12-3-${attempt}`,retest:true,cardLabel:`Day 3.${attempt}`,title:`Day 3.${attempt}`,description:'Fresh Day 3 practice. Aim for at least 9/12 on first tries, then finish your retries and Round 2.',questions:questions(i+1),reviewVariants:questions(i+3)}));
  bank.splice(bank.indexOf(base)+1,0,...retries);
+ // Short follow-up to the repeated mixed-number errors and the Day 3.3
+ // equivalent-fraction miss. This is separate from the 12-question checks.
+ function fractionReview(review=false){
+  const pairs=review?[[3,3,4],[5,2,7],[4,3,8],[6,2,5]]:[[2,2,3],[4,3,5],[3,2,5],[5,1,4]];
+  const questions=pairs.map(([whole,n,d],i)=>{
+   const prefix=i===2?`A recipe uses ${whole} full cups of flour and another ${n}/${d} cup. Write the total as an improper fraction of a cup.`:i===3?`Sam writes ${whole} ${n}/${d} = ${whole*d}/${d}. Fix his answer.`:`Write ${whole} ${n}/${d} as an improper fraction.`;
+   return {source:i+1,sourceLabel:'Targeted fraction review',skill:'Mixed numbers to improper fractions',type:'number',retryUntilCorrect:true,prompt:`${prefix} ${whole} ${n}/${d} = ____/${d}. Fill in the missing numerator.`,answerLabel:'Missing numerator (top number)',correct:whole*d+n,hint:'Multiply the whole number by the denominator, then add the numerator. Keep the denominator unchanged.',explanation:`${whole} wholes are ${whole*d}/${d}. Add the extra ${n}/${d}: (${whole} × ${d} + ${n})/${d} = ${whole*d+n}/${d}.`};
+  });
+  const [a,b,factor]=review?[3,5,4]:[2,3,3];
+  questions.push({source:5,sourceLabel:'Targeted fraction review',skill:'Equivalent fractions',type:'number',retryUntilCorrect:true,prompt:`Complete the equivalent fraction: ${a}/${b} = ____/${b*factor}. Fill in the missing numerator.`,answerLabel:'Missing numerator (top number)',correct:a*factor,hint:'Find what the denominator was multiplied by. Multiply the numerator by the same number.',explanation:`${b} × ${factor} = ${b*factor}, so multiply the numerator by ${factor} too: ${a} × ${factor} = ${a*factor}.`});
+  const [c,d,k]=review?[4,5,3]:[3,4,3];
+  questions.push({source:6,sourceLabel:'Targeted fraction review',skill:'Equivalent fractions',type:'number',retryUntilCorrect:true,prompt:`Complete the equivalent fraction: ${c}/${d} = ${c*k}/____. Fill in the missing denominator.`,answerLabel:'Missing denominator (bottom number)',correct:d*k,hint:'Find what the numerator was multiplied by. Multiply the denominator by the same number.',explanation:`${c} × ${k} = ${c*k}, so multiply the denominator by ${k} too: ${d} × ${k} = ${d*k}.`});
+  return questions;
+ }
+ const focused={...base,id:'week-oct12-3-4',retest:true,targeted:true,practiceOnly:true,cardLabel:'Day 3.4',title:'Day 3.4 · Fraction check',description:'6 fill-in questions: 4 mixed-number conversions and 2 equivalent-fraction checks. Type the missing number and keep trying until correct. A method hint appears after two mistakes. Progress shows questions completed, with no score or separate second round.',questions:fractionReview(),reviewVariants:fractionReview(true)};
+ bank.splice(bank.indexOf(retries.at(-1))+1,0,focused);
 })(window);
+

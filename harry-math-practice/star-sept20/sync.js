@@ -4,10 +4,13 @@
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c','oct4-d','oct4-e','oct10-original','oct10-a','oct10-b','week-oct12-1','week-oct12-2','week-oct12-3','week-oct12-4','week-oct12-5','week-oct12-6'];
   IDS.push('week-oct12-3-2','week-oct12-3-3','week-oct12-3-2-round2','week-oct12-3-3-round2');
+  IDS.push('week-oct12-3-4','week-oct12-3-4-round2');
   IDS.push(...Array.from({length:6},(_,i)=>'week-oct12-'+(i+1)+'-round2'));
-  const reviewId=id=>/^week-oct12-(?:[1-6]|3-[23])-round2$/.test(id);
+  const reviewId=id=>/^week-oct12-(?:[1-6]|3-[234])-round2$/.test(id);
   const validReview=(id,run)=>!reviewId(id)||(typeof run.sourceRunId==='string'&&Array.isArray(run.round2Sources)&&run.round2Sources.length>0&&run.round2Sources.length<=12&&new Set(run.round2Sources).size===run.round2Sources.length&&run.round2Sources.every(n=>Number.isInteger(n)&&n>=1&&n<=12)&&Object.keys(run.answers).every(n=>run.round2Sources.includes(Number(n))));
+  const unlimitedId=id=>/^week-oct12-(?:[456]|3-4)(?:-round2)?$/.test(id);
   const validTyped=(id,source,value)=>typeof value==='string'&&(
+    (unlimitedId(id)&&/^(?:[1-9]|1[0-2])$/.test(source)&&(/^(?:\d{1,15})(?:\.\d{1,8})?$/.test(value)||/^\d{1,9}\/[1-9]\d{0,8}$/.test(value)))||
     (id.startsWith('oct4-')&&source==='7'&&/^\d{1,15}(?: \| \d{1,15}){5}$/.test(value))||
     (id.startsWith('oct4-')&&source==='3002'&&/^\d{1,15}$/.test(value))||
     (id.startsWith('oct4-')&&source==='3009'&&/^\d{1,15} × \d{1,15} \+ \d{1,15} × \d{1,15} = \d{1,15} \+ \d{1,15} = \d{1,15}$/.test(value))||
@@ -35,7 +38,7 @@
     return object(state)&&state.version===1&&object(state.sessions)&&Object.entries(state.sessions).every(([id,runs])=>
       IDS.includes(id)&&Array.isArray(runs)&&runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&
         (run.completedAt===null||time(run.completedAt))&&object(run.answers)&&validReview(id,run)&&Object.entries(run.answers).every(([source,entry])=>
-          /^\d+$/.test(source)&&object(entry)&&Array.isArray(entry.attempts)&&entry.attempts.length<=2&&entry.attempts.every(a=>
+          /^\d+$/.test(source)&&object(entry)&&Array.isArray(entry.attempts)&&(unlimitedId(id)||entry.attempts.length<=2)&&entry.attempts.every(a=>
             object(a)&&((Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4)||validTyped(id,source,a.choice))&&typeof a.correct==='boolean'&&time(a.at)))));
   }
   const sameAttempt=(a,b)=>a.choice===b.choice&&a.at===b.at;
@@ -78,8 +81,9 @@
           if(versions.length>1)run.deviceConflict=true;
           run.answers=Object.fromEntries(Object.entries(run.answers).sort(([x],[y])=>Number(x)-Number(y)));
           const entries=Object.entries(run.answers).filter(([source])=>!id.startsWith('oct4-')||source!=='29').map(([,entry])=>entry);
-          const expected=reviewId(id)?run.round2Sources.length:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
-          if(!run.completedAt&&entries.length===expected&&entries.every(e=>e.attempts.length===2||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
+          const expected=reviewId(id)?run.round2Sources.length:id==='week-oct12-3-4'?6:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          if(unlimitedId(id)&&!(entries.length===expected&&entries.every(e=>e.attempts.some(a=>a.correct))))run.completedAt=null;
+          if(!run.completedAt&&entries.length===expected&&entries.every(e=>(!unlimitedId(id)&&e.attempts.length===2)||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
         });
       }
@@ -142,3 +146,4 @@
   }
   root.HarrySeptSync={valid,merge,create,applyResets};
 })(typeof window==='undefined'?globalThis:window);
+
