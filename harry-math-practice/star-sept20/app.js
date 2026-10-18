@@ -26,6 +26,7 @@
   const sourceLabel=q=>q.sourceLabel||`STAR Q${q.source}`;
   const chosenText=(q,choice)=>q.legacyQuestion&&typeof choice==='number'?chosenText(q.legacyQuestion,choice):engine.typed(q)?esc(choice):`${'ABCD'[choice]} (${esc(q.choices[choice])})`;
   const firstTryText=s=>s?.attempted?`${s.firstTryPercent}% first try${s.attempted<s.total?' so far':''}`:'First-try score: —';
+  const skillText=(session,run)=>window.HarryWeekExtraReview?.text(session,run)||'';
   const answerText=q=>q.type==='fraction'?math(q.correct):q.type==='fill-blanks'?q.blanks.map(b=>`${esc(b.label)} ${b.answer} ${esc(b.unit)}`).join('<br>'):q.type==='split-sum'?`${q.expansion[0]} × ${q.expansion[1]} + ${q.expansion[2]} × ${q.expansion[3]} = ${q.parts[0].toLocaleString('en-US')} + ${q.parts[1].toLocaleString('en-US')} = ${q.parts[2].toLocaleString('en-US')}`:q.type==='number'?q.correct.toLocaleString('en-US'):`${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}`;
   function numericField(q,attempts,closed){
     if(q.type==='fraction'){
@@ -86,12 +87,15 @@
       const repeat=completed&&latest!==completed&&r.finished!==r.total;
       const card=`<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${reason?'🔒 ':''}${session.weekly?esc(session.cardLabel):`${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}`}</b>${session.weekly?'':`<span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span>`}<span class="day-status">${reason?'Locked':completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${session.practiceOnly?`<strong class="day-score">${firstTryText(r)}</strong><small>${r?.finished||0}/${session.questions.length} completed · Practice until correct</small>`:score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${reason?`<small class="lock-hint">${esc(reason)}</small>`:''}${session.weekly&&!session.targeted&&session.id.startsWith('week-oct12-3')?'<small class="mastery-target">Day 3 target: 9/12</small>':''}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;return session.weekly?`<div class="session-pair">${card}${round2Link(session)}</div>`:card;
     }).join('');
+    const extra=window.HarryWeekExtraReview;
+    if(extra){const session=visibleBank().find(s=>s.extraReview),link=session&&document.querySelector(`.session-link[href="?session=${session.id}"]`);if(link){const run=window.HarryWeekProgress.firstRun(state.sessions[session.id])||{answers:{}};link.querySelector('.day-score').textContent='4 questions per skill';link.insertAdjacentHTML('beforeend',`<small class="skill-counts">${esc(skillText(session,run))}</small><small>Goal: 3/4 in each skill</small>`);}}
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().filter(s=>!s.retest).length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
     const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Day 3.4 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. All sessions are unlocked; choose any day or retest. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=active.practiceOnly?(s.firstTryPercent===null?'—':`${s.firstTryPercent}%`):`${s.first} / ${s.total}`;
+    const skills=document.querySelector('#skill-scores');skills.hidden=!active.extraReview;if(active.extraReview)skills.innerHTML=window.HarryWeekExtraReview.html(active,current());
     document.querySelector('.scorebar div span').textContent=active.practiceOnly&&s.attempted<s.total?'First-try score so far':'First-try score';
     document.querySelector('#progress').textContent=active.practiceOnly?`${s.finished}/${s.total} completed · ${s.first}/${s.attempted} first answers correct · ${s.attempted}/${s.total} questions attempted. Retries do not change your first-try score.`:`${s.attempted}/${s.total} first tries recorded · ${s.corrected} corrected on retry · ${s.revealed} answers shown${s.attempted===s.total?` · Final first-try score: ${s.percent}%`:''}`;
     renderDays();
@@ -99,12 +103,15 @@
     const completion=document.querySelector('#completion');completion.hidden=s.finished!==s.total;
     completion.innerHTML=s.finished===s.total?(active.practiceOnly?`<h2>Practice complete!</h2><p>All ${s.total} questions answered correctly.</p><p>First-try score: <strong>${s.firstTryPercent}% (${s.first}/${s.total})</strong>. Retries do not change this score.</p><p>${weeklyNextStep()}</p>`:`<h2>${s.first===s.total?`${s.total} out of ${s.total} on your first tries!`:active.round2?'Round 2 complete. Well done for working through it.':'Day complete. Well done for working through it.'}</h2><p>First-try score: <strong>${s.first}/${s.total} (${s.percent}%)</strong>. Second-try corrections: ${s.corrected}. Answers shown after two misses: ${s.revealed}.</p><p>${(active.weekly||active.round2)?weeklyNextStep():active.id===visibleBank().at(-1).id?'Your practice record is below. Review any skills that still need work.':'When you are ready, try the next day’s fresh questions.'}</p>`):'';
     document.querySelector('#new-run').hidden=active.weekly||s.finished!==s.total;document.querySelector('#new-run').textContent=active.round2?'Repeat these Round 2 questions':'Start another run of this session';
+    if(active.extraReview&&s.finished===s.total)completion.insertAdjacentHTML('beforeend',`<p>${esc(skillText(active,current()))}. Goal: 3/4 in each skill.</p>`);
     renderHistory();applyMistakeFilter();
   }
   function weeklyNextStep(){
     const base=bank.find(s=>s.id===(active.baseId||active.id)),reason=W.unfinished(base,state);
     if(reason)return `You can review first-try mistakes in <a href="?session=${base.id}-round2">Round 2</a>, or choose any other session.`;
-    if(base.practiceOnly)return base.targeted?'Fraction review complete. Days 4–6 are open whenever you are ready.':base.id==='week-oct12-6'?'All questions in this practice are complete.':'Practice complete. The other days are open whenever you are ready.';
+    if(base.extraReview)return 'Review any first-try mistakes with a parent. All sessions remain open.';
+    if(base.id==='week-oct12-6')return 'Day 6 is complete. <a href="?session=week-oct12-extra-review">Open the extra fraction review</a> when you are ready.';
+    if(base.practiceOnly)return base.targeted?'Fraction review complete. Days 4–6 are open whenever you are ready.':'Practice complete. The other days are open whenever you are ready.';
     if(base.id==='week-oct12-3-3')return 'Day 3.4 is a short check of the fraction skills that still need practice. <a href="?session=week-oct12-3-4">Open Day 3.4</a>';
     if(base.id.startsWith('week-oct12-3')&&!W.day3Passed(state)){
       const next=base.id==='week-oct12-3'?'week-oct12-3-2':base.id==='week-oct12-3-2'?'week-oct12-3-3':null;
@@ -115,6 +122,7 @@
   function renderHistory(){
     document.querySelector('#history').innerHTML=runs(active).map((run,i)=>{
       const s=engine.stats(active,run);
+      if(active.extraReview)return `<details class="history-run"><summary>Practice ${i+1} - ${esc(date(run.startedAt))} - ${s.finished}/${s.total} completed</summary><p>${esc(skillText(active,run))}. Goal: 3/4 in each skill.</p><ol>${active.questions.map(q=>{const attempts=run.answers[q.source]?.attempts;return `<li>Q${q.source}: ${esc(q.skill)} - ${attempts?.length?attempts.map((a,j)=>`Try ${j+1}: ${chosenText(q,a.choice)} - ${engine.isCorrect(q,a.choice)?'correct':'incorrect'} - ${esc(date(a.at))}`).join('; '):'Not attempted'}</li>`;}).join('')}</ol></details>`;
       if(active.practiceOnly)return `<details class="history-run"><summary>Practice ${i+1} · ${esc(date(run.startedAt))} · ${s.finished}/${s.total} completed · ${firstTryText(s)}</summary><ol>${active.questions.map(q=>`<li>${esc(q.skill)} — ${engine.done(q,run.answers[q.source])?'Completed':'Still to do'}</li>`).join('')}</ol></details>`;
       return `<details class="history-run"><summary>Run ${i+1}${run.deviceConflict?' · Separate device attempt':''} · ${esc(date(run.startedAt))} · ${s.first}/${s.total} first-try points · ${s.finished===s.total?'Complete':`${s.attempted}/${s.total} attempted`}</summary><p>${run.completedAt?(s.finished===s.total?'Completed ':'Original portion completed; added questions pending · ')+esc(date(run.completedAt)):'In progress'} · ${s.corrected} corrected on retry · ${s.revealed} answers shown</p><ol>${active.questions.map(q=>{
         const e=run.answers[q.source];return `<li>${esc(sourceLabel(q))}: ${esc(q.skill)} — ${e?.attempts.length?e.attempts.map((a,j)=>`Try ${j+1}: ${chosenText(q,a.choice)} · ${engine.isCorrect(q,a.choice)?'correct':'incorrect'} · ${esc(date(a.at))}`).join('; '):'Not attempted'}</li>`;

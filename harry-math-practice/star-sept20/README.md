@@ -1,3 +1,13 @@
+# Extra fraction review for the October 12 practice group
+
+`?group=week-2026-10-12` includes an **Extra review** card after Day 6, with direct link `?session=week-oct12-extra-review`. This separate session has eight fresh multiple-choice questions: four mixed numbers on number lines, and four possible sums of three positive improper fractions. SVG diagrams show equally spaced intervals between labeled whole numbers. Sum explanations give the lower bound of 3 and a concrete set of fractions that produces the possible answer. An improper fraction is explicitly defined to include equality of numerator and denominator.
+
+Each skill shows its own first-try correct count **out of 4**, answered/completed progress, and a **3/4 goal**. Counts appear in the session, completion message, history, session card, and week table. Retries continue until correct and never change the first submitted answer or its score. The existing first answered run remains authoritative. There are no new locks or separate Round 2. Day 6 links onward to the extra review.
+
+The new session ID is added to the existing sync allowlist with an eight-question completion count. The storage key, reset cutoff, merge/conflict handling, engine, older question definitions, unlock rules, and restored Days 3.2/3.3 remain unchanged. Tests submit answers only on localhost with live sync blocked. `week-oct12-extra-review.test.mjs` checks independent answer keys and diagram coordinates, first-try preservation through multiple retries/reload/sync, separate skill scores, conflicting device histories, and unchanged earlier sessions and records.
+
+The source misconception descriptions supplied with the task were used: counting tick marks instead of intervals, and allowing a total below 3 for three positive improper fractions. Original screenshot pixels could not be inspected because the required Library metadata transfer helper does not support this Windows environment.
+
 # October 8: Two more October 4 practice sessions
 
 The October 4 group now has six sessions. Sessions 5 and 6 (`oct4-d`, `oct4-e`) each add 15 fresh questions covering the same skills, in the existing easy-to-hard order. `oct4-extra-data.js` retains the six conversion blanks at Q2, seven multiplication boxes, input/output tables, fractional-weight line plots, and box plots. Perpendicular lines remain excluded. All sessions are untimed with first-try scoring, one retry, explanations, and independent synced records. Earlier question banks and saved attempts are unchanged.
