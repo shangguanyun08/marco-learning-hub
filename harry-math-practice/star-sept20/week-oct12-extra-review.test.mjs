@@ -19,7 +19,7 @@ test('One unlocked eight-question session follows Day 6; all previous session de
  assert.equal(b.s.questions.length,8);assert.equal(new Set(b.s.questions.map(q=>q.source)).size,8);
  const ids=bank.filter(s=>s.group==='week-2026-10-12').map(s=>s.id);
  assert.deepEqual(Array.from(ids.slice(-2)),['week-oct12-6',ID]);assert.ok(ids.includes('week-oct12-3-2'));assert.ok(ids.includes('week-oct12-3-3'));
- assert.equal(b.d.querySelectorAll('.session-link').length,10);assert.equal(b.d.querySelector('.session-pair:last-child .session-link').getAttribute('href'),'?session='+ID);
+ assert.equal(b.d.querySelectorAll('.session-link').length,11);assert.equal(b.d.querySelector('.session-pair:last-child .session-link').getAttribute('href'),'?session='+ID);
  for(const s of bank.filter(s=>s.weekly))assert.equal(b.w.HarryWeekRules.lockReason(s,{version:1,sessions:{}}),'');
  assert.equal(b.d.querySelector(`.round2-link[href="?session=${ID}-round2"]`),null);
 });

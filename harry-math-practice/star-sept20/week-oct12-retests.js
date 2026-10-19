@@ -55,6 +55,7 @@
   return questions;
  }
  const focused={...base,id:'week-oct12-3-4',retest:true,targeted:true,practiceOnly:true,cardLabel:'Day 3.4',title:'Day 3.4 · Fraction check',description:'6 fill-in questions: 4 mixed-number conversions and 2 equivalent-fraction checks. Type the missing number and keep trying until correct. A method hint appears after two mistakes. Your first-try percentage is recorded separately; retries do not change it. No separate second round.',questions:fractionReview(),reviewVariants:fractionReview(true)};
- bank.splice(bank.indexOf(retries.at(-1))+1,0,focused);
+ const followup={...focused,id:'week-oct12-3-5',cardLabel:'Day 3.5',title:'Day 3.5 · Fraction check',questions:fractionReview(true)};
+ bank.splice(bank.indexOf(retries.at(-1))+1,0,focused,followup);
 })(window);
 
