@@ -45,7 +45,7 @@
   }
   function save(upload=true){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}saveNote();if(upload)void sync?.push();}
   function saveNote(){$('#sync-note').textContent=storageOK?status:'Device storage unavailable. Keep the page open and download records.';$('#sync-note').dataset.kind=storageOK?kind:'offline';}
-  function reviewCard(){return '<div class="set-pair"><a class="set-card review-card" href="review.html"><b>Review</b><span>Past first-try mistakes</span><small>After Set 6 · before Review Session 2</small><small>Lowest scores first · answers hidden until opened</small></a></div><div class="set-pair"><a class="set-card review-card" href="review2.html"><b>Review Session 2</b><span>4 fresh questions per subtopic</span><small>13 subtopics · 52 questions · untimed</small><small>Goal: at least 3/4 first-try correct in each subtopic</small></a></div>';}
+  function reviewCard(){return '<div class="set-pair"><a class="set-card review-card" href="review.html"><b>Review</b><span>Past first-try mistakes</span><small>After Set 6 · before Review Session 2</small><small>Lowest scores first · answers hidden until opened</small></a></div><div class="set-pair"><a class="set-card review-card" href="review2.html"><b>Review Session 2</b><span>4 fresh questions per subtopic</span><small>15 subtopics · 60 questions · untimed</small><small>Goal: at least 3/4 first-try correct in each subtopic</small></a></div>';}
   function cards(){
     $('#sets').innerHTML=C.sets.map(s=>{
       const gate=access(s.number),locked=gate.pending||Boolean(gate.number),r=s.checkpoint?runs(s.number)[0]:runs(s.number).at(-1),st=E.stats(r),hidden=s.check&&r&&!E.firstPass(r),total=r?st.total:s.questionIds.length;

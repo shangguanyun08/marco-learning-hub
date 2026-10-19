@@ -2,8 +2,8 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8'),ctx={crypto:{randomUUID}},files=['review2-data.js','review2-engine.js'];
 for(const f of files)vm.runInNewContext(read(f),ctx);const D=ctx.MarcoReview2Data,E=ctx.MarcoReview2Engine,copy=x=>JSON.parse(JSON.stringify(x)),KEY='marco-math-skill-builder-oct12-review2-v1';
 const numeric=s=>String(s).replace(/%/g,'').split('/').map(Number).reduce((a,b)=>a/b),compare=(a,b)=>Math.abs(a-b)<1e-8?2:a>b?0:1;
-test('52 independently checked answers, exactly 4 fresh questions for each original review subtopic',()=>{
- assert.equal(D.ids.length,52);const concepts=D.topics.flatMap(t=>t.subtopics.map(s=>s[0]));assert.equal(concepts.length,13);
+test('60 independently checked answers, exactly 4 fresh questions for each review subtopic',()=>{
+ assert.equal(D.ids.length,60);const concepts=D.topics.flatMap(t=>t.subtopics.map(s=>s[0]));assert.equal(concepts.length,15);
  assert.deepEqual(copy(concepts),[...read('review.html').matchAll(/<details class="record" id="([^"]+)"/g)].map(m=>m[1]));
  const seen=new Set();
  for(const concept of concepts)assert.equal(E.ids(concept).length,4);
@@ -26,6 +26,12 @@ test('52 independently checked answers, exactly 4 fresh questions for each origi
    case 'units':index=compare(p.mph,p.fps/5280*3600);break;
    case 'compound':answer=p.start*p.a*p.b;break;
    case 'dimension':answer=p.percent?(p.scale**p.power-1)*100:p.scale**p.power;break;
+   case 'proportion-equation':{const letters=q.prompt.match(/If (\w)\/\d+ = (\w)\/\d+/);assert.equal(p.leftCoefficient*p.leftDen,p.rightCoefficient*p.rightDen);assert.equal(q.choices[q.correct],`${p.leftCoefficient}${letters[1]} = ${p.rightCoefficient}${letters[2]}`);continue;}
+   case 'proportion-value':answer=p.left*p.rightDen/p.leftDen;break;
+   case 'proportion-denominators':assert.equal(p.leftCoefficient/p.rightCoefficient,p.leftNum/p.rightNum);assert.equal(q.choices[q.correct],`${p.leftCoefficient}n = ${p.rightCoefficient}m`);continue;
+   case 'net-solid':{const base={4:'Square',6:'Hexagonal'}[p.baseSides];assert.equal(p.sideFaces,p.baseSides);assert.equal(q.choices[q.correct],`${base} ${p.bases===1?'pyramid':'prism'}`);continue;}
+   case 'net-faces':answer=p.baseSides+p.bases;break;
+   case 'net-base':assert.equal(p.sideFaces,8);assert.equal(q.choices[q.correct],'Octagon');continue;
    default:throw Error(q.id);
   }
   if(index!==undefined)assert.equal(q.correct,index,q.id);
@@ -37,7 +43,7 @@ function browser(t,state){let requests=0;const dom=new JSDOM(read('review2.html'
 function answer(page,id,choice){const f=page.d.querySelector(`form[data-question="${id}"]`),input=f.querySelector(`input[value="${choice}"]`);assert.equal(input.disabled,false);input.checked=true;input.dispatchEvent(new page.w.Event('change',{bubbles:true}));f.dispatchEvent(new page.w.Event('submit',{bubbles:true,cancelable:true}));}
 test('Per-subtopic 3/4 threshold, withheld feedback, retries, reload, and original-course isolation',t=>{
  for(const right of [2,3,4]){
-  const p=browser(t),ids=E.ids('intercept');assert.equal(p.d.querySelectorAll('.record').length,13);assert.equal(p.d.querySelectorAll('.attempt').length,52);
+  const p=browser(t),ids=E.ids('intercept');assert.equal(p.d.querySelectorAll('.record').length,15);assert.equal(p.d.querySelectorAll('.attempt').length,60);
   p.d.querySelector('#intercept').open=true;
   for(const [i,id]of ids.entries()){answer(p,id,(D.questions[id].correct+(i<right?0:1))%4);if(i<3){assert.equal(p.d.querySelector('#intercept .answer-reveal'),null);assert.doesNotMatch(p.d.querySelector('#intercept .score').textContent,/75%|50%|100%/);}}
   assert.match(p.d.querySelector('#intercept .score').textContent,new RegExp(`${right}/4 = ${right*25}%`));assert.equal(p.d.querySelector('#intercept').dataset.result,right>=3?'passed':'needs-practice');assert.equal(p.d.querySelector('#intercept').open,true);
@@ -45,6 +51,19 @@ test('Per-subtopic 3/4 threshold, withheld feedback, retries, reload, and origin
   assert.equal(E.stats(p.state(),'intercept').first,right);assert.equal(E.stats(p.state(),'intercept').corrected,4-right);
   const reload=browser(t,p.state());assert.match(reload.d.querySelector('#intercept .score').textContent,new RegExp(`${right}/4`));assert.equal(reload.d.querySelector('#slope').dataset.result,'pending');assert.equal(p.w.localStorage.getItem('marco-math-skill-builder-oct12-v1'),'original-sentinel');assert.equal(p.requests(),0);
  }
+});
+test('Both added subtopics score 3/4 independently while the previous 52-question record remains intact',t=>{
+ const saved=E.empty();for(const id of D.ids.slice(0,52))E.submit(saved,id,D.questions[id].correct,'2026-10-18T20:00:00Z','old-'+id);
+ const original=copy(saved),p=browser(t,saved);assert.equal(p.d.querySelector('#overall strong').textContent,'13/15');
+ assert.equal(p.d.querySelector('#net').dataset.result,'pending');assert.equal(p.d.querySelector('#proportions').dataset.result,'pending');
+ assert.ok(p.d.querySelector('#net svg[role="img"]'));
+ for(const concept of ['proportions','net']){
+  for(const [i,id]of E.ids(concept).entries())answer(p,id,(D.questions[id].correct+(i===3?1:0))%4);
+  assert.match(p.d.querySelector('#'+concept+' .score').textContent,/3\/4 = 75%/);
+ }
+ const after=p.state();for(const id of D.ids.slice(0,52))assert.deepEqual(copy(E.answers(after)[id]),copy(E.answers(original)[id]));
+ assert.equal(E.stats(after).first,58);assert.equal(E.stats(after).answered,60);assert.equal(p.d.querySelector('#overall strong').textContent,'15/15');
+ const reload=browser(t,after);for(const concept of ['proportions','net'])assert.equal(reload.d.querySelector('#'+concept).dataset.result,'passed');assert.equal(p.requests(),0);
 });
 test('Event merge preserves the first answer, survives reload, and rejects invalid scores',()=>{
  const a=E.empty(),b=E.empty(),ids=E.ids('slope'),at='2026-10-17T20:00:00.000Z';

@@ -3,6 +3,8 @@ const {JSDOM}=require('jsdom');
 const read=file=>fs.readFileSync(path.join(__dirname,file),'utf8');
 const ctx={crypto:{randomUUID}};for(const file of ['data.js','round2.js','checkpoint-data.js','engine.js'])vm.runInNewContext(read(file),ctx);
 const E=ctx.MarcoSkillEngine,KEY='marco-math-skill-builder-oct12-v1';
+const past={};past.window=past;vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../2026-09-27/data.js'),'utf8'),past);
+const reviewQuestion=line=>line.dataset.sourceCourse==='2026-09-27'?past.MARCO_ISEE_PRACTICE.find(s=>s.id===line.dataset.sourceSession).questions.find(q=>q.source===Number(line.dataset.sourceId)):E.resolve(line.dataset.questionId);
 function course(t,query='',state){
  const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;
  t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};
@@ -36,7 +38,7 @@ test('Review lists only wrong first answers, sorts by accuracy, and hides each a
   for(const record of records)assert.equal(record.querySelectorAll('.answer-line[data-question-id]').length,Number(record.dataset.missedCount));
  }
  for(const line of lines){
-  const q=E.resolve(line.dataset.questionId),article=line.closest('.attempt'),toggle=article.querySelector('.answer-reveal');
+  const q=reviewQuestion(line),article=line.closest('.attempt'),toggle=article.querySelector('.answer-reveal');
   assert.ok(toggle);assert.equal(toggle.open,false);
   assert.match(toggle.textContent,new RegExp('Correct answer: '+ 'ABCD'[q.correct].replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));
   const chosen=/His wrong answer:\s*([ABCD])/.exec(line.textContent);assert.ok(chosen);assert.notEqual(chosen[1],'ABCD'[q.correct]);
@@ -48,6 +50,17 @@ test('Review lists only wrong first answers, sorts by accuracy, and hides each a
  summary.click();assert.equal(toggle.open,true);summary.click();assert.equal(toggle.open,false);
  assert.equal(d.querySelector('.review-nav a').getAttribute('href'),'./?set=6');
  assert.equal(d.querySelector('.review-next a').getAttribute('href'),'review2.html');
+});
+
+test('Added review topics retain actual question text, first wrong answers, and separate sample counts',t=>{
+ const dom=new JSDOM(read('review.html')),d=dom.window.document;t.after(()=>dom.window.close());
+ assert.equal(d.querySelectorAll('.record').length,15);
+ assert.match(d.querySelector('.overall').textContent,/64\/118 = 54%/);
+ for(const [id,right,total,choices]of [['proportions',1,4,[0,2,0]],['net',3,6,[0,0,3]]]){
+  const record=d.getElementById(id);assert.equal(Number(record.dataset.firstRight),right);assert.equal(Number(record.dataset.questionCount),total);
+  const lines=[...record.querySelectorAll('.answer-line')];assert.equal(lines.length,3);
+  lines.forEach((line,i)=>{const q=reviewQuestion(line),article=line.closest('.attempt');assert.equal(article.querySelector('.question-prompt').textContent,q.prompt);assert.ok(line.querySelector('.his-answer').textContent.includes('ABCD'[choices[i]]+' · '+q.choices[choices[i]]));assert.equal(Number(article.dataset.correct),q.correct);assert.ok(article.querySelector('.correct-key').textContent.includes(q.explanation));});
+ }
 });
 
 test('Review practice checks new selections independently and preserves original scores and saved work',t=>{

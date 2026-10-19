@@ -3,8 +3,9 @@
   const topics=[
     {id:'graphs',name:'Graphs & data',subtopics:[['intercept','Y-intercept'],['slope','Slope'],['direction','Increasing vs. decreasing'],['count','Data comparisons & ties'],['graphvalue','Total vs. per-item rate']]},
     {id:'absolute',name:'Absolute value & signs',subtopics:[['grouping','Absolute-value grouping'],['absequation','Both absolute-value solutions']]},
-    {id:'rates',name:'Rates & proportions',subtopics:[['relative','Comparing two speeds'],['mixture','Parts in a ratio'],['remaining','Time for remaining work'],['units','Converting speed units']]},
-    {id:'percent',name:'Percentages',subtopics:[['compound','Successive percentage changes'],['dimension','Area & volume scaling']]}
+    {id:'rates',name:'Rates & proportions',subtopics:[['relative','Comparing two speeds'],['proportions','Equivalent proportions'],['mixture','Parts in a ratio'],['remaining','Time for remaining work'],['units','Converting speed units']]},
+    {id:'percent',name:'Percentages',subtopics:[['compound','Successive percentage changes'],['dimension','Area & volume scaling']]},
+    {id:'geometry',name:'Geometry',subtopics:[['net','Nets / solid shapes']]}
   ];
   const questions={},fmt=n=>String(Number(n.toFixed(6))),fixed=['Column A is greater.','Column B is greater.','The quantities are equal.','The relationship cannot be determined.'];
   function add(concept,prompt,answer,wrong,explanation,extra={}){
@@ -78,5 +79,14 @@
   add('dimension','Each side of a square is increased by 25%. By what percent does its area increase?','56.25%',['25%','50%','156.25%'],'The area factor is 1.25² = 1.5625, so the increase is 56.25%.',{audit:{kind:'dimension',scale:1.25,power:2,percent:true}});
   add('dimension','Each edge of a cube becomes 4 times as long. The new volume is how many times the original volume?',64,[4,12,16],'Volume scales with the cube of the length factor: 4³ = 64.',{audit:{kind:'dimension',scale:4,power:3}});
   add('dimension','Each edge of a cube is reduced to one third of its original length. The new volume is what fraction of the original volume?','1/27',['1/3','1/9','2/3'],'Volume factor = (1/3)³ = 1/27.',{audit:{kind:'dimension',scale:1/3,power:3}});
+  // Append new questions so every existing question ID, choice order, and answer key stays unchanged.
+  add('proportions','If a/11 = b/8, which equation must be true?','8a = 11b',['11a = 8b','ab = 88','a + b = 19'],'Multiply both sides by 88: 8a = 11b. Each numerator multiplies the opposite denominator.',{audit:{kind:'proportion-equation',leftDen:11,rightDen:8,leftCoefficient:8,rightCoefficient:11}});
+  add('proportions','If x/15 = y/9, which equation must be true?','3x = 5y',['5x = 3y','xy = 135','x + y = 24'],'Cross-multiply to get 9x = 15y. Divide both sides by 3 to get 3x = 5y.',{audit:{kind:'proportion-equation',leftDen:15,rightDen:9,leftCoefficient:3,rightCoefficient:5}});
+  add('proportions','If p/8 = q/3 and p = 24, what is q?',9,[64,3,21],'24/8 = 3, so q/3 must also equal 3. Therefore q = 9. Check: 3 × 24 = 8 × 9.',{audit:{kind:'proportion-value',left:24,leftDen:8,rightDen:3}});
+  add('proportions','If 6/m = 10/n, where m and n are positive, which equation must be true?','3n = 5m',['3m = 5n','mn = 60','m + n = 16'],'Cross-multiply: 6n = 10m. Divide both sides by 2: 3n = 5m. The letters are in the denominators, so keep the diagonal pairs together.',{audit:{kind:'proportion-denominators',leftNum:6,rightNum:10,leftCoefficient:3,rightCoefficient:5}});
+  add('net','Fold the net shown along the dashed edges. Which solid does it form?','Square pyramid',['Square prism','Triangular prism','Cone'],'The square is one base. The four triangles meet at one point when folded, so this is a square pyramid.',{diagram:'square-pyramid-net',audit:{kind:'net-solid',solid:'Square pyramid',baseSides:4,bases:1,sideFaces:4}});
+  add('net','A packaging net has two matching hexagons and six rectangular side faces. Which solid can be made from this net?','Hexagonal prism',['Hexagonal pyramid','Pentagonal prism','Cylinder'],'Two matching bases identify a prism. The bases are hexagons, so it is a hexagonal prism.',{audit:{kind:'net-solid',solid:'Hexagonal prism',baseSides:6,bases:2,sideFaces:6}});
+  add('net','A prism has two pentagonal bases. How many faces, including both bases, does the prism have?',7,[5,6,10],'A pentagon has 5 sides, so there are 5 rectangular side faces. Add the 2 bases: 5 + 2 = 7 faces.',{audit:{kind:'net-faces',baseSides:5,bases:2}});
+  add('net','A pyramid has eight triangular side faces and one base. What shape is its base?','Octagon',['Triangle','Hexagon','Pentagon'],'Each triangular side face attaches to one edge of the base. Eight side faces mean an eight-sided base: an octagon.',{audit:{kind:'net-base',sideFaces:8,shape:'Octagon'}});
   root.MarcoReview2Data={topics,questions,ids:Object.keys(questions)};
 })(typeof window==='undefined'?globalThis:window);
