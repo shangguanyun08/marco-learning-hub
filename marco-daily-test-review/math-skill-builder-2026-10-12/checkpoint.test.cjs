@@ -94,6 +94,21 @@ test('Review 3 is the light next step and locks direct Set 8 access until correc
  assert.ok(page.d.querySelector('[data-action="start"]'));assert.equal(page.d.querySelector('.next-step'),null);assert.equal(R.stats(r).first,0);assert.equal(JSON.stringify(state),before);
 });
 
+test('Finishing the original 24 Review 3 questions leaves the new eight pending before Set 8',t=>{
+ const state=finishCore();firstAnswers(state,7,20);const R=ctx.MarcoReview3Engine,D=ctx.MarcoReview3Data,r=R.empty(),saved=copy(state);
+ for(const id of D.ids.slice(0,24))R.submit(r,id,D.questions[id].correct,at,randomUUID());
+ const before=copy(R.answers(r)),page=browser(t,state,'?set=8',r);
+ assert.match(page.d.querySelector('.review3-card').textContent,/8 subtopics · 32 fresh questions/);
+ assert.match(page.d.querySelector('.review3-card').textContent,/24\/32 finished/);
+ assert.match(page.d.querySelector('.session-lock').textContent,/Answer all 32 questions/);
+ assert.equal(page.d.querySelector('[data-action="start"]'),null);
+ for(const id of D.ids.slice(24))R.submit(r,id,D.questions[id].correct,at,randomUUID());
+ page.w.localStorage.setItem('marco-math-skill-builder-oct12-review3-v1',JSON.stringify(r));page.w.dispatchEvent(new page.w.StorageEvent('storage',{key:'marco-math-skill-builder-oct12-review3-v1'}));
+ assert.ok(page.d.querySelector('[data-action="start"]'));
+ for(const [id,answer]of Object.entries(before))assert.deepEqual(copy(R.answers(r)[id]),answer);
+ assert.deepEqual(page.state(),saved);
+});
+
 test('Online Review 3 verification is read-only and unlocks from another device',async t=>{
  const state=finishCore();firstAnswers(state,7,20);const r=ctx.MarcoReview3Engine.empty();for(const id of ctx.MarcoReview3Data.ids)ctx.MarcoReview3Engine.submit(r,id,ctx.MarcoReview3Data.questions[id].correct,at,randomUUID());
  const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'https://example.test/?set=8',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};

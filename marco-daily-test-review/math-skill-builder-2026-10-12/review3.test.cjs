@@ -1,13 +1,13 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{randomUUID}=require('node:crypto'),{JSDOM}=require('jsdom');
 const read=f=>fs.readFileSync(path.join(__dirname,f),'utf8'),ctx={crypto:{randomUUID}},files=['review3-data.js','review3-engine.js'];
 for(const f of files)vm.runInNewContext(read(f),ctx);const D=ctx.MarcoReview3Data,E=ctx.MarcoReview3Engine,copy=x=>JSON.parse(JSON.stringify(x)),KEY='marco-math-skill-builder-oct12-review3-v1';
-test('Exactly the six Review 2 subtopics at <=50%, four fresh questions each, independently checked keys',()=>{
- const scores={intercept:1,slope:4,direction:3,count:1,graphvalue:4,grouping:4,absequation:2,relative:3,proportions:2,mixture:4,remaining:4,units:2,compound:4,dimension:2,net:3};
+test('Eight priority skills include the original six Review 2 targets, with four fresh questions each',()=>{
+ const scores={intercept:1,slope:4,direction:3,count:1,graphvalue:4,grouping:4,absequation:2,relative:3,proportions:2,mixture:4,remaining:4,units:2,compound:4,dimension:2,net:3,independent:2,transformations:2};
  assert.deepEqual(copy(D.topics.flatMap(t=>t.subtopics.map(s=>s[0]))),Object.keys(scores).filter(c=>scores[c]/4<=.5));
- const expected=['7','-9','34','6','2/6','3','3/8','-3','18','-12','2','x = 4 or x = −7','3a = 7b','2x = 3y','4n = 7m','20','Column B is greater.','Column A is greater.','The quantities are equal.','Column B is greater.','32.25%','125','1/64','72.8%'];
- assert.equal(D.ids.length,24);assert.deepEqual(copy(D.ids.map(id=>D.questions[id].choices[D.questions[id].correct])),expected);
+ const expected=['7','-9','34','6','2/6','3','3/8','-3','18','-12','2','x = 4 or x = −7','3a = 7b','2x = 3y','4n = 7m','20','Column B is greater.','Column A is greater.','The quantities are equal.','Column B is greater.','32.25%','125','1/64','72.8%','9/64','1/4','1/12','9/35','Translation 5 units right and 3 units up','Reflection across the y-axis','Rotation 90° counterclockwise about the origin','Dilation with scale factor 2 about the origin'];
+ assert.equal(D.ids.length,32);assert.deepEqual(copy(D.ids.map(id=>D.questions[id].choices[D.questions[id].correct])),expected);
  const old={};vm.runInNewContext(read('review2-data.js'),old);
- const givens=q=>JSON.stringify([q.prompt,q.graph,q.table,q.series,q.columns]),seen=new Set(Object.values(old.MarcoReview2Data.questions).map(givens));
+ const givens=q=>JSON.stringify([q.prompt,q.graph,q.table,q.series,q.columns,q.transformation]),seen=new Set(Object.values(old.MarcoReview2Data.questions).map(givens));
  for(const [c,s]of Object.entries(D.source.scores)){assert.equal(s.answered,4);assert.equal(s.first,scores[c]);assert.equal(E.ids(c).length,4);}
  for(const q of Object.values(D.questions)){assert.equal(new Set(q.choices).size,4,q.id);assert.ok(!seen.has(givens(q)),q.id);seen.add(givens(q));if(q.graph)for(const [x,y]of q.graph.points){assert.equal(q.graph.lines[0].m*x+q.graph.lines[0].b,y);assert.ok(x>=q.graph.xmin&&x<=q.graph.xmax&&y>=q.graph.ymin&&y<=q.graph.ymax);}}
 });
@@ -15,7 +15,7 @@ function browser(t,state){let requests=0;const dom=new JSDOM(read('review3.html'
 function answer(page,id,choice){const f=page.d.querySelector(`form[data-question="${id}"]`),input=f.querySelector(`input[value="${choice}"]`);assert.equal(input.disabled,false);input.checked=true;input.dispatchEvent(new page.w.Event('change',{bubbles:true}));f.dispatchEvent(new page.w.Event('submit',{bubbles:true,cancelable:true}));}
 test('Per-subtopic 3/4 threshold, withheld feedback, retries, reload, and original-course isolation',t=>{
  for(const right of [2,3,4]){
-  const p=browser(t),ids=E.ids('intercept');assert.equal(p.d.querySelectorAll('.record').length,6);assert.equal(p.d.querySelectorAll('.attempt').length,24);
+  const p=browser(t),ids=E.ids('intercept');assert.equal(p.d.querySelectorAll('.record').length,8);assert.equal(p.d.querySelectorAll('.attempt').length,32);
   p.d.querySelector('#intercept').open=true;
   for(const [i,id]of ids.entries()){answer(p,id,(D.questions[id].correct+(i<right?0:1))%4);if(i<3){assert.equal(p.d.querySelector('#intercept .answer-reveal'),null);assert.doesNotMatch(p.d.querySelector('#intercept .score').textContent,/75%|50%|100%/);}}
   assert.match(p.d.querySelector('#intercept .score').textContent,new RegExp(`${right}/4 = ${right*25}%`));assert.equal(p.d.querySelector('#intercept').dataset.result,right>=3?'passed':'needs-practice');assert.equal(p.d.querySelector('#intercept').open,true);
@@ -51,5 +51,45 @@ test('Course cards and Set 7 completion lead to Review 3 before Set 8 while pres
  const review=browser(t),links=[...review.d.querySelectorAll('nav a')].map(a=>a.getAttribute('href'));
  assert.ok(links.some(h=>h.includes('set=7')));assert.ok(links.some(h=>h.includes('set=8')));
  assert.match(review.d.querySelector('.review-next').textContent,/Continue to Set 8/);
- assert.equal(review.d.querySelectorAll('svg.plot').length,4);
+ assert.equal(review.d.querySelectorAll('svg.plot').length,8);
+});
+
+
+test('Probability keys match independent outcome counts; transformation maps match all vertices',()=>{
+ const gcd=(a,b)=>b?gcd(b,a%b):a;
+ for(const id of E.ids('independent')){
+  const q=D.questions[id],events=q.audit.events,n=events[0][0]*events[1][0],d=events[0][1]*events[1][1],g=gcd(n,d);
+  assert.equal(q.choices[q.correct],`${n/g}/${d/g}`,id);
+ }
+ const maps=[([x,y])=>[x+5,y+3],([x,y])=>[-x,y],([x,y])=>[-y,x],([x,y])=>[2*x,2*y]];
+ E.ids('transformations').forEach((id,i)=>{
+  const g=D.questions[id].transformation;
+  assert.deepEqual(copy(g.points.map(maps[i])),copy(g.imagePoints),id);
+ });
+});
+
+test('Both added skills use recent-practice evidence, retain 3/4 after retry, and restore old answers',t=>{
+ const legacy=E.empty();
+ for(const [i,id]of D.ids.slice(0,24).entries())E.submit(legacy,id,(D.questions[id].correct+(i===0?1:0))%4,'2026-10-19T20:00:00Z',id);
+ E.submit(legacy,D.ids[0],D.questions[D.ids[0]].correct,'2026-10-19T20:01:00Z','legacy-retry');
+ const before=copy(E.answers(legacy)),p=browser(t,legacy);
+ assert.ok(E.valid(legacy));assert.match(p.d.querySelector('#overall').textContent,/24\/32 questions answered/);
+ for(const concept of ['independent','transformations']){
+  assert.match(p.d.querySelector(`#${concept} .topic small`).textContent,/Latest 4 similar questions: 2\/4 = 50%/);
+  assert.equal(p.d.querySelector(`#${concept}`).dataset.result,'pending');
+  for(const [i,id]of E.ids(concept).entries()){
+   answer(p,id,(D.questions[id].correct+(i===0?1:0))%4);
+   if(i<3)assert.equal(p.d.querySelector(`#${concept} .answer-reveal`),null);
+  }
+  assert.equal(p.d.querySelector(`#${concept}`).dataset.result,'passed');
+  const id=E.ids(concept)[0];answer(p,id,D.questions[id].correct);
+  assert.match(p.d.querySelector(`#${concept} .score`).textContent,/3\/4 = 75%/);
+  assert.equal(E.stats(p.state(),concept).corrected,1);
+ }
+ const reloaded=browser(t,p.state());
+ for(const [id,answer]of Object.entries(before))assert.deepEqual(copy(E.answers(reloaded.state())[id]),answer,id);
+ for(const concept of ['independent','transformations'])assert.equal(E.stats(reloaded.state(),concept).first,3);
+ assert.equal(p.requests(),0);assert.equal(reloaded.requests(),0);
+ const plots=p.d.querySelectorAll('.transformation-plot');assert.equal(plots.length,4);
+ for(const plot of plots){assert.equal(plot.querySelectorAll('polygon').length,2);assert.match(plot.getAttribute('aria-label'),/Original triangle: A .*Image triangle: A′/);}
 });
