@@ -10,3 +10,5 @@
 .set-card .saved-first-score,.round2-link .saved-first-score{font-size:14px;font-weight:750;color:var(--ink);line-height:1.5}.session-lock .saved-first-score{font-weight:750}
 
 .review-card{background:#eaf3ef;border-color:#8aada5}.review-card b{color:#176150}
+
+.review3-card{background:var(--paper);border-color:var(--line)}.review3-card .next-step{align-self:flex-start;background:#edf3ff;color:var(--blue);font-weight:800}

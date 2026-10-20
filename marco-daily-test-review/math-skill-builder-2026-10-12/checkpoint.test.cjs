@@ -1,12 +1,12 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{randomUUID}=require('node:crypto');
 const {JSDOM}=require('jsdom');
-const read=file=>fs.readFileSync(path.join(__dirname,file),'utf8'),files=['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js'];
+const read=file=>fs.readFileSync(path.join(__dirname,file),'utf8'),files=['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js','review3-data.js','review3-engine.js'];
 const ctx={crypto:{randomUUID}};for(const f of files)vm.runInNewContext(read(f),ctx);
 const C=ctx.MarcoSkillCourse,E=ctx.MarcoSkillEngine,copy=x=>JSON.parse(JSON.stringify(x)),at='2026-10-17T18:00:00.000Z',KEY='marco-math-skill-builder-oct12-v1';
 function finishCore(){const state=E.empty();for(let n=1;n<=6;n++){const r=E.start(n,state,at);state.sessions[E.sessionId(n)]=[r];for(const id of r.questionIds)E.submit(r,id,E.resolve(id).correct,at);}return state;}
 function firstAnswers(state,number,right){const r=E.start(number,state,at);state.sessions[E.sessionId(number)]=[r];for(const [i,id] of r.questionIds.entries())E.submit(r,id,(E.resolve(id).correct+(i<right?0:1))%4,at);return r;}
 function corrections(r){for(const id of r.questionIds)if(!E.done(r.answers[id]))E.submit(r,id,E.resolve(id).correct,at);}
-function browser(t,state,query){const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.MarcoSkillSync={APP_ID:KEY};w.localStorage.setItem(KEY,JSON.stringify(state));for(const f of [...files,'app.js'])w.eval(read(f));return {w,d:w.document,state:()=>JSON.parse(w.localStorage.getItem(KEY))};}
+function browser(t,state,query,reviewState){const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.MarcoSkillSync={APP_ID:KEY};w.localStorage.setItem(KEY,JSON.stringify(state));for(const f of files)w.eval(read(f));if(reviewState===undefined){reviewState=w.MarcoReview3Engine.empty();for(const id of w.MarcoReview3Data.ids)w.MarcoReview3Engine.submit(reviewState,id,w.MarcoReview3Data.questions[id].correct);}w.localStorage.setItem('marco-math-skill-builder-oct12-review3-v1',JSON.stringify(reviewState));w.eval(read('app.js'));return {w,d:w.document,state:()=>JSON.parse(w.localStorage.getItem(KEY))};}
 const givens=q=>JSON.stringify([q.prompt,q.columns,q.table,q.graph,q.series,q.choiceGraphs,q.concept==='direction'?q.choices:null]);
 test('Set 7 retains its 20-question check; Sets 8–10 cover six targets with two questions each',()=>{
  const seven=E.set(7);assert.equal(seven.questionIds.length,20);assert.equal(seven.targetCorrect,18);
@@ -82,4 +82,23 @@ test('Earlier 20-question Set 8 answers remain valid and merge intact beside the
  assert.ok(E.valid(state));const snapshot=copy(state.sessions[old.id]);
  const fresh=firstAnswers(state,8,11);corrections(fresh);const merged=E.merge(state,E.empty());
  assert.ok(E.valid(merged));assert.deepEqual(copy(merged.sessions[old.id]),snapshot);assert.equal(E.stats(merged.sessions[E.sessionId(8)][0]).total,12);assert.equal(E.stats(merged.sessions[old.id][0]).total,20);
+});
+
+test('Review 3 is the light next step and locks direct Set 8 access until corrections are finished',t=>{
+ const state=finishCore();firstAnswers(state,7,20);const R=ctx.MarcoReview3Engine,D=ctx.MarcoReview3Data,r=R.empty();
+ for(const id of D.ids)R.submit(r,id,(D.questions[id].correct+1)%4,at,randomUUID());
+ const page=browser(t,state,'?set=8',r);assert.equal(page.d.querySelector('[data-action="start"]'),null);assert.match(page.d.querySelector('#content').textContent,/Finish Review Session 3/);
+ const card=page.d.querySelector('.review3-card');assert.ok(!card.classList.contains('review-card'));assert.match(card.textContent,/Next step/);assert.ok(page.d.querySelector('a[href="?set=8"]').classList.contains('session-locked'));
+ const before=JSON.stringify(state);for(const id of D.ids)R.submit(r,id,D.questions[id].correct,at,randomUUID());
+ page.w.localStorage.setItem('marco-math-skill-builder-oct12-review3-v1',JSON.stringify(r));page.w.dispatchEvent(new page.w.StorageEvent('storage',{key:'marco-math-skill-builder-oct12-review3-v1'}));
+ assert.ok(page.d.querySelector('[data-action="start"]'));assert.equal(page.d.querySelector('.next-step'),null);assert.equal(R.stats(r).first,0);assert.equal(JSON.stringify(state),before);
+});
+
+test('Online Review 3 verification is read-only and unlocks from another device',async t=>{
+ const state=finishCore();firstAnswers(state,7,20);const r=ctx.MarcoReview3Engine.empty();for(const id of ctx.MarcoReview3Data.ids)ctx.MarcoReview3Engine.submit(r,id,ctx.MarcoReview3Data.questions[id].correct,at,randomUUID());
+ const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'https://example.test/?set=8',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};
+ const calls=[];w.fetch=async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({progress:{state:r,version:1}})};};
+ w.MarcoSkillSync={APP_ID:KEY,create:()=>({start:()=>Promise.resolve(),push(){throw Error('No course writes expected');}})};w.localStorage.setItem(KEY,JSON.stringify(state));
+ for(const f of [...files,'app.js'])w.eval(read(f));await new Promise(resolve=>setTimeout(resolve,25));
+ assert.ok(w.document.querySelector('[data-action="start"]'));assert.equal(calls.length,1);assert.equal(calls[0].options.method,undefined);assert.equal(calls[0].options.body,undefined);assert.match(calls[0].url,/review3-v1$/);assert.equal(w.localStorage.getItem('marco-math-skill-builder-oct12-review3-v1'),null);
 });
