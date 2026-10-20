@@ -2,12 +2,12 @@
 
 This is a separate course, not a replacement for dated mock-test reviews.
 
-- Sets 1–6: 15 questions each, 90 core questions total. Each next core set requires completed Round 1 and required Round 2 of the earlier core sets, including second tries. No first-try misses means no Round 2 is required. Optional Sets 7 and 8 share those six core prerequisites and do not block each other. Saved out-of-order work remains preserved; this gate does not change the progress schema or scores.
+- Sets 1–6: 15 questions each, 90 core questions total. Each next core set requires completed Round 1 and required Round 2 of the earlier core sets, including second tries. No first-try misses means no Round 2 is required. Set 7 requires the six core Round 1 sets; Sets 8–10 then require completion of the preceding check. Saved out-of-order work remains preserved; this gate does not change the progress schema or scores.
 - Set scoreboard: original-run first-try correct counts stay visible on set cards and locked pages, including optional Sets 7 and 8. Partial practice shows counts only for answered questions; unstarted sets have no score. In-progress independent-check scores remain hidden until the first pass finishes. Corrections and repeats never raise the original score. The core scoreboard uses Set numbers, percentage bars, changes between sets, actual first-pass finish dates, and a core total. Different sets are not difficulty-equated, so score changes alone do not establish improvement.
 - Core weighting: graphs/data 24, percentages 20, rates/proportions 16, absolute value/signs 12, algebra 8, other checks 10.
-- Set 7: up to three missed concepts, five unused variants each; 5–15 questions. Selection uses original-run first-attempt misses and deprioritizes concepts with five recent correct fresh follow-ups. A run’s selected question IDs are immutable. New follow-up runs recalculate targets and use unused IDs.
-- Set 8: optional 25-question mixed challenge; balances independent-check coverage across the five main skills.
-- All sets are untimed. Sets 5, 6, and 8 hold feedback until the entire first pass is complete. A first-attempt miss then gets one retry before its answer, short trick, and explanation appear.
+- Set 7: 20-question mixed check; goal 18/20 first-try correct. Earlier optional adaptive Set 7 work remains saved under its original session ID.
+- Sets 8–10: 12-question mixed checks; 2 fresh questions for each of the 6 Review 3 target subtopics, goal 11/12 first-try correct. Review 3 appears between Sets 7 and 8. Earlier 25- and 20-question Set 8 records remain saved under their original session IDs.
+- All sets are untimed. Sets 5–10 hold feedback until the entire first pass is complete. A first-attempt miss then gets one retry before its answer, short trick, and explanation appear.
 - Green means completed, not mastered. Provisional skill security uses original-run independent checks, at least 10 questions, 90% first-attempt accuracy, and a 48-hour span. Repeating identical sets does not add independent-check evidence. This is a practical study rule, not an official ISEE standard or guarantee of test gains.
 - Method notes are saved but not machine-graded. Adaptation is deterministic and answer-based; it does not pretend to know why a child made an error.
 - Uses the existing family progress service with a separate app ID: `marco-math-skill-builder-oct12-v1`. No other review progress is changed. Localhost and `?demo=1` use local records only.
@@ -29,3 +29,9 @@ Run `node tests.mjs` for independent numerical/key checks and state/sync tests. 
 - The 3/4 target, per-answer right-out-of-done count, delayed detailed feedback, retries, and layout match Review 2. Scaling puts 3 of its 4 questions on cube volume, where both Review 2 misses occurred.
 - Independent app ID `marco-math-skill-builder-oct12-review3-v1`, session ID `review3-v1`, question IDs, and storage preserve every prior answer. Navigation is Review 2 → Set 7 → Review 3 → Set 8; the Review 3 card follows Set 7 and Set 7’s completion link opens Review 3. Existing set locks are unchanged; Review 3 is directly accessible.
 - Source selection is fixed; later corrections do not change the questions. The source records remain read-only. Localhost and `?demo=1` never call the production progress API.
+
+## October 19: 12-question Sets 8–10
+
+- Set 8 is now a 12-question mixed check, followed by similar Sets 9 and 10 with 12 fresh questions each. Every set contains 2 questions for each of the 6 Review 3 targets: y-intercept, data comparisons/ties, both absolute-value solutions, equivalent proportions, speed-unit conversions, and area/volume scaling. These were the <=50% Review 2 subtopics; Review 3 had no saved answers at creation, so no Review 3 performance is claimed.
+- Goal: 11/12 (92%, the minimum whole-question score meeting 90%). Feedback waits for all 12 first answers, with one retry per miss. First-try scores remain fixed. Set 9 requires Set 8 completion; Set 10 requires Set 9 completion. The order remains Set 7 → Review 3 → Set 8 → Set 9 → Set 10.
+- New session and question IDs preserve the previous 20-question Set 8 and every earlier saved record. Set 7 remains exactly the same. The existing progress app ID and version checks are retained.

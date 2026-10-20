@@ -25,13 +25,13 @@
   function start(number,state,at=new Date().toISOString(),id=root.crypto.randomUUID()){
     const s=set(number),p=s.adaptive?plan(state):null;if(s.adaptive&&!p.hasEvidence)throw new Error('Answer a core set before using targeted practice.');
     if(s.checkpoint&&state.sessions[s.id]?.length)throw new Error('This check already has a saved attempt. Continue that attempt; its first-try score stays fixed.');
-    if(s.checkpoint&&number===8&&!state.sessions[set(7).id]?.[0]?.completedAt)throw new Error('Finish the new Set 7 before opening Set 8.');
+    if(s.checkpoint&&number>=8&&!state.sessions[set(number-1).id]?.[0]?.completedAt)throw new Error(`Finish Set ${number-1} before opening Set ${number}.`);
     const ids=p?p.questionIds:s.questionIds;if(!ids.length)throw new Error('No unused follow-up questions remain.');
     return {id,setNumber:number,...(s.contentVersion?{contentVersion:s.contentVersion}:{}),startedAt:at,completedAt:null,questionIds:[...ids],answers:{},pending:{},notes:{},targeted:p?.targeted||false,reasons:p?.reasons||[]};
   }
   const sessionId=(number,round=1)=>set(number).id+(round===2?'-round2':'');
   const definitions=()=>[...C.sets,...(C.legacySets||[])].flatMap(s=>s.noRound2?[s]:[s,{...s,id:s.id+'-round2',sourceId:s.id,round:2,check:false}]);
-  const isCheck=r=>{const current=set(r.setNumber),definition=current.contentVersion&&r.contentVersion!==current.contentVersion?(C.legacySets||[]).find(s=>s.number===r.setNumber):current;return r.round!==2&&!!definition?.check;};
+  const isCheck=r=>{const current=set(r.setNumber),definition=current.contentVersion&&r.contentVersion!==current.contentVersion?(C.legacySets||[]).find(s=>s.number===r.setNumber&&s.contentVersion===r.contentVersion):current;return r.round!==2&&!!definition?.check;};
   function round2Plan(number,state){
     if(set(number).noRound2)return {ready:false,source:null,sourceQuestionIds:[],questionIds:[]};
     const source=state.sessions[sessionId(number)]?.[0],ready=!!source&&firstPass(source);
@@ -39,7 +39,7 @@
     return {ready,source,sourceQuestionIds:missed,questionIds:missed.map(id=>'r2:'+id)};
   }
   function startRound2(number,state,at=new Date().toISOString(),id=root.crypto.randomUUID()){
-    if(set(number).noRound2)throw new Error('Sets 7 and 8 use one check with an in-question retry; there is no separate Round 2.');
+    if(set(number).noRound2)throw new Error('Sets 7–10 use one check with an in-question retry; there is no separate Round 2.');
     const p=round2Plan(number,state);
     if(!p.ready)throw new Error('Finish all Round 1 first answers before starting Round 2.');
     if(!p.questionIds.length)throw new Error('No first-try mistakes. Round 2 is not needed.');

@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import {randomUUID} from 'node:crypto';
 const dir=new URL('.',import.meta.url),context={crypto:{randomUUID},setTimeout,clearTimeout,setInterval,clearInterval,AbortController,fetch,addEventListener(){},removeEventListener(){},document:{visibilityState:'visible',addEventListener(){},removeEventListener(){}},localStorage:{getItem(){return null;},setItem(){}}};
-for(const file of ['data.js','round2.js','checkpoint-data.js','engine.js','sync.js'])vm.runInNewContext(fs.readFileSync(new URL(file,dir),'utf8'),context,{filename:file});
+for(const file of ['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js','sync.js'])vm.runInNewContext(fs.readFileSync(new URL(file,dir),'utf8'),context,{filename:file});
 const C=context.MarcoSkillCourse,E=context.MarcoSkillEngine,S=context.MarcoSkillSync,copy=x=>JSON.parse(JSON.stringify(x));
 const number=s=>{const text=String(s).replace(/[°%]/g,'');if(text.includes('/')){const [a,b]=text.split('/').map(Number);return a/b;}return Number(text);};
 const close=(a,b)=>Math.abs(a-b)<1e-8;
@@ -22,6 +22,11 @@ function expected(q){const p=q.audit,v=p.v;
     case 'count':{let a=0,b=0,d=0;for(const r of p.rows){if(r[1]>r[2])a++;if(r[2]>r[1])b++;if(r[1]!==r[2])d++;}return v===0?b-a:v===1?b/p.rows.length:d;}
     case 'grouping':return {comparison:v===0?[2*Math.abs(-p.a)-2*Math.abs(p.b),2*Math.abs(-p.a-p.b)]:v===1?[Math.abs(-p.a+p.b),Math.abs(-p.a)+Math.abs(p.b)]:[-Math.abs(-p.a)+p.b,Math.abs(-p.a+p.b)]};
     case 'absequation':return v===0?(p.k===0?1:p.k<0?0:2):v===1?(p.c+p.k)+(p.c-p.k):`x is ${p.k} or −${p.k}.`;
+    case 'abs-pair':return `x = ${(p.k-p.b)/p.a} or x = ${(-p.k-p.b)/p.a}`;
+    case 'proportion-equation':assert.equal(p.lc*p.ld,p.rc*p.rd);return `${p.lc}${p.l} = ${p.rc}${p.r}`;
+    case 'proportion-denominators':assert.equal(p.lc*p.rn,p.rc*p.ln);return `${p.lc}${p.r} = ${p.rc}${p.l}`;
+    case 'proportion-denominator-value':return p.rn*p.ld/p.ln;
+    case 'unit-conversion':return p.toMph?p.speed/5280*3600:p.speed/3600*5280;
     case 'signed':return v===0?-p.a*p.b-(-p.c):v===1?-p.a*p.b+(-p.c):(-p.a)*(-p.b)-p.c;
     case 'part':return v===0?p.amount*p.p/100:v===1?p.portion/p.amount*100:40;
     case 'base':return v===0?(p.newer-p.old)/p.old*100:v===1?(p.newer-p.old)/p.newer*100:{comparison:[(p.newer-p.old)/p.old,(p.newer-p.old)/p.newer]};
@@ -40,7 +45,7 @@ function expected(q){const p=q.audit,v=p.v;
 function checkQuestion(q){assert.equal(q.choices.length,4,q.id);assert.equal(new Set(q.choices).size,4,q.id);assert.ok(q.tip&&q.explanation&&q.prompt,q.id);const x=expected(q);if(x?.comparison){const [a,b]=x.comparison,index=close(a,b)?2:a>b?0:1;assert.equal(q.correct,index,q.id);}else if(x?.index!==undefined)assert.equal(q.correct,x.index,q.id);else if(typeof x==='number'){assert.ok(close(number(q.choices[q.correct]),x),q.id+': '+q.choices[q.correct]+' expected '+x);assert.equal(q.choices.filter(c=>close(number(c),x)).length,1,q.id);}else{assert.equal(q.choices[q.correct],x,q.id);}}
 let checked=0;for(const kind of Object.keys(C.group))for(let seed=1;seed<=500;seed++){checkQuestion(C.question(kind,seed));checked++;}
 const core=C.sets.slice(0,6).flatMap(s=>s.questionIds);assert.equal(core.length,90);assert.equal(new Set(core).size,90);const allocation={};for(const id of core){const k=E.resolve(id).skill;allocation[k]=(allocation[k]||0)+1;}assert.deepEqual(allocation,{rates:16,graphs:24,absolute:12,percent:20,algebra:8,other:10});
-assert.equal(C.sets[7].questionIds.length,20);for(const set of C.sets.filter(s=>s.checkpoint))for(const id of set.questionIds)checkQuestion(E.resolve(id));assert.ok(C.sets[7].questionIds.every(id=>!core.includes(id)));
+assert.equal(C.sets[7].questionIds.length,12);for(const set of C.sets.filter(s=>s.checkpoint))for(const id of set.questionIds)checkQuestion(E.resolve(id));assert.ok(C.sets[7].questionIds.every(id=>!core.includes(id)));
 const at=(day,second=0)=>`2026-10-${String(day).padStart(2,'0')}T18:00:${String(second).padStart(2,'0')}.000Z`;
 const state=E.empty(),r=E.start(1,state,at(12),'learning-run');state.sessions['set-1']=[r];const id=r.questionIds[0],q=E.resolve(id),wrong=(q.correct+1)%4;
 assert.ok(E.submit(r,id,wrong,at(12,1)));assert.equal(E.reveal(r,id),false);assert.equal(E.submit(r,id,wrong,at(12,2)),false);assert.ok(E.submit(r,id,q.correct,at(12,3)));assert.equal(E.reveal(r,id),true);assert.equal(E.stats(r).first,0);assert.equal(E.stats(r).corrected,1);
@@ -57,7 +62,7 @@ const proof=E.skillStats(clean);for(const k of ['rates','graphs','absolute','per
 const dailyBefore=copy(E.dailyScores(clean));const dailyRepeat=E.start(5,clean,at(20),'repeat-day-score');clean.sessions['set-5'].push(dailyRepeat);for(const xid of dailyRepeat.questionIds)E.submit(dailyRepeat,xid,(E.resolve(xid).correct+1)%4,at(20,1));assert.deepEqual(copy(E.dailyScores(clean)),dailyBefore);
 const held=E.empty(),heldRun=E.start(6,held,at(17),'held-score');held.sessions['set-6']=[heldRun];E.submit(heldRun,heldRun.questionIds[0],E.resolve(heldRun.questionIds[0]).correct,at(17,1));assert.equal(E.dailyScores(held)[5].correct,null);assert.equal(E.dailyScores(held)[5].percent,null);
 assert.equal(E.dailyScores(state)[0].correct,0);assert.equal(E.dailyScores(state)[4].correct,14);assert.equal(E.dailyScores(state)[4].final,true);assert.equal(E.dailyScores(state)[4].percent,93);
-console.log(JSON.stringify({checkedQuestions:checked,coreQuestions:90,allocation,newTargetedChecks:'2 × 20; goal 18/20 first try',tests:'math answers, unique options, 2-try gates, delayed feedback, adaptation, fresh IDs, state validation, conflict-safe sync, repeat-proof daily/check scores: PASS'},null,2));
+console.log(JSON.stringify({checkedQuestions:checked,coreQuestions:90,allocation,newTargetedChecks:'Set 7: 20; Sets 8–10: 12 each, goal 11/12 first try',tests:'math answers, unique options, 2-try gates, delayed feedback, adaptation, fresh IDs, state validation, conflict-safe sync, repeat-proof daily/check scores: PASS'},null,2));
 
 const givens=q=>JSON.stringify([q.prompt,q.table,q.graph,q.series,q.diagram,q.columns,q.choiceGraphs,q.concept==='direction'?q.choices:null]);
 for(const kind of Object.keys(C.group))for(let seed=1;seed<=500;seed++){
