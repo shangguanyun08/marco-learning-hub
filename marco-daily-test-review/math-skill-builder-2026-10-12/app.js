@@ -51,7 +51,8 @@
     const original=runs(n,r)[0],st=E.stats(original);
     if(!st.attempted)return 'No first-try score yet.';
     if(E.isCheck(original)&&!E.firstPass(original))return `First-try score hidden until all first answers are recorded (${st.attempted}/${st.total}).`;
-    return `First try right: ${st.first}/${E.firstPass(original)?st.total:st.attempted}${E.firstPass(original)?'':' answered so far'}${runs(n,r).length>1?' · original run':''}`;
+    const finished=E.firstPass(original),total=finished?st.total:st.attempted,percent=Math.round(100*st.first/total);
+    return `First try: ${percent}% · ${st.first}/${total} correct${finished?'':' so far'}${runs(n,r).length>1?' · original run':''}`;
   }
   function lockedContent(gate) {
     if(gate.review3)return `<section class="panel session-lock" role="status">${lockBadge()}<h2>Set ${active}</h2><p class="saved-first-score">${firstTrySummary(active,round)}</p><p><strong>Finish Review Session 3 to unlock Set 8.</strong></p><p>Answer all ${R3D.ids.length} questions and correct any missed answers. Your first-try score stays unchanged; a perfect first try is not required.</p><a class="primary" href="review3.html${demo?'?demo=1':''}">Open Review Session 3 →</a></section>${completed(active,round)?historyPanel(active,true):''}`;

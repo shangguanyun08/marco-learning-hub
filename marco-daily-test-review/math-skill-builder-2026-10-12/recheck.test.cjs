@@ -46,16 +46,21 @@ test('Each 17-question set keeps first scores after retries and reloads and open
   const run=complete(state,n,E,'mixture');assert.equal(E.stats(run).first,16);assert.equal(E.stats(run).total,17);assert.equal(run.completedAt,null);
   const page=browser(t,state,`?set=${n}`);assert.equal(page.d.querySelectorAll('#content .question').length,17);assert.match(page.d.querySelector('.stage-head').textContent,/17 QUESTIONS/);assert.match(page.d.querySelector('.checkpoint-goal').textContent,/16\/17 = 94%/);assert.match(page.d.querySelector('.checkpoint-goal').textContent,/goal reached/);assert.equal(page.d.querySelector('nav[aria-label="Practice rounds"]'),null);
   if(n<10){assert.throws(()=>E.start(n+1,state,at),new RegExp(`Finish Set ${n}`));assert.match(browser(t,state,`?set=${n+1}`).d.querySelector('.session-lock').textContent,new RegExp(`Finish Set ${n}`));}
+  assert.equal(page.d.querySelector(`#sets a[href="?set=${n}"] .saved-first-score`).textContent,'First try: 94% · 16/17 correct');
   corrections(run);assert.ok(run.completedAt);assert.equal(E.stats(run).first,16);assert.ok(E.valid(state));assert.throws(()=>E.start(n,state,at),/saved attempt/);
-  assert.match(browser(t,copy(state),`?set=${n}`).d.querySelector('.complete-panel').textContent,/16\/17 correct/);
+  const reloaded=browser(t,copy(state),`?set=${n}`);assert.match(reloaded.d.querySelector('.complete-panel').textContent,/16\/17 correct/);
+  assert.equal(reloaded.d.querySelector(`#sets a[href="?set=${n}"] .saved-first-score`).textContent,'First try: 94% · 16/17 correct');
  }
  const low=ready(),r=complete(low,8);const miss=r.questionIds.slice(0,2);for(const id of miss){r.answers[id].attempts[0].choice=(E.resolve(id).correct+1)%4;r.answers[id].attempts[0].correct=false;}r.completedAt=null;corrections(r);
  const page=browser(t,low);assert.match(page.d.querySelector('.checkpoint-goal').textContent,/15\/17 = 88%/);assert.doesNotMatch(page.d.querySelector('.checkpoint-goal').textContent,/goal reached/);
+ assert.equal(page.d.querySelector('#sets a[href="?set=8"] .saved-first-score').textContent,'First try: 88% · 15/17 correct');
 });
 test('Skill table withholds first-pass correctness and tracks original first answers across all three sets',t=>{
  const state=ready(),r=E.start(8,state,at);state.sessions[E.sessionId(8)]=[r];const first=r.questionIds[0];E.submit(r,first,(E.resolve(first).correct+1)%4,at);
  assert.equal(E.submit(r,first,E.resolve(first).correct,at),false);
  const page=browser(t,state);assert.equal(page.d.querySelector('#content .solution'),null);assert.match(page.d.querySelector('#recheck-report').textContent,/Recorded/);assert.doesNotMatch(page.d.querySelector('#recheck-report tbody').textContent,/Missed|Correct/);
+ assert.equal(page.d.querySelector('#sets a[href="?set=8"] .saved-first-score').textContent,'First-try score hidden until all first answers are recorded (1/17).');
+ assert.equal(page.d.querySelector('#sets a[href="?set=9"] .saved-first-score').textContent,'No first-try score yet.');
  for(const id of r.questionIds.slice(1))E.submit(r,id,E.resolve(id).correct,at);corrections(r);complete(state,9);complete(state,10);
  const finished=browser(t,state,'?set=10'),rows=[...finished.d.querySelectorAll('#recheck-report tbody tr')];assert.equal(rows.length,17);
  const missed=rows.find(row=>row.querySelector('th').textContent==='Parts in a ratio');assert.match(missed.textContent,/Missed.*Correct.*Correct.*2\/3.*Revisit this skill/);
