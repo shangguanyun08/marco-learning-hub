@@ -91,7 +91,7 @@
     if(extra){const session=visibleBank().find(s=>s.extraReview),link=session&&document.querySelector(`.session-link[href="?session=${session.id}"]`);if(link){const run=window.HarryWeekProgress.firstRun(state.sessions[session.id])||{answers:{}};link.querySelector('.day-score').textContent='4 questions per skill';link.insertAdjacentHTML('beforeend',`<small class="skill-counts">${esc(skillText(session,run))}</small><small>Goal: 3/4 in each skill</small>`);}}
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().filter(s=>!s.retest).length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
-    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Day 3.4 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. All sessions are unlocked; choose any day or retest. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
+    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. All sessions are unlocked; choose any day or retest. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=active.practiceOnly?(s.firstTryPercent===null?'—':`${s.firstTryPercent}%`):`${s.first} / ${s.total}`;
@@ -111,6 +111,7 @@
     if(reason)return `You can review first-try mistakes in <a href="?session=${base.id}-round2">Round 2</a>, or choose any other session.`;
     if(base.extraReview)return 'Review any first-try mistakes with a parent. All sessions remain open.';
     if(base.id==='week-oct12-6')return 'Day 6 is complete. <a href="?session=week-oct12-extra-review">Open the extra fraction review</a> when you are ready.';
+    if(base.id==='week-oct12-3-4'||base.id==='week-oct12-3-5'){const next=bank[bank.indexOf(base)+1];return `Fraction review complete. <a href="?session=${next.id}">Open ${esc(next.cardLabel)}</a> for 6 fresh questions.`;}
     if(base.practiceOnly)return base.targeted?'Fraction review complete. Days 4–6 are open whenever you are ready.':'Practice complete. The other days are open whenever you are ready.';
     if(base.id==='week-oct12-3-3')return 'Day 3.4 is a short check of the fraction skills that still need practice. <a href="?session=week-oct12-3-4">Open Day 3.4</a>';
     if(base.id.startsWith('week-oct12-3')&&!W.day3Passed(state)){
@@ -194,7 +195,7 @@
   document.querySelector('#large-text').addEventListener('click',event=>{event.currentTarget.setAttribute('aria-pressed',String(document.body.classList.toggle('large')));});
   document.querySelector('#new-run').addEventListener('click',()=>{if(!active||active.weekly||locked(active))return;if(engine.stats(active,current()).finished!==active.questions.length)return;runs(active).push(newRun(true));save();render();document.querySelector('#session-title').scrollIntoView();});
   document.querySelector('#download').addEventListener('click',()=>{
-    const payload={exportedAt:new Date().toISOString(),testDates:groups?.map(g=>g.id)||['2026-09-20'],scoring:'Day 3.4 and Days 4–6 record completion only. Earlier sessions retain first-try scoring.',sessions:[...bank,...(R?.sessions(state)||[]).filter(s=>state.sessions[s.id])].map(session=>({...session,runs:state.sessions[session.id]||[]}))};
+    const payload={exportedAt:new Date().toISOString(),testDates:groups?.map(g=>g.id)||['2026-09-20'],scoring:'Days 3.4–3.6 and Days 4–6 record first-try percentages and completion. Retries do not change first-try scores. Earlier sessions retain their original first-try scoring.',sessions:[...bank,...(R?.sessions(state)||[]).filter(s=>state.sessions[s.id])].map(session=>({...session,runs:state.sessions[session.id]||[]}))};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'})),link=document.createElement('a');link.href=url;link.download='harry-star-math-practice-records.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   });
   const isLocalPreview=location.hostname==='localhost'||location.hostname==='127.0.0.1';
@@ -216,4 +217,5 @@
   }
   render();
 })();
+
 

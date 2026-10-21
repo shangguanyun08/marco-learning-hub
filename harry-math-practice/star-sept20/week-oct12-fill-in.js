@@ -26,5 +26,6 @@
   const variants=root.HarryWeekRound2.variants.get(s.id);
   if(variants)root.HarryWeekRound2.variants.set(s.id,variants.filter(q=>selected[day].includes(q.source)).map(q=>convert(q,day)));
  }
- const group=root.HARRY_STAR_GROUPS?.find(g=>g.id==='week-2026-10-12');if(group)group.description='Day 3.4 has 6 focused fraction questions. Days 4–6 have 8 questions each. All sessions are unlocked; choose any day or retest. Keep trying until correct, with a separate first-try percentage and completion progress. Earlier practice scores are saved.';
+ const group=root.HARRY_STAR_GROUPS?.find(g=>g.id==='week-2026-10-12');if(group)group.description='Days 3.4–3.6 each have 6 focused fraction questions. Days 4–6 have 8 questions each. All sessions are unlocked; choose any day or retest. Keep trying until correct, with a separate first-try percentage and completion progress. Earlier practice scores are saved.';
 })(window);
+

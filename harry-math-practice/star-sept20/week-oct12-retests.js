@@ -42,19 +42,27 @@
  bank.splice(bank.indexOf(base)+1,0,...retries);
  // Short follow-up to the repeated mixed-number errors and the Day 3.3
  // equivalent-fraction miss. This is separate from the 12-question checks.
- function fractionReview(review=false){
-  const pairs=review?[[3,3,4],[5,2,7],[4,3,8],[6,2,5]]:[[2,2,3],[4,3,5],[3,2,5],[5,1,4]];
+ function fractionReview(review=false,session=4){
+  const variants={
+   4:{pairs:review?[[3,3,4],[5,2,7],[4,3,8],[6,2,5]]:[[2,2,3],[4,3,5],[3,2,5],[5,1,4]],numerator:review?[3,5,4]:[2,3,3],denominator:review?[4,5,3]:[3,4,3]},
+   5:{pairs:review?[[4,1,3],[3,4,5],[6,1,2],[2,5,6]]:[[3,1,2],[2,3,4],[4,2,3],[5,3,8]],numerator:review?[2,7,4]:[3,5,4],denominator:review?[3,8,3]:[2,7,3]},
+   6:{pairs:review?[[5,3,4],[2,5,8],[4,4,7],[6,3,5]]:[[2,4,5],[5,2,3],[3,5,6],[4,3,7]],numerator:review?[3,8,4]:[4,7,2],denominator:review?[4,9,3]:[5,6,4]}
+  };
+  const {pairs,numerator,denominator}=variants[session];
   const questions=pairs.map(([whole,n,d],i)=>{
    const prefix=i===2?`A recipe uses ${whole} full cups of flour and another ${n}/${d} cup. Write the total as an improper fraction of a cup.`:i===3?`Sam writes ${whole} ${n}/${d} = ${whole*d}/${d}. Fix his answer.`:`Write ${whole} ${n}/${d} as an improper fraction.`;
    return {source:i+1,sourceLabel:'Targeted fraction review',skill:'Mixed numbers to improper fractions',type:'number',retryUntilCorrect:true,prompt:`${prefix} ${whole} ${n}/${d} = ____/${d}. Fill in the missing numerator.`,answerLabel:'Missing numerator (top number)',correct:whole*d+n,hint:'Multiply the whole number by the denominator, then add the numerator. Keep the denominator unchanged.',explanation:`${whole} wholes are ${whole*d}/${d}. Add the extra ${n}/${d}: (${whole} × ${d} + ${n})/${d} = ${whole*d+n}/${d}.`};
   });
-  const [a,b,factor]=review?[3,5,4]:[2,3,3];
+  const [a,b,factor]=numerator;
   questions.push({source:5,sourceLabel:'Targeted fraction review',skill:'Equivalent fractions',type:'number',retryUntilCorrect:true,prompt:`Complete the equivalent fraction: ${a}/${b} = ____/${b*factor}. Fill in the missing numerator.`,answerLabel:'Missing numerator (top number)',correct:a*factor,hint:'Find what the denominator was multiplied by. Multiply the numerator by the same number.',explanation:`${b} × ${factor} = ${b*factor}, so multiply the numerator by ${factor} too: ${a} × ${factor} = ${a*factor}.`});
-  const [c,d,k]=review?[4,5,3]:[3,4,3];
+  const [c,d,k]=denominator;
   questions.push({source:6,sourceLabel:'Targeted fraction review',skill:'Equivalent fractions',type:'number',retryUntilCorrect:true,prompt:`Complete the equivalent fraction: ${c}/${d} = ${c*k}/____. Fill in the missing denominator.`,answerLabel:'Missing denominator (bottom number)',correct:d*k,hint:'Find what the numerator was multiplied by. Multiply the denominator by the same number.',explanation:`${c} × ${k} = ${c*k}, so multiply the denominator by ${k} too: ${d} × ${k} = ${d*k}.`});
   return questions;
  }
  const focused={...base,id:'week-oct12-3-4',retest:true,targeted:true,practiceOnly:true,cardLabel:'Day 3.4',title:'Day 3.4 · Fraction check',description:'6 fill-in questions: 4 mixed-number conversions and 2 equivalent-fraction checks. Type the missing number and keep trying until correct. A method hint appears after two mistakes. Your first-try percentage is recorded separately; retries do not change it. No separate second round.',questions:fractionReview(),reviewVariants:fractionReview(true)};
  bank.splice(bank.indexOf(retries.at(-1))+1,0,focused);
+ const followups=[5,6].map(session=>({...focused,id:`week-oct12-3-${session}`,cardLabel:`Day 3.${session}`,title:`Day 3.${session} · Fraction check`,questions:fractionReview(false,session),reviewVariants:fractionReview(true,session)}));
+ bank.splice(bank.indexOf(focused)+1,0,...followups);
 })(window);
+
 
