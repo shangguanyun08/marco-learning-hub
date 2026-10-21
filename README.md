@@ -37,4 +37,4 @@ The recorder begins with interaction, pauses on hidden/blurred pages or after 90
 
 Older minute records are labeled estimates. Historical answer/run timestamps are shown as evidence only; no elapsed duration is invented from gaps between timestamps. Mixed work without a reliable subject stays separate. The daily log offers a JSON download with all recorded intervals and timestamp evidence for that day.
 
-Verification: `NODE_PATH=/workspace/scratch/ae5ae247844b/qa/node_modules node --test study-time-tracker.test.cjs activity-dashboard.test.mjs`. The backend tests cover overlaps, offline validation, replay, and Pacific midnight/daylight-saving boundaries.
+Verification: `node --test study-time-tracker.test.cjs activity-dashboard.test.mjs` (requires JSDOM; set `NODE_PATH` to its installation if it is outside this checkout). The backend tests cover overlaps, offline validation, replay, and Pacific midnight/daylight-saving boundaries.
