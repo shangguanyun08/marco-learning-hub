@@ -105,7 +105,7 @@
         masteredLine.textContent = `${mastered} math ${mastered === 1 ? "question" : "questions"} mastered`;
         const subjectTime = document.createElement("span");
         if (student === "Marco") {
-          subjectTime.textContent = studentStats?.hasTimeRecord ? `Math ${Math.round(studentStats.mathSeconds / 60)} min · Words ${Math.round(studentStats.wordSeconds / 60)} min` : "Subject time not recorded";
+          subjectTime.textContent = studentStats?.hasTimeRecord ? `Math ${studentStats.mathSeconds ? Math.round(studentStats.mathSeconds / 60) + " min" : "not recorded"} · Words ${studentStats.wordSeconds ? Math.round(studentStats.wordSeconds / 60) + " min" : "not recorded"}` : "Subject time not recorded";
           if (studentStats?.hasHistoricalEvidence && !studentStats.hasTimeRecord) minutesLine.textContent = "Time not recorded";
         }
         cell.append(minutesLine, subjectTime, wordsLine, mathLine, masteredLine);
@@ -145,7 +145,7 @@
       const marco = Math.max(0, Number(today?.students?.Marco?.minutes) || 0);
       const harry = Math.max(0, Number(today?.students?.Harry?.minutes) || 0);
       marcoMinutes.textContent = today?.students?.Marco?.hasHistoricalEvidence && !today.students.Marco.hasTimeRecord ? "Not recorded" : String(marco);
-      const timeText = (stats, key) => stats?.hasTimeRecord ? `${Math.round((stats[key] || 0) / 60)} min` : "Not recorded";
+      const timeText = (stats, key) => stats?.[key] ? (stats[key] < 60 ? "<1 min" : `${Math.round(stats[key] / 60)} min`) : "Not recorded";
       const marcoStats = today?.students?.Marco;
       if (document.getElementById("marco-math-time")) document.getElementById("marco-math-time").textContent = timeText(marcoStats, "mathSeconds");
       if (document.getElementById("marco-word-time")) document.getElementById("marco-word-time").textContent = timeText(marcoStats, "wordSeconds");
