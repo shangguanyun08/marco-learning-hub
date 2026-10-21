@@ -58,13 +58,18 @@
     lastTick=at;if(!visible()||at-lastEngaged>=IDLE)current=null;paint();
   }
   function engage(event){
-    if(event?.target?.closest?.('#study-time-status')||!visible()||paused||event?.type==='scroll'&&!lastEngaged)return;
+    if(event?.target?.closest?.('#study-time-status, #study-time-link')||!visible()||paused||event?.type==='scroll'&&!lastEngaged)return;
     const at=Date.now();tick(at);lastEngaged=at;lastTick=at;current=context(event?.target);paint();
     window.queueMicrotask(()=>{if(current&&!paused)current=context(event?.target);});
   }
   let status,caption,toggle;
   function mount(){
     if(document.getElementById('study-time-status'))return;
+    const topLink=document.createElement('a');topLink.id='study-time-link';topLink.href=HUB+'study-time.html';topLink.textContent='Time record';
+    topLink.style.cssText='display:inline-flex;align-items:center;box-sizing:border-box;min-height:44px;padding:8px 14px;border:1px solid #bdccd6;border-radius:10px;background:#f4f8fb;color:#173957;font:600 15px/1.4 system-ui;text-decoration:underline;text-underline-offset:3px;white-space:nowrap';
+    const courseNav=appId.startsWith('marco-math-skill-builder-')&&document.querySelector('.topnav, .review-nav');
+    if(courseNav){courseNav.style.flexWrap='wrap';courseNav.style.alignItems='center';courseNav.append(topLink);}
+    else{const topNav=document.createElement('nav');topNav.setAttribute('aria-label','Study records');topNav.style.cssText='box-sizing:border-box;max-width:1050px;margin:12px auto;padding:0 20px;display:flex;justify-content:flex-end';topNav.append(topLink);document.body.prepend(topNav);}
     status=document.createElement('aside');status.id='study-time-status';status.setAttribute('aria-label','Study time recorder');
     status.style.cssText='margin:16px auto;padding:10px 14px;max-width:1050px;border:1px solid #bdccd6;border-radius:12px;background:#f4f8fb;color:#173957;font:14px/1.5 system-ui;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center';
     caption=document.createElement('span');caption.style.flex='1 1 250px';toggle=document.createElement('button');toggle.type='button';toggle.style.cssText='font:inherit;border:1px solid #9bb0bf;border-radius:7px;padding:5px 10px;background:white;color:#173957;cursor:pointer';
