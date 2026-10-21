@@ -10,6 +10,7 @@ function browser(t,state,query='?set=8',review){const dom=new JSDOM(read('index.
  const scripts=[...read('index.html').matchAll(/<script defer src="([^"?]+)[^"]*"/g)].map(x=>x[1]);
  for(const file of scripts.filter(f=>!['app.js','sync.js'].includes(f)))w.eval(read(file));w.MarcoSkillSync={APP_ID:KEY};
  if(review===undefined){review=w.MarcoReview3Engine.empty();for(const id of w.MarcoReview3Data.ids)w.MarcoReview3Engine.submit(review,id,w.MarcoReview3Data.questions[id].correct);}
+ const review4=w.MarcoReview4Engine.empty();for(const id of w.MarcoReview4Data.ids)w.MarcoReview4Engine.submit(review4,id,w.MarcoReview4Data.questions[id].correct);w.localStorage.setItem('marco-math-skill-builder-oct12-review4-v1',JSON.stringify(review4));
  w.localStorage.setItem(RKEY,JSON.stringify(review));w.eval(read('app.js'));
  return{w,d:w.document,state:()=>JSON.parse(w.localStorage.getItem(KEY))};}
 const expected={
