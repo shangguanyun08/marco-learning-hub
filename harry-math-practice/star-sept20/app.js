@@ -91,7 +91,7 @@
     if(extra){const session=visibleBank().find(s=>s.extraReview),link=session&&document.querySelector(`.session-link[href="?session=${session.id}"]`);if(link){const run=window.HarryWeekProgress.firstRun(state.sessions[session.id])||{answers:{}};link.querySelector('.day-score').textContent='4 questions per skill';link.insertAdjacentHTML('beforeend',`<small class="skill-counts">${esc(skillText(session,run))}</small><small>Goal: 3/4 in each skill</small>`);}}
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().filter(s=>!s.retest).length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
-    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. All sessions are unlocked; choose any day or retest. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
+    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. Day 3.6 and later sessions unlock after all 6 questions in Day 3.5 are completed correctly. Retries count toward completion. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=active.practiceOnly?(s.firstTryPercent===null?'—':`${s.firstTryPercent}%`):`${s.first} / ${s.total}`;
@@ -108,17 +108,17 @@
   }
   function weeklyNextStep(){
     const base=bank.find(s=>s.id===(active.baseId||active.id)),reason=W.unfinished(base,state);
-    if(reason)return `You can review first-try mistakes in <a href="?session=${base.id}-round2">Round 2</a>, or choose any other session.`;
-    if(base.extraReview)return 'Review any first-try mistakes with a parent. All sessions remain open.';
+    if(reason)return `You can review first-try mistakes in <a href="?session=${base.id}-round2">Round 2</a>, or choose another unlocked session.`;
+    if(base.extraReview)return 'Review any first-try mistakes with a parent. Choose any unlocked session.';
     if(base.id==='week-oct12-6')return 'Day 6 is complete. <a href="?session=week-oct12-extra-review">Open the extra fraction review</a> when you are ready.';
     if(base.id==='week-oct12-3-4'||base.id==='week-oct12-3-5'){const next=bank[bank.indexOf(base)+1];return `Fraction review complete. <a href="?session=${next.id}">Open ${esc(next.cardLabel)}</a> for 6 fresh questions.`;}
-    if(base.practiceOnly)return base.targeted?'Fraction review complete. Days 4–6 are open whenever you are ready.':'Practice complete. The other days are open whenever you are ready.';
+    if(base.practiceOnly)return base.targeted?'Fraction review complete. Day 3.6 and later sessions unlock after completing Day 3.5.':'Practice complete. Choose any unlocked session.';
     if(base.id==='week-oct12-3-3')return 'Day 3.4 is a short check of the fraction skills that still need practice. <a href="?session=week-oct12-3-4">Open Day 3.4</a>';
     if(base.id.startsWith('week-oct12-3')&&!W.day3Passed(state)){
       const next=base.id==='week-oct12-3'?'week-oct12-3-2':base.id==='week-oct12-3-2'?'week-oct12-3-3':null;
-      return `The Day 3 practice target is <strong>9/12 on first tries</strong>. All sessions are open. ${next?`<a href="?session=${next}">Start ${esc(bank.find(s=>s.id===next).cardLabel)}</a>`:'Review the explanations with a parent before more fresh practice.'}`;
+      return `The Day 3 practice target is <strong>9/12 on first tries</strong>. Sessions through Day 3.5 are open. ${next?`<a href="?session=${next}">Start ${esc(bank.find(s=>s.id===next).cardLabel)}</a>`:'Review the explanations with a parent before more fresh practice.'}`;
     }
-    return base.id==='week-oct12-6'?'Your practice record is below.':'Practice complete. All sessions are unlocked; choose any day or retest.';
+    return base.id==='week-oct12-6'?'Your practice record is below.':'Practice complete. Day 3.6 and later sessions unlock after all 6 questions in Day 3.5 are completed correctly. Retries count toward completion.';
   }
   function renderHistory(){
     document.querySelector('#history').innerHTML=runs(active).map((run,i)=>{
@@ -159,8 +159,8 @@
     if(reason){
       document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent='Your earlier answers and scores are saved.';
       for(const selector of ['.scorebar','#jump','.records'])document.querySelector(selector).hidden=true;
-      const next=bank.find(s=>s.weekly&&!locked(s)&&W.unfinished(s,state)),nextId=next?(W.stats(next,state)?.finished===next.questions.length?next.id+'-round2':next.id):'week-oct12-3';
-      document.querySelector('#questions').innerHTML=`<section class="session-lock"><h2>🔒 Practice locked</h2><p>${esc(reason)}</p><a href="?session=${active.round2?active.baseId:nextId}">${active.round2?'Back to Round 1':'Open required practice'}</a></section>`;
+      const nextId='week-oct12-3-5';
+      document.querySelector('#questions').innerHTML=`<section class="session-lock"><h2>🔒 Practice locked</h2><p>${esc(reason)}</p><a href="?session=${nextId}">Open Day 3.5</a></section>`;
       document.querySelector('#completion').hidden=true;renderDays();updateSaveNote();return;
     }
     const emptyReview=active.round2&&!active.questions.length;

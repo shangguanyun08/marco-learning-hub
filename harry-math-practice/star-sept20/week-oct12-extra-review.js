@@ -16,7 +16,7 @@
  add(7,1,'Each of three fractions has a positive numerator at least as large as its positive denominator. Which value could their total equal?',['3 2/5','2 4/5','2 1/3','1 9/10'],0,`${bound} For example, 17/15 + 17/15 + 17/15 = 51/15 = 3 2/5.`);
  add(8,1,'Choose a possible sum of three positive improper fractions.',['2 3/4','2 9/10','5 1/6','1 11/12'],2,`${bound} For example, 3/2 + 5/3 + 2/1 = 31/6 = 5 1/6.`);
  questions.filter(q=>q.skillId==='improper-sums').forEach(q=>q.hint='Compare each improper fraction with 1. What is the smallest possible total for three of them?');
- const session={id,group,weekly:true,retest:true,targeted:true,practiceOnly:true,extraReview:true,cardLabel:'Extra review',title:'Extra review - Two fraction skills',description:'8 fresh questions: 4 mixed-number number lines and 4 possible sums of improper fractions. Here, an improper fraction has a numerator at least as large as its positive denominator. Aim for 3/4 correct on your first try in each skill. Keep trying until correct; retries never change your first-try counts. All sessions stay open.',questions};
+ const session={id,group,weekly:true,retest:true,targeted:true,practiceOnly:true,extraReview:true,cardLabel:'Extra review',title:'Extra review - Two fraction skills',description:'8 fresh questions: 4 mixed-number number lines and 4 possible sums of improper fractions. Here, an improper fraction has a numerator at least as large as its positive denominator. Aim for 3/4 correct on your first try in each skill. Keep trying until correct; retries never change your first-try counts.',questions};
  const bank=root.HARRY_SEPT_PRACTICE,last=bank.findLastIndex(s=>s.group===group);
  bank.splice(last+1,0,session);
  const metadata=root.HARRY_STAR_GROUPS.find(g=>g.id===group);

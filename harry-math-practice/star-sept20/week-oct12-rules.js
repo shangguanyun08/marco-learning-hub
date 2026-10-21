@@ -11,8 +11,14 @@
   return '';
  }
  function day3Passed(state){for(const id of ids){const s=base(id);if(unfinished(s,state))return false;if(stats(s,state)?.first>=9)return true;}return false;}
- // All sessions in this practice week are open, independent of prior completion or scores.
- function lockReason(){return '';}
+ // Day 3.6 and all later weekly sessions unlock together after Day 3.5.
+ function lockReason(session,state){
+  const current=base(session?.baseId||session?.id),cutoff=bank.findIndex(s=>s.id==='week-oct12-3-6');
+  if(!current||current.group!=='week-2026-10-12'||cutoff<0||bank.indexOf(current)<cutoff)return '';
+  const required=base('week-oct12-3-5');
+  if(required&&stats(required,state)?.finished===required.questions.length)return '';
+  return 'Finish all 6 questions in Day 3.5 correctly to unlock Day 3.6 and later sessions. Retries count toward completion.';
+ }
  root.HarryWeekRules={lockReason,stats,day3Passed,unfinished};
 })(window);
 
