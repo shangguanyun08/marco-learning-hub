@@ -97,7 +97,7 @@
     if(status==='retry')feedback='You got it on your second try! This correction is saved; the first-try score stays unchanged.';
     if(status==='revealed')feedback='Two tries completed. Read the explanation below to learn the method.';
     if(status==='timedout')feedback=attempts.length?'Time is up. Your submitted answer and first-try score are saved.':'Time is up. This question was unanswered and earns 0 first-try points.';
-    return `<article class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${part.id.endsWith('original')?'Original':'Matches'} Zozeck Q${q.source} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${arcDiagram(q)}<form data-part="${part.id}" data-source="${q.source}" novalidate><fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
+    return `<article data-study-subject="${part.subject==='math'?'math':'words'}" class="question ${status}" id="q${i+1}" data-source="${q.source}"><div class="question-head"><h3>Question ${i+1}</h3><span class="source">${part.id.endsWith('original')?'Original':'Matches'} Zozeck Q${q.source} · ${esc(q.skill)}</span></div><p class="prompt">${math(q.prompt)}</p>${arcDiagram(q)}<form data-part="${part.id}" data-source="${q.source}" novalidate><fieldset class="choices"><legend>${closed?'Your recorded answers':'Choose one answer'}</legend>${q.choices.map((choice,index)=>{
       const tried=attempts.findIndex(a=>a.choice===index),disabled=closed||tried>=0;
       const tag=tried>=0?`Try ${tried+1}${index===q.correct?' · correct':' · incorrect'}`:'';
       return `<label class="choice ${disabled?'disabled':''} ${tried>=0&&index!==q.correct?'wrong-option':''} ${closed&&index===q.correct?'correct-option':''}"><input type="radio" name="answer-${q.source}" value="${index}" ${disabled?'disabled':''} ${tried===attempts.length-1&&tried>=0?'checked':''}><span class="letter">${'ABCDE'[index]}</span><span class="choice-text">${math(choice)}${tag?`<small>${tag}</small>`:''}</span></label>`;
@@ -193,5 +193,5 @@
   }else{syncKind='offline';syncMessage=isLocalPreview?'Preview · Progress saves only in this browser.':'Not synced · Saved on this device. Reload to reconnect.';}
   window.addEventListener('pagehide',()=>{scratch.flush();save(false);});
   render();expireTimedRuns();setInterval(()=>{expireTimedRuns();if(active)renderTimer();},500);
-  if(!isLocalPreview){const tracker=document.createElement('script');tracker.src='../../shared-activity-tracker.js?v=1';tracker.dataset.appId=KEY;tracker.dataset.course='Marco ISEE Middle test review';document.body.append(tracker);}
+  if(!isLocalPreview){const tracker=document.createElement('script');tracker.src='../../shared-activity-tracker.js?v=20261021-time2';tracker.dataset.appId=KEY;tracker.dataset.course='Marco ISEE Middle test review';document.body.append(tracker);}
 })();

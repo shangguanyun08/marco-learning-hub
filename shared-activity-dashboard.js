@@ -1,7 +1,7 @@
 (function installDailyActivityDashboard() {
   "use strict";
 
-  const API_URL = "https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/activity";
+  const API_URL = "https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/study-time";
   const TIME_ZONE = "America/Los_Angeles";
   const marcoMinutes = document.getElementById("marco-minutes");
   const harryMinutes = document.getElementById("harry-minutes");
@@ -103,7 +103,12 @@
         const masteredLine = document.createElement("span");
         const mastered = masteryCount(mastery, student, day.date);
         masteredLine.textContent = `${mastered} math ${mastered === 1 ? "question" : "questions"} mastered`;
-        cell.append(minutesLine, wordsLine, mathLine, masteredLine);
+        const subjectTime = document.createElement("span");
+        if (student === "Marco") {
+          subjectTime.textContent = studentStats?.hasTimeRecord ? `Math ${Math.round(studentStats.mathSeconds / 60)} min · Words ${Math.round(studentStats.wordSeconds / 60)} min` : "Subject time not recorded";
+          if (studentStats?.hasHistoricalEvidence && !studentStats.hasTimeRecord) minutesLine.textContent = "Time not recorded";
+        }
+        cell.append(minutesLine, subjectTime, wordsLine, mathLine, masteredLine);
         return cell;
       });
       row.append(date, ...stats);
@@ -139,7 +144,11 @@
       const today = history.find((day) => day.date === dateKey());
       const marco = Math.max(0, Number(today?.students?.Marco?.minutes) || 0);
       const harry = Math.max(0, Number(today?.students?.Harry?.minutes) || 0);
-      marcoMinutes.textContent = String(marco);
+      marcoMinutes.textContent = today?.students?.Marco?.hasHistoricalEvidence && !today.students.Marco.hasTimeRecord ? "Not recorded" : String(marco);
+      const timeText = (stats, key) => stats?.hasTimeRecord ? `${Math.round((stats[key] || 0) / 60)} min` : "Not recorded";
+      const marcoStats = today?.students?.Marco;
+      if (document.getElementById("marco-math-time")) document.getElementById("marco-math-time").textContent = timeText(marcoStats, "mathSeconds");
+      if (document.getElementById("marco-word-time")) document.getElementById("marco-word-time").textContent = timeText(marcoStats, "wordSeconds");
       harryMinutes.textContent = String(harry);
       for (const student of ["Marco", "Harry"]) {
         const stats = today?.students?.[student];
@@ -148,7 +157,7 @@
         sessionNodes[student].mastered.textContent = String(masteryCount(mastery, student, dateKey()));
       }
       renderHistory(history, mastery);
-      noteNode.textContent = "Math mastery: 3 correct in a row · Each main question counted once · Pacific time.";
+      noteNode.textContent = "Active minutes are estimates · Detailed time log shows math, words, and work periods · Pacific time. Math mastery: 3 correct in a row.";
       if (Object.values(mastery).some(item => !item)) noteNode.textContent += " Math counts will retry automatically.";
       if (Object.values(mastery).some(item => item?.undated)) noteNode.textContent += " Earlier mastery without a saved date is excluded.";
     } catch (error) {

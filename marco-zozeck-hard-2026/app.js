@@ -311,7 +311,7 @@
     });
     void sync.start(progress);
     const tracker = document.createElement('script');
-    tracker.src = '../shared-activity-tracker.js?v=1';
+    tracker.src = '../shared-activity-tracker.js?v=20261021-time2';
     tracker.dataset.appId = APP_ID;
     tracker.dataset.course = '2026 Zozeck Hard · 331 questions';
     document.body.append(tracker);

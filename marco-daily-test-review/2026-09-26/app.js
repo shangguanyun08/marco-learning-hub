@@ -74,5 +74,5 @@
   const local=['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:';
   if(!local){sync=window.MarcoIseeSync.create({getState:()=>state,onRemote:applyRemote,onStatus(kind,message){statusKind=kind;statusText=message;saveNote();}});void sync.start();}else{statusKind='preview';statusText='Preview · Progress saves only in this browser.';}
   render();expire();setInterval(()=>{expire();timer();},500);
-  if(!local){const script=document.createElement('script');script.src='../../shared-activity-tracker.js?v=1';script.dataset.appId=KEY;script.dataset.course='Marco ISEE review · September 26';document.body.append(script);}
+  if(!local){const script=document.createElement('script');script.src='../../shared-activity-tracker.js?v=20261021-time2';script.dataset.appId=KEY;script.dataset.course='Marco ISEE review · September 26';document.body.append(script);}
 })();

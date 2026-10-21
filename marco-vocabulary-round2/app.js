@@ -197,7 +197,7 @@
     });
     void sync.start(envelope);
     const tracker = document.createElement('script');
-    tracker.src = '../shared-activity-tracker.js?v=1';
+    tracker.src = '../shared-activity-tracker.js?v=20261021-time2';
     tracker.dataset.appId = APP_ID;
     tracker.dataset.course = 'Vocabulary Practice';
     document.body.append(tracker);

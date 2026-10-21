@@ -199,7 +199,7 @@
     });
     void sync.start(progress);
     const tracker = document.createElement('script');
-    tracker.src = '../shared-activity-tracker.js?v=1';
+    tracker.src = '../shared-activity-tracker.js?v=20261021-time2';
     tracker.dataset.appId = APP_ID;
     tracker.dataset.course = 'ISEE Words to Know · 250';
     document.body.append(tracker);
