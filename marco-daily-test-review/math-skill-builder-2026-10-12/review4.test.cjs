@@ -7,11 +7,11 @@ function filled(engine,data,wrong=false){const s=engine.empty();for(const id of 
 function ready(){const s=CE.empty();for(let n=1;n<=7;n++){const r=CE.start(n,s,at);s.sessions[CE.sessionId(n)]=[r];for(const id of r.questionIds)CE.submit(r,id,CE.resolve(id).correct,at);}return s;}
 function browser(t,{main=false,state,query='',online=false,remoteReview}={}){
  const html=read(main?'index.html':'review4.html'),dom=new JSDOM(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:(online?'https://example.test/':'http://localhost/')+(main?'':'review4.html')+query,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};
- const calls=[];w.fetch=async(url,opt)=>{calls.push({url,opt});assert.equal(opt.method,undefined);assert.equal(opt.body,undefined);return{ok:true,json:async()=>({progress:{state:url.includes('review4-v1')?remoteReview:filled(course.MarcoReview3Engine,course.MarcoReview3Data),version:1}})};};
+ const calls=[];w.fetch=async(url,opt)=>{calls.push({url,opt});assert.equal(opt.method,undefined);assert.equal(opt.body,undefined);return{ok:true,json:async()=>({progress:{state:url.includes('review5-v1')?filled(course.MarcoReview5Engine,course.MarcoReview5Data):url.includes('review4-v1')?remoteReview:filled(course.MarcoReview3Engine,course.MarcoReview3Data),version:1}})};};
  w.localStorage.setItem(MAIN,main?JSON.stringify(state):'course-sentinel');w.localStorage.setItem(R3KEY,main?JSON.stringify(filled(course.MarcoReview3Engine,course.MarcoReview3Data)):'review3-sentinel');
  if(!main&&state)w.localStorage.setItem(KEY+(query.includes('demo')?':demo':''),JSON.stringify(state));
  for(const f of scripts(html).filter(f=>!['app.js','sync.js','review4.js'].includes(f)))w.eval(read(f));
- if(main){w.MarcoSkillSync={APP_ID:MAIN,create:()=>({start:()=>Promise.resolve(),push(){throw Error('Unexpected course write');}})};if(remoteReview&&!online)w.localStorage.setItem(KEY,JSON.stringify(remoteReview));}
+ if(main){w.localStorage.setItem('marco-math-skill-builder-oct12-review5-v1',JSON.stringify(filled(course.MarcoReview5Engine,course.MarcoReview5Data)));w.MarcoSkillSync={APP_ID:MAIN,create:()=>({start:()=>Promise.resolve(),push(){throw Error('Unexpected course write');}})};if(remoteReview&&!online)w.localStorage.setItem(KEY,JSON.stringify(remoteReview));}
  w.eval(read(main?'app.js':'review4.js'));
  return{w,d:w.document,calls,state:()=>JSON.parse(w.localStorage.getItem(main?MAIN:KEY+(query.includes('demo')?':demo':'')))};
 }
@@ -65,5 +65,5 @@ test('Set 8 stays locked with old answers intact until every Review 4 miss is co
  E.submit(r,D.ids.at(-1),D.questions[D.ids.at(-1)].correct,'2026-10-22T03:05:00.000Z',randomUUID());refresh();assert.equal(p.d.querySelector('.session-lock'),null);assert.equal(p.d.querySelectorAll('#content .question').length,17);assert.equal(E.stats(r).first,0);assert.deepEqual(p.state(),before);assert.equal(p.d.querySelector('.review4-card .next-step'),null);
 });
 test('A completed Review 4 unlocks Set 8 across devices through read-only progress checks',async t=>{
- const state=ready(),r=filled(E,D),p=browser(t,{main:true,state,query:'?set=8',online:true,remoteReview:r});await new Promise(resolve=>setTimeout(resolve,25));assert.equal(p.d.querySelector('.session-lock'),null);assert.ok(p.d.querySelector('[data-action="start"]'));assert.equal(p.calls.length,2);assert.ok(p.calls.some(x=>x.url.endsWith('review4-v1')));assert.deepEqual(p.state(),copy(state));
+ const state=ready(),r=filled(E,D),p=browser(t,{main:true,state,query:'?set=8',online:true,remoteReview:r});await new Promise(resolve=>setTimeout(resolve,25));assert.equal(p.d.querySelector('.session-lock'),null);assert.ok(p.d.querySelector('[data-action="start"]'));assert.equal(p.calls.length,3);assert.ok(p.calls.some(x=>x.url.endsWith('review4-v1')));assert.deepEqual(p.state(),copy(state));
 });

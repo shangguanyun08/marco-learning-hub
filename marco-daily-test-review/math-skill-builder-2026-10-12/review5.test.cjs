@@ -73,10 +73,10 @@ test('Demo on a public origin never calls progress service; empty online review 
  const demo=browser(t,{online:true});assert.equal(demo.calls.length,0);for(const a of demo.d.querySelectorAll('nav a'))assert.ok(new URL(a.href).searchParams.has('demo'));
  const online=browser(t,{online:true,query:''});await new Promise(resolve=>setTimeout(resolve,10));assert.equal(online.calls.length,1);assert.ok(online.calls[0].url.endsWith(KEY));preserved(online);
 });
-test('Review 5 navigation is discoverable and adds no unlock gate or old-progress dependency',t=>{
+test('Review 5 navigation is discoverable and its separate gate dependencies do not write old progress',t=>{
  const html=read('index.html'),dom=new JSDOM(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};
  const oldKeys=sentinels.map(key=>[key,w.localStorage.getItem(key)]);for(const f of scripts(html))w.eval(read(f));
  const labels=[...w.document.querySelectorAll('#sets .set-card>b')].map(e=>e.textContent);assert.ok(labels.indexOf('Review Session 4')<labels.indexOf('Review Session 5'));assert.ok(labels.indexOf('Review Session 5')<labels.indexOf('Set 8'));assert.equal(w.document.querySelector('.review5-card').getAttribute('href'),'review5.html');
- assert.ok(!/review5/i.test(read('app.js').slice(read('app.js').indexOf('  function access('),read('app.js').indexOf('  const canPractice='))));
- assert.ok(!scripts(html).some(f=>/review5/.test(f)));assert.match(read('review4.html'),/href="review5.html"/);for(const [key,value]of oldKeys)assert.equal(w.localStorage.getItem(key),value);
+ assert.ok(scripts(html).includes('review5-data.js'));assert.ok(scripts(html).includes('review5-engine.js'));
+ assert.ok(!scripts(html).includes('review5-sync.js'));assert.match(read('review4.html'),/href="review5.html"/);for(const [key,value]of oldKeys)assert.equal(w.localStorage.getItem(key),value);
 });

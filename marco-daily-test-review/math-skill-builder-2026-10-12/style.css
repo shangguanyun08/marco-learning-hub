@@ -11,4 +11,4 @@
 
 .review-card{background:#eaf3ef;border-color:#8aada5}.review-card b{color:#176150}
 
-.review3-card,.review4-card{background:var(--paper);border-color:var(--line)}.review3-card .next-step,.review4-card .next-step{align-self:flex-start;background:#edf3ff;color:var(--blue);font-weight:800}
+.review3-card,.review4-card,.review5-card{background:var(--paper);border-color:var(--line)}.review3-card .next-step,.review4-card .next-step,.review5-card .next-step{align-self:flex-start;background:#edf3ff;color:var(--blue);font-weight:800}
