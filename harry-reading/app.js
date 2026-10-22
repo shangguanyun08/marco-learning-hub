@@ -28,7 +28,7 @@
   }
   function home(){
     article=null;run=null;retry=false;pending=[];
-    app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1><p class="lede">A good answer has evidence. Reread each article, answer the missed questions, and highlight the words that support your thinking.</p><div class="flow"><strong>1 Read</strong><span>→</span><strong>2 Answer</strong><span>→</span><strong>3 Highlight</strong><span>→</span><strong>4 Check</strong></div></section>
+    app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1></section>
       <section class="cards" aria-label="Reading sessions">${articles.map((a,i)=>{
         const r=latest(a),score=core.scores(a,r),done=completed(a,r);
         return `<article class="card ${done?'done':''}"><span class="num">0${i+1}</span><p class="eyebrow">Session ${i+1} · ${a.questions.length} questions to redo</p><h2>${esc(a.title)}</h2><p>${r?`${score.mastered} of ${score.total} answers supported with evidence`:'Read the full article, then redo only the missed questions.'}</p><button class="primary" data-open="${a.id}">${done?'See results':r?'Continue reading':'Start reading'} →</button></article>`;
