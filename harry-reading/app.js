@@ -11,6 +11,8 @@
   const currentQ=()=>article.questions[run.position||0],attempts=q=>run.answers[q.id]||[];
   const draft=()=>run.drafts[currentQ().id],isResolved=()=>core.resolved(attempts(currentQ()));
   const completed=(a,r)=>core.finished(a,r)===a.questions.length;
+  const levelLabel=a=>a.lexile?`Lexile ${a.lexile}L`:`Reference Lexile ${a.referenceLexile}L`;
+  const questionLabel=(a,q)=>`${a.sourceQuiz?'Original question':'Question'} ${q.number}`;
   function save(){
     if(demo){document.querySelector('#save-status').textContent='Preview · no records saved';return;}
     try{localStorage.setItem(key,JSON.stringify(state));document.querySelector('#save-status').textContent='Saved on this device';}
@@ -27,12 +29,17 @@
   function home(){
     article=null;run=null;pending=[];
     app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1></section>
-      <section class="cards" aria-label="Reading sessions">${articles.map((a,i)=>{
-        const r=latest(a),score=core.scores(a,r),done=completed(a,r);
-        return `<article class="card ${score.mastered===score.total?'done':''}"><span class="num">0${i+1}</span><p class="eyebrow">Session ${i+1} · ${a.questions.length} questions to redo</p><h2>${esc(a.title)}</h2><p>${r?`${core.finished(a,r)} of ${score.total} questions checked · ${score.mastered} answered and supported`:'Choose an answer and highlight its evidence, then check.'}</p><button class="primary" data-open="${a.id}">${done?'See results':r?'Continue practice':'Start practice'} →</button></article>`;
-      }).join('')}</section><p class="home-note">Tap sentences to highlight them, or select words and choose “Highlight selected words.” Choose your answer and evidence together, then check. You get a second try on anything missed.</p>
+      <section class="cards" aria-label="Recent article redo sessions">${renderCards(articles.filter(a=>a.kind!=='parallel'))}</section>
+      <section class="practice-group" aria-labelledby="grade3-heading"><div class="practice-group-head"><h2 id="grade3-heading">Grade 3 · New practice</h2><span>10 articles · 52 multiple-choice questions</span></div><p class="meta">The Lexile labels below belong to the ReadTheory reference samples. These are original parallel passages, and their own Lexile scores have not been measured.</p><div class="cards" aria-label="Grade 3 parallel reading sessions">${renderCards(articles.filter(a=>a.kind==='parallel'))}</div></section>
+      <p class="home-note">Tap sentences to highlight them, or select words and choose “Highlight selected words.” Choose your answer and evidence together, then check. You get a second try on anything missed.</p>
       <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records stay in this browser. Export a copy to keep or share the attempts and highlighted evidence.</p></details>`;
     app.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openArticle(b.dataset.open));app.querySelector('#export').onclick=exportProgress;
+  }
+  function renderCards(list){
+    return list.map(a=>{
+      const i=articles.indexOf(a),r=latest(a),score=core.scores(a,r),done=completed(a,r);
+      return `<article class="card ${score.mastered===score.total?'done':''}"><span class="num">${String(i+1).padStart(2,'0')}</span><p class="eyebrow">Session ${i+1} · ${a.questions.length} ${a.kind==='parallel'?'questions':'questions to redo'}</p><h2>${esc(a.title)}</h2><p class="lexile">${esc(levelLabel(a))}</p>${a.referenceTitle?`<p class="reference-title">Parallel to “${esc(a.referenceTitle)}”</p>`:''}<p>${r?`${core.finished(a,r)} of ${score.total} questions checked · ${score.mastered} answered and supported`:'Choose an answer and highlight its evidence, then check.'}</p><button class="primary" data-open="${a.id}">${done?'See results':r?'Continue practice':'Start practice'} →</button></article>`;
+    }).join('');
   }
   function renderHistory(){
     const records=articles.flatMap(a=>runs(a).map((r,i)=>({a,r,i})));
@@ -41,13 +48,13 @@
       const score=core.scores(a,r),date=new Date(r.startedAt).toLocaleString();
       return `<details class="history-record"><summary>${esc(a.title)} · Practice ${i+1} · ${core.finished(a,r)}/${score.total} complete</summary><p class="meta">${esc(date)} · First answers: ${score.firstAnswers}/${score.total} · First evidence checks: ${score.firstEvidence}/${score.total}</p>${a.questions.map(q=>{
         const aa=r.answers[q.id]||[];
-        if(!aa.length)return `<p class="meta">Original question ${q.number}: not checked yet.</p>`;
-        return `<div><p><strong>Original question ${q.number}</strong></p>${aa.map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · Answer ${at.answerOK?'correct':'incorrect'} · Evidence ${at.evidenceOK?'supported':'needs another look'}</p>${core.quoteMarks(a,at.marks||[]).map(m=>`<blockquote>${esc(m.quote)}</blockquote>`).join('')}`).join('')}</div>`;
+        if(!aa.length)return `<p class="meta">${questionLabel(a,q)}: not checked yet.</p>`;
+        return `<div><p><strong>${questionLabel(a,q)}</strong></p>${aa.map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · Answer ${at.answerOK?'correct':'incorrect'} · Evidence ${at.evidenceOK?'supported':'needs another look'}</p>${core.quoteMarks(a,at.marks||[]).map(m=>`<blockquote>${esc(m.quote)}</blockquote>`).join('')}`).join('')}</div>`;
       }).join('')}</details>`;
     }).join('');
   }
   function exportProgress(){
-    const exported={...state,exportedAt:now(),course:'ReadTheory redo · October 21, 2026',articleTitles:Object.fromEntries(articles.map(a=>[a.id,a.title]))};
+    const exported={...state,exportedAt:now(),course:'Harry reading · recent articles and Grade 3 parallel practice',articleTitles:Object.fromEntries(articles.map(a=>[a.id,a.title]))};
     const blob=new Blob([JSON.stringify(exported,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
     a.href=url;a.download='harry-reading-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
@@ -55,8 +62,8 @@
     pending=[];
     const q=currentQ(),done=isResolved(),at=attempts(q).at(-1),marks=done?at.marks:draft().marks;
     const tryNumber=attempts(q).length+1;
-    app.innerHTML=`<div class="workspace-head"><div><p class="eyebrow">Session ${articles.indexOf(article)+1} of 3</p><h1>${esc(article.title)}</h1><p class="meta">Question ${(run.position||0)+1} of ${article.questions.length} · Original question ${q.number}</p></div><button class="quiet" id="back-home">All articles</button></div>
-      <div class="reading-layout"><section class="passage-panel" aria-labelledby="passage-heading"><h2 id="passage-heading">${esc(article.title)}</h2><p class="instructions">${done?'Reread the highlighted evidence as you review.':'Choose your answer and highlight supporting words. Tap a sentence, or select words to highlight.'}</p><div class="passage" id="passage">${renderPassage(marks,!done)}</div></section>
+    app.innerHTML=`<div class="workspace-head"><div><p class="eyebrow">Session ${articles.indexOf(article)+1} of ${articles.length}</p><h1>${esc(article.title)}</h1><p class="meta">Question ${(run.position||0)+1} of ${article.questions.length}${article.sourceQuiz?` · Original question ${q.number}`:''} · ${esc(levelLabel(article))}</p></div><button class="quiet" id="back-home">All articles</button></div>
+      <div class="reading-layout"><section class="passage-panel" aria-labelledby="passage-heading"><h2 id="passage-heading">${esc(article.title)}</h2>${article.referenceTitle?`<p class="reference-note">Original parallel practice · reference: “${esc(article.referenceTitle)}” (${article.referenceLexile}L). This new passage has not been Lexile-measured.</p>`:''}<p class="instructions">${done?'Reread the highlighted evidence as you review.':'Choose your answer and highlight supporting words. Tap a sentence, or select words to highlight.'}</p><div class="passage" id="passage">${renderPassage(marks,!done)}</div></section>
       <section class="question-panel" aria-labelledby="question-title"><p class="eyebrow">${done?'Checked':tryNumber===1?'First try':'Second try'}</p><h2 id="question-title" tabindex="-1">${esc(q.prompt)}</h2><div id="question-body">${done?renderFeedback(q,at):renderForm(q,at)}</div></section></div>
       ${!done?`<div class="mobile-dock"><button class="select-action" id="mobile-add" hidden>Highlight selection</button><button class="primary" id="mobile-check" ${canCheck()?'':'disabled'}>Check ${tryNumber===1?'first':'second'} try</button></div>`:''}`;
     app.querySelector('#back-home').onclick=home;

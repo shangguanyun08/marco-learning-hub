@@ -8,6 +8,23 @@ A single launchpad for every published learning site in the `shangguanyun08` Git
 
 Opening an article shows its full passage, answer choices, and highlighting together. There is no read-first gate or step strip. A check requires both a choice and highlighted evidence. The first failed check reports answer/evidence status without revealing the solution; Harry can edit either part for one second check. A successful check or the second check reveals the explanation and enables the next question. Completion and mastery are counted separately. Multiple evidence groups are required for both-passage summaries, exclusion lists, and sequences. Evidence checking matches curated source phrases; it does not grade freeform explanations. Sentence tapping and exact text selection both work. Checked first/second attempts and editable drafts are stored in localStorage, with JSON export; earlier checked records are preserved. `?demo` uses an unsaved preview. This course does not modify the ReadTheory account or use the hub’s cloud progress service.
 
+The three recent articles display their recorded ReadTheory Lexile levels: Carla 500L, Fruits and Vegetables 480L, and Leo and Jasmine 640L. `grade3-practice.js` appends 10 original parallel passages and 52 multiple-choice questions as sessions 4–13. The public course does not contain the downloaded Grade 3 PDFs or reproduce their passages/questions: those PDFs prohibit reuse/republication. Reference Lexile numbers identify the publisher’s samples; the new passages have not been measured by Lexile. They are labeled accordingly on cards and inside each session.
+
+| New passage | Reference sample | Reference Lexile | Questions |
+| --- | --- | --- | --- |
+| Tents for the Class Trip | Car For Sale! | 460L | 4 |
+| A Letter about the Garden | Dear Emily | 470L | 4 |
+| Finding Pinebridge Library | Where We Live | 470L | 6 |
+| The Closed Footbridge | A Problem at the Fire Station | 480L | 4 |
+| One Game at a Time | The New Law | 500L | 5 |
+| Three Reviews of a Book Lamp | Sky Boots | 500L | 6 |
+| A Ranger Plans Ahead | Thinking First | 540L | 5 |
+| The Museum after Midnight | Tornado! | 560L | 6 |
+| The First Canoe Lesson | Roller Coaster | 570L | 6 |
+| Keeping the Bakery Moving | Calm on the Job | 580L | 6 |
+
+Validate with `node --test harry-reading/core.test.cjs harry-reading/grade3-practice.test.cjs`. The existing storage key and original article/question IDs remain unchanged.
+
 The hub links to:
 
 - Marco's Complete ISEE Vocabulary

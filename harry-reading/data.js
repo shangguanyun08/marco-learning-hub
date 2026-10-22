@@ -1,6 +1,6 @@
 window.READING_ARTICLES = [
   {
-    id: 'carla', title: 'Carla the Cat', sourceQuiz: 30, sourceDate: '2026-10-21', grade: 3,
+    id: 'carla', title: 'Carla the Cat', sourceQuiz: 30, sourceDate: '2026-10-21', grade: 3, lexile: 500,
     paragraphs: [
       "Carla is a cat. She is like most other cats. And like most other cats, Carla likes to play with string, lay out in the sun, and lick her paws.",
       "Carla likes to do all of these things. But this not what she likes to do best. That's because Carla is a hunter. She likes hunting more than anything else. For Carla, hunting is a job.",
@@ -16,7 +16,7 @@ window.READING_ARTICLES = [
     ]
   },
   {
-    id:'fruits', title:'Fruits and Vegetables', sourceQuiz:29, sourceDate:'2026-10-21', grade:3,
+    id:'fruits', title:'Fruits and Vegetables', sourceQuiz:29, sourceDate:'2026-10-21', grade:3, lexile:480,
     sectionTitles:{0:'Passage 1 · Fruits',6:'Passage 2 · Vegetables'},
     paragraphs:[
       'All fruits have seeds in them.',
@@ -44,7 +44,7 @@ window.READING_ARTICLES = [
     ]
   },
   {
-    id:'trip',title:'Leo and Jasmine Plan a Trip',sourceQuiz:28,sourceDate:'2026-10-21',grade:4,
+    id:'trip',title:'Leo and Jasmine Plan a Trip',sourceQuiz:28,sourceDate:'2026-10-21',grade:4,lexile:640,
     paragraphs:[
       '“I am glad that we both have some time off from work next month,” Jasmine said. “We should go on a trip.”',
       '“Good idea,” said Leo. “Where should we go?”',
