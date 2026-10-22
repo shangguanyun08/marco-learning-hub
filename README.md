@@ -2,6 +2,12 @@
 
 A single launchpad for every published learning site in the `shangguanyun08` GitHub account.
 
+## Harry’s reading
+
+`harry-reading/` contains the three latest ReadTheory articles completed October 21, 2026: quiz 30 Carla the Cat (missed Q4–5), quiz 29 Fruits and Vegetables (missed Q1–4), and quiz 28 Leo and Jasmine Plan a Trip (missed Q1, Q3, Q5–6). Passage text, choices, and answer keys were checked against the authenticated review pages. Paragraph breaks were restored for readability. No student identifiers or account review links are published.
+
+The flow is reread → submit an answer → highlight source words → check answer and evidence separately. Multiple evidence groups are required for both-passage summaries, exclusion lists, and sequences. Evidence checking matches curated source phrases; it does not grade freeform explanations. Sentence tapping and exact text selection both work. A correct answer and supported evidence are required to continue. First answers, every retry, and exact highlighted text are stored in localStorage, with JSON export. `?demo` uses an unsaved preview. This course does not modify the ReadTheory account or use the hub’s cloud progress service.
+
 The hub links to:
 
 - Marco's Complete ISEE Vocabulary
