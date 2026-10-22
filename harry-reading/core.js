@@ -31,6 +31,36 @@
     return {correct:valid.length>0&&focused&&supported.every(Boolean),supported,focused};
   }
   function passed(attempts){return !!attempts?.some(a=>a.checkedAt&&a.answerOK&&a.evidenceOK);}
+  function resolved(attempts){return passed(attempts)||(attempts||[]).filter(a=>a.checkedAt).length>=2;}
+  function finished(article,run){return article.questions.filter(q=>resolved(run?.answers[q.id])).length;}
+  function prepareRun(article,run){
+    run.answers??={};run.drafts??={};
+    for(const q of article.questions){
+      const list=run.answers[q.id]||[],unchecked=list.filter(a=>!a.checkedAt).at(-1);
+      if(unchecked){
+        run.drafts[q.id]={choice:unchecked.choice,marks:quoteMarks(article,unchecked.marks||[])};
+        run.answers[q.id]=list.filter(a=>a.checkedAt);
+      }
+      if(!run.drafts[q.id]){
+        const previous=run.answers[q.id]?.at(-1);
+        run.drafts[q.id]={choice:previous?.choice??null,marks:quoteMarks(article,previous?.marks||[])};
+      }
+    }
+    return run;
+  }
+  function recordCheck(article,q,run,at){
+    prepareRun(article,run);
+    const list=run.answers[q.id]||[],draft=run.drafts[q.id];
+    if(resolved(list)||!Number.isInteger(draft.choice)||draft.choice<0||draft.choice>=q.choices.length)return null;
+    const marks=quoteMarks(article,draft.marks);
+    if(!marks.length)return null;
+    const result=assess(article,q,marks);
+    const checked={choice:draft.choice,answeredAt:at,marks,checkedAt:at,answerOK:draft.choice===q.answer,evidenceOK:result.correct,focused:result.focused,supported:result.supported};
+    (run.answers[q.id]??=[]).push(checked);
+    run.drafts[q.id]={choice:draft.choice,marks:marks.map(m=>({...m}))};
+    if(finished(article,run)===article.questions.length)run.completedAt=at;
+    return checked;
+  }
   function scores(article,run){
     return {
       mastered:article.questions.filter(q=>passed(run?.answers[q.id])).length,
@@ -39,7 +69,7 @@
       total:article.questions.length
     };
   }
-  const api={sentences,quoteMarks,assess,passed,scores};
+  const api={sentences,quoteMarks,assess,passed,resolved,finished,prepareRun,recordCheck,scores};
   if(typeof module!=='undefined')module.exports=api;
   else root.ReadingCore=api;
 })(typeof window==='undefined'?{}:window);

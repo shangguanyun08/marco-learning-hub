@@ -46,3 +46,50 @@ test('answer alone and evidence alone cannot complete a question',()=>{
   assert.equal(core.passed([{checkedAt:'now',answerOK:false,evidenceOK:true}]),false);
   assert.equal(core.passed([{checkedAt:null,answerOK:true,evidenceOK:true}]),false);
 });
+test('a check needs both an answer and evidence and does not consume incomplete tries',()=>{
+  const a=articles[0],q=a.questions[0],r=core.prepareRun(a,{answers:{}});
+  assert.equal(core.recordCheck(a,q,r,'first'),null);
+  r.drafts[q.id].choice=q.answer;
+  assert.equal(core.recordCheck(a,q,r,'first'),null);
+  assert.deepEqual(r.answers,{});
+  r.drafts[q.id].marks=exactMarks(a,'Squirrels run down the driveway.');
+  assert.equal(core.recordCheck(a,q,r,'first').answerOK,true);
+  assert.equal(core.resolved(r.answers[q.id]),true);
+  assert.equal(core.recordCheck(a,q,r,'second'),null);
+});
+test('second check closes a missed question without claiming mastery and blocks a third check',()=>{
+  const a=articles[0],q=a.questions[0],r=core.prepareRun(a,{answers:{}});
+  r.drafts[q.id]={choice:0,marks:exactMarks(a,'Mice scamper over the porch.')};
+  const first=core.recordCheck(a,q,r,'first');
+  assert.equal(core.resolved(r.answers[q.id]),false);
+  r.drafts[q.id].choice=1;r.drafts[q.id].marks=[];
+  assert.equal(first.choice,0);assert.equal(first.marks.length,1);
+  r.drafts[q.id].marks=exactMarks(a,'Moles dig in the yard.');
+  core.recordCheck(a,q,r,'second');
+  assert.equal(core.resolved(r.answers[q.id]),true);
+  assert.equal(core.passed(r.answers[q.id]),false);
+  assert.equal(core.finished(a,r),1);
+  assert.equal(core.recordCheck(a,q,r,'third'),null);
+  assert.equal(r.answers[q.id].length,2);
+});
+test('successful second check keeps first-choice scores and highlights unchanged',()=>{
+  const a=articles[0],q=a.questions[0],r=core.prepareRun(a,{answers:{}});
+  r.drafts[q.id]={choice:0,marks:exactMarks(a,'Mice scamper over the porch.')};
+  core.recordCheck(a,q,r,'first');
+  r.drafts[q.id]={choice:q.answer,marks:exactMarks(a,'Squirrels run down the driveway.')};
+  core.recordCheck(a,q,r,'second');
+  assert.deepEqual(core.scores(a,r),{mastered:1,firstAnswers:0,firstEvidence:0,total:2});
+  assert.equal(r.answers[q.id][0].marks[0].quote,'Mice scamper over the porch.');
+});
+test('existing unchecked responses become editable drafts and checked history is preserved',()=>{
+  const a=articles[0],q=a.questions[0],checked={choice:0,checkedAt:'old',answerOK:false,evidenceOK:false,marks:exactMarks(a,'Mice scamper over the porch.')};
+  const r={answers:{[q.id]:[checked,{choice:2,checkedAt:null,marks:exactMarks(a,'Squirrels run down the driveway.')} ]}};
+  core.prepareRun(a,r);
+  assert.equal(r.answers[q.id].length,1);assert.equal(r.answers[q.id][0],checked);
+  assert.equal(r.drafts[q.id].choice,2);assert.equal(r.drafts[q.id].marks[0].quote,'Squirrels run down the driveway.');
+});
+test('session completion counts two checked misses as finished while mastery remains separate',()=>{
+  const a=articles[0],r=core.prepareRun(a,{answers:{}});
+  for(const q of a.questions){r.drafts[q.id]={choice:(q.answer+1)%4,marks:exactMarks(a,'Carla is a cat.')};core.recordCheck(a,q,r,'first');core.recordCheck(a,q,r,'second');}
+  assert.equal(core.finished(a,r),2);assert.equal(core.scores(a,r).mastered,0);assert.equal(r.completedAt,'second');
+});
