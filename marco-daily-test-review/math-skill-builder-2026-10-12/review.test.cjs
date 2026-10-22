@@ -9,7 +9,8 @@ function course(t,query='',state){
  const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/'+query,runScripts:'outside-only'}),w=dom.window;
  t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};
  w.MarcoSkillSync={APP_ID:KEY};if(state)w.localStorage.setItem(KEY,JSON.stringify(state));
- for(const file of ['data.js','round2.js','checkpoint-data.js','engine.js','app.js'])w.eval(read(file));
+ // Load the page's current data/engine dependencies, including its review gates.
+ for(const [,file] of read('index.html').matchAll(/<script defer src="([^"?]+)[^"]*"/g))if(file!=='sync.js'&&!file.includes('../'))w.eval(read(file));
  return {w,d:w.document};
 }
 test('Review is placed between Set 6 and Set 7, including direct set pages',t=>{
