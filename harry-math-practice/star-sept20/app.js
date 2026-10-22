@@ -145,6 +145,7 @@
     document.querySelector('#group-description').textContent=group?.description||'';
   }
   function render(){
+    window.HarryMathScratch?.setSession(active?.id);
     if(active?.round2)active=R.resolve(active.id,state);
     renderGroups();
     document.querySelector('#questions').setAttribute('aria-label',active?`${active.questions.length} practice questions`:'Practice questions');
@@ -169,7 +170,7 @@
     document.querySelector('.gentle').textContent=active.practiceOnly?'Keep trying until each answer is correct. Your first-try percentage is saved separately and retries do not change it. There is no separate second round.':'Use paper for your working. There is no timer. You can stop and come back.';
     document.querySelector('.records > p').textContent=active.practiceOnly?'Your first-try percentage and completed questions are saved automatically. Continue any unfinished questions whenever you are ready.':'First tries and retries are recorded separately. A new run keeps the earlier run in this history; it does not erase or improve its score.';
     runs(active);document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent=active.description;
-    document.querySelector('#questions').innerHTML=active.questions.map(card).join('');renderSummary();updateSaveNote();
+    document.querySelector('#questions').innerHTML=active.questions.map(card).join('');renderSummary();updateSaveNote();window.HarryMathScratch?.mount(active);
   }
   document.querySelector('#questions').addEventListener('submit',event=>{
     event.preventDefault();if(!active||locked(active))return;const form=event.target;let q=active.questions.find(q=>q.source===Number(form.dataset.source));if(!q)return;
@@ -179,14 +180,14 @@
       if(engine.normalizeFor(q,values)===null){feedback.textContent='Fill all six blanks with whole numbers. No attempt has been used.';feedback.focus();return;}
       const run=current();if(!engine.submit(run,q,values,new Date().toISOString())){feedback.textContent='Change at least one answer before trying again. No new attempt has been used.';feedback.focus();return;}
       if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
-      const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});return;
+      const index=active.questions.indexOf(q);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();window.HarryMathScratch?.mount(active);document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});return;
     }
     const selected=form.querySelector(q.type==='fraction'?'input[name="fraction-part"]:not(:disabled)':q.type==='split-sum'?'input[name="number-part"]:not(:disabled)':q.type==='number'?'input[name="number-answer"]:not(:disabled)':'input:checked:not(:disabled)'),feedback=document.querySelector(`#feedback-${q.source}`);
     const value=q.type==='fraction'?Array.from(form.querySelectorAll('input[name="fraction-part"]:not(:disabled)'),input=>input.value):q.type==='split-sum'?Array.from(form.querySelectorAll('input[name="number-part"]:not(:disabled)'),input=>input.value):q.type==='number'?selected?.value:Number(selected?.value);
     if(!selected||(engine.typed(q)&&engine.normalizeFor(q,value)===null)){feedback.textContent=q.type==='fraction'?'Enter whole numbers for the numerator and denominator. The denominator must be greater than zero. No attempt has been used.':q.type==='split-sum'?'Fill all seven boxes with whole numbers. No attempt has been used.':q.type==='number'?`Type a ${q.decimal?'number':'whole-number'} answer before checking. No attempt has been used.`:'Choose a new answer before checking. No attempt has been used.';feedback.focus();return;}
     const run=current();if(!engine.submit(run,q,value,new Date().toISOString())){feedback.textContent='Try a different answer. No new attempt has been used.';feedback.focus();return;}
     if(engine.stats(active,run).finished===active.questions.length)run.completedAt=new Date().toISOString();save();
-    const index=active.questions.findIndex(item=>item.source===q.source);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
+    const index=active.questions.findIndex(item=>item.source===q.source);document.querySelector(`#q${index+1}`).outerHTML=card(q,index);renderSummary();window.HarryMathScratch?.mount(active);document.querySelector(`#feedback-${q.source}`).focus({preventScroll:true});
   });
   document.addEventListener('click',event=>{const link=event.target.closest('a[href^="?session="]');if(!link||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;event.preventDefault();const id=new URL(link.href).searchParams.get('session');active=findSession(id);onlyMistakes=false;history.pushState(null,'',link.href);render();document.querySelector('#session-title').scrollIntoView({block:'start'});});
   window.addEventListener('popstate',()=>{active=selectedDay();onlyMistakes=false;render();});

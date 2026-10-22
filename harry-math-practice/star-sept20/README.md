@@ -100,6 +100,16 @@ Parent-requested removal: the perpendicular-lines question (previously Q3, stabl
 
 `oct4-order.js` applies the same skill progression to all four October 4 sessions: division with zeros; unit conversions (kept at Q2); perpendicular lines; expanded decimals; equivalent ratios; mixed numbers; fraction addition; simple multiplicative equations; division with remainders; friendly-number multiplication; decimal division; earnings/hours; equations from words; equation tables; fraction line plots; box plots. This is an instructional estimate, not an official STAR difficulty ranking. Only display order changes: question identities, choices, correct answers, scores, and timestamps are preserved. Earlier date groups are unchanged. The three October 1 review items now appear at Q1, Q9, and Q10; their original source labels remain visible.
 
+## Day 3.5 scratchpad pilot · October 22
+
+Only `?session=week-oct12-3-5` opens the scratchpad layout by default. Each of its six questions has the question/answer area on the left and a larger drawing pad on the right at tablet widths (700px and up); phones stack the pad below the question. Pen, finger and mouse input use Pointer Events, with Undo, Redo and reversible Clear. Scroll outside the drawing area.
+
+The top **Use original layout** button hides the pads without reloading or discarding typed answers or drawings. **Use scratchpad layout** switches back. Explicit links can use `&scratch=off` or `&scratch=on`. The layout preference is remembered on that device. Other sessions retain their existing layout.
+
+Drawings save separately in browser storage under `harry-math-day3-5-scratch-v1`, per question, across reloads and answer-card refreshes. They are device-local working notes, separate from the existing synced answer and score records. Active strokes are saved before rendering/navigation, on pointer cancellation, and when the page is hidden. No question data, scoring, unlocking, sync or reset rules change.
+
+The six tests in `week-oct12-scratch.test.mjs` cover input types, scope, original-layout fallback, draft retention, save/reload, undo/redo/clear, answer retries and scoring, older records, interrupted strokes and stored layout preferences. The broader suite has 19 failures also reproduced against the unchanged commit (mostly earlier question-count/format and unlocking expectations); this pilot introduces no new failing tests. Tablet layouts were also inspected at 1024×768 and 768×1024.
+
 ## October 4 unit-conversion update
 
 `oct4-units.js` replaces the conversion item with one six-blank question, always Q2 in all four October 4 sessions. It covers feet/inches, yards/feet, yards/inches, pounds/ounces, quarts/pints, and gallons/quarts. Each session still has 16 questions, and the combined Q2 earns one point only when all six blanks are correct on the first try. Sessions 2–4 use different quantities. Blank or unchanged submissions do not consume a try; one retry is allowed, then answers appear. Source IDs remain unchanged when the cards move. Existing multiple-choice attempts retain their original question and scoring within that run; new runs use the updated question. Six-number strings sync using the existing app ID. `units.test.mjs` loads the actual published script list and verifies all four sessions, retry/reveal, saved records, and backward compatibility.
