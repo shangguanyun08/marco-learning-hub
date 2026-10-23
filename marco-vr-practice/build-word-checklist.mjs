@@ -17,7 +17,7 @@ export function checklistRows(){
  }
  return JSON.parse(JSON.stringify(rows));
 }
-export function renderChecklist(){return fs.readFileSync(path.join(here,'word-checklist.template.html'),'utf8').replace('__QUESTIONS__',JSON.stringify(checklistRows()).replace(/</g,'\\u003c'));}
+export function renderChecklist(){return fs.readFileSync(path.join(here,'word-checklist.template.html'),'utf8').replace('__QUESTIONS__',()=>JSON.stringify(checklistRows()).replace(/</g,'\\u003c')).replace('__SYNC_MODULE__',()=>fs.readFileSync(path.join(here,'word-checklist-sync.js'),'utf8'));}
 if(process.argv.includes('--patch')){
  const content=renderChecklist(),targets=[path.join(here,'word-checklist.html'),path.join(here,'../../output/Marco_VR_Wrong_Questions_Checklist.html')];
  let patch='*** Begin Patch\n';for(const file of targets){if(fs.existsSync(file)){patch+='*** Update File: '+file.replace(/\\/g,'/')+'\n@@\n'+fs.readFileSync(file,'utf8').trimEnd().split(/\r?\n/).map(l=>'-'+l).join('\n')+'\n'+content.trimEnd().split(/\r?\n/).map(l=>'+'+l).join('\n')+'\n';}else patch+='*** Add File: '+file.replace(/\\/g,'/')+'\n'+content.trimEnd().split(/\r?\n/).map(l=>'+'+l).join('\n')+'\n';}
