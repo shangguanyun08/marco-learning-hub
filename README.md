@@ -2,6 +2,14 @@
 
 A single launchpad for every published learning site in the `shangguanyun08` GitHub account.
 
+## Marco VR Practice
+
+`marco-vr-practice/` is a dated library of original VR mock-test mistakes. `2026-10-22/` contains all 13 mistakes verified against the completed Test Innovators Middle Practice Test 4 result: 6 synonyms and 7 sentence completions, with source difficulty counts of 1 easy, 4 medium, and 8 hard. The source displays October 23; the requested practice date is October 22. No account IDs or private analysis links are published.
+
+Question order is source difficulty first, then original question number: 29, 5, 9, 10, 34, 16, 18, 20, 36, 37, 38, 39, 40. The course is untimed. One incorrect answer permits a distinct second try; answers, authored tricks, and explanations appear only after a correct answer or the second try. Original mock choices are not shown until then. First-try scores and every new run remain separate; completed practice turns green.
+
+The generic October 11 engine and conflict-preserving sync adapter are reused with isolated namespace `marco-vr-practice-oct22-test4-v1`; older defaults are unchanged. The shared backend registers this ID for progress, word-study time, and completion counts. `?demo=1` uses separate local-only practice records and never sends progress or time. Validate with `node --test marco-vr-practice/2026-10-22/tests.mjs marco-daily-test-review/2026-10-11/tests.mjs`.
+
 ## Harry’s reading
 
 `harry-reading/` contains the three latest ReadTheory articles completed October 21, 2026: quiz 30 Carla the Cat (missed Q4–5), quiz 29 Fruits and Vegetables (missed Q1–4), and quiz 28 Leo and Jasmine Plan a Trip (missed Q1, Q3, Q5–6). Passage text, choices, and answer keys were checked against the authenticated review pages. Paragraph breaks were restored for readability. No student identifiers or account review links are published.

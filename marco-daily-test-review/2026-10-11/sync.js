@@ -1,6 +1,9 @@
 (function(root){
   'use strict';
-  const APP_ID='marco-isee-middle-oct11-test3-v1';
+  const options=root.MARCO_TEST_REVIEW_SYNC_OPTIONS||{};
+  const APP_ID=options.appId||'marco-isee-middle-oct11-test3-v1';
+  const savedMessage=options.savedMessage||'Live online sync · VR, QR, and MA progress saved online and on this device.';
+  const connectedMessage=options.connectedMessage||'Live online sync connected · All three sessions sync across your devices.';
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress';
   const bank=root.MARCO_ISEE_PRACTICE,ids=bank.map(s=>s.id),clone=x=>JSON.parse(JSON.stringify(x));
   const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x),time=x=>typeof x==='string'&&Number.isFinite(Date.parse(x));
@@ -61,11 +64,11 @@
       if(busy||stopped)return;busy=true;
       try{for(let attempt=0;attempt<3;attempt++){
         const data=await request(),record=data.progress,remote=record?.state||empty(),next=apply(remote);
-        if(equal(next,normalize(remote))){onStatus('live',record?'Live online sync · VR, QR, and MA progress saved online and on this device.':'Live online sync connected · All three sessions sync across your devices.');return;}
+        if(equal(next,normalize(remote))){onStatus('live',record?savedMessage:connectedMessage);return;}
         onStatus('saving','Saving online… Answers are already saved on this device.');
         const saved=await request({appId:APP_ID,studentName:'Marco',deviceId:device,state:next,progressScore:Object.values(next.sessions).flat().reduce((n,r)=>n+Object.values(r.answers).reduce((sum,e)=>sum+e.attempts.length,0),0),baseVersion:record?.version??null,clientUpdatedAt:new Date().toISOString()});
         if(!saved.progress)throw new Error('Save unconfirmed');apply(saved.progress.state);
-        if(saved.accepted&&equal(normalize(getState()),normalize(saved.progress.state))){onStatus('live','Live online sync · VR, QR, and MA progress saved online and on this device.');return;}
+        if(saved.accepted&&equal(normalize(getState()),normalize(saved.progress.state))){onStatus('live',savedMessage);return;}
       }onStatus('saving','Merging changes from another device…');}catch{onStatus('offline','Not synced · Saved on this device. Online sync will retry automatically.');}finally{busy=false;}
     }
     const visible=()=>{if(root.document.visibilityState==='visible')void refresh();};
