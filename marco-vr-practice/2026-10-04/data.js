@@ -1,4 +1,4 @@
-/* Rechecked original mock records; no private account links. */
+/* Rechecked second-attempt mock records; no private account links. */
 window.MARCO_VR_REVIEW_PAGE = {
   "test": 2,
   "date": "2026-10-04",
@@ -8,40 +8,12 @@ window.MARCO_VR_REVIEW_PAGE = {
   "originalCourse": "../../marco-daily-test-review/2026-10-04/",
   "attempts": [
     {
-      "label": "1st attempt",
-      "score": 29,
-      "wrong": 11
-    },
-    {
       "label": "2nd attempt",
       "score": 31,
       "wrong": 9
     }
   ],
   "questions": [
-    {
-      "number": 7,
-      "section": "VR",
-      "prompt": "ENCIRCLE:",
-      "choices": [
-        "charter",
-        "encompass",
-        "recoil",
-        "swivel"
-      ],
-      "correct": 1,
-      "tip": "Picture a circle around an object, not an object spinning in place.",
-      "source": 7,
-      "type": "synonym",
-      "difficulty": "medium",
-      "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 3,
-          "seconds": 5
-        }
-      ]
-    },
     {
       "source": 8,
       "section": "VR",
@@ -59,11 +31,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       "type": "synonym",
       "difficulty": "medium",
       "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 1,
-          "seconds": 4
-        },
         {
           "label": "2nd attempt",
           "choice": 0,
@@ -113,11 +80,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       "difficulty": "medium",
       "mockAttempts": [
         {
-          "label": "1st attempt",
-          "choice": 1,
-          "seconds": 19
-        },
-        {
           "label": "2nd attempt",
           "choice": 1,
           "seconds": 2
@@ -149,29 +111,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       ]
     },
     {
-      "number": 37,
-      "section": "VR",
-      "prompt": "Although the new customer had _______ glanced at the menu, he was certain he had found the best possible dish to order.",
-      "choices": [
-        "energetically",
-        "nimbly",
-        "scarcely",
-        "willfully"
-      ],
-      "correct": 2,
-      "tip": "Read although as a contrast: barely checked, yet very sure.",
-      "source": 37,
-      "type": "sentence completion",
-      "difficulty": "medium",
-      "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 1,
-          "seconds": 11
-        }
-      ]
-    },
-    {
       "source": 10,
       "section": "VR",
       "number": 10,
@@ -188,11 +127,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       "type": "synonym",
       "difficulty": "hard",
       "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 0,
-          "seconds": 5
-        },
         {
           "label": "2nd attempt",
           "choice": 0,
@@ -242,11 +176,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       "difficulty": "hard",
       "mockAttempts": [
         {
-          "label": "1st attempt",
-          "choice": 2,
-          "seconds": 5
-        },
-        {
           "label": "2nd attempt",
           "choice": 0,
           "seconds": 4
@@ -270,11 +199,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       "type": "synonym",
       "difficulty": "hard",
       "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 1,
-          "seconds": 8
-        },
         {
           "label": "2nd attempt",
           "choice": 1,
@@ -300,116 +224,14 @@ window.MARCO_VR_REVIEW_PAGE = {
       "difficulty": "hard",
       "mockAttempts": [
         {
-          "label": "1st attempt",
-          "choice": 0,
-          "seconds": 32
-        },
-        {
           "label": "2nd attempt",
           "choice": 0,
           "seconds": 2
         }
       ]
-    },
-    {
-      "number": 38,
-      "section": "VR",
-      "prompt": "While the painter was careful to keep the paint from dripping onto the floor, she _______ keeping the windowsills pristine.",
-      "choices": [
-        "celebrated",
-        "mourned",
-        "overlooked",
-        "regretted"
-      ],
-      "correct": 2,
-      "tip": "While contrasts what she watched carefully with what she missed.",
-      "source": 38,
-      "type": "sentence completion",
-      "difficulty": "hard",
-      "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 3,
-          "seconds": 24
-        }
-      ]
-    },
-    {
-      "number": 39,
-      "section": "VR",
-      "prompt": "Although it had once been unhealthy and _______, the newly adopted puppy now looked plump, happy, and sleek.",
-      "choices": [
-        "brawny",
-        "gaunt",
-        "trim",
-        "vigorous"
-      ],
-      "correct": 1,
-      "tip": "Use the before-and-after contrast: once sick and thin; now healthy and plump.",
-      "source": 39,
-      "type": "sentence completion",
-      "difficulty": "hard",
-      "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 0,
-          "seconds": 18
-        }
-      ]
-    },
-    {
-      "number": 40,
-      "section": "VR",
-      "prompt": "Unlike Taylor, who was a(n) _______ shopper, Stefanie could spend hours hunting for a deal.",
-      "choices": [
-        "amiable",
-        "aggressive",
-        "rash",
-        "trendy"
-      ],
-      "correct": 2,
-      "tip": "Unlike tells you to find the opposite shopping habit, not a personality or fashion label.",
-      "source": 40,
-      "type": "sentence completion",
-      "difficulty": "hard",
-      "mockAttempts": [
-        {
-          "label": "1st attempt",
-          "choice": 3,
-          "seconds": 14
-        }
-      ]
     }
   ],
   "notes": {
-    "7": {
-      "word": "ENCIRCLE",
-      "publisher": "Encircle means surround or encompass. Encompass is the closest verb.",
-      "contrast": "Swivel means turn or pivot. Turning at one point does not mean surrounding something.",
-      "meanings": [
-        [
-          "encircle",
-          "surround on all sides"
-        ],
-        [
-          "encompass",
-          "surround or include completely"
-        ],
-        [
-          "charter",
-          "hire for special use; also officially establish"
-        ],
-        [
-          "recoil",
-          "spring or shrink backward"
-        ],
-        [
-          "swivel",
-          "turn around a fixed point"
-        ]
-      ],
-      "history": []
-    },
     "8": {
       "word": "ASSAULT",
       "publisher": "Assault means attack or confront. Confront is the closest available choice, though it is less forceful than assault.",
@@ -759,171 +581,8 @@ window.MARCO_VR_REVIEW_PAGE = {
         ]
       ],
       "history": []
-    },
-    "37": {
-      "word": "SCARCELY",
-      "publisher": "Scarcely means hardly or barely. The customer barely examined the menu but still felt certain he had found the best dish.",
-      "contrast": "Nimbly means quickly and skillfully. The contrast is about how little he looked, not his physical skill.",
-      "meanings": [
-        [
-          "scarcely",
-          "hardly; barely"
-        ],
-        [
-          "energetically",
-          "with energy or vigor"
-        ],
-        [
-          "nimbly",
-          "quickly and skillfully"
-        ],
-        [
-          "willfully",
-          "deliberately; stubbornly on purpose"
-        ],
-        [
-          "glanced",
-          "looked briefly"
-        ]
-      ],
-      "history": []
-    },
-    "38": {
-      "word": "OVERLOOKED",
-      "publisher": "Overlooked means missed or failed to notice. The painter attended to the floor but neglected the windowsills.",
-      "contrast": "Regretted means felt sorry about. It does not express the lack of attention contrasted with care for the floor.",
-      "meanings": [
-        [
-          "overlooked",
-          "failed to notice or take care of"
-        ],
-        [
-          "celebrated",
-          "honored or marked with festivities"
-        ],
-        [
-          "mourned",
-          "felt grief or sadness over a loss"
-        ],
-        [
-          "regretted",
-          "felt sorry about"
-        ],
-        [
-          "pristine",
-          "perfectly clean or unspoiled"
-        ]
-      ],
-      "history": []
-    },
-    "39": {
-      "word": "GAUNT",
-      "publisher": "Gaunt means very thin or scrawny, often from illness or hunger. It contrasts with the puppy now being plump and healthy.",
-      "contrast": "Brawny means muscular and strong. That conflicts with the puppy’s formerly unhealthy condition.",
-      "meanings": [
-        [
-          "gaunt",
-          "extremely thin, often from illness or hunger"
-        ],
-        [
-          "brawny",
-          "muscular and strong"
-        ],
-        [
-          "trim",
-          "neat or slim"
-        ],
-        [
-          "vigorous",
-          "strong, healthy, and energetic"
-        ],
-        [
-          "plump",
-          "pleasantly rounded or well-fed"
-        ]
-      ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "gaunt",
-          "source": "Spring Weeks 7 & 12–17 · W15D1-29",
-          "url": "https://marco-vocab-weeks7-12-17.alexsoton.chatgpt.site",
-          "prompt": "adj. thin and bony, starved looking",
-          "choices": [
-            "convey",
-            "stoical",
-            "gaunt",
-            "indelible"
-          ],
-          "answer": 2,
-          "explanation": "Earlier vocabulary target: gaunt. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 7 & 12–17 · W15D1-29 · Round 1",
-              "at": "2026-08-10T16:39:43.608Z",
-              "choice": "gaunt",
-              "correct": true
-            }
-          ]
-        }
-      ]
-    },
-    "40": {
-      "word": "RASH",
-      "publisher": "Rash means impulsive or acting without enough thought. It contrasts with hours of careful bargain-hunting.",
-      "contrast": "Trendy means fashionable. Style does not explain the difference between quick decisions and patient searching.",
-      "meanings": [
-        [
-          "rash",
-          "acting too quickly without enough thought"
-        ],
-        [
-          "amiable",
-          "friendly and pleasant"
-        ],
-        [
-          "aggressive",
-          "forceful or ready to attack"
-        ],
-        [
-          "trendy",
-          "fashionable"
-        ],
-        [
-          "deal",
-          "a bargain or favorable purchase"
-        ]
-      ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "rash",
-          "source": "Spring Weeks 8–11 · W9D1-04",
-          "url": "https://marco-vocab-weeks8-11.alexsoton.chatgpt.site",
-          "prompt": "adj. acting too hastily without carefully considering the consequences n. an area of redness and",
-          "choices": [
-            "rash",
-            "swelter",
-            "orderly",
-            "hereditary"
-          ],
-          "answer": 0,
-          "explanation": "Earlier vocabulary target: rash. The saved source key is shown; historical results below are retained.",
-          "note": "The stored prompt ends during a second, noun definition. This mock tests rash as an adjective: acting without enough thought.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 8–11 · W9D1-04 · Round 1",
-              "at": "2026-08-13T19:52:25.015Z",
-              "choice": "rash",
-              "correct": true
-            }
-          ]
-        }
-      ]
     }
   },
-  "historyForms": 6,
-  "historyAttempts": 6
+  "historyForms": 4,
+  "historyAttempts": 4
 };
