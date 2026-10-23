@@ -5,7 +5,7 @@
   if(!appId||window.MarcoStudyTime||['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:'||new URLSearchParams(location.search).has('demo'))return;
   const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/study-time';
   const HUB='https://shangguanyun08.github.io/marco-learning-hub/';
-  const PREFIX='study-time-v2:', IDLE=90000, TICK=10000;
+  const PREFIX='study-time-v2:', IDLE=600000, TICK=10000;
   const courseName=script.dataset.course||document.title;
   const mixed=/middle-(sept25|sept27|oct04|oct11)/.test(appId);
   const defaultSubject=script.dataset.subject||(mixed?'mixed':/math|thinkacademy|sept26/.test(appId)?'math':'words');
@@ -51,7 +51,7 @@
     try{const response=await fetch(API,{method:'POST',cache:'no-store',keepalive:true,headers:{'content-type':'application/json'},body:JSON.stringify({segments:batch})});if(!response.ok)throw Error('Time sync unavailable');const result=await response.json();if(result.accepted){for(const id of result.ids||[])forget(id);}online=true;}
     catch{online=false;}finally{saving=false;paint();}
   }
-  function visible(){return document.visibilityState==='visible'&&document.hasFocus();}
+  function visible(){return document.visibilityState==='visible';}
   function tick(at=Date.now()){
     // A suspended device/long timer gap is not evidence of study during the gap.
     if(current&&!paused&&lastEngaged&&at-lastTick<=30000){const end=Math.min(at,lastEngaged+IDLE);if(end>lastTick)keep({...current,id:uuid(),startedAt:new Date(lastTick).toISOString(),endedAt:new Date(end).toISOString()});}
@@ -76,9 +76,9 @@
     toggle.onclick=()=>{tick();paused=!paused;lastEngaged=0;current=null;if(!paused){lastEngaged=Date.now();lastTick=lastEngaged;current=context();}void flush();paint();};
     const link=document.createElement('a');link.href=HUB+'study-time.html';link.textContent='Daily time log';link.style.color='inherit';status.append(caption,toggle,link);document.body.append(status);paint();
   }
-  function paint(){if(!caption)return;const active=current&&!paused&&Date.now()-lastEngaged<IDLE;caption.textContent=(paused?'Time recording paused':active?'Recording active study time':'Time recorder ready · pauses after 90 seconds without activity')+(online?'':' · Saved here; waiting to sync')+(!storageOK?' · Keep this page open until synced':'');toggle.textContent=paused?'Resume recording':'Pause recording';toggle.setAttribute('aria-pressed',String(paused));}
+  function paint(){if(!caption)return;const active=current&&!paused&&Date.now()-lastEngaged<IDLE;caption.textContent=(paused?'Time recording paused':active?'Recording active study time':'Time recorder ready · allows 10 minutes for reading / paper work')+(online?'':' · Saved here; waiting to sync')+(!storageOK?' · Keep this page open until synced':'');toggle.textContent=paused?'Resume recording':'Pause recording';toggle.setAttribute('aria-pressed',String(paused));}
   window.MarcoStudyTime={flush,pause(){tick();paused=true;current=null;void flush();paint();}};
-  ['pointerdown','keydown','input','scroll','touchstart'].forEach(name=>window.addEventListener(name,engage,{passive:true,capture:true}));
+  ['pointerdown','click','submit','keydown','input','scroll','touchstart'].forEach(name=>window.addEventListener(name,engage,{passive:true,capture:true}));
   document.addEventListener('visibilitychange',()=>{tick();current=null;lastEngaged=0;void flush();});
   window.addEventListener('blur',()=>{tick();current=null;lastEngaged=0;void flush();});
   window.addEventListener('pagehide',()=>{tick();current=null;void flush();});

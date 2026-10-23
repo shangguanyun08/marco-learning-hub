@@ -24,30 +24,33 @@
   const review5Done=()=>R5D.ids.every(id=>R5.attempts(review5State,id).some(a=>a.correct));
   function readReview5Cache(){try{const saved=JSON.parse(localStorage.getItem(R5KEY)||'null');if(R5.valid(saved))review5State=R5.merge(review5State,saved);}catch{}}
   readReview5Cache();
-  async function refreshReview5(){
-    if(review5Busy)return;review5Busy=true;const before=JSON.stringify(review5State);readReview5Cache();
-    if(!local){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);try{
-      const response=await fetch('https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress?appId=marco-math-skill-builder-oct12-review5-v1',{cache:'no-store',signal:controller.signal});
-      if(response.ok){const data=await response.json();if(R5.valid(data.progress?.state))review5State=R5.merge(review5State,data.progress.state);}
-    }catch{}finally{clearTimeout(timeout);}}
-    review5Busy=false;if(before!==JSON.stringify(review5State))keepPositionRender();
+  const reviewChannels={},reviewStatus=new Map();
+  function paintReviewSync(){
+    const node=$('#review-sync-status');if(!node)return;
+    node.replaceChildren();
+    for(const [n,entry] of [...reviewStatus].sort((a,b)=>a[0]-b[0])){
+      const st=entry.engine.stats(entry.get()),line=document.createElement('p');
+      line.dataset.reviewSync=String(n);line.dataset.kind=entry.kind;
+      line.textContent=`Review ${n}: ${st.answered}/${st.total} answered · ${entry.kind==='live'?(st.answered?'Saved online':'No saved answers yet'):entry.kind==='preview'?'Preview · device only':entry.kind==='offline'?'Not synced — saved answers remain on this device':entry.kind==='saving'?'Uploading saved answers…':'Checking saved answers…'}`;
+      node.append(line);
+    }
   }
-  async function refreshReview4(){
-    if(review4Busy)return;review4Busy=true;const before=JSON.stringify(review4State);readReview4Cache();
-    if(!local){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);try{
-      const response=await fetch('https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress?appId=marco-math-skill-builder-oct12-review4-v1',{cache:'no-store',signal:controller.signal});
-      if(response.ok){const data=await response.json();if(R4.valid(data.progress?.state))review4State=R4.merge(review4State,data.progress.state);}
-    }catch{}finally{clearTimeout(timeout);}}
-    review4Busy=false;if(before!==JSON.stringify(review4State))keepPositionRender();
+  function reviewChannel(n,engine,key,get,set,read){
+    const entry={engine,get,kind:local?'preview':'connecting'};reviewStatus.set(n,entry);
+    if(local)return null;
+    return window[`MarcoReview${n}Sync`].create({getState:()=>{read();return get();},onRemote(value){
+      read();const next=engine.merge(get(),value),changed=JSON.stringify(next)!==JSON.stringify(get());set(next);
+      try{localStorage.setItem(key,JSON.stringify(next));}catch{storageOK=false;}
+      if(changed)keepPositionRender();paintReviewSync();
+    },onStatus(kind){entry.kind=kind;paintReviewSync();}});
   }
-  async function refreshReview3(){
-    if(review3Busy)return;review3Busy=true;const before=JSON.stringify(review3State);readReview3Cache();
-    if(!local){const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),10000);try{
-      const response=await fetch('https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/progress?appId=marco-math-skill-builder-oct12-review3-v1',{cache:'no-store',signal:controller.signal});
-      if(response.ok){const data=await response.json();if(R3.valid(data.progress?.state))review3State=R3.merge(review3State,data.progress.state);}
-    }catch{}finally{clearTimeout(timeout);}}
-    review3Busy=false;if(before!==JSON.stringify(review3State))keepPositionRender();
-  }
+  reviewChannels[3]=reviewChannel(3,R3,R3KEY,()=>review3State,x=>review3State=x,readReview3Cache);
+  reviewChannels[4]=reviewChannel(4,R4,R4KEY,()=>review4State,x=>review4State=x,readReview4Cache);
+  reviewChannels[5]=reviewChannel(5,R5,R5KEY,()=>review5State,x=>review5State=x,readReview5Cache);
+  async function refreshReview(n,read,get){const before=JSON.stringify(get());read();if(!local)await reviewChannels[n].push();if(before!==JSON.stringify(get()))keepPositionRender();paintReviewSync();}
+  const refreshReview3=()=>refreshReview(3,readReview3Cache,()=>review3State);
+  const refreshReview4=()=>refreshReview(4,readReview4Cache,()=>review4State);
+  const refreshReview5=()=>refreshReview(5,readReview5Cache,()=>review5State);
   try{const x=JSON.parse(localStorage.getItem(KEY)||'null');if(E.valid(x))state=E.merge(x,E.empty());}catch{storageOK=false;}
   const runs=(n,r=1)=>state.sessions[E.sessionId(n,r)]||[],current=()=>active?(E.set(active).checkpoint?runs(active,round)[0]:runs(active,round).at(-1)):null,url=(n,r=1)=>'?set='+n+(r===2?'&round=2':'')+(demo?'&demo=1':'');
   const completed=(n,r=1)=>E.set(n).checkpoint?Boolean(runs(n,r)[0]?.completedAt):runs(n,r).some(run=>run.completedAt);
@@ -90,7 +93,7 @@
     return `<section class="panel session-lock" role="status">${!gate.pending?lockBadge():''}<h2>Set ${active}${active>=7?'':' · Round '+round}</h2><p class="saved-first-score">${firstTrySummary(active,round)}</p><p><strong>Finish your earlier sessions to unlock the next one.</strong></p>${gate.pending?'<p>Checking saved progress before opening this set…</p>':`<p>Finish ${label}, including the second try on missed answers. A perfect score is not required.</p><a class="primary" href="${url(gate.number,gate.round)}">Open ${label}</a>${runs(active,round).length?'<p>Your saved answers, scores, and method notes are preserved.</p>':''}`}</section>${!gate.pending&&completed(active,round)?historyPanel(active,true):''}`;
   }
   function save(upload=true){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}saveNote();if(upload)void sync?.push();}
-  function saveNote(){$('#sync-note').textContent=storageOK?status:'Device storage unavailable. Keep the page open and download records.';$('#sync-note').dataset.kind=storageOK?kind:'offline';}
+  function saveNote(){$('#sync-note').textContent=storageOK?'Set records: '+status:'Device storage unavailable. Keep the page open and download records.';$('#sync-note').dataset.kind=storageOK?kind:'offline';}
   function reviewCard(){return '<div class="set-pair"><a class="set-card review-card" href="review.html"><b>Review</b><span>Past first-try mistakes</span><small>After Set 6 · before Review Session 2</small><small>Lowest scores first · answers hidden until opened</small></a></div><div class="set-pair"><a class="set-card review-card" href="review2.html"><b>Review Session 2</b><span>4 fresh questions per subtopic</span><small>15 subtopics · 60 questions · untimed</small><small>Goal: at least 3/4 first-try correct in each subtopic</small></a></div>';}
   function review3Card(){const done=review3Done(),next=completed(7)&&!done,finished=R3D.ids.filter(id=>R3.attempts(review3State,id).some(a=>a.correct)).length;return `<div class="set-pair"><a class="set-card review3-card${done?' complete':''}" href="review3.html${demo?'?demo=1':''}">${next?'<span class="badge next-step">Next step →</span>':''}<b>Review Session 3</b><small>After Set 7 · before Review Session 4</small><span>Skills at 50% or lower on the latest 4 questions</span><small>${R3D.topics.flatMap(t=>t.subtopics).length} subtopics · ${R3D.ids.length} fresh questions · untimed</small><small>${done?'✓ Done':`${finished}/${R3D.ids.length} finished`}</small><small>Goal: at least 3/4 first-try correct in each subtopic</small></a></div>`;}
   function review4Card(){const done=review4Done(),next=completed(7)&&review3Done()&&!done,finished=R4D.ids.filter(id=>R4.attempts(review4State,id).some(a=>a.correct)).length,st=R4.stats(review4State);return `<div class="set-pair"><a class="set-card review4-card${done?' complete':''}" href="review4.html${demo?'?demo=1':''}">${next?'<span class="badge next-step">Next step →</span>':''}<b>Review Session 4</b><small>After Review Session 3 · before Review Session 5</small><span>Recheck skills below 100% in Review 3</span><small>7 subtopics · 28 fresh questions · untimed</small><small class="saved-first-score">${st.answered?`First try: ${Math.round(100*st.first/st.answered)}% · ${st.first}/${st.answered} correct${st.complete?'':' so far'}`:'No first-try score yet.'}</small><small>${done?'✓ Done':`${finished}/${R4D.ids.length} finished · complete to unlock Set 8`}</small><small>Goal: 4/4 = 100% first try in each skill</small></a></div>`;}
@@ -199,5 +202,7 @@
   window.addEventListener('focus',()=>{void refreshReview3();void refreshReview4();void refreshReview5();});
   window.addEventListener('online',()=>{void refreshReview3();void refreshReview4();void refreshReview5();});
   if(!local){void refreshReview3();void refreshReview4();void refreshReview5();setInterval(()=>{if(document.visibilityState==='visible'){void refreshReview3();void refreshReview4();void refreshReview5();}},10000);}
+  $('#sync-all').onclick=()=>{void sync?.push();void refreshReview3();void refreshReview4();void refreshReview5();};
+  paintReviewSync();if(local)$('#sync-all').disabled=true;
   render();if(local){kind='preview';status='Preview · Saved on this device only. Live progress is untouched.';saveNote();}else{sync=S.create({getState:()=>state,onRemote:remote,onStatus(k,t){kind=k;status=t;saveNote();}});const started=sync.start();const ready=()=>{accessReady=true;render();};if(started?.then)started.then(ready,ready);else ready();}
 })();

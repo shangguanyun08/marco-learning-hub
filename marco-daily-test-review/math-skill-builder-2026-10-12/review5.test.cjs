@@ -78,5 +78,5 @@ test('Review 5 navigation is discoverable and its separate gate dependencies do 
  const oldKeys=sentinels.map(key=>[key,w.localStorage.getItem(key)]);for(const f of scripts(html))w.eval(read(f));
  const labels=[...w.document.querySelectorAll('#sets .set-card>b')].map(e=>e.textContent);assert.ok(labels.indexOf('Review Session 4')<labels.indexOf('Review Session 5'));assert.ok(labels.indexOf('Review Session 5')<labels.indexOf('Set 8'));assert.equal(w.document.querySelector('.review5-card').getAttribute('href'),'review5.html');
  assert.ok(scripts(html).includes('review5-data.js'));assert.ok(scripts(html).includes('review5-engine.js'));
- assert.ok(!scripts(html).includes('review5-sync.js'));assert.match(read('review4.html'),/href="review5.html"/);for(const [key,value]of oldKeys)assert.equal(w.localStorage.getItem(key),value);
+ assert.ok(scripts(html).includes('review5-sync.js'));assert.match(read('review4.html'),/href="review5.html"/);for(const [key,value]of oldKeys)assert.equal(w.localStorage.getItem(key),value);
 });

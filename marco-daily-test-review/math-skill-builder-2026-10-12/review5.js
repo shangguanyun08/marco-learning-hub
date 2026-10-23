@@ -69,5 +69,6 @@
   window.addEventListener('storage',event=>{if(event.key===KEY&&event.newValue)try{const value=JSON.parse(event.newValue);if(E.valid(value)){remote(value);void sync?.push();}}catch{}});
   $('#download').onclick=()=>{const blob=new Blob([JSON.stringify({course:'Marco Math Skill Builder · Review Session 5',...state,results:D.topics.flatMap(t=>t.subtopics.map(([id,name])=>({topic:t.name,subtopic:name,...E.stats(state,id)})))},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='marco-review-session-5-results.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
   if(demo)document.querySelectorAll('nav a').forEach(a=>{const url=new URL(a.href);url.searchParams.set('demo','1');a.href=url;});
+  if($('#sync-now')){$('#sync-now').disabled=local;$('#sync-now').onclick=()=>void sync?.push();}
   render();if(!local){sync=S.create({getState:()=>state,onRemote:remote,onStatus(k,t){kind=k;status=t;saveNote();}});Promise.resolve(sync.start()).finally(()=>{ready=true;redraw();});}
 })();
