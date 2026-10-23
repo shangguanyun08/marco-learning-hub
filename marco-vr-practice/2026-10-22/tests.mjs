@@ -41,5 +41,5 @@ test('merge preserves drafts and conflicting independent first answers',()=>{
  E.submit(b,q,q.correct,at(3));const both=S.merge(state,{version:1,sessions:{[session.id]:[b]}});assert.equal(both.sessions[session.id].length,2);assert.ok(both.sessions[session.id].every(r=>r.deviceConflict));
 });
 test('demo isolates progress and study time; public files have no private source link',()=>{
- const html=read('index.html'),app=read('app.js'),data=read('data.js');assert.match(app,/storageKey=demo\?KEY\+':demo':KEY/);assert.match(app,/if\(!preview\)/);assert.match(html,/data-subject="words"/);assert.match(html,/data-app-id="marco-vr-practice-oct22-test4-v1"/);assert.doesNotMatch(html+app+data,/5003638|students\/analysis|Marco Yang/);assert.match(app,/done\?solution\(q\):''/);
+ const html=read('practice.html'),app=read('app.js'),data=read('data.js');assert.match(app,/storageKey=demo\?KEY\+':demo':KEY/);assert.match(app,/if\(!preview\)/);assert.match(html,/data-subject="words"/);assert.match(html,/data-app-id="marco-vr-practice-oct22-test4-v1"/);assert.doesNotMatch(html+app+data,/5003638|students\/analysis|Marco Yang/);assert.match(app,/done\?solution\(q\):''/);
 });

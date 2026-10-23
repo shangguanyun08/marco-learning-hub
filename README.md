@@ -6,9 +6,13 @@ A single launchpad for every published learning site in the `shangguanyun08` Git
 
 `marco-vr-practice/` is a dated library of original VR mock-test mistakes. `2026-10-22/` contains all 13 mistakes verified against the completed Test Innovators Middle Practice Test 4 result: 6 synonyms and 7 sentence completions, with source difficulty counts of 1 easy, 4 medium, and 8 hard. The source displays October 23; the requested practice date is October 22. No account IDs or private analysis links are published.
 
-Question order is source difficulty first, then original question number: 29, 5, 9, 10, 34, 16, 18, 20, 36, 37, 38, 39, 40. The course is untimed. One incorrect answer permits a distinct second try; answers, authored tricks, and explanations appear only after a correct answer or the second try. Original mock choices are not shown until then. First-try scores and every new run remain separate; completed practice turns green.
+Question order is source difficulty first, then original question number: 29, 5, 9, 10, 34, 16, 18, 20, 36, 37, 38, 39, 40. The main page is now an unscored review: original wrong choices and keyword meanings are always shown; answers, authored tricks, simplified Test Innovators solutions, and wrong-choice comparisons start visible with per-question and global hide/show controls. Visibility preferences are device-local and separate from scored progress.
 
-The generic October 11 engine and conflict-preserving sync adapter are reused with isolated namespace `marco-vr-practice-oct22-test4-v1`; older defaults are unchanged. The shared backend registers this ID for progress, word-study time, and completion counts. `?demo=1` uses separate local-only practice records and never sends progress or time. Validate with `node --test marco-vr-practice/2026-10-22/tests.mjs marco-daily-test-review/2026-10-11/tests.mjs`.
+`review-data.js` includes nine distinct earlier main-target question forms for DISMAL (3 recorded attempts), VOCATION (10), and VERSATILE (8). Copies and retries are grouped, direct synonym stems are separated from definition-to-word targets, and unused-bank entries are not treated as completed practice. Historical keys/outcomes are retained with explicit notes for the old DISMAL overlap and VOCATION key mismatch. The original Test 1 VOCATION wrong choice was not preserved and is labeled unknown, not invented.
+
+The previous two-try redo remains at `2026-10-22/practice.html`, using the same question IDs and sync namespace, without resetting any existing scores or run history. Review access creates no scored answers or completion.
+
+The generic October 11 engine and conflict-preserving sync adapter are reused with isolated namespace `marco-vr-practice-oct22-test4-v1`; older defaults are unchanged. The shared backend registers this ID for progress, word-study time, and completion counts. `?demo=1` uses separate local-only records and never sends progress or time. Validate with `node --test marco-vr-practice/2026-10-22/tests.mjs marco-vr-practice/2026-10-22/review-tests.mjs marco-daily-test-review/2026-10-11/tests.mjs`.
 
 ## Harry’s reading
 
