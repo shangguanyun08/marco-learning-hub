@@ -1,4 +1,4 @@
-/* Rechecked second-attempt mock records; no private account links. */
+/* Earlier history includes only actual synonym or sentence-completion questions. */
 window.MARCO_VR_REVIEW_PAGE = {
   "test": 2,
   "date": "2026-10-04",
@@ -286,56 +286,7 @@ window.MARCO_VR_REVIEW_PAGE = {
           "revealed or exposed"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "obscure",
-          "source": "Spring Week 4 · W4D4-13",
-          "url": "https://marco-week4-vocab-demo.alexsoton.chatgpt.site",
-          "prompt": "adj. unclear, dark v. to make dark or unclear",
-          "choices": [
-            "baffling",
-            "obscure",
-            "distort",
-            "mirage"
-          ],
-          "answer": 1,
-          "explanation": "Earlier vocabulary target: obscure. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Week 4 · W4D4-13 · Round 1",
-              "at": "2026-08-06T21:23:20.406Z",
-              "choice": "obscure",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "obscure",
-          "source": "Summer Camp Weeks 1–4 · W3D4-18",
-          "url": "https://marco-summer-camp-isee.alexsoton.chatgpt.site",
-          "prompt": "adj. unclear, dark v. to make dark or unclear",
-          "choices": [
-            "prophesy",
-            "devise",
-            "obscure",
-            "gullible"
-          ],
-          "answer": 2,
-          "explanation": "Earlier vocabulary target: obscure. The saved source key is shown; historical results below are retained.",
-          "id": "history-1",
-          "events": [
-            {
-              "source": "Summer Camp Weeks 1–4 · W3D4-18 · Round 1",
-              "at": "2026-08-16T17:12:38.949Z",
-              "choice": "obscure",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     "10": {
       "word": "DISCLOSE",
@@ -447,56 +398,7 @@ window.MARCO_VR_REVIEW_PAGE = {
           "an evil character or wrongdoer"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "conviction",
-          "source": "Spring Weeks 1, 2, 3, 5 & 6 · W3D4-29",
-          "url": "https://marco-week1-week2-vocab.alexsoton.chatgpt.site",
-          "prompt": "n. (1) unshakably strong belief, (2) the final judgment that a person is guilty of a crime",
-          "choices": [
-            "convention",
-            "naïve",
-            "conviction",
-            "liberal"
-          ],
-          "answer": 2,
-          "explanation": "Earlier vocabulary target: conviction. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · W3D4-29 · Round 1",
-              "at": "2026-08-09T00:57:23.049Z",
-              "choice": "conviction",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "conviction",
-          "source": "Summer Camp Weeks 1–4 · W3D1-04",
-          "url": "https://marco-summer-camp-isee.alexsoton.chatgpt.site",
-          "prompt": "n. unshakably strong belief",
-          "choices": [
-            "impending",
-            "conviction",
-            "assert",
-            "renovate"
-          ],
-          "answer": 1,
-          "explanation": "Earlier vocabulary target: conviction. The saved source key is shown; historical results below are retained.",
-          "id": "history-1",
-          "events": [
-            {
-              "source": "Summer Camp Weeks 1–4 · W3D1-04 · Round 1",
-              "at": "2026-08-15T20:03:09.123Z",
-              "choice": "conviction",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     "18": {
       "word": "EMBOLDEN",
@@ -583,6 +485,6 @@ window.MARCO_VR_REVIEW_PAGE = {
       "history": []
     }
   },
-  "historyForms": 4,
-  "historyAttempts": 4
+  "historyForms": 0,
+  "historyAttempts": 0
 };

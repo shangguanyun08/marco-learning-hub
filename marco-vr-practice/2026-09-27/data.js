@@ -1,4 +1,4 @@
-/* Rechecked original mock records; no private account links. */
+/* Earlier history includes only actual synonym or sentence-completion questions. */
 window.MARCO_VR_REVIEW_PAGE = {
   "test": 1,
   "date": "2026-09-27",
@@ -242,33 +242,7 @@ window.MARCO_VR_REVIEW_PAGE = {
           "a tall, pointed tower"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "mutiny",
-          "source": "Spring Weeks 8–11 · W9D2-32",
-          "url": "https://marco-vocab-weeks8-11.alexsoton.chatgpt.site",
-          "prompt": "n. deliberate refusal to obey orders given by those in command, especially by sailors v. to",
-          "choices": [
-            "pilot",
-            "mutiny",
-            "equality",
-            "pandemonium"
-          ],
-          "answer": 1,
-          "explanation": "Earlier vocabulary target: mutiny. The saved source key is shown; historical results below are retained.",
-          "note": "The stored prompt ends mid-definition. Mutiny’s complete meaning is given in the keyword box above.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 8–11 · W9D2-32 · Round 1",
-              "at": "2026-08-13T19:56:36.487Z",
-              "choice": "mutiny",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     "12": {
       "word": "PRESTIGIOUS",
@@ -324,74 +298,7 @@ window.MARCO_VR_REVIEW_PAGE = {
           "a tall tower, often on a church"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "vocation",
-          "source": "Spring Week 4 · W4D2-29",
-          "url": "https://marco-week4-vocab-demo.alexsoton.chatgpt.site",
-          "prompt": "n. person's employment",
-          "choices": [
-            "lush",
-            "oblige",
-            "pretentious",
-            "vocation"
-          ],
-          "answer": 3,
-          "explanation": "Earlier vocabulary target: vocation. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Week 4 · W4D2-29 · Round 1",
-              "at": "2026-08-06T21:13:45.208Z",
-              "choice": "oblige",
-              "correct": false
-            },
-            {
-              "source": "Spring Week 4 · W4D2-29 · Round 2",
-              "at": "2026-08-06T21:14:14.355Z",
-              "choice": "oblige",
-              "correct": false
-            },
-            {
-              "source": "Spring Week 4 · W4D2-29 · Round 3",
-              "at": "2026-08-06T21:14:17.477Z",
-              "choice": "vocation",
-              "correct": true
-            },
-            {
-              "source": "Round 1 missed vocabulary · spring-4:73 · Round 1",
-              "at": "2026-08-21T01:36:27.056Z",
-              "choice": "vocation",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "vocation",
-          "source": "Spring Weeks 8–11 · W10D1-50",
-          "url": "https://marco-vocab-weeks8-11.alexsoton.chatgpt.site",
-          "prompt": "n. job",
-          "choices": [
-            "sullen",
-            "vocation",
-            "specification",
-            "scarce"
-          ],
-          "answer": 1,
-          "explanation": "Earlier vocabulary target: vocation. The saved source key is shown; historical results below are retained.",
-          "id": "history-1",
-          "events": [
-            {
-              "source": "Spring Weeks 8–11 · W10D1-50 · Round 1",
-              "at": "2026-08-13T20:19:46.891Z",
-              "choice": "vocation",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     "17": {
       "word": "BLIGHT",
@@ -419,32 +326,7 @@ window.MARCO_VR_REVIEW_PAGE = {
           "something that restores strength; also a type of drink"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "blight",
-          "source": "Spring Weeks 8–11 · W8D4-28",
-          "url": "https://marco-vocab-weeks8-11.alexsoton.chatgpt.site",
-          "prompt": "n. blemish, flaw, defect",
-          "choices": [
-            "solemn",
-            "abbreviate",
-            "ardent",
-            "blight"
-          ],
-          "answer": 3,
-          "explanation": "Earlier vocabulary target: blight. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 8–11 · W8D4-28 · Round 1",
-              "at": "2026-08-18T04:24:27.934Z",
-              "choice": "blight",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     "18": {
       "word": "MERIT",
@@ -472,104 +354,7 @@ window.MARCO_VR_REVIEW_PAGE = {
           "a flat plate with an inscription; also a deposit on teeth"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "Merit",
-          "source": "Spring Weeks 1, 2, 3, 5 & 6 · W2D3-04",
-          "url": "https://marco-week1-week2-vocab.alexsoton.chatgpt.site",
-          "prompt": "n. (1) excellence in achievement or performance, (2) deserving of aid or recognition",
-          "choices": [
-            "Merit",
-            "Feat",
-            "keen",
-            "Versatile"
-          ],
-          "answer": 0,
-          "explanation": "Earlier vocabulary target: Merit. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · W2D3-04 · Round 1",
-              "at": "2026-08-10T03:57:40.752Z",
-              "choice": "Merit",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "merit",
-          "source": "Spring Weeks 1, 2, 3, 5 & 6 · W3D2-47",
-          "url": "https://marco-week1-week2-vocab.alexsoton.chatgpt.site",
-          "prompt": "n. worthiness, value v. deserve, warrant",
-          "choices": [
-            "thrive",
-            "laborious",
-            "merit",
-            "fiasco"
-          ],
-          "answer": 2,
-          "explanation": "Earlier vocabulary target: merit. The saved source key is shown; historical results below are retained.",
-          "id": "history-1",
-          "events": [
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · W3D2-47 · Round 1",
-              "at": "2026-08-08T23:31:30.934Z",
-              "choice": "fiasco",
-              "correct": false
-            },
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · W3D2-47 · Round 2",
-              "at": "2026-08-08T23:32:05.775Z",
-              "choice": "merit",
-              "correct": true
-            },
-            {
-              "source": "Round 1 missed vocabulary · spring-1-2-3-5-6:476 · Round 1",
-              "at": "2026-08-21T01:36:27.056Z",
-              "choice": "fiasco",
-              "correct": false
-            },
-            {
-              "source": "Round 1 missed vocabulary · spring-1-2-3-5-6:476 · Round 2",
-              "at": "2026-08-22T00:18:34.839Z",
-              "choice": "laborious",
-              "correct": false
-            },
-            {
-              "source": "Round 1 missed vocabulary · spring-1-2-3-5-6:476 · Round 3",
-              "at": "2026-08-22T00:19:40.688Z",
-              "choice": "merit",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "merit",
-          "source": "Summer Camp Weeks 1–4 · W1D4-19",
-          "url": "https://marco-summer-camp-isee.alexsoton.chatgpt.site",
-          "prompt": "n. excellence in achievement or performance",
-          "choices": [
-            "merit",
-            "methodical",
-            "feeble",
-            "charismatic"
-          ],
-          "answer": 0,
-          "explanation": "Earlier vocabulary target: merit. The saved source key is shown; historical results below are retained.",
-          "id": "history-2",
-          "events": [
-            {
-              "source": "Summer Camp Weeks 1–4 · W1D4-19 · Round 1",
-              "at": "2026-08-12T21:50:55.581Z",
-              "choice": "merit",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     },
     "37": {
       "word": "MASQUERADES",
@@ -653,89 +438,9 @@ window.MARCO_VR_REVIEW_PAGE = {
           "varied; having different kinds"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "rustic",
-          "source": "Spring Weeks 1, 2, 3, 5 & 6 · W6D3-30",
-          "note": "Rural also means relating to country life, so this old choice set has overlapping meanings. The saved key accepted rustic; do not learn that rural is wrong in meaning.",
-          "url": "https://marco-week1-week2-vocab.alexsoton.chatgpt.site",
-          "prompt": "adj. characteristic of country life, rough or unfinished",
-          "choices": [
-            "rustic",
-            "inhabit",
-            "rural",
-            "chasm"
-          ],
-          "answer": 0,
-          "explanation": "Earlier vocabulary target: rustic. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · W6D3-30 · Round 1",
-              "at": "2026-08-08T17:15:24.890Z",
-              "choice": "rustic",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "rustic",
-          "source": "Spring Week 4 · W4D2-27",
-          "url": "https://marco-week4-vocab-demo.alexsoton.chatgpt.site",
-          "prompt": "adj. of or relating to country life or people",
-          "choices": [
-            "subtle",
-            "rustic",
-            "prowess",
-            "lush"
-          ],
-          "answer": 1,
-          "explanation": "Earlier vocabulary target: rustic. The saved source key is shown; historical results below are retained.",
-          "id": "history-1",
-          "events": [
-            {
-              "source": "Spring Week 4 · W4D2-27 · Round 1",
-              "at": "2026-08-06T21:13:45.208Z",
-              "choice": "rustic",
-              "correct": true
-            }
-          ]
-        },
-        {
-          "format": "Definition → word",
-          "target": "rustic",
-          "source": "Summer Camp Weeks 1–4 · W4D5-25",
-          "url": "https://marco-summer-camp-isee.alexsoton.chatgpt.site",
-          "prompt": "adj. characteristic of country life, rough or unfinished",
-          "choices": [
-            "ample",
-            "rustic",
-            "audible",
-            "obliterate"
-          ],
-          "answer": 1,
-          "explanation": "Earlier vocabulary target: rustic. The saved source key is shown; historical results below are retained.",
-          "id": "history-2",
-          "events": [
-            {
-              "source": "Summer Camp Weeks 1–4 · W4D5-25 · Round 1",
-              "at": "2026-08-15T03:44:13.524Z",
-              "choice": "rustic",
-              "correct": true
-            },
-            {
-              "source": "Summer Camp Weeks 1–4 · W4D5-25 · Round 1",
-              "at": "2026-08-18T04:38:19.668Z",
-              "choice": "rustic",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     }
   },
-  "historyForms": 10,
-  "historyAttempts": 18
+  "historyForms": 0,
+  "historyAttempts": 0
 };

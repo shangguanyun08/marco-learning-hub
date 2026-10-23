@@ -1,4 +1,4 @@
-/* Rechecked second-attempt mock records; no private account links. */
+/* Earlier history includes only actual synonym or sentence-completion questions. */
 window.MARCO_VR_REVIEW_PAGE = {
   "test": 3,
   "date": "2026-10-11",
@@ -117,46 +117,9 @@ window.MARCO_VR_REVIEW_PAGE = {
           "let liquid or loose material fall out"
         ]
       ],
-      "history": [
-        {
-          "format": "Definition → word",
-          "target": "amble",
-          "source": "Spring Weeks 1, 2, 3, 5 & 6 · D1-04",
-          "url": "https://marco-week1-week2-vocab.alexsoton.chatgpt.site",
-          "prompt": "v. walk slowly and easily; n. a stroll",
-          "choices": [
-            "hurtle",
-            "brandish",
-            "amble",
-            "alight"
-          ],
-          "answer": 2,
-          "explanation": "Earlier vocabulary target: amble. The saved source key is shown; historical results below are retained.",
-          "id": "history-0",
-          "events": [
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · D1-04 · Round 1",
-              "at": "2026-08-09T17:59:27.677Z",
-              "choice": "hurtle",
-              "correct": false
-            },
-            {
-              "source": "Spring Weeks 1, 2, 3, 5 & 6 · D1-04 · Round 2",
-              "at": "2026-08-09T18:00:01.380Z",
-              "choice": "amble",
-              "correct": true
-            },
-            {
-              "source": "Round 1 missed vocabulary · spring-1-2-3-5-6:121 · Round 1",
-              "at": "2026-08-21T01:36:27.056Z",
-              "choice": "amble",
-              "correct": true
-            }
-          ]
-        }
-      ]
+      "history": []
     }
   },
-  "historyForms": 1,
-  "historyAttempts": 3
+  "historyForms": 0,
+  "historyAttempts": 0
 };
