@@ -5,11 +5,12 @@
   const IDS=['original','similar-a','similar-b','similar-c','similar-d','similar-e','similar-f','sept27-original','sept27-a','sept27-b','sept27-c','oct1-original','oct1-a','oct1-b','oct1-c','oct4-original','oct4-a','oct4-b','oct4-c','oct4-d','oct4-e','oct10-original','oct10-a','oct10-b','week-oct12-1','week-oct12-2','week-oct12-3','week-oct12-4','week-oct12-5','week-oct12-6'];
   IDS.push('week-oct12-3-2','week-oct12-3-3','week-oct12-3-2-round2','week-oct12-3-3-round2');
   IDS.push('week-oct12-3-4','week-oct12-3-4-round2');
+  IDS.push('week-oct12-3-5','week-oct12-3-6');
   IDS.push('week-oct12-extra-review');
   IDS.push(...Array.from({length:6},(_,i)=>'week-oct12-'+(i+1)+'-round2'));
   const reviewId=id=>/^week-oct12-(?:[1-6]|3-[234])-round2$/.test(id);
   const validReview=(id,run)=>!reviewId(id)||(typeof run.sourceRunId==='string'&&Array.isArray(run.round2Sources)&&run.round2Sources.length>0&&run.round2Sources.length<=12&&new Set(run.round2Sources).size===run.round2Sources.length&&run.round2Sources.every(n=>Number.isInteger(n)&&n>=1&&n<=12)&&Object.keys(run.answers).every(n=>run.round2Sources.includes(Number(n))));
-  const unlimitedId=id=>id==='week-oct12-extra-review'||/^week-oct12-(?:[456]|3-4)(?:-round2)?$/.test(id);
+  const unlimitedId=id=>id==='week-oct12-extra-review'||/^week-oct12-(?:[456]|3-[456])(?:-round2)?$/.test(id);
   const validTyped=(id,source,value)=>typeof value==='string'&&(
     (unlimitedId(id)&&id!=='week-oct12-extra-review'&&/^(?:[1-9]|1[0-2])$/.test(source)&&(/^(?:\d{1,15})(?:\.\d{1,8})?$/.test(value)||/^\d{1,9}\/[1-9]\d{0,8}$/.test(value)))||
     (id.startsWith('oct4-')&&source==='7'&&/^\d{1,15}(?: \| \d{1,15}){5}$/.test(value))||
@@ -85,7 +86,7 @@
           // answers to removed questions in history without blocking completion.
           const practice=(root.HARRY_SEPT_PRACTICE||[]).find(s=>s.id===id&&s.practiceOnly);
           const entries=practice?practice.questions.map(q=>run.answers[q.source]).filter(Boolean):Object.entries(run.answers).filter(([source])=>!id.startsWith('oct4-')||source!=='29').map(([,entry])=>entry);
-          const expected=practice?practice.questions.length:id==='week-oct12-extra-review'?8:reviewId(id)?run.round2Sources.length:id==='week-oct12-3-4'?6:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
+          const expected=practice?practice.questions.length:id==='week-oct12-extra-review'?8:reviewId(id)?run.round2Sources.length:/^week-oct12-3-[456]$/.test(id)?6:id.startsWith('oct10-')?14:id.startsWith('oct4-')?15:id==='oct1-original'?22:id.startsWith('oct1-')?12:id.startsWith('sept27-')?(Object.keys(run.answers).some(n=>Number(n)>100)?13:10):12;
           if(unlimitedId(id)&&!(entries.length===expected&&entries.every(e=>e.attempts.some(a=>a.correct))))run.completedAt=null;
           if(!run.completedAt&&entries.length===expected&&entries.every(e=>(!unlimitedId(id)&&e.attempts.length===2)||e.attempts.some(a=>a.correct)))run.completedAt=entries.flatMap(e=>e.attempts.map(a=>a.at)).sort().at(-1);
           output.push(run);
@@ -150,4 +151,5 @@
   }
   root.HarrySeptSync={valid,merge,create,applyResets};
 })(typeof window==='undefined'?globalThis:window);
+
 

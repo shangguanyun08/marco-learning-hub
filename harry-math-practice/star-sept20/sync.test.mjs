@@ -26,6 +26,38 @@ function server(){let record=null,online=true,conflict=null;
    return {ok:true,json:async()=>json({progress:record})};
  }};
 }
+test('Days 3.5 and 3.6 upload typed answers, unlimited retries, and six-question completion to another device',async()=>{
+ const api=server(),sessions={'week-oct12-3-4':[run('earlier',{1:answer('8',true)})]};
+ for(const id of ['week-oct12-3-5','week-oct12-3-6']){
+  const answers=Object.fromEntries(Array.from({length:6},(_,i)=>[i+1,answer(String(i+7),true)]));
+  answers[1]={attempts:[{choice:'1',correct:false,at},{choice:'2',correct:false,at:'2026-09-23T00:01:00.000Z'},{choice:'7',correct:true,at:'2026-09-23T00:02:00.000Z'}]};
+  sessions[id]=[run(id,answers)];
+ }
+ const a=client({version:1,sessions},api.fetch),b=client(empty(),api.fetch);
+ try{
+  assert.equal(a.w.HarrySeptSync.valid(a.state),true);
+  await a.sync.start();await b.sync.start();
+  assert.equal(b.status.kind,'live');assert.deepEqual(b.state,api.record.state);
+  for(const id of ['week-oct12-3-5','week-oct12-3-6']){
+   const saved=b.state.sessions[id][0];assert.equal(Object.keys(saved.answers).length,6);
+   assert.equal(saved.answers[1].attempts.length,3);assert.equal(saved.answers[1].attempts[0].correct,false);
+   assert.equal(saved.completedAt,'2026-09-23T00:02:00.000Z');
+  }
+  assert.deepEqual(b.state.sessions['week-oct12-3-4'],sessions['week-oct12-3-4']);
+ }finally{a.close();b.close();}
+});
+test('unfinished Day 3.5 stays unfinished and offline Day 3.6 answers merge with earlier work',async()=>{
+ const api=server(),a=client({version:1,sessions:{'week-oct12-3-5':[run('ipad',{1:answer('7',true)})]}},api.fetch);
+ const b=client({version:1,sessions:{'week-oct12-3-6':[run('phone',{1:answer('14',true)})]}},api.fetch);
+ try{
+  api.online=false;await a.sync.start();assert.equal(a.status.kind,'offline');
+  api.online=true;await b.sync.start();await a.sync.refresh();await b.sync.refresh();
+  assert.deepEqual(a.state,b.state);assert.equal(Object.keys(b.state.sessions).length,2);
+  assert.equal(b.state.sessions['week-oct12-3-5'][0].completedAt,null);
+  assert.equal(b.state.sessions['week-oct12-3-6'][0].completedAt,null);
+  assert.equal(b.w.HarrySeptSync.valid({version:1,sessions:{unknown:[run('bad',{1:answer('7',true)})]}}),false);
+ }finally{a.close();b.close();}
+});
 test('existing device history migrates and a fresh device restores scores and retries',async()=>{
  const api=server(),saved={version:1,sessions:{'similar-a':[run('ipad',{4:{attempts:[{choice:0,correct:false,at},{choice:1,correct:true,at:'2026-09-23T00:01:00.000Z'}]}})]}};
  const a=client(saved,api.fetch),b=client(empty(),api.fetch);
@@ -94,3 +126,4 @@ test('October 4 records including seven-box multiplication restore beside prior 
  try{assert(a.w.HarrySeptSync.valid(a.state));await a.sync.start();await b.sync.start();assert.deepEqual(b.state,a.state);assert.equal(Object.keys(b.state.sessions).length,5);assert.equal(b.status.kind,'live');}
  finally{a.close();b.close();}
 });
+
