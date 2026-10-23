@@ -25,7 +25,7 @@ test('earlier practice has 9 distinct forms and 21 attempts, with exact per-word
  assert.deepEqual([5,20,37].map(n=>notes[n].history.flatMap(f=>f.events).length),[3,10,8]);
  assert.equal(forms.flatMap(f=>f.events).filter(e=>!e.correct).length,5);
  for(const form of forms){assert.equal(form.choices.length,4);assert.ok(form.choices[form.answer]);assert.ok(form.events.length);}
- const vocation=notes[20].history.find(f=>f.id==='vocation-synonym');assert.equal(vocation.events[0].choice,null);assert.match(vocation.note,/key mismatch/);
+ const vocation=notes[20].history.find(f=>f.id==='vocation-synonym');assert.equal(vocation.events[0].choice,'steeple');assert.match(vocation.note,/key mismatch/);
  assert.equal(notes[10].history,undefined);assert.match(notes[10].historyNote,/no earlier completed/);
 });
 test('review defaults to visible solutions and original wrong choices, with no scoring form',()=>{
