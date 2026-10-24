@@ -1,0 +1,143 @@
+/* Transcribed from the five user-supplied Kindle recordings, 2026-10-24.
+   Original question wording and A–D order; blank lengths normalized.
+   Answers independently checked (the clips do not show publisher answer keys).
+   Meanings, tricks, explanations, and difficulty judgments are editorial. */
+(function(root){
+  'use strict';
+  const questions=[];
+  const evidence={3:'07-42-01.mp4 at 00:15 and 00:21',4:'07-43-05.mp4 at 00:27 and 00:30',5:'07-43-05.mp4 at 00:36',6:'07-45-25.mp4 at 00:18',7:'07-46-29.mp4 at 00:12 and 00:15',8:'07-46-29.mp4 at 00:21 and 00:27'};
+  function add(test,number,type,word,prompt,choices,key,meaning,tip,skill){
+    questions.push({source:test*100+number+(type==='synonym'?0:20),test,number,part:type==='synonym'?'Synonyms':'Sentence completion',type,word,prompt,choices:choices.split('|'),correct:'ABCD'.indexOf(key),meaning,tip,skill:skill||(type==='synonym'?'Precise vocabulary':'Whole-sentence clues'),level:'Hard / precision-tricky (editorial)',section:'VR',explanation:`${word.charAt(0).toUpperCase()+word.slice(1)} means ${meaning}. ${tip}`,selection:type==='synonym'?'Selected for a less-familiar academic meaning, a confusable sense, or a close meaning/opposite distinction.':'Selected for precise context, evidence, contrast, or an abstract word—not just whether the sentence sounds positive or negative.',related:[],evidence:`Kindle recording ${evidence[test]}; answer independently checked from the visible choices and context.`});
+  }
+  const s=(t,n,w,c,k,m,h,skill)=>add(t,n,'synonym',w,w.toUpperCase(),c,k,m,h,skill);
+  const c=(t,n,p,ch,k,w,m,h,skill)=>add(t,n,'sentence completion',w,p,ch,k,m,h,skill);
+
+  s(3,1,'adroit','curious|honest|patient|skilful','D','skillful; clever at doing something','Match ability, not honesty, patience, or curiosity.');
+  s(3,2,'cogent','cautious|confusing|incomplete|persuasive','D','clear, logical, and convincing','A cogent argument persuades through good reasons.');
+  s(3,4,'futile','dangerous|lengthy|pointless|urgent','C','unable to achieve a useful result; pointless','Futile describes lack of useful effect, not danger or time taken.');
+  s(3,6,'impart','borrow|collect|conceal|convey','D','give or communicate something','Impart knowledge means convey it to someone, not collect or conceal it.');
+  s(3,9,'arduous','amusing|brief|difficult|familiar','C','difficult and requiring much effort','An arduous task takes effort; it need not be unfamiliar.');
+  s(3,10,'censure','criticize|ignore|imitate|reward','A','express strong disapproval of; criticize','Do not confuse censure with censor, which means suppress material.');
+  s(3,12,'erratic','deliberate|gradual|steady|unpredictable','D','irregular and unpredictable','Steady is the opposite; gradual only describes speed of change.');
+  s(3,13,'prudent','cautious|cheerful|impatient|reckless','A','careful and sensible about possible consequences','Prudence is wise caution, not recklessness.');
+  s(3,14,'appraise','announce|evaluate|purchase|repair','B','assess the quality or value of','Appraise means evaluate; buying or repairing an object is a different action.');
+  s(3,16,'reticent','careless|forceful|taciturn|talkative','C','unwilling to say much; reserved','Taciturn also means habitually quiet. Talkative is the opposite.');
+  s(3,18,'tractable','careless|fragile|manageable|stubborn','C','easy to manage or influence','A tractable person cooperates; stubborn points in the opposite direction.');
+  s(3,19,'formidable','daunting|flexible|hidden|ordinary','A','causing fear or respect because of strength or difficulty','Daunting captures the intimidating quality, not merely being unusual.');
+  s(3,20,'clandestine','lawful|noisy|ordinary|secret','D','done secretly, often because it is not allowed','Secret is the defining feature; unlawful is not one of the choices.');
+  c(3,1,'Since the directions identified every turn and landmark, they were _______.','indirect|scenic|unambiguous|remote','C','unambiguous','clear; having only one reasonable meaning','Every turn and landmark removes uncertainty. Scenic describes views, not clarity.');
+  c(3,4,"The lawyer’s summary was _______, presenting the facts in a logical order without contradictions.",'coherent|incomplete|emotional|lengthy','A','coherent','logical, consistent, and easy to follow','Use both clues: logical order and no contradictions. Length is not the issue.');
+  c(3,7,'The guide translated specialized terms into everyday language, making the lecture _______ to newcomers.','tedious|accessible|formal|secretive','B','accessible','easy to understand or use','Here accessible concerns understanding, not whether a place can be entered.');
+  c(3,13,'When the orchestra missed its entrance, the conductor remained _______ and calmly restarted the piece.','composed|careless|irritated|bewildered','A','composed','calm and in control of your feelings','Calmly restarted is the evidence. Do not choose an emotion merely associated with a mistake.');
+  c(3,18,"The historian treated the diary as a useful but _______ source because it reflected only one person’s viewpoint.",'objective|comprehensive|definitive|limited','D','limited','restricted in range or scope','Useful BUT one viewpoint means limited coverage—not necessarily a dishonest diary.');
+  c(3,19,"The school’s new policy was _______; it ensured that fees would never prevent a student from joining an academic club.",'temporary|strict|complicated|equitable','D','equitable','fair and impartial','The policy removes a financial barrier. Strictness and complexity are not the point.');
+
+  s(4,2,'abate','announce|combine|predict|subside','D','become less strong or severe','Rain or anger can abate: it subsides rather than being announced.');
+  s(4,4,'dispel','collect|conceal|eliminate|measure','C','drive away or remove','Dispel a rumor or fear means eliminate it, not conceal it.');
+  s(4,5,'docile','alert|clever|obedient|restless','C','easy to teach or control; obedient','The word concerns willingness to be managed, not intelligence.');
+  s(4,7,'expedite','divide|hasten|inspect|postpone','B','make a process happen sooner or faster','Hasten means speed up; postpone delays it.');
+  s(4,8,'imminent','approaching|distant|preventable|uncertain','A','about to happen very soon','Imminent concerns nearness in time, not whether the event can be prevented.');
+  s(4,9,'sporadic','constant|occasional|planned|rapid','B','happening irregularly; occasional','Frequency and regularity matter, not speed. Constant is the opposite.');
+  s(4,10,'tangible','distant|imaginary|physical|temporary','C','real and able to be touched or clearly demonstrated','Physical is closest here. Temporary concerns duration.');
+  s(4,11,'audacious','bold|cautious|loyal|ordinary','A','very bold or daring','Audacious can suggest surprising daring, not caution.');
+  s(4,14,'impassive','cheerful|impatient|uncertain|unemotional','D','showing no emotion','Do not confuse impassive with impatient or passive.');
+  s(4,15,'pertinent','casual|decorative|relevant|remote','C','relevant to the matter being considered','A pertinent detail bears on the topic; decorative detail may not.');
+  s(4,16,'reclusive','energetic|generous|sociable|withdrawn','D','avoiding other people; living apart','Sociable points in the opposite direction.');
+  s(4,17,'repudiate','examine|postpone|reject|support','C','reject or refuse to accept','Repudiate a claim means reject it, not merely delay judging it.');
+  s(4,18,'sagacious','flexible|noisy|timid|wise','D','wise; showing good judgment','Judge the quality of thinking, not confidence or volume.');
+  s(4,19,'imperative','distant|optional|ordinary|pressing','D','extremely important or urgent; necessary','Pressing means urgently needing attention. Optional is the opposite.');
+  s(4,20,'provisional','complete|interim|public|strict','B','temporary; arranged for now and subject to change','Interim means for the time being, not final or complete.');
+  c(4,1,"The archaeologist refused to _______ the object’s age before laboratory results were available.",'discuss|record|compare|assert','D','assert','state confidently as a fact','Without results, the issue is claiming certainty. Merely discussing a possible age need not claim it is a fact.');
+  c(4,4,'The historian warned that the inscription was _______ because part of the stone had broken away.','fragmentary|recent|authentic|polished','A','fragmentary','incomplete; existing only in pieces','Broken-away stone means missing text, not evidence of recent age or authenticity.');
+  c(4,7,'Since the data set contained several recording errors, the researcher treated the average as only _______.','approximate|exact|irrelevant|final','A','approximate','close to the true value but not exact','Errors limit precision. They do not automatically make the average irrelevant.');
+  c(4,8,'By asking each witness the same questions in the same order, the reporter made the interviews _______.','informal|persuasive|uniform|skeptical','C','uniform','consistent; the same in form or method','Same questions and same order describe a consistent method, not a persuasive result.');
+  c(4,9,'Because the two maps used different scales, comparing the apparent sizes of the parks would be _______.','unnecessary|misleading|convenient|precise','B','misleading','likely to create a false impression','Different scales distort the apparent size comparison. The comparison might still be needed, but it would not be reliable.');
+  c(4,19,"The student council’s proposal was initially vague, but after revisions it became _______, with a budget, schedule, and list of responsibilities.",'ambitious|brief|popular|concrete','D','concrete','specific and definite rather than vague','Budget, schedule, and responsibilities supply specifics. Concrete here does not mean building material.');
+
+  s(5,1,'quell','announce|divide|encourage|suppress','D','put an end to or quiet down','Quell a disturbance means suppress it, not encourage it.');
+  s(5,2,'falter','accelerate|celebrate|hesitate|persist','C','hesitate or lose strength or confidence','Falter interrupts confident progress; persist means continue.');
+  s(5,4,'kindle','conceal|extinguish|ignite|scatter','C','start a fire, feeling, or interest','Ignite means set alight. Extinguish does the reverse.');
+  s(5,7,'ornate','ancient|elaborate|fragile|plain','B','highly decorated; elaborate','Ornate describes decoration, not age or fragility.');
+  s(5,8,'quench','brighten|extinguish|kindle|preserve','B','put out a fire; satisfy thirst','With these choices, use the put-out-a-fire sense. Kindle is its opposite.');
+  s(5,11,'copious','costly|hidden|plentiful|scarce','C','abundant; plentiful','The word concerns amount, not cost. Scarce is the opposite.');
+  s(5,12,'tarnish','measure|polish|restore|stain','D','make less shiny or damage a reputation','Stain is closest; polish and restore improve the object or reputation.');
+  s(5,15,'haphazard','deliberate|orderly|random|uniform','C','without a plan or order; random','A haphazard arrangement is unplanned, not uniform.');
+  s(5,16,'incessant','brief|continuous|occasional|uncertain','B','continuing without stopping','Do not reduce this to frequent: incessant emphasizes no break.');
+  s(5,17,'cumbersome','awkward|compact|effortless|graceful','A','awkward or difficult to carry, use, or manage','It concerns difficulty of handling, not simply size.');
+  s(5,18,'gregarious','cautious|sociable|solitary|stern','B','enjoying the company of other people','Sociable matches the preference for company; solitary is the opposite.');
+  s(5,19,'unassuming','boastful|costly|elaborate|humble','D','modest; not drawing attention to yourself','Unassuming does not mean making no assumptions. It means modest.');
+  c(5,1,"Skipping routine oil changes can be _______ to an engine’s lifespan.",'optional|unrelated|harmless|detrimental','D','detrimental','causing harm or damage','Skipping maintenance harms the engine. Harmless reverses the intended relationship.');
+  c(5,2,'The safety review was _______, covering every room, exit, alarm, and emergency procedure.','exhaustive|casual|decorative|incomplete','A','exhaustive','thorough; covering every relevant part','Every room, exit, alarm, and procedure means complete coverage—not a review that feels tiring.');
+  c(5,3,'With donated materials and enough volunteers, the community garden plan became financially _______.','accidental|secretive|temporary|viable','D','viable','capable of working successfully','Resources make the plan workable. Financially viable does not mean merely temporary or inexpensive.');
+  c(5,5,"The mountain valley’s weather is highly _______; clear skies can turn to hail within minutes.",'volatile|seasonal|measured|mild','A','volatile','liable to change suddenly and sharply','Within minutes signals rapid, unpredictable change, not a normal seasonal cycle.');
+  c(5,10,'Chemical analysis showed that the supposed century-old signature used modern ink, so experts judged it _______.','valuable|spurious|faded|authentic','B','spurious','false or not genuine','Modern ink contradicts the claimed age. Authentic would affirm the claim.');
+  c(5,12,'The divers entered the pool in perfectly _______ movements, each reaching the water at the same instant.','improvised|separate|hesitant|synchronized','D','synchronized','coordinated to happen at the same time','At the same instant supplies the timing relationship. Separate is not the same as synchronized.');
+  c(5,15,'The archivist was _______ about dating the unsigned letter, refusing to assign a year until more evidence appeared.','circumspect|delighted|certain|careless','A','circumspect','careful and cautious before acting or judging','Waiting for evidence shows caution, not certainty.');
+  c(5,16,'Even when the panelists disagreed sharply, their exchange remained _______; they criticized arguments without insulting one another.','private|civil|hostile|evasive','B','civil','polite and respectful','Civil disagreement can be sharp. Respectful treatment does not require agreement.');
+
+  s(6,2,'yearn','forget|long|refuse|settle','B','want something very strongly','Long is a verb here: to long for something, not a description of length.');
+  s(6,3,'frugal','cheerful|thrifty|wasteful|wealthy','B','careful not to waste money or resources','Frugal describes spending habits, not how much money a person has.');
+  s(6,4,'garble','clarify|distort|memorize|repeat','B','mix up or distort a message so it is unclear','Repeating a message does not necessarily garble it; distortion is essential.');
+  s(6,6,'adverse','expected|temporary|unfavorable|useful','C','unfavorable or harmful','Adverse conditions work against success. Do not confuse adverse with averse, meaning unwilling.');
+  s(6,7,'austere','colorful|crowded|luxurious|plain','D','severely plain; without luxury or decoration','Use the plain-style sense among these choices. Luxurious is the opposite.');
+  s(6,8,'contend','argue|explain|observe|surrender','A','argue or maintain that something is true; compete','Argue is the available matching sense. Explain need not involve making a disputed claim.');
+  s(6,9,'deviate','depart|divide|measure|reveal','A','move away from an expected route or standard','Depart from the usual method means deviate from it.');
+  s(6,10,'elusive','common|hard to locate|obvious|permanent','B','difficult to find, catch, or understand','It concerns difficulty of reaching the target, not permanence.');
+  s(6,12,'illicit','ancient|harmless|illegal|public','C','not permitted by law or rules','Illicit concerns permission or legality. Public describes visibility.');
+  s(6,14,'flagrant','accidental|glaring|hidden|minor','B','obviously and seriously wrong; glaring','A flagrant violation is conspicuously bad, not hidden or minor.');
+  s(6,15,'prolific','hesitant|ordinary|productive|scarce','C','producing a large amount or many works','Productive captures output; scarce points in the opposite direction.');
+  s(6,18,'venerate','approach|honor|imitate|question','B','regard with deep respect; honor','Respect is the defining attitude, not merely copying someone.');
+  s(6,19,'ephemeral','distant|frequent|short-lived|transparent','C','lasting only a short time','Duration matters, not how often something happens.');
+  c(6,1,"The editor removed the paragraph because it was _______ to the article’s main point.",'central|persuasive|accurate|extraneous','D','extraneous','not relevant or necessary to the main matter','A paragraph can be accurate yet irrelevant. Removal here is about relevance, not truth.');
+  c(6,6,"The final chapter does not state what happens next, leaving the hero’s future deliberately _______.",'indeterminate|obvious|fortunate|peaceful','A','indeterminate','not settled or clearly known','An unstated future remains unsettled; it is not necessarily fortunate or peaceful.');
+  c(6,7,"Mara’s explanation was so _______ that even students unfamiliar with the topic understood it immediately.",'lengthy|technical|hesitant|intelligible','D','intelligible','able to be understood','Immediate understanding is the evidence. A technical explanation might instead need specialist knowledge.');
+  c(6,10,'The museum placed the fragile manuscript in a dim display case to _______ damage from bright light.','avert|measure|describe|display','A','avert','prevent something bad from happening','Dim lighting is meant to prevent damage, not measure damage already done.');
+  c(6,11,'Although Nia had practiced her speech several times, she remained _______ about volunteering to present first.','certain|boastful|apprehensive|amused','C','apprehensive','anxious or worried about what may happen','Although signals that practice has not removed her anxiety.');
+  c(6,13,'The committee postponed its decision because the evidence was _______ and could support several different conclusions.','conclusive|inconclusive|familiar|abundant','B','inconclusive','not settling a question or proving one conclusion','Several possible conclusions mean the evidence does not settle the decision.');
+  c(6,15,'The two reports appeared to disagree; however, a closer reading showed that their conclusions were actually _______.','unequal|compatible|unfinished|reckless','B','compatible','able to agree or exist together without conflict','However reverses the first impression of disagreement. Compatible need not mean identical.');
+  c(6,16,'The travel writer used such _______ descriptions that readers could picture the crowded market and smell the spices.','dull|evocative|incomplete|accidental','B','evocative','bringing vivid images, memories, or feelings to mind','Picture and smell describe an effect on the imagination, not just factual completeness.');
+
+  s(7,2,'evoke','compare|erase|restrict|summon','D','bring a feeling, memory, or image to mind','Summon means call forth here; it is not limited to calling a person.');
+  s(7,3,'lucid','clear|doubtful|hidden|lengthy','A','clear and easy to understand','Clarity is different from brevity. A long explanation can still be lucid.');
+  s(7,5,'meager','abundant|balanced|paltry|polished','C','small or inadequate in amount','Paltry also means very small or insufficient. Abundant is the opposite.');
+  s(7,7,'appease','calm|confuse|ignore|provoke','A','calm or satisfy someone who is angry or upset','Appeasing reduces anger; provoking increases it.');
+  s(7,8,'concede','acknowledge|forceful|imaginative|incomplete','A','admit or acknowledge, often reluctantly','Use the verb sense. The other choices are adjectives, not equivalent actions.');
+  s(7,10,'eloquent','brief|expressive|hesitant|secretive','B','fluent and effective in expression','Eloquent describes expressive quality, not simply a short speech.');
+  s(7,12,'rigorous','brief|casual|pleasant|thorough','D','very thorough, careful, or demanding','A rigorous check is thorough. It need not be brief or pleasant.');
+  s(7,13,'ambiguous','cheerful|exact|familiar|open to interpretation','D','having more than one possible meaning','Ambiguous means more than one reading is possible, not merely unfamiliar.');
+  s(7,15,'reconcile','conceal|harmonize|question|separate','B','bring into agreement or restore friendly relations','Harmonize means make consistent or bring together; separate goes the other way.');
+  s(7,16,'facilitate','enable|observe|prevent|replace','A','make something easier or help it happen','Enable is closest here. Observe does not necessarily help, and prevent blocks it.');
+  s(7,17,'precarious','flexible|ordinary|secure|unstable','D','not secure or stable; risky','Unstable captures the lack of security. Flexible need not be unsafe.');
+  s(7,19,'discrepancy','agreement|boundary|inconsistency|prediction','C','a difference or inconsistency between things expected to agree','Think of conflicting totals or accounts—not a physical boundary.');
+  s(7,20,'magnanimous','cautious|generous|impatient|resentful','B','generous and forgiving, especially toward a rival','Resentful is the opposite attitude; magnanimity goes beyond merely being polite.');
+  c(7,5,'The historian separated what eyewitnesses directly observed from what later writers had merely _______.','speculated|translated|preserved|witnessed','A','speculated','guessed or reasoned without firm evidence','Direct observation contrasts with inference or guesswork—not translation.');
+  c(7,7,'The editor removed two examples that repeated the same idea, making the paragraph more _______.','formal|cautious|streamlined|dramatic','C','streamlined','simplified and made more efficient','Removing repetition improves efficiency. It does not necessarily make the style formal.');
+  c(7,9,'The two measurements were nearly identical, so the small difference between them was considered _______.','permanent|deliberate|negligible|alarming','C','negligible','too small to matter much','Nearly identical tells you the difference has little importance, not that it is exactly zero.');
+  c(7,10,'The curator placed the joyful and somber paintings side by side to _______ their opposing moods.','conceal|accentuate|imitate|equalize','B','accentuate','make something more noticeable; emphasize','Side-by-side contrast highlights the difference. It does not make the moods equal.');
+  c(7,12,"The coach’s feedback was _______, identifying one weakness and suggesting a specific way to improve it.",'unnecessary|actionable|vague|harsh','B','actionable','specific enough to act on','A specific way to improve gives the listener an action to take. Harsh concerns tone, not usefulness.');
+  c(7,17,'The scientist considered the first surprising result _______ until repeated trials could show whether it was genuine.','decisive|preliminary|typical|irrelevant','B','preliminary','initial; not yet final or fully confirmed','Until repeated trials means the first finding is provisional evidence, not a decisive conclusion.');
+
+  s(8,2,'deft','awkward|cautious|dexterous|stubborn','C','skillful and quick, especially with the hands','Dexterous matches skill; cautious describes how carefully someone acts.');
+  s(8,4,'astute','blunt|ordinary|reckless|shrewd','D','quick to understand and judge situations wisely','Shrewd captures perceptive judgment, not blunt speech.');
+  s(8,5,'subtle','enormous|faint|harsh|obvious','B','delicate or not immediately noticeable','Faint is closest among these choices. Obvious is the opposite of this sense.');
+  s(8,6,'adamant','cheerful|firm|flexible|hesitant','B','firm and unwilling to change a decision or belief','The firmness is about conviction, not physical hardness in this question.');
+  s(8,7,'dormant','active|crowded|inactive|visible','C','inactive for a time, but able to become active','Dormant is not necessarily dead or permanently ended.');
+  s(8,9,'mollify','intensify|observe|pacify|postpone','C','calm someone’s anger or anxiety','Pacify means soothe or calm. Intensify would increase the feeling.');
+  s(8,10,'mundane','costly|dangerous|ordinary|unusual','C','ordinary and lacking excitement','The issue is everyday ordinariness, not cost or danger.');
+  s(8,11,'ominous','cheerful|harmless|ordinary|threatening','D','suggesting that something bad may happen','Ominous is a warning quality, not proof that harm has already occurred.');
+  s(8,15,'jubilant','cautious|joyful|silent|weary','B','extremely happy, often because of success','Jubilant is strong joy, not merely absence of sadness.');
+  s(8,16,'vigilant','planned|repeated|skillful|watchful','D','keeping careful watch for danger or problems','Vigilance concerns attention and watchfulness, not general skill.');
+  s(8,17,'embellish','conceal|decorate|measure|simplify','B','decorate; add attractive or extra details','Decorate is the matching basic sense. Simplify removes detail.');
+  s(8,19,'versatile','fragile|multifunctional|narrow|rigid','B','able to do many different things or serve many uses','Multifunctional captures range of uses. Flexible-looking is not sufficient.');
+  s(8,20,'impediment','agreement|method|obstacle|reward','C','something that hinders progress; an obstacle','An impediment blocks or slows progress, rather than being a method for achieving it.');
+  c(8,2,'After the serious announcement, the once-lively crowd became _______ and spoke only in quiet voices.','subdued|festive|curious|impatient','A','subdued','quiet and restrained; less lively than before','Use the change from lively to quiet. Curious does not necessarily mean quiet or restrained.');
+  c(8,3,'Since the accusation rested only on an unverified rumor, the principal considered the criticism _______.','unwarranted|helpful|accurate|restrained','A','unwarranted','not justified by adequate reasons or evidence','The weak evidence makes the criticism unjustified. Restrained describes its tone, not its basis.');
+  c(8,5,'Because the council published its selection criteria and meeting notes, residents considered the process _______.','temporary|competitive|complicated|transparent','D','transparent','open and easy to examine or understand','Publishing the criteria makes decisions visible. Transparent here does not mean physically see-through.');
+  c(8,10,'Kai felt _______ about moving: he was excited by the new school but sad to leave his friends.','ambivalent|uninterested|certain|grateful','A','ambivalent','having mixed or conflicting feelings','Excited AND sad are competing feelings. Ambivalent does not mean having no interest.');
+  c(8,12,'Because the second sentence merely repeated the first sentence in different words, the editor called it _______.','duplicative|vivid|persuasive|balanced','A','duplicative','unnecessarily repeating something already done or said','Different wording can still repeat the same content. Vivid concerns imagery, not repetition.');
+  c(8,15,'Even after the harsh criticism, the mayor gave a _______ response that addressed the facts without showing anger.','measured|careless|boastful|hostile','A','measured','careful, controlled, and restrained','Without showing anger selects restraint. Measured does not mean checked with a ruler here.');
+  c(8,16,'Because the two experiments produced conflicting results, the researchers called the evidence _______ and planned more trials.','unanimous|reliable|consistent|equivocal','D','equivocal','unclear or not pointing to one definite conclusion','Conflicting results leave the conclusion uncertain. Consistent would mean the results agree.');
+  c(8,19,'The engineer warned that tiny errors at each stage could become _______, producing a large final error after many calculations.','random|temporary|harmless|cumulative','D','cumulative','increasing as successive amounts are added','Errors build up across stages. Small at each step does not mean harmless overall.');
+  c(8,20,'To reduce favoritism, the judges evaluated numbered entries with an _______ scoring guide that applied the same standards to everyone.','flexible|objective|casual|secret','B','objective','based on facts or consistent criteria rather than personal feelings','Same standards and numbered entries reduce personal bias. Secret does not by itself ensure fairness.');
+  root.KINDLE_VR_EXTRA=questions;
+})(window);

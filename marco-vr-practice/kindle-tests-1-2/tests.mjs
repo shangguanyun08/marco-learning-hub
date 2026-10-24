@@ -64,7 +64,7 @@ test('isolated sync namespace saves and merges to a second simulated device',asy
 });
 test('library exposes one previous-mocks entry and preserves all old links on its new group page',()=>{
  const root=new JSDOM(read('../index.html')),old=new JSDOM(read('../previous-mocks.html'));
- assert.ok(root.window.document.querySelector('#kindle-tests-card[href="./kindle-tests-1-2/"]'));assert.ok(root.window.document.querySelector('#previous-mocks[href="./previous-mocks.html"]'));assert.equal(root.window.document.querySelectorAll('#oct22-test,#test3-review,#test2-review,#test1-review').length,0);
+ assert.ok(root.window.document.querySelector('#kindle-tests-card[href="./kindle-tests-1-8/"]'));assert.ok(read('../kindle-tests-1-8/index.html').includes('../kindle-tests-1-2/?v=20261024-edit3'));assert.ok(root.window.document.querySelector('#previous-mocks[href="./previous-mocks.html"]'));assert.equal(root.window.document.querySelectorAll('#oct22-test,#test3-review,#test2-review,#test1-review').length,0);
  for(const[id,path]of [['oct22-test','2026-10-22'],['test3-review','2026-10-11'],['test2-review','2026-10-04'],['test1-review','2026-09-27']])assert.ok(old.window.document.querySelector(`#${id}[href^="./${path}/"]`));assert.ok(old.window.document.getElementById('oct22-status'));assert.ok(old.window.document.querySelector('a[href^="./combined-review.html"]'));root.window.close();old.window.close();
 });
 test('library completion uses the Kindle namespace only and turns green',t=>{
