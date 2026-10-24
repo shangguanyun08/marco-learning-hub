@@ -12,7 +12,8 @@ export function checklistRows(){
   const p=c.window.MARCO_VR_REVIEW_PAGE,questions=p?p.questions:c.window.MARCO_ISEE_PRACTICE[0].questions,notes=p?p.notes:c.window.MARCO_VR_REVIEW;
   for(const q of [...questions].sort((a,b)=>a.number-b.number)){
    const n=notes[q.number],meaning=word=>{const entry=n.meanings.find(([w])=>clean(w)===clean(word));if(!entry)throw Error('Missing meaning: '+date+' Q'+q.number+' '+word);return entry[1];};
-   rows.push({id:'t'+(i+1)+'-q'+q.number,test:i+1,label:'Test '+(i+1),date,number:q.number,type:q.type,prompt:q.prompt,choices:[...q.choices],correct:q.correct,wrongChoices:p?[...new Set(q.mockAttempts.map(a=>a.choice))]:[q.chosen],attempt:p?p.attempts.map(a=>a.label).join(' / '):'Completed mock attempt',targetMeaning:q.type==='synonym'?meaning(q.prompt.replace(/:$/,'')):null,choiceMeanings:q.choices.map(meaning),tip:q.tip});
+   const mainWord=q.type==='synonym'?q.prompt.replace(/:$/,''):n.word;
+   rows.push({id:'t'+(i+1)+'-q'+q.number,test:i+1,label:'Test '+(i+1),date,number:q.number,type:q.type,prompt:q.prompt,choices:[...q.choices],correct:q.correct,wrongChoices:p?[...new Set(q.mockAttempts.map(a=>a.choice))]:[q.chosen],attempt:p?p.attempts.map(a=>a.label).join(' / '):'Completed mock attempt',mainWord,mainMeaning:meaning(mainWord),targetMeaning:q.type==='synonym'?meaning(mainWord):null,choiceMeanings:q.choices.map(meaning),tip:q.tip});
   }
  }
  return JSON.parse(JSON.stringify(rows));
