@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {checklistRows,renderChecklist} from './build-word-checklist.mjs';
@@ -13,6 +14,15 @@ test('all 32 selected mock mistakes and original choices are included, with no e
  assert.deepEqual([1,2,3,4].map(t=>rows.filter(r=>r.test===t).length),[8,9,2,13]);assert.equal(new Set(rows.map(r=>r.id)).size,32);assert.equal(rows.filter(r=>r.type==='synonym').length,20);assert.equal(rows.filter(r=>r.type==='sentence completion').length,12);
  for(const r of rows){assert.equal(r.choices.length,4);assert.equal(r.choiceMeanings.length,4);assert.ok(r.choices[r.correct]);assert.ok(r.wrongChoices.every(i=>i!==r.correct));assert.ok(r.choiceMeanings.every(m=>m.length>5));assert.ok(r.mainWord&&r.mainMeaning.length>5);if(r.type==='synonym')assert.equal(r.mainMeaning,r.targetMeaning);else assert.equal(r.mainMeaning,r.choiceMeanings[r.correct]);if(r.test===2||r.test===3)assert.equal(r.attempt,'2nd attempt');}
  assert.equal(rows.filter(r=>r.prompt==='VOCATION:').length,2);assert.notDeepEqual(rows.filter(r=>r.prompt==='VOCATION:')[0].choices,rows.filter(r=>r.prompt==='VOCATION:')[1].choices);
+});
+
+test('both VOCATION questions use the exact latest mock-review wording, not the older Test 1 definition',()=>{
+ const context={window:{}};vm.runInNewContext(fs.readFileSync(new URL('2026-10-22/review-data.js',import.meta.url),'utf8'),context);
+ const expected=context.window.MARCO_VR_REVIEW[20].meanings.find(([word])=>word==='vocation')[1];
+ assert.equal(expected,'occupation; work someone feels especially suited or called to do');
+ const repeated=rows.filter(r=>r.mainWord==='VOCATION');assert.equal(repeated.length,2);
+ for(const r of repeated){assert.equal(r.mainMeaning,expected);assert.equal(r.targetMeaning,expected);}
+ const d=page();for(const r of repeated)assert.equal(d.window.document.querySelector(`[data-id="${r.id}"] .main-meaning`).textContent,'Meaning: '+expected);d.window.close();
 });
 
 test('single-file output matches its template, retains five columns, and removes all unwanted controls',()=>{

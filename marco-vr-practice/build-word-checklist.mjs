@@ -16,6 +16,10 @@ export function checklistRows(){
    rows.push({id:'t'+(i+1)+'-q'+q.number,test:i+1,label:'Test '+(i+1),date,number:q.number,type:q.type,prompt:q.prompt,choices:[...q.choices],correct:q.correct,wrongChoices:p?[...new Set(q.mockAttempts.map(a=>a.choice))]:[q.chosen],attempt:p?p.attempts.map(a=>a.label).join(' / '):'Completed mock attempt',mainWord,mainMeaning:meaning(mainWord),targetMeaning:q.type==='synonym'?meaning(mainWord):null,choiceMeanings:q.choices.map(meaning),tip:q.tip});
   }
  }
+ // Repeated headwords share the exact wording from their latest mock review.
+ // Keep each original question, answer choice, and saved checkbox ID unchanged.
+ const latestMeanings=new Map(rows.map(r=>[clean(r.mainWord),r.mainMeaning]));
+ for(const r of rows){r.mainMeaning=latestMeanings.get(clean(r.mainWord));if(r.type==='synonym')r.targetMeaning=r.mainMeaning;}
  return JSON.parse(JSON.stringify(rows));
 }
 export function renderChecklist(){return fs.readFileSync(path.join(here,'word-checklist.template.html'),'utf8').replace('__QUESTIONS__',()=>JSON.stringify(checklistRows()).replace(/</g,'\\u003c')).replace('__SYNC_MODULE__',()=>fs.readFileSync(path.join(here,'word-checklist-sync.js'),'utf8'));}
