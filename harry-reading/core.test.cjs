@@ -20,29 +20,34 @@ test('exact extraction includes ten misses and original numbering',()=>{
   assert.deepEqual(articles.map(a=>a.questions.map(q=>q.answer)),[[2,1],[1,2,2,3],[0,2,3,3]]);
 });
 for(const a of articles)for(const q of a.questions){
-  test(`${q.id}: focused canonical evidence passes; no evidence fails`,()=>{
+  test(`${q.id}: suggested supporting excerpts refer to actual passage text`,()=>{
     const marks=q.evidence.flatMap(g=>exactMarks(a,g[0]));
-    assert.equal(core.assess(a,q,marks).correct,true);
-    assert.equal(core.assess(a,q,[]).correct,false);
+    assert.ok(core.quoteMarks(a,marks).length);
   });
-  if(q.evidence.length>1)test(`${q.id}: missing a required support group fails`,()=>{
+  if(q.evidence.length>1)test(`${q.id}: partial support can be highlighted without grading`,()=>{
     const marks=q.evidence.slice(0,-1).flatMap(g=>exactMarks(a,g[0]));
-    assert.equal(core.assess(a,q,marks).correct,false);
+    const r=core.prepareRun(a,{answers:{}});r.drafts[q.id]={choice:q.answer,marks};
+    assert.equal(core.recordCheck(a,q,r,'now').answerOK,true);
   });
 }
-test('irrelevant highlights, fabricated ranges, and whole-article selections fail',()=>{
+test('any genuine highlight is accepted; fabricated and blank ranges are not',()=>{
   const a=articles[0],q=a.questions[0];
-  assert.equal(core.assess(a,q,exactMarks(a,'Mice scamper over the porch.')).correct,false);
-  assert.equal(core.assess(a,q,[{sid:'fake',start:0,end:10,quote:'Squirrels run down the driveway.'}]).correct,false);
-  assert.equal(core.assess(a,q,core.sentences(a).flat().map(s=>({sid:s.id,start:0,end:s.text.length}))).correct,false);
+  for(const marks of [exactMarks(a,'Mice scamper over the porch.'),core.sentences(a).flat().map(s=>({sid:s.id,start:0,end:s.text.length})),exactMarks(a,'cat')]){
+    const r=core.prepareRun(a,{answers:{}});r.drafts[q.id]={choice:q.answer,marks};
+    const check=core.recordCheck(a,q,r,'now');assert.equal(check.answerOK,true);assert.equal(check.highlightAdded,true);assert.equal(core.resolved(r.answers[q.id]),true);
+    for(const property of ['evidenceOK','focused','supported'])assert.equal(property in check,false);
+  }
+  for(const marks of [[{sid:'fake',start:0,end:10,quote:'Squirrels run down the driveway.'}],[{sid:'p0s0',start:5,end:6}]]){
+    const r=core.prepareRun(a,{answers:{}});r.drafts[q.id]={choice:q.answer,marks};assert.equal(core.recordCheck(a,q,r,'now'),null);
+  }
 });
 test('score preserves incorrect first answer after a successful retry',()=>{
   const a=articles[0],q=a.questions[0];
   const r={answers:{[q.id]:[{choice:0,checkedAt:'2026-10-22T10:00:00Z',answerOK:false,evidenceOK:true},{choice:2,checkedAt:'2026-10-22T10:01:00Z',answerOK:true,evidenceOK:true}]}};
-  assert.deepEqual(core.scores(a,r),{mastered:1,firstAnswers:0,firstEvidence:1,total:2});
+  assert.deepEqual(core.scores(a,r),{mastered:1,firstAnswers:0,firstHighlights:0,total:2});
 });
-test('answer alone and evidence alone cannot complete a question',()=>{
-  assert.equal(core.passed([{checkedAt:'now',answerOK:true,evidenceOK:false}]),false);
+test('legacy evidence grades do not override answer correctness',()=>{
+  assert.equal(core.passed([{checkedAt:'now',answerOK:true,evidenceOK:false}]),true);
   assert.equal(core.passed([{checkedAt:'now',answerOK:false,evidenceOK:true}]),false);
   assert.equal(core.passed([{checkedAt:null,answerOK:true,evidenceOK:true}]),false);
 });
@@ -78,7 +83,7 @@ test('successful second check keeps first-choice scores and highlights unchanged
   core.recordCheck(a,q,r,'first');
   r.drafts[q.id]={choice:q.answer,marks:exactMarks(a,'Squirrels run down the driveway.')};
   core.recordCheck(a,q,r,'second');
-  assert.deepEqual(core.scores(a,r),{mastered:1,firstAnswers:0,firstEvidence:0,total:2});
+  assert.deepEqual(core.scores(a,r),{mastered:1,firstAnswers:0,firstHighlights:1,total:2});
   assert.equal(r.answers[q.id][0].marks[0].quote,'Mice scamper over the porch.');
 });
 test('existing unchecked responses become editable drafts and checked history is preserved',()=>{

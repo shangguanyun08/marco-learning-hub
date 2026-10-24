@@ -31,14 +31,14 @@
     app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1></section>
       <section class="cards" aria-label="Recent article redo sessions">${renderCards(articles.filter(a=>a.kind!=='parallel'))}</section>
       <section class="practice-group" aria-labelledby="grade3-heading"><div class="practice-group-head"><h2 id="grade3-heading">Grade 3 · New practice</h2><span>10 articles · 52 multiple-choice questions</span></div><p class="meta">The Lexile labels below belong to the ReadTheory reference samples. These are original parallel passages, and their own Lexile scores have not been measured.</p><div class="cards" aria-label="Grade 3 parallel reading sessions">${renderCards(articles.filter(a=>a.kind==='parallel'))}</div></section>
-      <p class="home-note">Tap sentences to highlight them, or select words and choose “Highlight selected words.” Choose your answer and evidence together, then check. You get a second try on anything missed.</p>
+      <p class="home-note">Choose an answer and highlight supporting text before checking. Only your answer is marked right or wrong; highlights are saved, not graded. Tap sentences or select words to highlight them. Wrong answers get one second try. After checking, use “Show answer and explanation” for a parent review.</p>
       <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records stay in this browser. Export a copy to keep or share the attempts and highlighted evidence.</p></details>`;
     app.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openArticle(b.dataset.open));app.querySelector('#export').onclick=exportProgress;
   }
   function renderCards(list){
     return list.map(a=>{
       const i=articles.indexOf(a),r=latest(a),score=core.scores(a,r),done=completed(a,r);
-      return `<article class="card ${score.mastered===score.total?'done':''}"><span class="num">${String(i+1).padStart(2,'0')}</span><p class="eyebrow">Session ${i+1} · ${a.questions.length} ${a.kind==='parallel'?'questions':'questions to redo'}</p><h2>${esc(a.title)}</h2><p class="lexile">${esc(levelLabel(a))}</p>${a.referenceTitle?`<p class="reference-title">Parallel to “${esc(a.referenceTitle)}”</p>`:''}<p>${r?`${core.finished(a,r)} of ${score.total} questions checked · ${score.mastered} answered and supported`:'Choose an answer and highlight its evidence, then check.'}</p><button class="primary" data-open="${a.id}">${done?'See results':r?'Continue practice':'Start practice'} →</button></article>`;
+      return `<article class="card ${score.mastered===score.total?'done':''}"><span class="num">${String(i+1).padStart(2,'0')}</span><p class="eyebrow">Session ${i+1} · ${a.questions.length} ${a.kind==='parallel'?'questions':'questions to redo'}</p><h2>${esc(a.title)}</h2><p class="lexile">${esc(levelLabel(a))}</p>${a.referenceTitle?`<p class="reference-title">Parallel to “${esc(a.referenceTitle)}”</p>`:''}<p>${r?`${core.finished(a,r)} of ${score.total} questions checked · ${score.mastered} answers correct`:'Choose an answer and highlight supporting text. Highlights are not graded.'}</p><button class="primary" data-open="${a.id}">${done?'See results':r?'Continue practice':'Start practice'} →</button></article>`;
     }).join('');
   }
   function renderHistory(){
@@ -46,10 +46,10 @@
     if(!records.length)return '<p class="empty">No checks yet. Start a practice session above.</p>';
     return records.map(({a,r,i})=>{
       const score=core.scores(a,r),date=new Date(r.startedAt).toLocaleString();
-      return `<details class="history-record"><summary>${esc(a.title)} · Practice ${i+1} · ${core.finished(a,r)}/${score.total} complete</summary><p class="meta">${esc(date)} · First answers: ${score.firstAnswers}/${score.total} · First evidence checks: ${score.firstEvidence}/${score.total}</p>${a.questions.map(q=>{
+      return `<details class="history-record"><summary>${esc(a.title)} · Practice ${i+1} · ${core.finished(a,r)}/${score.total} complete</summary><p class="meta">${esc(date)} · First answers: ${score.firstAnswers}/${score.total} · Highlights added on first try: ${score.firstHighlights}/${score.total} (not graded)</p>${a.questions.map(q=>{
         const aa=r.answers[q.id]||[];
         if(!aa.length)return `<p class="meta">${questionLabel(a,q)}: not checked yet.</p>`;
-        return `<div><p><strong>${questionLabel(a,q)}</strong></p>${aa.map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · Answer ${at.answerOK?'correct':'incorrect'} · Evidence ${at.evidenceOK?'supported':'needs another look'}</p>${core.quoteMarks(a,at.marks||[]).map(m=>`<blockquote>${esc(m.quote)}</blockquote>`).join('')}`).join('')}</div>`;
+        return `<div><p><strong>${questionLabel(a,q)}</strong> · ${esc(q.prompt)}</p>${aa.map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · Answer ${at.answerOK?'correct':'incorrect'} · ${core.quoteMarks(a,at.marks||[]).length?'Highlight saved':'No highlight recorded'} (not graded)</p>${core.quoteMarks(a,at.marks||[]).map(m=>`<blockquote>${esc(m.quote)}</blockquote>`).join('')}`).join('')}${core.resolved(aa)?renderAnswerReview(q,`history-${a.id}-${i}-${q.id}`):''}</div>`;
       }).join('')}</details>`;
     }).join('');
   }
@@ -81,21 +81,28 @@
   }
   function renderFirstFeedback(at){
     if(!at)return '';
-    return `<div class="feedback needs-work" role="status"><h3>First try checked. Try once more.</h3><p><strong>Answer: ${at.answerOK?'correct':'incorrect'}.</strong><br><strong>Evidence: ${at.evidenceOK?'supported':'not enough yet'}.</strong></p><p>Change your answer, your highlights, or both, then check your second try.</p></div>`;
+    return `<div class="feedback needs-work" role="status"><h3>Try once more.</h3><p><strong>Answer: incorrect.</strong></p><p>Your highlight is saved, not graded. Choose your answer for the second try. You may also change your highlights.</p></div>`;
   }
   function renderForm(q,previous){
     const d=draft(),tryNumber=attempts(q).length+1;
     return `${renderFirstFeedback(previous)}<form id="answer-form"><fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">Answer choices</legend>${q.choices.map((c,i)=>`<label class="choice"><input type="radio" name="answer" value="${i}" ${d.choice===i?'checked':''}><strong>${'ABCD'[i]}</strong><span>${esc(c)}</span></label>`).join('')}</fieldset><button class="select-action" id="highlight-selection" type="button" hidden>Highlight selected words</button><p class="selected-preview" id="selected-preview"></p><ul class="evidence-list" id="evidence-list">${renderEvidence(d.marks)}</ul><div class="actions"><button class="primary" id="check" ${canCheck()?'':'disabled'}>Check ${tryNumber===1?'first':'second'} try</button><button class="quiet" type="button" id="clear-marks" ${d.marks.length?'':'disabled'}>Clear highlights</button></div><p class="meta">Choose an answer and add a highlight before checking.</p></form>`;
   }
   function renderFeedback(q,at){
-    const both=at.answerOK&&at.evidenceOK;
-    return `<div class="locked-choice"><span class="meta">Your ${attempts(q).length===1?'first':'second'} try</span><br><strong>${'ABCD'[at.choice]}.</strong> ${esc(q.choices[at.choice])}</div><ul class="evidence-list">${renderEvidence(at.marks,false)}</ul><div class="feedback ${both?'':'needs-work'}" role="status"><h3>${both?'You answered it and found the proof!':'Review the answer and evidence.'}</h3><p class="${at.answerOK?'correct':'incorrect'}"><strong>Answer: ${at.answerOK?'correct':'incorrect'}.</strong>${!at.answerOK?` The correct answer is ${'ABCD'[q.answer]}: ${esc(q.choices[q.answer])}.`:''}</p><p class="${at.evidenceOK?'correct':'incorrect'}"><strong>Evidence: ${at.evidenceOK?'supported':'not enough yet'}.</strong> ${at.evidenceOK?'Your highlights include the support this question needs.':at.focused===false?'Choose a smaller, focused set of words.':esc(q.hint)}</p><p>${esc(q.explanation)}</p>${!both?q.evidence.map(group=>`<blockquote class="support">${esc(group[0])}</blockquote>`).join(''):''}</div><div class="actions"><button class="primary" id="next">${(run.position||0)===article.questions.length-1?'See session results':'Next question'} →</button></div>`;
+    return `<div class="locked-choice"><span class="meta">Your ${attempts(q).length===1?'first':'second'} try</span><br><strong>${'ABCD'[at.choice]}.</strong> ${esc(q.choices[at.choice])}</div><p class="meta">Your saved highlights · not graded</p><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul><div class="feedback ${at.answerOK?'':'needs-work'}" role="status"><h3>Answer: ${at.answerOK?'correct':'incorrect'}.</h3><p>Your highlighted text is saved for parent review. The site does not decide whether it supports the answer.</p></div>${renderAnswerReview(q,`review-${q.id}`)}<div class="actions"><button class="primary" id="next">${(run.position||0)===article.questions.length-1?'See session results':'Next question'} →</button></div>`;
   }
+  function renderAnswerReview(q,id){
+    return `<div class="answer-review"><button type="button" class="secondary" data-review="${id}" aria-controls="${id}" aria-expanded="false">Show answer and explanation</button><div class="review-details" id="${id}" hidden><h3>Answer and explanation</h3><p><strong>Correct answer: ${'ABCD'[q.answer]} · ${esc(q.choices[q.answer])}</strong></p><p>${esc(q.explanation)}</p><h3>Suggested supporting text</h3>${q.evidence.map(group=>`<blockquote class="support">${esc(group[0])}</blockquote>`).join('')}<p class="meta">Compare this with Harry’s saved highlights. Other wording or selections may also support the answer; highlights are for a parent to review, not an automatic score.</p></div></div>`;
+  }
+  app.addEventListener('click',event=>{
+    const button=event.target.closest('[data-review]');if(!button)return;
+    const panel=document.getElementById(button.dataset.review);panel.hidden=!panel.hidden;
+    button.setAttribute('aria-expanded',String(!panel.hidden));button.textContent=panel.hidden?'Show answer and explanation':'Hide answer and explanation';
+  });
   function renderEvidence(marks,editable=true){
     const marked=core.quoteMarks(article,marks);
     return marked.length?marked.map((m,i)=>`<li><q>${esc(m.quote)}</q>${editable?`<button type="button" class="remove" data-remove="${i}" aria-label="Remove highlight ${i+1}">×</button>`:''}</li>`).join(''):'<li class="empty">Highlight evidence in the article.</li>';
   }
-  function canCheck(){return !isResolved()&&Number.isInteger(draft().choice)&&draft().marks.length>0;}
+  function canCheck(){return !isResolved()&&Number.isInteger(draft().choice)&&core.quoteMarks(article,draft().marks).length>0;}
   function updateCheckButtons(){
     app.querySelector('#check').disabled=!canCheck();app.querySelector('#mobile-check').disabled=!canCheck();
     app.querySelector('#clear-marks').disabled=!draft().marks.length;
@@ -156,8 +163,8 @@
     pending=parts;button.hidden=!parts.length;app.querySelector('#mobile-add').hidden=!parts.length;preview.textContent=parts.length?`Selected: “${selection.toString().trim()}”`:'';
   });
   function renderSummary(){
-    const score=core.scores(article,run),index=articles.indexOf(article),next=articles[index+1],allSupported=score.mastered===score.total;
-    app.innerHTML=`<section class="summary-panel"><p class="eyebrow">Session ${index+1} complete</p><h1>${allSupported?'You found the proof.':'Reading session complete.'}</h1><h2>${esc(article.title)}</h2><p>${allSupported?'Every answer has supporting evidence.':'You’ve checked every question. You can review the explanations and practice this article again.'} Your first and second tries are kept in practice history.</p><div class="stat-row"><div class="stat"><strong>${score.firstAnswers}/${score.total}</strong><span>First answers correct</span></div><div class="stat"><strong>${score.firstEvidence}/${score.total}</strong><span>Evidence right on first check</span></div><div class="stat"><strong>${score.mastered}/${score.total}</strong><span>Answered and supported</span></div></div><div class="actions">${next?`<button class="primary" id="next-article">Next article →</button>`:''}<button class="secondary" id="all-articles">All articles & history</button><button class="quiet" id="fresh-run">Practice this article again</button></div></section>`;
+    const score=core.scores(article,run),index=articles.indexOf(article),next=articles[index+1];
+    app.innerHTML=`<section class="summary-panel"><p class="eyebrow">Session ${index+1} complete</p><h1>Reading session complete.</h1><h2>${esc(article.title)}</h2><p>Only answer choices are graded. Highlights are saved for parent review. Your first and second tries are kept in practice history.</p><div class="stat-row"><div class="stat"><strong>${score.firstAnswers}/${score.total}</strong><span>First answers correct</span></div><div class="stat"><strong>${score.firstHighlights}/${score.total}</strong><span>Highlights added on first try · not graded</span></div><div class="stat"><strong>${score.mastered}/${score.total}</strong><span>Answers correct by the second try</span></div></div><h2>Parent review</h2>${article.questions.map(q=>`<section class="question-review"><h3>${questionLabel(article,q)}</h3><p>${esc(q.prompt)}</p>${attempts(q).map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · ${at.answerOK?'correct':'incorrect'}</p><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul>`).join('')}${renderAnswerReview(q,`summary-${q.id}`)}</section>`).join('')}<div class="actions">${next?`<button class="primary" id="next-article">Next article →</button>`:''}<button class="secondary" id="all-articles">All articles & history</button><button class="quiet" id="fresh-run">Practice this article again</button></div></section>`;
     app.querySelector('#all-articles').onclick=home;app.querySelector('#fresh-run').onclick=()=>openArticle(article.id,true);if(next)app.querySelector('#next-article').onclick=()=>openArticle(next.id);
   }
   if(demo)document.querySelector('#save-status').textContent='Preview · no records saved';

@@ -32,19 +32,20 @@ for(const a of practice)for(const q of a.questions){
       for(const option of group)selectPhrase(a,option);
       return selectPhrase(a,group[0]);
     });
-    assert.equal(core.assess(a,q,marks).correct,true);
+    assert.ok(core.quoteMarks(a,marks).length);
     const r=core.prepareRun(a,{answers:{}});r.drafts[q.id]={choice:q.answer,marks};
-    assert.equal(core.recordCheck(a,q,r,'check').evidenceOK,true);
+    assert.equal(core.recordCheck(a,q,r,'check').highlightAdded,true);
     assert.equal(core.passed(r.answers[q.id]),true);
   });
-  if(q.evidence.length>1)test(`${q.id}: omitting a required part is not fully supported`,()=>{
+  if(q.evidence.length>1)test(`${q.id}: highlighting only one part is allowed for human review`,()=>{
     const marks=q.evidence.slice(0,-1).map(group=>selectPhrase(a,group[0]));
-    assert.equal(core.assess(a,q,marks).correct,false);
+    const r=core.prepareRun(a,{answers:{}});r.drafts[q.id]={choice:q.answer,marks};
+    assert.equal(core.recordCheck(a,q,r,'check').answerOK,true);assert.equal(core.resolved(r.answers[q.id]),true);
   });
 }
 test('adding practice articles preserves earlier checked attempts and first-try scores',()=>{
   const old=all[0],q=old.questions[0],checked={choice:q.answer,checkedAt:'old',answerOK:true,evidenceOK:true,marks:[]};
   const r={answers:{[q.id]:[checked]}};core.prepareRun(old,r);
   assert.equal(r.answers[q.id][0],checked);
-  assert.deepEqual(core.scores(old,r),{mastered:1,firstAnswers:1,firstEvidence:1,total:2});
+  assert.deepEqual(core.scores(old,r),{mastered:1,firstAnswers:1,firstHighlights:0,total:2});
 });
