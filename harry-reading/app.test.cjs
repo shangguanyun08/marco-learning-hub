@@ -48,3 +48,28 @@ test('legacy rejected highlight cannot force a retry and old attempt objects are
   const t=boot(saved);t.d.querySelector('[data-open="carla"]').click();assert.match(t.d.querySelector('.feedback').textContent,/Answer: correct/);assert.ok(t.d.querySelector('#next'));
   assert.deepEqual(JSON.parse(t.saved()).articles.carla[0].answers['carla-4'][0],old);t.close();
 });
+test('reopened completed results show the full article and per-attempt highlights without changing records',()=>{
+  const t=boot();t.d.querySelector('[data-open="carla"]').click();choose(t,0);highlight(t);check(t);
+  t.d.querySelector('[data-sid="p0s1"]').click();choose(t,2);check(t);t.d.querySelector('#next').click();choose(t,1);highlight(t);check(t);
+  const saved=t.saved();t.close();
+  const reopened=boot(saved);reopened.d.querySelector('[data-open="carla"]').click();
+  assert.ok(reopened.d.querySelector('.results-layout .results-passage'));
+  assert.match(reopened.d.querySelector('#review-passage').textContent,/And for Carla, it's good to love your job/);
+  assert.equal(reopened.d.querySelectorAll('#review-passage mark').length,1);
+  const before=reopened.saved();reopened.d.querySelector('[data-review-highlights="carla-4"][data-attempt="1"]').click();
+  assert.equal(reopened.d.querySelectorAll('#review-passage mark').length,2);
+  assert.match(reopened.d.querySelector('#review-highlight-label').textContent,/Original question 4 · Try 2/);
+  assert.equal(reopened.d.querySelectorAll('.results-answers .question-review').length,2);
+  assert.equal(reopened.d.querySelectorAll('#review-passage [role=button]').length,0);
+  reopened.d.querySelector('[data-review]').click();assert.equal(reopened.d.querySelector('.review-details').hidden,false);
+  assert.equal(reopened.saved(),before);reopened.close();
+});
+test('history review opens the selected old run, not the latest, and never reveals unchecked answers',()=>{
+  const checked={choice:2,checkedAt:'old',answerOK:true,marks:[{sid:'p0s0',start:0,end:15}]};
+  const old={id:'old',startedAt:'2026-10-22T10:00:00Z',answers:{'carla-4':[checked]}},fresh={id:'new',startedAt:'2026-10-23T10:00:00Z',answers:{}};
+  const t=boot(JSON.stringify({version:1,articles:{carla:[old,fresh]}})),before=t.saved();
+  t.d.querySelector('[data-history-review="carla"][data-run="0"]').click();
+  assert.match(t.d.querySelector('.results-header').textContent,/Practice 1/);assert.match(t.d.querySelector('.results-header').textContent,/In progress/);
+  assert.equal(t.d.querySelectorAll('.results-answers [data-review]').length,1);assert.match(t.d.querySelector('.results-answers').textContent,/Not checked yet/);
+  assert.equal(t.d.querySelector('#review-passage mark').textContent,'Carla is a cat.');assert.equal(t.saved(),before);t.close();
+});

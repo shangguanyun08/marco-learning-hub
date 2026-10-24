@@ -41,6 +41,8 @@ The three recent articles display their recorded ReadTheory Lexile levels: Carla
 | The First Canoe Lesson | Roller Coaster | 570L | 6 |
 | Keeping the Bakery Moving | Calm on the Job | 580L | 6 |
 
+Completed sessions reopen with the full article beside the saved answers. A sticky, independently scrollable article panel displays the selected attempt’s highlights; each answer has an explicit per-attempt highlight button. On phones the article remains in a compact sticky panel above the answers. “Review with article” in history opens that exact run, including older or incomplete runs, without creating attempts or changing progress; unchecked questions do not expose answers. Explanation buttons remain opt-in.
+
 Validate with `node --test harry-reading/core.test.cjs harry-reading/grade3-practice.test.cjs harry-reading/app.test.cjs`. The UI tests use the existing `harry-math-practice` jsdom dependency. The existing storage key and original article/question IDs remain unchanged.
 
 The hub links to:

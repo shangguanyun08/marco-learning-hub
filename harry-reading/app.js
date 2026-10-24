@@ -34,6 +34,10 @@
       <p class="home-note">Choose an answer and highlight supporting text before checking. Only your answer is marked right or wrong; highlights are saved, not graded. Tap sentences or select words to highlight them. Wrong answers get one second try. After checking, use “Show answer and explanation” for a parent review.</p>
       <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records stay in this browser. Export a copy to keep or share the attempts and highlighted evidence.</p></details>`;
     app.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openArticle(b.dataset.open));app.querySelector('#export').onclick=exportProgress;
+    app.querySelectorAll('[data-history-review]').forEach(b=>b.onclick=()=>{
+      article=articles.find(a=>a.id===b.dataset.historyReview);run=runs(article)[Number(b.dataset.run)];pending=[];
+      renderSummary();window.scrollTo(0,0);
+    });
   }
   function renderCards(list){
     return list.map(a=>{
@@ -50,7 +54,7 @@
         const aa=r.answers[q.id]||[];
         if(!aa.length)return `<p class="meta">${questionLabel(a,q)}: not checked yet.</p>`;
         return `<div><p><strong>${questionLabel(a,q)}</strong> · ${esc(q.prompt)}</p>${aa.map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · Answer ${at.answerOK?'correct':'incorrect'} · ${core.quoteMarks(a,at.marks||[]).length?'Highlight saved':'No highlight recorded'} (not graded)</p>${core.quoteMarks(a,at.marks||[]).map(m=>`<blockquote>${esc(m.quote)}</blockquote>`).join('')}`).join('')}${core.resolved(aa)?renderAnswerReview(q,`history-${a.id}-${i}-${q.id}`):''}</div>`;
-      }).join('')}</details>`;
+      }).join('')}<button class="secondary" data-history-review="${a.id}" data-run="${i}">Review with article</button></details>`;
     }).join('');
   }
   function exportProgress(){
@@ -164,7 +168,19 @@
   });
   function renderSummary(){
     const score=core.scores(article,run),index=articles.indexOf(article),next=articles[index+1];
-    app.innerHTML=`<section class="summary-panel"><p class="eyebrow">Session ${index+1} complete</p><h1>Reading session complete.</h1><h2>${esc(article.title)}</h2><p>Only answer choices are graded. Highlights are saved for parent review. Your first and second tries are kept in practice history.</p><div class="stat-row"><div class="stat"><strong>${score.firstAnswers}/${score.total}</strong><span>First answers correct</span></div><div class="stat"><strong>${score.firstHighlights}/${score.total}</strong><span>Highlights added on first try · not graded</span></div><div class="stat"><strong>${score.mastered}/${score.total}</strong><span>Answers correct by the second try</span></div></div><h2>Parent review</h2>${article.questions.map(q=>`<section class="question-review"><h3>${questionLabel(article,q)}</h3><p>${esc(q.prompt)}</p>${attempts(q).map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · ${at.answerOK?'correct':'incorrect'}</p><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul>`).join('')}${renderAnswerReview(q,`summary-${q.id}`)}</section>`).join('')}<div class="actions">${next?`<button class="primary" id="next-article">Next article →</button>`:''}<button class="secondary" id="all-articles">All articles & history</button><button class="quiet" id="fresh-run">Practice this article again</button></div></section>`;
+    const firstChecked=article.questions.find(q=>attempts(q).length),initialMarks=firstChecked?attempts(firstChecked)[0].marks||[]:[];
+    app.innerHTML=`<section class="results-header"><p class="eyebrow">Session ${index+1} · ${completed(article,run)?'Complete':'In progress'} · Practice ${runs(article).indexOf(run)+1}</p><h1>${esc(article.title)} · Results</h1><p>Review the article and answers together. Select an attempt’s highlights to see them in the article. Highlights are saved, not graded.</p><div class="stat-row"><div class="stat"><strong>${score.firstAnswers}/${score.total}</strong><span>First answers correct</span></div><div class="stat"><strong>${score.firstHighlights}/${score.total}</strong><span>Highlights added on first try · not graded</span></div><div class="stat"><strong>${score.mastered}/${score.total}</strong><span>Answers correct by the second try</span></div></div><button class="quiet" id="all-articles">All articles & history</button></section>
+      <div class="reading-layout results-layout"><section class="passage-panel results-passage" aria-labelledby="review-passage-heading" tabindex="0"><h2 id="review-passage-heading">${esc(article.title)}</h2><p class="instructions" id="review-highlight-label" role="status">${firstChecked?`${questionLabel(article,firstChecked)} · Try 1 highlights`:'No highlights recorded yet'}</p><div class="passage" id="review-passage">${renderPassage(initialMarks,false)}</div></section><section class="results-answers" aria-labelledby="results-answers-heading"><h2 id="results-answers-heading">Answers & parent review</h2>${article.questions.map(q=>`<section class="question-review"><h3>${questionLabel(article,q)}</h3><p>${esc(q.prompt)}</p>${attempts(q).map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · ${at.answerOK?'correct':'incorrect'}</p><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul><button class="secondary" data-review-highlights="${q.id}" data-attempt="${n}" aria-controls="review-passage" aria-pressed="${q===firstChecked&&n===0}">Show ${questionLabel(article,q).toLowerCase()} · try ${n+1} highlights</button>`).join('')||'<p class="meta">Not checked yet.</p>'}${core.resolved(attempts(q))?renderAnswerReview(q,`summary-${q.id}`):''}</section>`).join('')}</section></div><div class="actions results-actions">${next?`<button class="primary" id="next-article">Next article →</button>`:''}<button class="secondary" id="results-home">All articles & history</button><button class="quiet" id="fresh-run">Practice this article again</button></div>`;
+    app.querySelectorAll('[data-review-highlights]').forEach(b=>b.onclick=()=>{
+      const q=article.questions.find(q=>q.id===b.dataset.reviewHighlights),n=Number(b.dataset.attempt);
+      app.querySelector('#review-passage').innerHTML=renderPassage(attempts(q)[n].marks||[],false);
+      app.querySelector('#review-highlight-label').textContent=`${questionLabel(article,q)} · Try ${n+1} highlights (not graded)`;
+      app.querySelectorAll('[data-review-highlights]').forEach(other=>other.setAttribute('aria-pressed',String(other===b)));
+      const panel=app.querySelector('.results-passage'),mark=panel.querySelector('mark');
+      if(mark)panel.scrollTop+=mark.getBoundingClientRect().top-panel.getBoundingClientRect().top-panel.clientHeight*.4;
+      b.closest('.question-review').scrollIntoView({block:'start'});
+    });
+    app.querySelector('#results-home').onclick=home;
     app.querySelector('#all-articles').onclick=home;app.querySelector('#fresh-run').onclick=()=>openArticle(article.id,true);if(next)app.querySelector('#next-article').onclick=()=>openArticle(next.id);
   }
   if(demo)document.querySelector('#save-status').textContent='Preview · no records saved';
