@@ -8,11 +8,10 @@
  function saveNote(s,id,text,at=new Date().toISOString()){if(!D.questions[id]||typeof text!=='string'||text.length>1500||!time(at)||attempts(s,id).length)return false;run(s).notes[id]={text,at};return true;}
  function submit(s,id,choice,at=new Date().toISOString(),eventId=root.crypto.randomUUID()){
   const q=D.questions[id],old=attempts(s,id);if(!q||!Number.isInteger(choice)||choice<0||choice>3||!time(at))return false;
-  if(!old.length&&note(s,id).trim().length<3)return false;
-  if(old.length&&(!firstPass(s)||old[0].correct||old.length>=2||old.some(a=>a.choice===choice)))return false;
+  if(old.length&&(old[0].correct||old.length>=2||old.some(a=>a.choice===choice)))return false;
   (run(s).answers[id]||={attempts:[]}).attempts.push({id:eventId,choice,correct:choice===q.correct,at});return true;
  }
  function stats(s,skill){const ids=D.ids.filter(id=>!skill||D.questions[id].skill===skill),done=ids.filter(id=>attempts(s,id).length),first=done.filter(id=>attempts(s,id)[0].correct).length;return{total:ids.length,answered:done.length,first,wrong:done.length-first,complete:done.length===ids.length,corrected:done.filter(id=>!attempts(s,id)[0].correct&&attempts(s,id).slice(1).some(a=>a.correct)).length};}
- const reveal=(s,id)=>firstPass(s)&&(attempts(s,id)[0]?.correct||attempts(s,id).length>=2);
+ const reveal=(s,id)=>!!(attempts(s,id)[0]?.correct||attempts(s,id).length>=2);
  root.MarcoQR4Engine={empty,run,valid,merge,attempts,firstPass,note,saveNote,submit,stats,reveal};
 })(typeof window==='undefined'?globalThis:window);

@@ -41,10 +41,87 @@ test('exactly 28 fresh mixed entries, four per skill, all keys independently che
  }
 });
 test('seven original choices, keys, times and source diagrams match verified extraction',()=>{assert.deepEqual(copy(D.originals.map(q=>[q.number,q.chosen,q.correct,q.seconds])),[[15,0,1,83],[18,1,0,59],[19,0,2,25],[20,2,1,41],[32,2,1,41],[36,1,0,87],[37,1,3,118]]);for(const q of D.originals){if(q.image)assert.ok(fs.existsSync(path.join(__dirname,q.image)));for(const img of q.choiceImages||[])assert.ok(fs.existsSync(path.join(__dirname,img)));}});
-test('first-pass lock, setup requirement, one retry and per-skill first scores',()=>{const s=E.empty(),id=D.ids[0],q=D.questions[id];assert.equal(E.submit(s,id,q.correct),false);assert.equal(record(s,id,(q.correct+1)%4),true);assert.equal(E.submit(s,id,q.correct),false);assert.equal(E.reveal(s,id),false);for(const other of D.ids.slice(1))assert.equal(record(s,other,D.questions[other].correct),true);assert.equal(E.firstPass(s),true);assert.equal(E.stats(s).first,27);assert.equal(E.stats(s,'fractions').first,3);assert.equal(E.reveal(s,id),false);assert.equal(E.submit(s,id,q.correct,at(40),'retry'),true);assert.equal(E.reveal(s,id),true);assert.equal(E.stats(s).first,27);assert.equal(E.stats(s).corrected,1);assert.equal(E.submit(s,id,(q.correct+2)%4),false);assert.equal(E.valid(s),true);assert.equal(E.saveNote(s,id,'Rewrite'),false);});
+test('answers need no setup; immediate second chance never changes first-try scores',()=>{
+ const s=E.empty(),id=D.ids[0],q=D.questions[id];
+ assert.equal(E.submit(s,id,(q.correct+1)%4,at(1),'first'),true);
+ assert.equal(E.note(s,id),'');assert.equal(E.firstPass(s),false);assert.equal(E.reveal(s,id),false);
+ assert.equal(E.submit(s,id,(q.correct+1)%4,at(2),'repeat-choice'),false);
+ assert.equal(E.submit(s,id,q.correct,at(3),'retry'),true);
+ assert.equal(E.reveal(s,id),true);assert.equal(E.firstPass(s),false);
+ assert.equal(E.stats(s).first,0);assert.equal(E.stats(s).corrected,1);
+ assert.equal(E.submit(s,id,(q.correct+2)%4),false);
+ for(const other of D.ids.slice(1))assert.equal(record(s,other,D.questions[other].correct),true);
+ assert.equal(E.firstPass(s),true);assert.equal(E.stats(s).first,27);assert.equal(E.stats(s,'fractions').first,3);
+ assert.equal(E.valid(s),true);assert.equal(E.saveNote(s,id,'Rewrite'),false);
+});
+test('a second miss unlocks the solution immediately, with no third try',()=>{
+ const s=E.empty(),id='t1',q=D.questions[id];
+ assert.equal(E.reveal(s,id),false);
+ assert.equal(E.submit(s,id,(q.correct+1)%4,at(1),'miss-1'),true);assert.equal(E.reveal(s,id),false);
+ assert.equal(E.submit(s,id,(q.correct+2)%4,at(2),'miss-2'),true);assert.equal(E.reveal(s,id),true);
+ assert.equal(E.submit(s,id,q.correct,at(3),'third'),false);assert.equal(E.stats(s).first,0);assert.equal(E.stats(s).corrected,0);
+});
+test('a first correct answer makes its solution available without waiting for all 28',()=>{
+ const s=E.empty();assert.equal(E.submit(s,'t1',D.questions.t1.correct),true);
+ assert.equal(E.reveal(s,'t1'),true);assert.equal(E.firstPass(s),false);assert.equal(E.stats(s).first,1);
+ assert.equal(E.submit(s,'t1',1),false);
+});
 test('device merge preserves first answers and setup notes deterministically',()=>{const a=E.empty(),b=E.empty();record(a,'f1',1,1);record(b,'t1',0,2);E.saveNote(a,'g1','Follow x to the left.',at(10));E.saveNote(b,'g1','Follow the right-to-left arrow.',at(11));const m=E.merge(a,b);assert.deepEqual(copy(m),copy(E.merge(b,a)));assert.equal(E.stats(m).answered,2);assert.equal(E.note(m,'g1'),'Follow the right-to-left arrow.');assert.deepEqual(copy(E.merge(m,m)),copy(m));assert.equal(E.valid(m),true);});
-function browser(t,query='?demo=1'){const html=read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),dom=new JSDOM(html,{url:'http://localhost/2026-10-23/'+query,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};let calls=0;w.fetch=()=>{calls++;throw Error('Production network forbidden in preview');};for(const f of['data.js','engine.js','sync.js','app.js'])w.eval(read(f));return{w,d:w.document,calls:()=>calls};}
-function uiAnswer(p,id,choice){const note=p.d.getElementById('setup-'+id);note.value='My short setup '+id;note.dispatchEvent(new p.w.Event('input',{bubbles:true}));const f=p.d.querySelector(`form[data-question="${id}"]`),input=f.querySelector(`input[value="${choice}"]`);input.checked=true;input.dispatchEvent(new p.w.Event('change',{bubbles:true}));f.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));}
+function browser(t,query='?demo=1',saved){const html=read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),dom=new JSDOM(html,{url:'http://localhost/2026-10-23/'+query,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};let calls=0;w.fetch=()=>{calls++;throw Error('Production network forbidden in preview');};if(saved)w.localStorage.setItem(D.appId+':demo',JSON.stringify(saved));for(const f of['data.js','engine.js','sync.js','app.js'])w.eval(read(f));return{w,d:w.document,calls:()=>calls};}
+function uiAnswer(p,id,choice){const f=p.d.querySelector(`form[data-question="${id}"]`),input=f.querySelector(`input[value="${choice}"]`);assert.equal(input.disabled,false);input.checked=true;input.dispatchEvent(new p.w.Event('change',{bubbles:true}));f.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));}
 test('review hides both historical choice and correct-answer method independently',t=>{const p=browser(t);assert.equal(p.d.querySelectorAll('article.question').length,7);assert.equal(p.d.querySelectorAll('.solution').length,0);assert.ok(!p.d.body.textContent.includes('Marco chose'));p.d.querySelector('[data-review="15"][data-kind="his"]').click();assert.ok(p.d.getElementById('his-15').textContent.includes('Marco chose A'));assert.equal(p.d.querySelectorAll('.solution').length,0);p.d.querySelector('[data-review="15"][data-kind="answer"]').click();assert.equal(p.d.querySelectorAll('.solution').length,1);p.d.querySelector('[data-review="15"][data-kind="his"]').click();assert.equal(p.d.getElementById('his-15').hidden,true);assert.equal(p.calls(),0);});
-test('mixed page has no skill headings or correctness before all 28; final report has seven scores',t=>{const p=browser(t,'?session=1&demo=1');assert.equal(p.d.querySelectorAll('article.question').length,28);assert.equal(p.d.querySelectorAll('.question header .source').length,0);assert.equal(p.d.querySelectorAll('.solution').length,0);for(let i=0;i<D.ids.length;i++){const id=D.ids[i],q=D.questions[id];uiAnswer(p,id,i===0?(q.correct+1)%4:q.correct);if(i<27){assert.equal(p.d.getElementById('skill-results'),null);assert.equal(p.d.querySelectorAll('.choice.correct,.choice.wrong,.solution').length,0);}}assert.ok(p.d.getElementById('skill-results').textContent.includes('27/28'));assert.equal(p.d.querySelectorAll('.skill-table tbody tr').length,7);assert.equal(p.d.querySelector('#q-f1 .answer-reveal'),null);const f=p.d.querySelector('form[data-question="f1"]'),input=f.querySelector('input[value="1"]');input.checked=true;input.dispatchEvent(new p.w.Event('change',{bubbles:true}));f.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));assert.ok(p.d.querySelector('#q-f1 .answer-reveal'));assert.ok(p.d.getElementById('skill-results').textContent.includes('27/28'));assert.equal(p.calls(),0);});
+test('mixed page gives instant feedback and retries without notes; seven skill scores follow all 28',t=>{
+ const p=browser(t,'?session=1&demo=1');
+ assert.equal(p.d.querySelectorAll('article.question').length,28);assert.equal(p.d.querySelectorAll('.question header .source').length,0);
+ assert.equal(p.d.querySelectorAll('textarea,.method-box,.solution').length,0);
+ uiAnswer(p,'f1',2);
+ assert.match(p.d.querySelector('#q-f1 .feedback').textContent,/Incorrect.*Try once more/);
+ assert.equal(p.d.querySelectorAll('#q-f1 .choice.wrong').length,1);
+ assert.equal(p.d.querySelectorAll('#q-f1 .choice.correct,.solution').length,0);
+ assert.equal(p.d.querySelector('#q-f1 .answer-reveal'),null);
+ assert.equal(p.d.querySelector('#q-f1 button[type=submit]').textContent,'Check second try');
+ assert.equal(p.d.querySelector('#q-f1 input[value="2"]').disabled,true);
+ assert.equal(p.d.getElementById('skill-results'),null);
+ uiAnswer(p,'f1',1);
+ assert.match(p.d.querySelector('#q-f1 .feedback').textContent,/Corrected on second try/);
+ assert.ok(p.d.querySelector('#q-f1 .answer-reveal'));assert.equal(p.d.querySelector('#q-f1 .answer-reveal').open,false);
+ assert.match(p.d.querySelector('.scorebar').textContent,/0\/1 correct first try/);
+ assert.equal(p.d.querySelectorAll('#q-f1 button[type=submit]').length,0);
+ for(let i=1;i<D.ids.length;i++){
+  const id=D.ids[i];uiAnswer(p,id,D.questions[id].correct);
+  assert.match(p.d.querySelector('#q-'+id+' .feedback').textContent,/Correct first try/);
+  assert.ok(p.d.querySelector('#q-'+id+' .choice.correct'));
+  if(i<27){assert.equal(p.d.getElementById('skill-results'),null);assert.equal(p.d.querySelectorAll('.question header .source').length,0);}
+ }
+ assert.match(p.d.getElementById('skill-results').textContent,/27\/28/);
+ assert.equal(p.d.querySelectorAll('.skill-table tbody tr').length,7);
+ assert.equal(p.d.querySelectorAll('.question header .source').length,28);
+ assert.ok(p.d.querySelector('.session-card.is-complete'));
+ assert.equal(p.calls(),0);
+});
+test('UI second miss reveals solution control before completion; empty choice uses no attempt',t=>{
+ const p=browser(t,'?session=1&demo=1'),f=p.d.querySelector('form[data-question="f1"]');
+ f.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));
+ assert.match(f.querySelector('.feedback').textContent,/No attempt used/);
+ assert.equal(p.w.localStorage.getItem(D.appId+':demo'),null);
+ uiAnswer(p,'f1',0);uiAnswer(p,'f1',2);
+ assert.match(p.d.querySelector('#q-f1 .feedback').textContent,/Incorrect on second try/);
+ assert.ok(p.d.querySelector('#q-f1 .answer-reveal'));assert.equal(p.d.querySelector('#q-f1 .answer-reveal').open,false);
+ assert.equal(p.d.querySelectorAll('#q-f1 button[type=submit]').length,0);
+ assert.equal(p.d.querySelectorAll('#q-f1 input:not(:disabled)').length,0);
+ assert.equal(p.d.getElementById('skill-results'),null);
+});
+test('previously saved answers and notes survive removal of the setup field and unlock immediate retry',t=>{
+ const legacy=E.empty();record(legacy,'f1',3,1);record(legacy,'t1',0,2);record(legacy,'g1',1,3);record(legacy,'e1',2,4);
+ assert.equal(E.valid(legacy),true);const original=copy(E.run(legacy)),p=browser(t,'?session=1&demo=1',legacy);
+ assert.equal(p.d.querySelectorAll('textarea,.method-box').length,0);
+ assert.match(p.d.querySelector('.scorebar').textContent,/4\/28 first answers/);
+ assert.equal(p.d.querySelector('#q-f1 button[type=submit]').textContent,'Check second try');
+ uiAnswer(p,'f1',1);const saved=JSON.parse(p.w.localStorage.getItem(D.appId+':demo')),r=E.run(saved);
+ assert.deepEqual(copy(r.notes),original.notes);
+ for(const id of Object.keys(original.answers))assert.deepEqual(copy(r.answers[id].attempts[0]),original.answers[id].attempts[0]);
+ assert.equal(E.stats(saved).first,3);assert.equal(E.stats(saved).answered,4);assert.equal(E.stats(saved).corrected,1);
+ const reload=browser(t,'?session=1&demo=1',saved);assert.ok(reload.d.querySelector('#q-f1 .answer-reveal'));
+ assert.match(reload.d.querySelector('.scorebar').textContent,/3\/4 correct first try/);assert.equal(reload.calls(),0);
+});
 test('mocked two-device sync persists notes and first-try scores, never calls production',async()=>{let recordOnServer=null,version=0;const calls=[];const fetcher=async(url,options)=>{assert.equal(url,S.API+'?appId='+D.appId);calls.push(options.method);if(options.method==='POST'){const body=JSON.parse(options.body);if(body.baseVersion!==(recordOnServer?version:null))return{ok:true,json:async()=>({accepted:false,progress:recordOnServer})};recordOnServer={state:body.state,version:++version};return{ok:true,json:async()=>({accepted:true,progress:recordOnServer})};}return{ok:true,json:async()=>({progress:recordOnServer})};};ctx.fetch=fetcher;ctx.localStorage={getItem:()=>null,setItem(){}};ctx.setTimeout=setTimeout;ctx.clearTimeout=clearTimeout;let a=E.empty(),b=E.empty();record(a,'f1',1);const one=S.create({getState:()=>a,onRemote:x=>a=x,onStatus(){},fetcher}),two=S.create({getState:()=>b,onRemote:x=>b=x,onStatus(){},fetcher});await one.push();await two.push();assert.equal(E.stats(b).first,1);record(b,'t1',0,5);await two.push();await one.push();assert.equal(E.stats(a).first,2);assert.ok(E.note(a,'t1'));assert.ok(calls.includes('POST'));});
