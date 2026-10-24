@@ -98,3 +98,13 @@ test('session completion counts two checked misses as finished while mastery rem
   for(const q of a.questions){r.drafts[q.id]={choice:(q.answer+1)%4,marks:exactMarks(a,'Carla is a cat.')};core.recordCheck(a,q,r,'first');core.recordCheck(a,q,r,'second');}
   assert.equal(core.finished(a,r),2);assert.equal(core.scores(a,r).mastered,0);assert.equal(r.completedAt,'second');
 });
+
+test('first-pass answered count includes single wrong checks, but not drafts or unchecked choices',()=>{
+  const a=articles[0],r=core.prepareRun(a,{answers:{}});
+  assert.equal(core.answered(a,r),0);
+  for(const q of a.questions){r.drafts[q.id]={choice:(q.answer+1)%4,marks:exactMarks(a,'Carla is a cat.')};core.recordCheck(a,q,r,'first');}
+  assert.equal(core.answered(a,r),a.questions.length);assert.equal(core.finished(a,r),0);assert.equal(core.scores(a,r).mastered,0);assert.ok(a.questions.every(q=>r.answers[q.id].length===1));
+  delete r.answers[a.questions[0].id];assert.equal(core.answered(a,r),1);
+  r.answers[a.questions[0].id]=[{choice:0,checkedAt:null}];assert.equal(core.answered(a,r),1);
+  r.answers[a.questions[0].id]=[{choice:99,checkedAt:'first'}];assert.equal(core.answered(a,r),1);
+});

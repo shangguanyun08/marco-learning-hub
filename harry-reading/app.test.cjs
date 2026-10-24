@@ -1,6 +1,6 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
-const {JSDOM}=require('../harry-math-practice/node_modules/jsdom');
+let JSDOM;try{({JSDOM}=require('jsdom'));}catch{({JSDOM}=require('../harry-math-practice/node_modules/jsdom'));}
 const KEY='harry-reading-readtheory-2026-10-21-v1';
 function boot(saved,fetcher){
   const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),{url:fetcher?'https://shangguanyun08.github.io/marco-learning-hub/harry-reading/':'http://localhost/harry-reading/',runScripts:'outside-only'}),w=dom.window;
@@ -98,4 +98,30 @@ test('history review opens the selected old run, not the latest, and never revea
   assert.equal(t.d.querySelector('#passage mark').textContent,'Carla is a cat.');
   t.d.querySelector('#review-next').click();assert.match(t.d.querySelector('.question-panel').textContent,/Not checked yet/);assert.equal(t.d.querySelector('[data-review]'),null);
   assert.equal(t.saved(),before);t.close();
+});
+
+test('all first answers turn a card Finished even with wrong answers and no second tries',()=>{
+  const at='2026-10-24T10:00:00Z',answers={'carla-4':[{choice:0,checkedAt:at,answerOK:false,marks:[]}],'carla-5':[{choice:0,checkedAt:at,answerOK:false,marks:[]}]};
+  const saved=JSON.stringify({version:1,articles:{carla:[{id:'first-pass',startedAt:at,position:1,completedAt:null,answers,drafts:{}}]}}),t=boot(saved),card=t.d.querySelector('[data-open="carla"]').closest('.card');
+  assert.ok(card.classList.contains('done'));assert.equal(card.querySelector('.completion-badge').textContent,'✓ Finished');assert.match(card.textContent,/2 of 2 questions answered · 0 answers correct/);assert.match(card.querySelector('button').textContent,/Review practice/);assert.equal(t.saved(),saved);
+  // Opening this finished first pass still offers the optional retry, without inventing one.
+  card.querySelector('button').click();assert.match(t.d.querySelector('#check').textContent,/second/);const r=JSON.parse(t.saved()).articles.carla[0];assert.equal(r.answers['carla-4'].length,1);assert.equal(r.answers['carla-5'].length,1);t.close();
+});
+
+test('partial, unchecked, or a new unfinished run does not get the Finished color',()=>{
+  const at='2026-10-24T10:00:00Z',checked={choice:2,checkedAt:at,answerOK:true,marks:[]};
+  for(const runs of [
+    [{id:'partial',startedAt:at,answers:{'carla-4':[checked]}}],
+    [{id:'unchecked',startedAt:at,answers:{'carla-4':[checked],'carla-5':[{choice:1,checkedAt:null,marks:[]}]}}],
+    [{id:'old',startedAt:at,answers:{'carla-4':[checked],'carla-5':[{...checked,choice:1}]}},{id:'fresh',startedAt:'2026-10-24T11:00:00Z',answers:{}}]
+  ]){const t=boot(JSON.stringify({version:1,articles:{carla:runs}})),card=t.d.querySelector('[data-open="carla"]').closest('.card');assert.equal(card.classList.contains('done'),false);assert.equal(card.querySelector('.completion-badge'),null);t.close();}
+});
+
+test('cloud-loaded first-pass completion shows Finished without uploading fabricated retries',async()=>{
+  const at='2026-10-24T10:00:00Z',state={version:1,articles:{carla:[{id:'cloud-first',startedAt:at,completedAt:null,position:1,answers:{'carla-4':[{choice:0,checkedAt:at,answerOK:false,marks:[]}],'carla-5':[{choice:0,checkedAt:at,answerOK:false,marks:[]}]}}]}};
+  let remote={version:1,state};const fetcher=async(_url,options)=>{if(options.method==='POST')remote={version:remote.version+1,state:JSON.parse(options.body).state};return {ok:true,json:async()=>({progress:remote,accepted:true})};};
+  const t=boot(null,fetcher);try{
+    for(let i=0;i<100&&t.d.querySelector('#save-status').textContent!=='Synced online';i++)await new Promise(r=>setTimeout(r,5));
+    assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');assert.ok(t.d.querySelector('[data-open="carla"]').closest('.card').classList.contains('done'));assert.equal(JSON.parse(t.saved()).articles.carla[0].answers['carla-4'].length,1);assert.equal(remote.state.articles.carla[0].answers['carla-5'].length,1);
+  }finally{t.close();}
 });

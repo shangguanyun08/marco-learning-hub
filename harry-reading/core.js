@@ -19,6 +19,8 @@
   function passed(attempts){return !!attempts?.some(a=>a.checkedAt&&a.answerOK);}
   function resolved(attempts){return passed(attempts)||(attempts||[]).filter(a=>a.checkedAt).length>=2;}
   function finished(article,run){return article.questions.filter(q=>resolved(run?.answers[q.id])).length;}
+  // First-pass completion is independent of accuracy and optional second tries.
+  function answered(article,run){return article.questions.filter(q=>(run?.answers[q.id]||[]).some(a=>a.checkedAt&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<q.choices.length)).length;}
   function prepareRun(article,run){
     run.answers??={};run.drafts??={};
     for(const q of article.questions){
@@ -54,7 +56,7 @@
       total:article.questions.length
     };
   }
-  const api={sentences,quoteMarks,passed,resolved,finished,prepareRun,recordCheck,scores};
+  const api={sentences,quoteMarks,passed,resolved,finished,answered,prepareRun,recordCheck,scores};
   if(typeof module!=='undefined')module.exports=api;
   else root.ReadingCore=api;
 })(typeof window==='undefined'?{}:window);
