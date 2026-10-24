@@ -64,12 +64,12 @@ test('isolated sync namespace saves and merges to a second simulated device',asy
 });
 test('library exposes one previous-mocks entry and preserves all old links on its new group page',()=>{
  const root=new JSDOM(read('../index.html')),old=new JSDOM(read('../previous-mocks.html'));
- assert.ok(root.window.document.querySelector('#kindle-tests-card[href="./kindle-tests-1-8/"]'));assert.ok(read('../kindle-tests-1-8/index.html').includes('../kindle-tests-1-2/?v=20261024-edit3'));assert.ok(root.window.document.querySelector('#previous-mocks[href="./previous-mocks.html"]'));assert.equal(root.window.document.querySelectorAll('#oct22-test,#test3-review,#test2-review,#test1-review').length,0);
+ assert.ok(root.window.document.querySelector('#kindle-focused-card[href="./kindle-vr-focused/"]'));assert.ok(read('../kindle-tests-1-8/index.html').includes('../kindle-tests-1-2/?v=20261024-edit3'));assert.ok(read('../kindle-vr-focused/index.html').includes('../kindle-tests-1-8/'));assert.ok(root.window.document.querySelector('#previous-mocks[href="./previous-mocks.html"]'));assert.equal(root.window.document.querySelectorAll('#oct22-test,#test3-review,#test2-review,#test1-review').length,0);
  for(const[id,path]of [['oct22-test','2026-10-22'],['test3-review','2026-10-11'],['test2-review','2026-10-04'],['test1-review','2026-09-27']])assert.ok(old.window.document.querySelector(`#${id}[href^="./${path}/"]`));assert.ok(old.window.document.getElementById('oct22-status'));assert.ok(old.window.document.querySelector('a[href^="./combined-review.html"]'));root.window.close();old.window.close();
 });
-test('library completion uses the Kindle namespace only and turns green',t=>{
+test('archived Tests 1–2 completion keeps its original namespace and turns green',t=>{
  const run=E.start(bank);for(const q of bank.questions)E.submit(run,q,q.correct);run.completedAt=new Date().toISOString();const saved={version:1,sessions:{[bank.id]:[plain(run)]}};
- const p=page(t,{saved,pathname:'../index.html',script:'library.js'});assert.ok(p.doc.querySelector('#kindle-tests-card').classList.contains('is-complete'));assert.match(p.doc.querySelector('#kindle-tests-status').textContent,/24\/24/);assert.equal(p.network(),0);
+ const p=page(t,{saved});assert.ok(p.doc.querySelector('#practice-status').classList.contains('is-complete'));assert.match(p.doc.querySelector('.run-score').textContent,/24\/24/);assert.equal(p.network(),0);
 });
 test('public links resolve and no screenshot, account identifier, or video is published',()=>{
  for(const file of ['index.html','../index.html','../previous-mocks.html']){const dom=new JSDOM(read(file));for(const el of dom.window.document.querySelectorAll('[src],[href]')){const value=el.getAttribute('src')||el.getAttribute('href');if(!value||value.startsWith('#')||/^[a-z]+:/i.test(value))continue;const path=value.split(/[?#]/)[0];assert.ok(existsSync(new URL(path,new URL(file,import.meta.url))),`${file}: ${value}`);}dom.window.close();}

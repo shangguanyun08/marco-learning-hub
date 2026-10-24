@@ -1,0 +1,6 @@
+.source-summary{margin:24px 0;padding:18px 22px;border:1px solid #ccd8e2;border-radius:12px;font-size:16px}
+.source-summary summary,.archive-note summary{cursor:pointer;font-weight:750;color:#173957}
+.source-summary p{line-height:1.7}
+.source-evidence{font-size:14px;color:#526b7f}
+.page-tabs a.is-complete[aria-current=page]{background:#206a4d;border-color:#206a4d;color:#fff}
+@media(min-width:851px){.course-pages{grid-template-columns:repeat(3,minmax(0,1fr))}}
