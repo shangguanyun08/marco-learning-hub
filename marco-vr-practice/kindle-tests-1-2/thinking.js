@@ -17,7 +17,9 @@
       Array.isArray(n.eliminated) && n.eliminated.length <= 2 && new Set(n.eliminated).size === n.eliminated.length && n.eliminated.every(i => Number.isInteger(i) && i >= 0 && i < 4);
   }
   function ready(q, n) {
-    return !!n?.prediction?.trim() && (q.type === 'synonym' ? !!n.tone && !!n.strength : !!n.link);
+    // Every prediction field is optional, including an entirely blank form.
+    // Retain older category values in saved records for backwards compatibility.
+    return fields(n);
   }
   function touch(n, patch = {}, at = new Date().toISOString(), id = root.crypto.randomUUID()) {
     return Object.assign(n, patch, { updatedAt: at, eventId: id });

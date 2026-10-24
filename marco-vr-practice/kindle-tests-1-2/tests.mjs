@@ -10,7 +10,7 @@ const read=p=>readFileSync(new URL(p,import.meta.url),'utf8'), plain=x=>JSON.par
 const common=['data.js','../../marco-daily-test-review/2026-10-11/engine.js','thinking.js','sync.js'];
 const context=vm.createContext({crypto:{randomUUID},setTimeout,clearTimeout,setInterval,clearInterval,AbortController,fetch:async()=>{},localStorage:{getItem(){return null},setItem(){}},addEventListener(){},removeEventListener(){},document:{visibilityState:'visible',addEventListener(){},removeEventListener(){}}});context.window=context;for(const p of common)vm.runInContext(read(p),context);
 const bank=context.MARCO_ISEE_PRACTICE[0], E=context.MarcoTest3Engine, S=context.MarcoTest3Sync, KEY='marco-vr-kindle-tests1-2-hard-20261024-v1';
-function page(t,{saved,pathname='index.html',script='app.js'}={}){
+function page(t,{saved,pathname='index.html',script='all-questions.js'}={}){
  const dom=new JSDOM(read(pathname),{url:'http://localhost:8793/marco-vr-practice/kindle-tests-1-2/?demo=1',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());
  let network=0;w.fetch=()=>{network++;throw new Error('Preview must not use network');};w.scrollTo=()=>{};
  w.localStorage.setItem('marco-vr-practice-oct22-test4-v1','original record sentinel');
@@ -19,13 +19,13 @@ function page(t,{saved,pathname='index.html',script='app.js'}={}){
  return {w,doc:w.document,network:()=>network,state:()=>JSON.parse(w.localStorage.getItem(KEY+':preview')||'null')};
 }
 function prepare(p,choice){
- const form=p.doc.querySelector('#prediction-form');
- if(form){const text=form.querySelector('textarea');text.value='my predicted meaning';text.dispatchEvent(new p.w.Event('input',{bubbles:true}));for(const [name,value]of [['tone','neutral'],['strength','neither'],['link','same']]){const radio=form.querySelector(`input[name="${name}"][value="${value}"]`);if(radio){radio.checked=true;radio.dispatchEvent(new p.w.Event('change',{bubbles:true}));}}form.querySelector('button[type=submit]').click();}
- const q=bank.questions[Number(new URL(p.w.location.href).searchParams.get('q')||1)-1],run=p.state().sessions[bank.id].at(-1),locked=(run.answers[q.source]?.attempts||[]).map(a=>a.choice),wanted=[...new Set([...locked,...q.choices.map((_,i)=>i).filter(i=>i!==choice&&i!==q.correct)])].slice(0,2);
- for(const button of [...p.doc.querySelectorAll('[data-eliminate][aria-pressed=true]')])if(!button.disabled&&!wanted.includes(Number(button.dataset.eliminate)))button.click();
- for(const cut of wanted){const button=p.doc.querySelector(`[data-eliminate="${cut}"]`);if(button.getAttribute('aria-pressed')!=='true')button.click();}
+ const i=Number(new URL(p.w.location.href).searchParams.get('q')||1)-1,q=bank.questions[i],getCard=()=>p.doc.querySelector('#q-'+(i+1)),form=getCard().querySelector('.prediction-form');
+ if(form){const text=form.querySelector('.prediction-input');text.value='my predicted meaning';text.dispatchEvent(new p.w.Event('input',{bubbles:true}));form.querySelector('button[type=submit]').click();}
+ const run=p.state().sessions[bank.id].at(-1),locked=(run.answers[q.source]?.attempts||[]).map(a=>a.choice),wanted=[...new Set([...locked,...q.choices.map((_,i)=>i).filter(i=>i!==choice&&i!==q.correct)])].slice(0,2);
+ for(const button of [...getCard().querySelectorAll('[data-eliminate][aria-pressed=true]')])if(!button.disabled&&!wanted.includes(Number(button.dataset.eliminate)))button.click();
+ for(const cut of wanted){const button=getCard().querySelector(`[data-eliminate="${cut}"]`);if(button.getAttribute('aria-pressed')!=='true')button.click();}
 }
-function answer(p,choice){prepare(p,choice);const input=p.doc.querySelector(`input[name=answer][value="${choice}"]`);assert.ok(input);assert.equal(input.disabled,false);input.checked=true;input.dispatchEvent(new p.w.Event('change',{bubbles:true}));p.doc.querySelector('#answer-form').dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));}
+function answer(p,choice){prepare(p,choice);const i=Number(new URL(p.w.location.href).searchParams.get('q')||1),c=p.doc.querySelector('#q-'+i),input=c.querySelector(`input[name=answer][value="${choice}"]`);assert.ok(input);assert.equal(input.disabled,false);input.checked=true;input.dispatchEvent(new p.w.Event('change',{bubbles:true}));c.querySelector('.answer-form').dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));}
 test('24 verified references, original choice orders and keys, balanced across both tests',()=>{
  assert.equal(bank.questions.length,24);assert.equal(new Set(bank.questions.map(q=>q.source)).size,24);
  assert.equal(bank.questions.filter(q=>q.test===1).length,12);assert.equal(bank.questions.filter(q=>q.test===2).length,12);
@@ -37,13 +37,13 @@ test('24 verified references, original choice orders and keys, balanced across b
 test('first wrong answer gives instant feedback but no key, meaning or trick; distinct retry reveals all',t=>{
  const p=page(t);assert.equal(p.doc.querySelector('.solution'),null);p.doc.querySelector('[data-action=start]').click();
  assert.equal(p.doc.querySelectorAll('.mixed-nav a').length,24);assert.equal(p.doc.querySelectorAll('.mixed-nav .jump').length,4);
- answer(p,0);assert.match(p.doc.querySelector('.feedback').textContent,/Not quite/);assert.equal(p.doc.querySelector('.solution'),null);assert.equal(p.doc.querySelector('.meaning'),null);assert.equal(p.doc.querySelector('.trick'),null);assert.equal(p.doc.querySelector('input[value="0"]').disabled,true);assert.equal(p.doc.querySelector('[data-action=next]').disabled,true);
+ answer(p,0);assert.match(p.doc.querySelector('.feedback').textContent,/Not quite/);assert.equal(p.doc.querySelector('.solution'),null);assert.equal(p.doc.querySelector('.meaning'),null);assert.equal(p.doc.querySelector('.trick'),null);assert.equal(p.doc.querySelector('input[value="0"]').disabled,true);assert.equal(p.doc.querySelectorAll('article.question').length,24);
  const run=p.state().sessions[bank.id][0];assert.equal(run.answers[101].attempts.length,1);answer(p,3);
- assert.match(p.doc.querySelector('.solution').textContent,/unwilling/);assert.ok(p.doc.querySelector('.trick'));assert.ok(p.doc.querySelector('.selection-note'));assert.equal(p.doc.querySelector('[data-action=next]').disabled,false);assert.match(p.doc.querySelector('.run-score').textContent,/0\/24/);assert.equal(p.state().sessions[bank.id][0].answers[101].attempts.length,2);assert.equal(p.network(),0);
+ assert.match(p.doc.querySelector('.solution').textContent,/unwilling/);assert.ok(p.doc.querySelector('.trick'));assert.ok(p.doc.querySelector('.selection-note'));assert.ok(p.doc.querySelector('#q-2'));assert.match(p.doc.querySelector('.run-score').textContent,/0\/24/);assert.equal(p.state().sessions[bank.id][0].answers[101].attempts.length,2);assert.equal(p.network(),0);
 });
 test('correct first answer reveals solution; two wrong attempts close without awarding a point',t=>{
  const a=page(t);a.doc.querySelector('[data-action=start]').click();answer(a,3);assert.match(a.doc.querySelector('.feedback').textContent,/Correct first try/);assert.match(a.doc.querySelector('.run-score').textContent,/1\/24/);
- const b=page(t);b.doc.querySelector('[data-action=start]').click();answer(b,0);answer(b,1);assert.match(b.doc.querySelector('.feedback').textContent,/Two tries/);assert.ok(b.doc.querySelector('.solution'));assert.match(b.doc.querySelector('.run-score').textContent,/0\/24/);assert.equal(b.doc.querySelectorAll('input:not(:disabled)').length,0);
+ const b=page(t);b.doc.querySelector('[data-action=start]').click();answer(b,0);answer(b,1);assert.match(b.doc.querySelector('.feedback').textContent,/Two tries/);assert.ok(b.doc.querySelector('.solution'));assert.match(b.doc.querySelector('.run-score').textContent,/0\/24/);assert.equal(b.doc.querySelectorAll('#q-1 input[name=answer]:not(:disabled)').length,0);
 });
 test('all 24 can finish, green completion and per-skill summary appear, new run preserves the old',t=>{
  const p=page(t);p.doc.querySelector('[data-action=start]').click();
@@ -73,5 +73,5 @@ test('library completion uses the Kindle namespace only and turns green',t=>{
 });
 test('public links resolve and no screenshot, account identifier, or video is published',()=>{
  for(const file of ['index.html','../index.html','../previous-mocks.html']){const dom=new JSDOM(read(file));for(const el of dom.window.document.querySelectorAll('[src],[href]')){const value=el.getAttribute('src')||el.getAttribute('href');if(!value||value.startsWith('#')||/^[a-z]+:/i.test(value))continue;const path=value.split(/[?#]/)[0];assert.ok(existsSync(new URL(path,new URL(file,import.meta.url))),`${file}: ${value}`);}dom.window.close();}
- assert.doesNotMatch(['index.html','data.js','app.js'].map(read).join(''),/5003638|students\/analysis|read\.amazon\.com|C:\\Users|<img|\.mp4/);assert.match(read('app.js'),/if \(!preview\)/);
+ assert.doesNotMatch(['index.html','data.js','all-questions.js'].map(read).join(''),/5003638|students\/analysis|read\.amazon\.com|C:\\Users|<img|\.mp4/);assert.match(read('all-questions.js'),/if \(!preview\)/);
 });
