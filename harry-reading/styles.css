@@ -10,3 +10,10 @@
 .card.done .primary{background:#fff;color:#155b4f;border-color:#fff}
 .card.done .primary:hover:enabled{background:#e1eee8}
 .completion-badge{display:inline-block;background:#fff;color:#155b4f;border-radius:6px;padding:6px 10px;margin-bottom:15px;font-size:13px;font-weight:800}
+.choice:has(input:checked){background:#edf1f6;border-color:#8497aa}
+.answer-choices .choice.answer-correct{background:#edf5ea;border-color:#4c8c77;color:#173c36}
+.answer-choices .choice.answer-incorrect{background:#fde8e7;border-color:#d68b84;color:#842a22}
+.answer-choices .choice.answer-incorrect input{accent-color:#9c352d}
+.feedback.needs-work{background:#fde8e7;border-color:#d68b84;color:#842a22}
+.attempt-tabs .is-incorrect[aria-pressed=true]{background:#fde8e7;border-color:#d68b84;color:#842a22}
+.attempt-tabs .is-correct[aria-pressed=true]{background:#edf5ea;border-color:#4c8c77;color:#173c36}

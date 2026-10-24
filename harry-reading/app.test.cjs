@@ -125,3 +125,29 @@ test('cloud-loaded first-pass completion shows Finished without uploading fabric
     assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');assert.ok(t.d.querySelector('[data-open="carla"]').closest('.card').classList.contains('done'));assert.equal(JSON.parse(t.saved()).articles.carla[0].answers['carla-4'].length,1);assert.equal(remote.state.articles.carla[0].answers['carla-5'].length,1);
   }finally{t.close();}
 });
+
+test('unchecked selection stays neutral; wrong first check is red without revealing a green correct choice',()=>{
+  const t=boot();try{
+    t.d.querySelector('[data-open="carla"]').click();choose(t,0);
+    assert.equal(t.d.querySelector('.answer-correct,.answer-incorrect'),null);highlight(t);check(t);
+    assert.ok(t.d.querySelector('input[value="0"]').closest('.choice').classList.contains('answer-incorrect'));
+    assert.equal(t.d.querySelector('.answer-correct'),null);assert.equal(t.d.querySelector('.review-details'),null);
+    choose(t,2);assert.equal(t.d.querySelector('input[value="2"]').closest('.choice').hasAttribute('data-answer-status'),false);
+    assert.ok(t.d.querySelector('input[value="0"]').closest('.choice').classList.contains('answer-incorrect'));check(t);
+    assert.ok(t.d.querySelector('input[value="2"]').closest('.choice').classList.contains('answer-correct'));
+    assert.equal(t.d.querySelector('.answer-incorrect'),null);
+  }finally{t.close();}
+});
+
+test('two wrong tries stay red, and saved review attempts have their own correct/incorrect colors',()=>{
+  const t=boot();try{
+    t.d.querySelector('[data-open="carla"]').click();choose(t,0);highlight(t);check(t);choose(t,1);check(t);
+    assert.ok(t.d.querySelector('input:checked').closest('.choice').classList.contains('answer-incorrect'));assert.equal(t.d.querySelector('.answer-correct'),null);
+    t.d.querySelector('#next').click();choose(t,1);highlight(t);check(t);t.d.querySelector('#next').click();
+    assert.ok(t.d.querySelector('[data-attempt="0"]').classList.contains('is-incorrect'));
+    assert.ok(t.d.querySelector('[data-attempt="1"]').classList.contains('is-incorrect'));
+    t.d.querySelector('[data-attempt="1"]').click();assert.ok(t.d.querySelector('input:checked').closest('.choice').classList.contains('answer-incorrect'));
+    t.d.querySelector('#review-next').click();assert.ok(t.d.querySelector('input:checked').closest('.choice').classList.contains('answer-correct'));
+    assert.ok(t.d.querySelector('[data-attempt="0"]').classList.contains('is-correct'));
+  }finally{t.close();}
+});
