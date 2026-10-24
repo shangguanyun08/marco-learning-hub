@@ -12,31 +12,22 @@
 </style>
 </head>
 <body><main>
-<nav><a href="https://shangguanyun08.github.io/marco-learning-hub/marco-vr-practice/?v=20261023-sync1">← All VR reviews</a><a class="download" href="https://shangguanyun08.github.io/marco-learning-hub/marco-vr-practice/word-checklist.html?v=20261023-sync1">Open online version</a></nav>
+<nav><a href="https://shangguanyun08.github.io/marco-learning-hub/marco-vr-practice/?v=20261023-sync1">← All VR reviews</a><a class="download" href="https://shangguanyun08.github.io/marco-learning-hub/marco-vr-practice/word-checklist.html?v=20261023-clean2">Open online version</a></nav>
 <header><h1>Marco’s Mock VR · Word Checklist</h1><p class="intro" id="scope"></p></header>
-<section class="instructions" aria-label="How to use this checklist">
-<h2>Check understanding, not just recognition</h2>
-<ul><li>Tick a word only if Marco can explain its <b>exact meaning in this question</b>. Several words in a row may be ticked. These boxes are <b>not answer choices</b>.</li><li>Choose one question diagnosis: <b>Should know / meaning forgotten</b>, <b>Known words / wrong sense or clue</b>, or <b>Unfamiliar vocabulary</b>. Selecting another diagnosis replaces the old one.</li><li>Use “Show meanings” to check his explanation. “Unfamiliar” does not mean a word is objectively rare or outside the ISEE level.</li></ul>
-</section>
-<section class="stats" aria-label="Question diagnosis totals" aria-live="polite">
-<div class="stat"><b id="total-count">0</b><span>question records</span></div>
-<div class="stat"><b id="common-count">0</b><span>should know / meaning forgotten</span></div>
-<div class="stat"><b id="nuance-count">0</b><span>known words / sense or clue</span></div>
-<div class="stat"><b id="unfamiliar-count">0</b><span>unfamiliar vocabulary</span></div>
-<div class="stat"><b id="unreviewed-count">0</b><span>not classified yet</span></div>
-</section>
 <div class="toolbar">
 <label>Mock <select id="test-filter"><option value="all">All four tests</option><option value="1">Test 1 · September 27</option><option value="2">Test 2 · October 4 · 2nd attempt</option><option value="3">Test 3 · October 11 · 2nd attempt</option><option value="4">Test 4 · October 22</option></select></label>
+<label>Question type <select id="type-filter"><option value="all">All question types</option><option value="synonym">Synonyms</option><option value="sentence completion">Sentence completions</option></select></label>
 <label><input type="checkbox" id="show-meanings"> Show meanings</label>
 <label><input type="checkbox" id="show-answers"> Show answers & Marco’s choices</label>
 <button type="button" class="primary" id="sync-now">Save online</button><button type="button" id="print">Print / save PDF</button><button type="button" id="clear">Clear checklist</button>
 </div>
+<p class="status" aria-live="polite"><strong id="total-count">0</strong> questions shown</p>
 <p class="word-count" id="word-count" aria-live="polite"></p>
 <p class="status" id="save-status" role="status" aria-live="polite">Connecting to online checklist sync…</p>
 <div class="table-wrap" role="region" aria-label="VR questions and four choices" tabindex="0">
-<table><colgroup><col class="question-col"><col span="4" class="choice-col"></colgroup><thead><tr><th scope="col">Question & diagnosis</th><th scope="col">A</th><th scope="col">B</th><th scope="col">C</th><th scope="col">D</th></tr></thead><tbody id="questions"></tbody></table>
+<table><colgroup><col class="question-col"><col span="4" class="choice-col"></colgroup><thead><tr><th scope="col">Question</th><th scope="col">A</th><th scope="col">B</th><th scope="col">C</th><th scope="col">D</th></tr></thead><tbody id="questions"></tbody></table>
 </div>
-<p class="footnote">Question diagnoses and word checks are your observations, not an automatic estimate of mastery. Totals follow the selected mock filter. Repeated headwords are retained when their question or choices differ. On the online website, selections save automatically and sync across devices; keep this page open until “Saved online” appears. Existing browser-only ticks are imported automatically. A downloaded offline HTML uses local saving only. No practice scores are changed. You can also print or save your observations as a PDF.</p>
+<p class="footnote">Totals follow both filters. Repeated words are kept in their own question context. Selections save automatically and sync across devices; keep this page open until “Saved online” appears. Downloaded offline copies save locally only. No practice scores are changed.</p>
 <noscript>This checklist needs JavaScript enabled. It works offline after the HTML file is downloaded.</noscript>
 </main>
 <script id="question-data" type="application/json">__QUESTIONS__</script>
@@ -45,20 +36,20 @@
 (function(){
 'use strict';
 const rows=JSON.parse(document.querySelector('#question-data').textContent),$=s=>document.querySelector(s),esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const demo=new URLSearchParams(location.search).has('demo'),preview=demo||['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:',kinds={common:'Should know / meaning forgotten',nuance:'Known words / wrong sense or clue',unfamiliar:'Unfamiliar vocabulary'};
+const demo=new URLSearchParams(location.search).has('demo'),preview=demo||['localhost','127.0.0.1'].includes(location.hostname)||location.protocol==='file:';
 let storage;try{storage=localStorage;}catch{}
 let saved={words:{},diagnoses:{}};
 const sync=window.MarcoVRChecklistSync.create({rows,storage,demo,disabled:preview,onState(value){saved=value;renderSaved();update();},onStatus(kind,text){$('#save-status').dataset.kind=kind;$('#save-status').textContent=text;$('#save-status').style.color=kind==='live'?'#146043':kind==='offline'?'#a22733':'#586b7a';}});saved=sync.view();
-function wordBox(r,text,meaning,column){const id=r.id+'-'+column;return '<label class="word-label"><input type="checkbox" data-word="'+esc(id)+'" aria-label="'+esc(r.label+' Q'+r.number+' · '+text+' · knows exact meaning')+'"'+(saved.words[id]===true?' checked':'')+'><span>'+esc(text)+'</span></label><p class="knows-caption">Knows exact meaning</p><p class="meaning">'+esc(meaning)+'</p>';}
+function wordBox(r,text,meaning,column){const id=r.id+'-'+column;return '<label class="word-label"><input type="checkbox" data-word="'+esc(id)+'" aria-label="'+esc(r.label+' Q'+r.number+' · '+text)+'"'+(saved.words[id]===true?' checked':'')+'><span>'+esc(text)+'</span></label><p class="meaning">'+esc(meaning)+'</p>';}
 const headwords=new Set(rows.filter(r=>r.type==='synonym').map(r=>r.prompt.replace(/:$/,'').toLowerCase()));
 $('#scope').textContent=rows.length+' recorded wrong questions from four reviewed mocks: '+rows.filter(r=>r.type==='synonym').length+' synonym questions ('+headwords.size+' different headwords) and '+rows.filter(r=>r.type!=='synonym').length+' sentence completions. Tests 2 and 3 use the second attempt only; Test 1 uses its original saved attempt.';
-$('#questions').innerHTML=rows.map(r=>'<tr data-id="'+r.id+'" data-test="'+r.test+'"><td><span class="source">'+esc(r.label)+' · '+esc(r.date)+' · Q'+r.number+' · '+(r.type==='synonym'?'Synonym':'Sentence completion')+'<br>'+esc(r.attempt)+'</span>'+(r.type==='synonym'?wordBox(r,r.prompt,r.targetMeaning,'stem'):'<p class="question">'+esc(r.prompt)+'</p>')+'<div class="diagnoses" role="group" aria-label="'+esc(r.label+' Q'+r.number+' diagnosis')+'">'+Object.entries(kinds).map(([k,label])=>'<label><input type="checkbox" data-diagnosis="'+r.id+'" data-kind="'+k+'"'+(saved.diagnoses[r.id]===k?' checked':'')+'>'+label+'</label>').join('')+'</div><div class="answer-detail"><b>Answer: '+ 'ABCD'[r.correct]+' · '+esc(r.choices[r.correct])+'</b><br>'+esc(r.tip)+'</div></td>'+r.choices.map((c,i)=>'<td class="'+(i===r.correct?'correct-cell ':'')+(r.wrongChoices.includes(i)?'wrong-cell':'')+'">'+wordBox(r,c,r.choiceMeanings[i],i)+'<p class="choice-tags">'+(i===r.correct?'<span class="correct">Correct answer</span>':'')+(r.wrongChoices.includes(i)?'<span class="wrong">Marco’s wrong answer</span>':'')+'</p></td>').join('')+'</tr>').join('');
-function visibleRows(){const test=$('#test-filter').value;return rows.filter(r=>test==='all'||String(r.test)===test);}
-function update(){const shown=visibleRows(),counts={common:0,nuance:0,unfamiliar:0};let wordTotal=0,checked=0;for(const r of shown){if(kinds[saved.diagnoses[r.id]])counts[saved.diagnoses[r.id]]++;for(const c of [...r.choices.map((_,i)=>i),...(r.type==='synonym'?['stem']:[])]){wordTotal++;if(saved.words[r.id+'-'+c]===true)checked++;}}$('#total-count').textContent=shown.length;for(const k of Object.keys(counts))$('#'+k+'-count').textContent=counts[k];$('#unreviewed-count').textContent=shown.length-Object.values(counts).reduce((a,b)=>a+b,0);$('#word-count').textContent=checked+' / '+wordTotal+' word occurrences marked “knows exact meaning” · repeated words are counted in their own question context.';for(const tr of document.querySelectorAll('tbody tr'))tr.hidden=$('#test-filter').value!=='all'&&tr.dataset.test!==$('#test-filter').value;}
-function renderSaved(){for(const el of document.querySelectorAll('[data-word]'))el.checked=saved.words[el.dataset.word]===true;for(const el of document.querySelectorAll('[data-diagnosis]'))el.checked=saved.diagnoses[el.dataset.diagnosis]===el.dataset.kind;}
-document.addEventListener('change',e=>{const el=e.target;if(el.matches('[data-word]'))sync.word(el.dataset.word,el.checked);if(el.matches('[data-diagnosis]'))sync.diagnosis(el.dataset.diagnosis,el.checked?el.dataset.kind:null);if(el.id==='show-meanings')document.body.classList.toggle('show-meanings',el.checked);if(el.id==='show-answers')document.body.classList.toggle('show-answers',el.checked);if(el.id==='test-filter')update();});
+$('#questions').innerHTML=rows.map(r=>'<tr data-id="'+r.id+'" data-test="'+r.test+'"><td><span class="source">'+esc(r.label)+' · '+esc(r.date)+' · Q'+r.number+' · '+(r.type==='synonym'?'Synonym':'Sentence completion')+'<br>'+esc(r.attempt)+'</span>'+(r.type==='synonym'?wordBox(r,r.prompt,r.targetMeaning,'stem'):'<p class="question">'+esc(r.prompt)+'</p>')+'<div class="answer-detail"><b>Answer: '+ 'ABCD'[r.correct]+' · '+esc(r.choices[r.correct])+'</b><br>'+esc(r.tip)+'</div></td>'+r.choices.map((c,i)=>'<td class="'+(i===r.correct?'correct-cell ':'')+(r.wrongChoices.includes(i)?'wrong-cell':'')+'">'+wordBox(r,c,r.choiceMeanings[i],i)+'<p class="choice-tags">'+(i===r.correct?'<span class="correct">Correct answer</span>':'')+(r.wrongChoices.includes(i)?'<span class="wrong">Marco’s wrong answer</span>':'')+'</p></td>').join('')+'</tr>').join('');
+function visibleRows(){const test=$('#test-filter').value,type=$('#type-filter').value;return rows.filter(r=>(test==='all'||String(r.test)===test)&&(type==='all'||r.type===type));}
+function update(){const shown=visibleRows(),visibleIds=new Set(shown.map(r=>r.id));let wordTotal=0,checked=0;for(const r of shown){for(const c of [...r.choices.map((_,i)=>i),...(r.type==='synonym'?['stem']:[])]){wordTotal++;if(saved.words[r.id+'-'+c]===true)checked++;}}$('#total-count').textContent=shown.length;$('#word-count').textContent=checked+' / '+wordTotal+' words checked';for(const tr of document.querySelectorAll('tbody tr'))tr.hidden=!visibleIds.has(tr.dataset.id);}
+function renderSaved(){for(const el of document.querySelectorAll('[data-word]'))el.checked=saved.words[el.dataset.word]===true;}
+document.addEventListener('change',e=>{const el=e.target;if(el.matches('[data-word]'))sync.word(el.dataset.word,el.checked);if(el.id==='show-meanings')document.body.classList.toggle('show-meanings',el.checked);if(el.id==='show-answers')document.body.classList.toggle('show-answers',el.checked);if(el.id==='test-filter'||el.id==='type-filter')update();});
 $('#print').addEventListener('click',()=>window.print());
-$('#clear').addEventListener('click',()=>{if(!window.confirm('Clear the word checks and question diagnoses on this checklist, including the synced copy? Marco’s practice results will not change.'))return;sync.clear();});
+$('#clear').addEventListener('click',()=>{if(!window.confirm('Clear all saved checklist selections, including the synced copy? Marco’s practice results will not change.'))return;sync.clear();});
 $('#sync-now').hidden=preview;$('#sync-now').addEventListener('click',()=>void sync.flush());
 update();void sync.start();if(!preview){window.addEventListener('online',()=>void sync.flush());window.addEventListener('focus',()=>void sync.flush());document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')void sync.flush();});setInterval(()=>{if(document.visibilityState==='visible')void sync.flush();},15000);}
 })();
