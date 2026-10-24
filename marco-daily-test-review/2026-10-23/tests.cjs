@@ -70,6 +70,29 @@ test('device merge preserves first answers and setup notes deterministically',()
 function browser(t,query='?demo=1',saved){const html=read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),dom=new JSDOM(html,{url:'http://localhost/2026-10-23/'+query,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};let calls=0;w.fetch=()=>{calls++;throw Error('Production network forbidden in preview');};if(saved)w.localStorage.setItem(D.appId+':demo',JSON.stringify(saved));for(const f of['data.js','engine.js','sync.js','app.js'])w.eval(read(f));return{w,d:w.document,calls:()=>calls};}
 function uiAnswer(p,id,choice){const f=p.d.querySelector(`form[data-question="${id}"]`),input=f.querySelector(`input[value="${choice}"]`);assert.equal(input.disabled,false);input.checked=true;input.dispatchEvent(new p.w.Event('change',{bubbles:true}));f.dispatchEvent(new p.w.Event('submit',{bubbles:true,cancelable:true}));}
 test('review hides both historical choice and correct-answer method independently',t=>{const p=browser(t);assert.equal(p.d.querySelectorAll('article.question').length,7);assert.equal(p.d.querySelectorAll('.solution').length,0);assert.ok(!p.d.body.textContent.includes('Marco chose'));p.d.querySelector('[data-review="15"][data-kind="his"]').click();assert.ok(p.d.getElementById('his-15').textContent.includes('Marco chose A'));assert.equal(p.d.querySelectorAll('.solution').length,0);p.d.querySelector('[data-review="15"][data-kind="answer"]').click();assert.equal(p.d.querySelectorAll('.solution').length,1);p.d.querySelector('[data-review="15"][data-kind="his"]').click();assert.equal(p.d.getElementById('his-15').hidden,true);assert.equal(p.calls(),0);});
+test('four visual groups of seven preserve numbering, order, dividers and saved progress',t=>{
+ const saved=E.empty();record(saved,'f1',3,1);record(saved,'t1',0,2);const p=browser(t,'?session=1&demo=1',saved);
+ function checkGroups(){
+  const groups=[...p.d.querySelectorAll('.jump-group')];assert.equal(groups.length,4);
+  for(let g=0;g<4;g++){
+   assert.equal(groups[g].getAttribute('aria-label'),`Questions ${g*7+1}–${g*7+7}`);
+   assert.deepEqual([...groups[g].querySelectorAll('a')].map(a=>a.textContent),Array.from({length:7},(_,j)=>String(g*7+j+1)));
+   assert.deepEqual([...groups[g].querySelectorAll('a')].map(a=>a.getAttribute('href')),copy(D.ids.slice(g*7,g*7+7).map(id=>'#q-'+id)));
+   assert.equal(groups[g].querySelectorAll('.jump-divider').length,g<3?1:0);
+  }
+  const dividers=[...p.d.querySelectorAll('hr.question-group-divider')];assert.equal(dividers.length,3);
+  dividers.forEach((hr,i)=>{
+   assert.equal(hr.previousElementSibling.id,'q-'+D.ids[i*7+6]);
+   assert.equal(hr.nextElementSibling.id,'q-'+D.ids[i*7+7]);
+  });
+  assert.deepEqual([...p.d.querySelectorAll('article.question')].map(q=>q.id),copy(D.ids.map(id=>'q-'+id)));
+ }
+ checkGroups();uiAnswer(p,'g1',D.questions.g1.correct);checkGroups();
+ const next=JSON.parse(p.w.localStorage.getItem(D.appId+':demo'));
+ for(const id of ['f1','t1'])assert.deepEqual(copy(E.attempts(next,id)),copy(E.attempts(saved,id)));
+ assert.equal(E.stats(next).answered,3);assert.equal(p.calls(),0);
+ const review=browser(t);assert.equal(review.d.querySelectorAll('.jump-group,.question-group-divider').length,0);
+});
 test('mixed page gives instant feedback and retries without notes; seven skill scores follow all 28',t=>{
  const p=browser(t,'?session=1&demo=1');
  assert.equal(p.d.querySelectorAll('article.question').length,28);assert.equal(p.d.querySelectorAll('.question header .source').length,0);

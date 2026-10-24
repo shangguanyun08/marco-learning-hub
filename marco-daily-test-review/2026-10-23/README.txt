@@ -1,6 +1,7 @@
 10/23/2026 QR Practice Test 4
 
 Two subsessions: unscored review of seven original Test Innovators mistakes; 28 freshly authored mixed practice questions, four per skill.
+The 28 questions are visually grouped into four blocks of seven, with horizontal dividers after questions 7, 14 and 21 and short vertical dividers between the corresponding number groups. Question order, IDs and scoring are unchanged.
 Review historical choices and correct answers are independently hidden by default behind dark-blue controls.
 Practice has no written-setup field or note requirement. Each submitted answer shows right/wrong immediately. A first miss gets one immediate retry before its solution and trick can be revealed; a first correct answer makes its solution available immediately. Skill labels stay hidden until 28 first answers are recorded, when seven skill scores and question-level results appear. First scores never increase from corrections.
 This is an untimed first-pass check, not a guarantee of mastery. No reset is offered that could replace the original first-try score. New checks require fresh questions and a separate version.
