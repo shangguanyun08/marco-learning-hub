@@ -143,8 +143,10 @@ test('no archive banner at the top; original course remains listed in the hub ar
   assert.ok(card.closest('.archive-section'));
   assert.equal(card.querySelector('a').getAttribute('href'),'./marco-zozeck-hard-2026/archive/');
   const group=card.closest('.archive-group');
-  assert.equal(group.querySelectorAll('.site-card').length,14);
-  assert.match(group.querySelector('.archive-group-heading').textContent,/14 sites/);
+  // Other courses can be archived independently; verify the displayed count.
+  const archivedCount=group.querySelectorAll('.site-card').length;
+  assert.ok(archivedCount>=14);
+  assert.match(group.querySelector('.archive-group-heading').textContent,new RegExp(archivedCount+' sites'));
   course.window.close();hub.window.close();
 });
 

@@ -3,6 +3,8 @@
   const Core = window.VocabularyQuiz;
   const {questions:originalWords,metadata} = window.MARCO_MIXED_VR;
   const review = window.MARCO_ROUND1_REVIEW || {questions:[],metadata:{sessions:[],questionCount:0}};
+  const focused = window.MARCO_REVIEW5 || {questions:[],metadata:{sessions:[]}};
+  const hasFocused = focused.questions.length > 0;
   // Review 2 repeats the frozen first review bank, with independent saved attempts.
   const review2 = {
     questions:review.questions.map(q=>({...q,id:q.id.replace(/^r1-/, 'r2-'),session:q.session+100,choices:[...q.choices]})),
@@ -23,15 +25,18 @@
     });
     repeats.push({cycle,questions,sessions:review.metadata.sessions.map(s=>({...s,number:s.number+(cycle-1)*100,label:`Review ${cycle} · Session ${s.reviewNumber}`}))});
   }
-  const words = [...originalWords,...review.questions,...repeats.flatMap(r=>r.questions)];
-  const sessions = [...metadata.sessions,...review.metadata.sessions,...repeats.flatMap(r=>r.sessions)];
+  const legacySessions = [...metadata.sessions,...review.metadata.sessions,...repeats.flatMap(r=>r.sessions)];
+  const words = [...originalWords,...review.questions,...repeats.flatMap(r=>r.questions),...focused.questions];
+  const sessions = [...legacySessions,...focused.metadata.sessions];
   const sessionInfo = number => sessions.find(s=>s.number===number);
   const sessionLabel = number => sessionInfo(number)?.label || `Session ${number}`;
   const sessionSize = number => words.filter(q=>q.session===number).length;
-  const nextSession = number => sessions[sessions.findIndex(s=>s.number===number)+1]?.number;
+  const trackFor = number => number>=500 ? focused.metadata.sessions : legacySessions;
+  const nextSession = number => {const track=trackFor(number);return track[track.findIndex(s=>s.number===number)+1]?.number;};
   const APP_ID = 'marco-zozeck-mixed-360-v1';
   const STORAGE_KEY = APP_ID + ':progress';
   const SELECTION_KEY = APP_ID + ':selection';
+  const FOCUSED_SELECTION_KEY = APP_ID + ':review5-selection';
   const local=['localhost','127.0.0.1','[::1]'].includes(location.hostname)||location.protocol==='file:';
   let accessReady=local;
   const byId = new Map(words.map(q => [q.id,q]));
@@ -58,9 +63,11 @@
   }
   let progress = mergeProgress(read(STORAGE_KEY),null);
   const params = new URLSearchParams(location.search);
-  const reviewCycle=[4,3,2,1].find(cycle=>params.has(cycle===1?'review':'review'+cycle));
-  let selected = reviewCycle ? reviewCycle*100+Number(params.get(reviewCycle===1?'review':'review'+reviewCycle)) : Number(params.get('session')) || Number(read(SELECTION_KEY)) || 1;
-  if (!sessionInfo(selected)) selected = 1;
+  const reviewCycle=[5,4,3,2,1].find(cycle=>params.has(cycle===1?'review':'review'+cycle));
+  let showPrevious = !hasFocused || params.has('previous') || params.has('session') || Boolean(reviewCycle&&reviewCycle<5);
+  const selectionKey=()=>hasFocused&&!showPrevious?FOCUSED_SELECTION_KEY:SELECTION_KEY;
+  let selected = reviewCycle ? reviewCycle*100+Number(params.get(reviewCycle===1?'review':'review'+reviewCycle)) : Number(params.get('session')) || Number(read(selectionKey())) || (hasFocused&&!showPrevious?501:1);
+  if (!sessionInfo(selected)) selected = hasFocused&&!showPrevious?501:1;
   let view = location.hash === '#results' ? 'results' : 'practice';
   let sync = null, notice = '', storageError = false;
   const drafts = new Map();
@@ -71,7 +78,7 @@
   const correct = r => r.ids.filter(id=>r.answers[id]?.correct).length;
   // Use the displayed course order, including review boundaries, with stable saved IDs.
   function access(number) {
-    const earlier=sessions.slice(0,sessions.findIndex(s=>s.number===number));
+    const track=trackFor(number),earlier=track.slice(0,track.findIndex(s=>s.number===number));
     return {pending:!accessReady, prerequisite:earlier.find(s=>!progress.sessions[s.number]?.completedAt)?.number};
   }
   const canPractice=()=>{const gate=access(selected);return !gate.pending&&!gate.prerequisite;};
@@ -99,7 +106,8 @@
       const status=gate.pending?'Checking saved progress…':gate.prerequisite?record?.completedAt?'Mastered · Saved results available':`Locked · Finish ${sessionLabel(gate.prerequisite)}`:record?.completedAt?'Mastered ✓':r?`Round ${r.number} · ${count(r)}/${r.ids.length} answered`:'Not started';
       return `<button data-session="${s.number}" class="${selected===s.number?'selected':''} ${record?.completedAt?'mastered':''} ${locked?'session-locked':''}" aria-pressed="${selected===s.number}" ${selected===s.number?'aria-current="page"':''}>${!gate.pending&&gate.prerequisite?lockBadge():''}<span>${esc(sessionLabel(s.number))}</span><strong>${size} questions</strong><strong class="first-round-score">${first?.finishedAt?`Round 1: ${correct(first)}/${size} correct`:`Round 1: -/${size} correct`}</strong><small>${s.types.synonym} synonyms · ${s.types.completion} completions${s.types.definition?` · ${s.types.definition} meaning`:''}</small><small>${esc(status)}</small></button>`;
     }).join('');
-    return `<section class="session-picker mixed-picker" aria-label="Practice and review sessions"><div class="session-group"><h2>Mixed Practice · Sessions 1–9</h2><div class="session-group-grid">${cards(metadata.sessions)}</div></div>${review.questions.length?`<div class="session-group review-session-group"><h2>Review 1 · Round 1 Missed Questions</h2><p>${review.metadata.questionCount} questions missed in the first round of Sessions 1–9. Four sessions of 40, then 42 in Session 5. New review scores start here; earlier results stay saved.</p><div class="session-group-grid">${cards(review.metadata.sessions)}</div></div>${repeats.map(r=>`<div class="session-group review-session-group"><h2>Review ${r.cycle} · ${r.cycle===2?'Repeat the Same 5 Sessions':'Shuffled Practice'}</h2><p>Repeat all ${review.metadata.questionCount} questions from Review 1 in the same five groups: 40, 40, 40, 40, and 42 questions. ${r.cycle>=3?'Question order and A–D choices are shuffled within each session. ':''}Every round is untimed, with fresh scores for Review ${r.cycle}.</p><div class="session-group-grid">${cards(r.sessions)}</div></div>`).join('')}`:''}</section>`;
+    if(hasFocused&&!showPrevious)return `<section class="session-picker mixed-picker" aria-label="Review 5 sessions"><div class="session-group focused-session-group"><h2>Review 5 · ${focused.metadata.questionCount} remaining questions</h2><p>Three mixed sessions: 40, 40, and 25 questions. All rounds are untimed. ${focused.metadata.maintenanceCount} questions have moved out of daily repetition and remain in Previous practice.</p><div class="session-group-grid">${cards(focused.metadata.sessions)}</div></div></section>`;
+    return `<section class="session-picker mixed-picker" aria-label="Practice and review sessions">${hasFocused?'<div class="archive-intro"><h2>Previous practice</h2><p>All original questions, first-try scores, correction rounds, and unfinished work are preserved here.</p><a href="./archive/">Earlier Sessions 1–14 &amp; Reviews 1A–3B →</a></div>':''}<div class="session-group"><h2>Mixed Practice · Sessions 1–9</h2><div class="session-group-grid">${cards(metadata.sessions)}</div></div>${review.questions.length?`<div class="session-group review-session-group"><h2>Review 1 · Round 1 Missed Questions</h2><p>${review.metadata.questionCount} questions missed in the first round of Sessions 1–9. Four sessions of 40, then 42 in Session 5. New review scores start here; earlier results stay saved.</p><div class="session-group-grid">${cards(review.metadata.sessions)}</div></div>${repeats.map(r=>`<div class="session-group review-session-group"><h2>Review ${r.cycle} · ${r.cycle===2?'Repeat the Same 5 Sessions':'Shuffled Practice'}</h2><p>Repeat all ${review.metadata.questionCount} questions from Review 1 in the same five groups: 40, 40, 40, 40, and 42 questions. ${r.cycle>=3?'Question order and A–D choices are shuffled within each session. ':''}Every round is untimed, with fresh scores for Review ${r.cycle}.</p><div class="session-group-grid">${cards(r.sessions)}</div></div>`).join('')}`:''}</section>`;
   }
   function questionStatus(number,id) {
     const attempts=(progress.sessions[number]?.rounds||[]).map(r=>r.answers[id]).filter(Boolean);
@@ -136,12 +144,17 @@
     if(accessReady&&access(selected).prerequisite&&progress.sessions[selected]?.completedAt)view='results';
     const gate=access(selected),resultLock=view==='results'&&(gate.pending||gate.prerequisite)?lockedPractice():'';
     const priorStatus=document.querySelector('[data-online-sync]')?.textContent;
-    app.innerHTML=`<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>2026 Zozeck · Mixed Practice &amp; Review</h1><p class="course-intro">360 questions across 9 sessions of 40, mixing topics and difficulty. Every round is untimed. Rounds 2, 3, and onward repeat only missed questions until mastered. Completed sessions turn green. Review 1 revisits first-round misses. Reviews 2, 3, and 4 repeat the same five sessions with independent scores; Reviews 3 and 4 shuffle question order and A–D choices.</p><p class="session-rule"><strong>Finish your earlier sessions to unlock the next one.</strong> Complete the remaining correction rounds until the session turns green. Follow Sessions 1–9, then each review in order. Saved completed sessions remain available in Results.</p></div><nav aria-label="Practice and results"><button data-view="practice" class="${view==='practice'?'active':''}" aria-pressed="${view==='practice'}">Practice</button><button data-view="results" class="${view==='results'?'active':''}" aria-pressed="${view==='results'}">Results &amp; tricks</button></nav></header>${sessionPicker()}<p class="sync-note" role="status" aria-live="polite"><span aria-hidden="true"></span><b data-online-sync="${APP_ID}">${esc(priorStatus||'Connecting to live online sync…')}</b></p>${storageError?'<p class="notice error">This browser could not save locally. Keep the page open and check the online-sync status.</p>':''}${notice?`<p class="notice" role="status">${esc(notice)}</p>`:''}<div id="workspace">${resultLock}${view==='results'?results():practice()}</div><footer class="site-footer"><a href="../">← Main Learning Hub</a><a href="./archive/">Previous Sessions 1–14 &amp; Reviews 1A–3B</a><span>360 original questions${review.questions.length?` + ${review.questions.length} questions in each of 4 reviews`:""} · difficulty labels are practice estimates</span></footer><details class="bank-note"><summary>How this bank was assembled</summary><p>121 clean questions retained from the 124-question review bank, plus all 227 curated historical misses, plus 12 other recorded historical misses. Three ambiguous review targets were excluded; competing distractors and one grammar mismatch were cleaned up in nine retained items. The latest October 4 nine VR misses are excluded. Old answers and scores remain in the archive, unchanged.</p></details>`;
+    const libraryTabs=hasFocused?`<nav class="library-tabs" aria-label="Current and previous practice"><button data-library="current" class="${!showPrevious?'active':''}" aria-pressed="${!showPrevious}">Review 5</button><button data-library="previous" class="${showPrevious?'active':''}" aria-pressed="${showPrevious}">Previous practice</button></nav>`:'';
+    const heading=hasFocused?(showPrevious?'Previous practice · Zozeck VR':'Review 5 · Focused VR practice'):'2026 Zozeck · Mixed Practice & Review';
+    const introduction=hasFocused?(showPrevious?'Your earlier sessions and Reviews 1–4 are archived here with all saved results intact. You can still revisit questions or continue unfinished work.':'105 remaining questions, mixing synonyms and sentence completion. Every round is untimed. Rounds 2, 3, and onward repeat only missed questions. Completed session cards turn green.'):'360 questions across 9 sessions of 40, mixing topics and difficulty. Every round is untimed. Rounds 2, 3, and onward repeat only missed questions until mastered. Completed sessions turn green. Review 1 revisits first-round misses. Reviews 2, 3, and 4 repeat the same five sessions with independent scores; Reviews 3 and 4 shuffle question order and A–D choices.';
+    const sessionRule=hasFocused&&!showPrevious?'Complete each session’s correction rounds to unlock the next one. Previous practice does not block Review 5. Answers and tricks stay hidden after a first wrong try.':'Finish your earlier sessions to unlock the next one. Complete the remaining correction rounds until the session turns green. Saved completed sessions remain available in Results.';
+    app.innerHTML=`${libraryTabs}<header class="topbar"><div><p class="eyebrow">Marco · Synonyms &amp; sentence completion</p><h1>${esc(heading)}</h1><p class="course-intro">${esc(introduction)}</p><p class="session-rule">${esc(sessionRule)}</p></div><nav aria-label="Practice and results"><button data-view="practice" class="${view==='practice'?'active':''}" aria-pressed="${view==='practice'}">Practice</button><button data-view="results" class="${view==='results'?'active':''}" aria-pressed="${view==='results'}">Results &amp; tricks</button></nav></header>${sessionPicker()}<p class="sync-note" role="status" aria-live="polite"><span aria-hidden="true"></span><b data-online-sync="${APP_ID}">${esc(priorStatus||'Connecting to live online sync…')}</b></p>${storageError?'<p class="notice error">This browser could not save locally. Keep the page open and check the online-sync status.</p>':''}${notice?`<p class="notice" role="status">${esc(notice)}</p>`:''}<div id="workspace">${resultLock}${view==='results'?results():practice()}</div><footer class="site-footer"><a href="../">← Main Learning Hub</a><a href="./archive/">Previous Sessions 1–14 &amp; Reviews 1A–3B</a><span>${hasFocused?`${focused.metadata.questionCount} focused Review 5 questions · `:""}360 original questions${review.questions.length?` + ${review.questions.length} questions in each of 4 archived reviews`:""} · difficulty labels are practice estimates</span></footer><details class="bank-note"><summary>How this bank was assembled</summary><p>121 clean questions retained from the 124-question review bank, plus all 227 curated historical misses, plus 12 other recorded historical misses. Three ambiguous review targets were excluded; competing distractors and one grammar mismatch were cleaned up in nine retained items. The latest October 4 nine VR misses are excluded. Old answers and scores remain in the archive, unchanged.</p></details>`;
   }
-  function setView(next) {view=next;const cycle=Math.floor(selected/100);const query=cycle?`?review${cycle===1?'':cycle}=${selected%100}`:`?session=${selected}`;history.replaceState(null,'',`${query}${view==='results'?'#results':''}`);render();}
+  function setView(next) {view=next;if(hasFocused)showPrevious=selected<500;const cycle=Math.floor(selected/100);const query=cycle?`?review${cycle===1?'':cycle}=${selected%100}`:`?session=${selected}`;history.replaceState(null,'',`${query}${view==='results'?'#results':''}`);render();}
   app.addEventListener('click',event=>{
     const button=event.target.closest('button');if(!button||button.disabled)return;
-    if(button.dataset.session){selected=Number(button.dataset.session);notice='';write(SELECTION_KEY,selected);setView(access(selected).prerequisite&&progress.sessions[selected]?.completedAt?'results':'practice');document.getElementById('workspace').scrollIntoView({block:'start'});return;}
+    if(button.dataset.library){showPrevious=button.dataset.library==='previous';const candidate=Number(read(selectionKey())),track=showPrevious?legacySessions:focused.metadata.sessions;selected=track.some(s=>s.number===candidate)?candidate:track[0].number;notice='';setView('practice');return;}
+    if(button.dataset.session){selected=Number(button.dataset.session);if(hasFocused)showPrevious=selected<500;notice='';write(selectionKey(),selected);setView(access(selected).prerequisite&&progress.sessions[selected]?.completedAt?'results':'practice');document.getElementById('workspace').scrollIntoView({block:'start'});return;}
     if(button.dataset.view){setView(button.dataset.view);return;}
     if(button.dataset.jump){document.getElementById('q-'+button.dataset.jump)?.scrollIntoView({block:'start',behavior:'smooth'});return;}
     // Recheck at every mutation as well as render: stale controls cannot bypass a sync update.
