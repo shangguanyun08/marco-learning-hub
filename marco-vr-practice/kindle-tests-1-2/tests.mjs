@@ -7,7 +7,7 @@ import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);let JSDOM;
 try{({JSDOM}=require('jsdom'));}catch{({JSDOM}=require('../../../tmp/daily-sync-qa/node_modules/jsdom/lib/api.js'));}
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8'), plain=x=>JSON.parse(JSON.stringify(x));
-const common=['data.js','../../marco-daily-test-review/2026-10-11/engine.js','thinking.js','sync.js'];
+const common=['data.js','../../marco-daily-test-review/2026-10-11/engine.js','thinking.js','clues.js','sync.js'];
 const context=vm.createContext({crypto:{randomUUID},setTimeout,clearTimeout,setInterval,clearInterval,AbortController,fetch:async()=>{},localStorage:{getItem(){return null},setItem(){}},addEventListener(){},removeEventListener(){},document:{visibilityState:'visible',addEventListener(){},removeEventListener(){}}});context.window=context;for(const p of common)vm.runInContext(read(p),context);
 const bank=context.MARCO_ISEE_PRACTICE[0], displayed=[...bank.questions.filter(q=>q.type==='synonym'),...bank.questions.filter(q=>q.type!=='synonym')], E=context.MarcoTest3Engine, S=context.MarcoTest3Sync, KEY='marco-vr-kindle-tests1-2-hard-20261024-v1';
 function page(t,{saved,pathname='index.html',script='all-questions.js'}={}){
@@ -20,7 +20,7 @@ function page(t,{saved,pathname='index.html',script='all-questions.js'}={}){
 }
 function prepare(p,choice){
  const i=Number(new URL(p.w.location.href).searchParams.get('q')||1)-1,q=displayed[i],getCard=()=>p.doc.querySelector('#q-'+(i+1)),form=getCard().querySelector('.prediction-form');
- if(form){const text=form.querySelector('.prediction-input');text.value='my predicted meaning';text.dispatchEvent(new p.w.Event('input',{bubbles:true}));form.querySelector('button[type=submit]').click();}
+ if(form){const text=form.querySelector('.prediction-input');if(text){text.value='my predicted meaning';text.dispatchEvent(new p.w.Event('input',{bubbles:true}));}else getCard().querySelector('[data-clue]').click();getCard().querySelector('.prediction-form button[type=submit]').click();}
  const run=p.state().sessions[bank.id].at(-1),locked=(run.answers[q.source]?.attempts||[]).map(a=>a.choice),wanted=[...new Set([...locked,...q.choices.map((_,i)=>i).filter(i=>i!==choice&&i!==q.correct)])].slice(0,2);
  for(const button of [...getCard().querySelectorAll('[data-eliminate][aria-pressed=true]')])if(!button.disabled&&!wanted.includes(Number(button.dataset.eliminate)))button.click();
  for(const cut of wanted){const button=getCard().querySelector(`[data-eliminate="${cut}"]`);if(button.getAttribute('aria-pressed')!=='true')button.click();}

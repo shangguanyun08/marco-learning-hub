@@ -6,9 +6,10 @@
   const tones = ['', 'good', 'bad', 'neutral', 'unsure'];
   const strengths = ['', 'strong', 'weak', 'neither', 'unsure'];
   const links = ['', 'same', 'opposite', 'unsure'];
-  const fields = n => object(n) && typeof n.prediction === 'string' && n.prediction.length <= 160 && tones.includes(n.tone) && strengths.includes(n.strength) && links.includes(n.link);
+  const clueFields = n => n.clues === undefined || (Array.isArray(n.clues) && n.clues.length <= 200 && new Set(n.clues).size === n.clues.length && n.clues.every(i => Number.isInteger(i) && i >= 0 && i < 1000));
+  const fields = n => object(n) && typeof n.prediction === 'string' && n.prediction.length <= 160 && tones.includes(n.tone) && strengths.includes(n.strength) && links.includes(n.link) && clueFields(n);
   function make(at = new Date().toISOString(), id = root.crypto.randomUUID()) {
-    return { prediction: '', tone: '', strength: '', link: '', committed: null, eliminated: [], updatedAt: at, eventId: id };
+    return { prediction: '', tone: '', strength: '', link: '', clues: [], committed: null, eliminated: [], updatedAt: at, eventId: id };
   }
   function valid(n) {
     return fields(n) && time(n.updatedAt) && typeof n.eventId === 'string' && n.eventId.length <= 100 &&
@@ -27,7 +28,7 @@
   }
   function commit(q, n, at = new Date().toISOString(), id = root.crypto.randomUUID()) {
     if (n.committed || !ready(q, n)) return false;
-    n.committed = { prediction: n.prediction.trim(), tone: n.tone, strength: n.strength, link: n.link, at, id };
+    n.committed = { prediction: n.prediction.trim(), tone: n.tone, strength: n.strength, link: n.link, clues: clone(n.clues || []), at, id };
     touch(n, {}, at, id); return true;
   }
   function merge(a, b) {
@@ -44,7 +45,7 @@
   }
   function revise(q, n, values, at = new Date().toISOString(), id = root.crypto.randomUUID()) {
     if (!ready(q, values)) return false;
-    n.revised = { prediction: values.prediction.trim(), tone: values.tone, strength: values.strength, link: values.link, at, id };
+    n.revised = { prediction: values.prediction.trim(), tone: values.tone, strength: values.strength, link: values.link, clues: clone(values.clues || []), at, id };
     touch(n, {}, at, id); return true;
   }
   root.KindleVRThinking = { make, valid, ready, touch, commit, revise, merge };

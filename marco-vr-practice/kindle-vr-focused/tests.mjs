@@ -4,7 +4,7 @@ import {readFileSync,existsSync} from 'node:fs';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url),{JSDOM}=require('jsdom'),read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const APP='marco-vr-kindle-focused-20261024-v1',KEY=APP+':preview';
-const scripts=['../kindle-tests-1-2/data.js','../kindle-tests-1-8/questions.js','../kindle-tests-1-8/data.js','pdf-data.js','data.js','../../marco-daily-test-review/2026-10-11/engine.js','../kindle-tests-1-2/thinking.js','../kindle-tests-1-2/sync.js'];
+const scripts=['../kindle-tests-1-2/data.js','../kindle-tests-1-8/questions.js','../kindle-tests-1-8/data.js','pdf-data.js','data.js','../../marco-daily-test-review/2026-10-11/engine.js','../kindle-tests-1-2/thinking.js','../kindle-tests-1-2/clues.js','../kindle-tests-1-2/sync.js'];
 const plain=x=>JSON.parse(JSON.stringify(x));
 function page(t,n=1,saved,library=false){
  const name=library?'index.html':'practice.html',dom=new JSDOM(read(name),{url:`https://example.test/marco-vr-practice/kindle-vr-focused/${name}?page=${n}&demo=1`,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};let network=0;w.fetch=()=>{network++;throw Error('No preview network');};
@@ -27,7 +27,7 @@ test('245 unique questions, exact retained originals, 172 keyed PDF additions, p
 
 for(const [n,total]of [[1,40],[2,40],[3,40],[4,40],[5,40],[6,45]])test(`page ${n}: ${total} items, synonyms first, two tries, no timer, saved on reload`,t=>{
  const p=page(t,n),cards=[...p.doc.querySelectorAll('article.question')];assert.equal(cards.length,total);assert.equal(p.doc.querySelectorAll('.jump a').length,total);assert.equal(p.doc.querySelectorAll('.page-tabs a').length,6);assert.match(p.doc.querySelector('#page-title').textContent,new RegExp(`Page ${n}.*${total}`));assert.equal(p.doc.querySelectorAll('textarea,[required],.solution').length,0);
- let sentences=false;for(const card of cards){const q=p.session.questions.find(q=>q.source===Number(card.dataset.source));if(q.type==='synonym'){assert.equal(sentences,false);assert.equal(card.querySelector('.prompt').textContent,q.word.toUpperCase());}else{sentences=true;assert.match(card.querySelector('.sentence-prediction-guide').textContent,/clue word or short phrase.*contrast.*opposite/);}}
+ let sentences=false;for(const card of cards){const q=p.session.questions.find(q=>q.source===Number(card.dataset.source));if(q.type==='synonym'){assert.equal(sentences,false);assert.equal(card.querySelector('.prompt').textContent,q.word.toUpperCase());}else{sentences=true;assert.match(card.querySelector('.sentence-prediction-guide').textContent,/Highlight the key words.*rest of the sentence.*contrast.*opposite/);assert.equal(card.querySelector('.prediction-input'),null);assert.ok(card.querySelector('[data-clue]'));}}
  assert.equal(sentences,true);const q=source(p);reveal(p);assert.deepEqual([...p.doc.querySelectorAll('#q-1 .choice-text')].map(x=>x.textContent),plain(q.choices));answer(p,1,(q.correct+1)%4);assert.equal(p.doc.querySelector('#q-1 .solution'),null);assert.match(p.doc.querySelector('#q-1 .feedback').textContent,/Not quite/);answer(p,1,q.correct);assert.ok(p.doc.querySelector('#q-1 .trick'));assert.ok(p.doc.querySelector('#q-1 .source-evidence'));assert.match(p.doc.querySelector('.run-score').textContent,new RegExp('0/'+total));assert.equal(p.network(),0);assert.ok(p.S.valid(p.state()));
  const again=page(t,n,p.state());assert.ok(again.doc.querySelector('#q-1 .solution'));for(const id of ['marco-vr-kindle-tests1-2-hard-20261024-v1','marco-vr-kindle-tests1-8-hard-20261024-v1'])assert.equal(again.w.localStorage.getItem(id),'legacy sentinel');
 });
@@ -51,4 +51,10 @@ test('hub opens focused course; archives and all local assets resolve; no timing
  const hub=new JSDOM(read('../index.html'));t.after(()=>hub.window.close());assert.equal(hub.window.document.querySelector('#kindle-focused-card').getAttribute('href'),'./kindle-vr-focused/');
  for(const f of ['index.html','practice.html','../kindle-tests-1-8/index.html','../kindle-tests-1-2/index.html','../index.html']){const dom=new JSDOM(read(f));for(const el of dom.window.document.querySelectorAll('[src],[href]')){const raw=el.getAttribute('src')||el.getAttribute('href');if(!raw||raw.startsWith('#')||/^(https?:|data:)/.test(raw))continue;assert.ok(existsSync(new URL(raw.split(/[?#]/)[0],new URL(f,import.meta.url))),`${f}: ${raw}`);}dom.window.close();}
  assert.match(read('index.html'),/kindle-tests-1-8/);assert.match(read('index.html'),/kindle-tests-1-2/);assert.doesNotMatch(read('practice.js'),/setInterval|timer\b|Eliminate two choices/);assert.match(read('practice.js'),/Eliminating choices is optional/);
+});
+
+test('focused sentence highlights save and revise without changing its first wrong answer',t=>{
+ const p=page(t),el=p.doc.querySelector('.prompt.completion').closest('article'),i=Number(el.id.slice(2)),q=source(p,i);
+ el.querySelector('[data-clue="0"]').click();reveal(p,i);answer(p,i,(q.correct+1)%4);const first=JSON.stringify(p.state().sessions[p.session.id][0].answers);
+ p.doc.querySelector(`#q-${i} [data-edit-prediction]`).click();p.doc.querySelector(`#q-${i} [data-clue="1"]`).click();reveal(p,i);assert.equal(p.doc.querySelectorAll(`#q-${i} .clue-highlight`).length,2);assert.equal(JSON.stringify(p.state().sessions[p.session.id][0].answers),first);assert.equal(p.doc.querySelector(`#q-${i} .solution`),null);assert.ok(p.S.valid(p.state()));const next=page(t,1,p.state());assert.equal(next.doc.querySelectorAll(`#q-${i} .clue-highlight`).length,2);assert.equal(next.network(),0);
 });

@@ -65,3 +65,9 @@
 .edit-prediction{margin-top:12px;font-size:15px;padding:9px 15px}
 .cancel-prediction,.start-fresh{background:#fff;color:#173957;border:1px solid #91a7b7;border-radius:8px;padding:10px 16px;margin-left:10px;font-weight:650;cursor:pointer}
 .start-fresh{margin-left:0}
+.prompt.completion .clue-word{display:inline;font:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;background:transparent;border:0;border-radius:3px;padding:0 2px;margin:0;box-shadow:none;cursor:pointer;text-transform:none;vertical-align:baseline}
+.prompt.completion .clue-word:hover{background:#fff0b8}
+.prompt.completion .clue-word.is-highlighted,.clue-highlight{background:#ffe28a;color:#173957;box-shadow:0 2px 0 #d59f29;border-radius:3px}
+.clue-word:focus-visible{outline:3px solid #173957;outline-offset:2px}
+.highlight-summary{font-size:16px;color:#173957}
+.legacy-prediction{font-size:15px;color:#526b80}

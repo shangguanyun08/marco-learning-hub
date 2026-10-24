@@ -15,7 +15,7 @@ Selection is an editorial prioritization around recent misses involving precise 
 
 App ID: `marco-vr-kindle-focused-20261024-v1`. Sessions: `kindle-vr-focused-page-{1..6}-20261024-v1`.
 
-Untimed. Synonyms precede sentence completions within each page. Prediction and elimination are optional. Predictions remain editable, with the original pre-choice snapshot retained. A wrong first answer hides the solution until a distinct second attempt; correct first answers reveal it immediately. First-try and corrected scores are separate. Completed pages turn green; new runs preserve earlier history.
+Untimed. Synonyms precede sentence completions within each page. Synonyms use an optional one-word prediction. Sentence completions instead invite Marco to tap and highlight the key words in the rest of the sentence, and think about the same idea or its opposite. Highlighting and elimination are optional. Predictions and highlights remain editable, with the original pre-choice snapshot retained. Older typed sentence predictions remain in records. A wrong first answer hides the solution until a distinct second attempt; correct first answers reveal it immediately. First-try and corrected scores are separate. Completed pages turn green; new runs preserve earlier history.
 
 The shared sync backend registers this new namespace, applies strict version protection, and counts it as Marco word practice. Old 24- and 146-question namespaces are unchanged and remain accessible under Previous Practice.
 
