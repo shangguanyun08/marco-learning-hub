@@ -12,6 +12,14 @@ function boot(saved){
 function choose(t,index){const input=t.d.querySelector(`input[value="${index}"]`);input.click();}
 function check(t){t.d.querySelector('#answer-form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 function highlight(t){t.d.querySelector('[data-sid="p0s0"]').click();}
+test('All articles is in the top bar and preserves an unfinished answer and highlight',()=>{
+  const t=boot();assert.equal(t.d.querySelectorAll('#back-home').length,1);assert.ok(t.d.querySelector('.topbar #back-home'));
+  assert.doesNotMatch(t.d.querySelector('.topbar').textContent,/HARRY’S READING/);
+  t.d.querySelector('[data-open="carla"]').click();choose(t,2);highlight(t);const saved=t.saved();
+  assert.equal(t.d.querySelector('.workspace-head #back-home'),null);t.d.querySelector('#back-home').click();
+  assert.ok(t.d.querySelector('[data-open="carla"]'));assert.equal(t.saved(),saved);
+  t.d.querySelector('[data-open="carla"]').click();assert.ok(t.d.querySelector('input[value="2"]').checked);assert.ok(t.d.querySelector('#passage mark'));t.close();
+});
 test('correct answer plus unrelated highlight resolves; review is manual and does not alter records',()=>{
   const t=boot();t.d.querySelector('[data-open="carla"]').click();
   choose(t,2);assert.equal(t.d.querySelector('#check').disabled,true);

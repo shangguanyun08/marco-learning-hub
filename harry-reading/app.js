@@ -66,11 +66,10 @@
     pending=[];
     const q=currentQ(),done=isResolved(),at=attempts(q).at(-1),marks=done?at.marks:draft().marks;
     const tryNumber=attempts(q).length+1;
-    app.innerHTML=`<div class="workspace-head"><div><p class="eyebrow">Session ${articles.indexOf(article)+1} of ${articles.length}</p><h1>${esc(article.title)}</h1><p class="meta">Question ${(run.position||0)+1} of ${article.questions.length}${article.sourceQuiz?` · Original question ${q.number}`:''} · ${esc(levelLabel(article))}</p></div><button class="quiet" id="back-home">All articles</button></div>
+    app.innerHTML=`<div class="workspace-head"><div><p class="eyebrow">Session ${articles.indexOf(article)+1} of ${articles.length}</p><h1>${esc(article.title)}</h1><p class="meta">Question ${(run.position||0)+1} of ${article.questions.length}${article.sourceQuiz?` · Original question ${q.number}`:''} · ${esc(levelLabel(article))}</p></div></div>
       <div class="reading-layout"><section class="passage-panel" aria-labelledby="passage-heading"><h2 id="passage-heading">${esc(article.title)}</h2>${article.referenceTitle?`<p class="reference-note">Original parallel practice · reference: “${esc(article.referenceTitle)}” (${article.referenceLexile}L). This new passage has not been Lexile-measured.</p>`:''}<p class="instructions">${done?'Reread the highlighted evidence as you review.':'Choose your answer and highlight supporting words. Tap a sentence, or select words to highlight.'}</p><div class="passage" id="passage">${renderPassage(marks,!done)}</div></section>
       <section class="question-panel" aria-labelledby="question-title"><p class="eyebrow">${done?'Checked':tryNumber===1?'First try':'Second try'}</p><h2 id="question-title" tabindex="-1">${esc(q.prompt)}</h2><div id="question-body">${done?renderFeedback(q,at):renderForm(q,at)}</div></section></div>
       ${!done?`<div class="mobile-dock"><button class="select-action" id="mobile-add" hidden>Highlight selection</button><button class="primary" id="mobile-check" ${canCheck()?'':'disabled'}>Check ${tryNumber===1?'first':'second'} try</button></div>`:''}`;
-    app.querySelector('#back-home').onclick=home;
     if(done){app.querySelector('#next').onclick=nextQuestion;}
     else bindEditing();
     if(focus)app.querySelector('#question-title').focus({preventScroll:true});
@@ -183,6 +182,7 @@
     app.querySelector('#results-home').onclick=home;
     app.querySelector('#all-articles').onclick=home;app.querySelector('#fresh-run').onclick=()=>openArticle(article.id,true);if(next)app.querySelector('#next-article').onclick=()=>openArticle(next.id);
   }
+  document.querySelector('#back-home').onclick=()=>{home();window.scrollTo(0,0);};
   if(demo)document.querySelector('#save-status').textContent='Preview · no records saved';
   home();
 })();
