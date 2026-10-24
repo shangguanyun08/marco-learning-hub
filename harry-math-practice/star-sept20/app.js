@@ -92,7 +92,7 @@
     if(extra){const session=visibleBank().find(s=>s.extraReview),link=session&&document.querySelector(`.session-link[href="?session=${session.id}"]`);if(link){const run=window.HarryWeekProgress.firstRun(state.sessions[session.id])||{answers:{}};link.querySelector('.day-score').textContent='4 questions per skill';link.insertAdjacentHTML('beforeend',`<small class="skill-counts">${esc(skillText(session,run))}</small><small>Goal: 3/4 in each skill</small>`);}}
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().filter(s=>!s.retest).length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
-    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. Set 7 has 8 fresh questions with a goal of 100% first try. Day 3.6 and later sessions unlock after all 6 questions in Day 3.5 are completed correctly. Retries count toward completion. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
+    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. Sets 7 and 8 each have 8 fresh questions with a goal of 100% first try. Day 3.6 and later sessions unlock after all 6 questions in Day 3.5 are completed correctly. Retries count toward completion. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=active.practiceOnly?(s.firstTryPercent===null?'—':`${s.firstTryPercent}%`):`${s.first} / ${s.total}`;
@@ -110,7 +110,11 @@
   function weeklyNextStep(){
     const base=bank.find(s=>s.id===(active.baseId||active.id)),reason=W.unfinished(base,state);
     if(reason)return `You can review first-try mistakes in <a href="?session=${base.id}-round2">Round 2</a>, or choose another unlocked session.`;
-    if(base.accuracyCheck)return engine.stats(base,current()).first===base.questions.length?'Goal reached: 8/8 (100%) on your first tries!':'Review the first-try mistakes with a parent before another fresh set. The goal is 8/8 (100%) on first tries.';
+    if(base.accuracyCheck){
+      const message=engine.stats(base,current()).first===base.questions.length?'Goal reached: 8/8 (100%) on your first tries!':'Review the first-try mistakes with a parent before another fresh set. The goal is 8/8 (100%) on first tries.';
+      const checks=bank.filter(s=>s.accuracyCheck),next=checks[checks.indexOf(base)+1];
+      return message+(next?` <a href="?session=${next.id}">Open ${esc(next.cardLabel)}</a> for 8 new questions on the same skills.`:'');
+    }
     if(base.extraReview)return 'Fraction review complete. <a href="?session=week-oct12-7">Open Set 7</a> for 8 fresh questions. Goal: 100% on first tries.';
     if(base.id==='week-oct12-6')return 'Day 6 is complete. <a href="?session=week-oct12-7">Open Set 7</a> for 8 fresh questions. You can also <a href="?session=week-oct12-extra-review">open the extra fraction review</a>.';
     if(base.id==='week-oct12-3-4'||base.id==='week-oct12-3-5'){const next=bank[bank.indexOf(base)+1];return `Fraction review complete. <a href="?session=${next.id}">Open ${esc(next.cardLabel)}</a> for 6 fresh questions.`;}
@@ -159,6 +163,7 @@
     let nav=document.querySelector('#round-navigation');if(!nav){nav=document.createElement('nav');nav.id='round-navigation';nav.className='round-navigation';document.querySelector('.session-intro').append(nav);}
     nav.hidden=active.practiceOnly||!(active.weekly||active.round2);const baseId=active.baseId||active.id;
     nav.innerHTML=nav.hidden?'':`<a href="?session=${baseId}" ${!active.round2?'aria-current="page"':''}>Round 1</a><a href="?session=${baseId}-round2" ${active.round2?'aria-current="page"':''}>Round 2 · new numbers</a>`;
+    if(active.accuracyCheck){nav.hidden=false;nav.innerHTML=bank.filter(s=>s.accuracyCheck).map(s=>`<a href="?session=${s.id}" ${active.id===s.id?'aria-current="page"':''}>${esc(s.cardLabel)}</a>`).join('');}
     const reason=locked(active);
     if(reason){
       document.querySelector('#session-title').textContent=active.title;document.querySelector('#session-description').textContent='Your earlier answers and scores are saved.';

@@ -1,4 +1,6 @@
-# Set 7 · October 24 first-try accuracy follow-up
+# Sets 7 and 8 · October 24 first-try accuracy follow-up
+
+`?session=week-oct12-8` adds a second eight-question check after Set 7, using the same skill blueprint with fresh numbers and answer positions. Set 8 switches the equivalent-fraction blank to a numerator and the conversion to pints/quarts, revisiting both weak patterns. The sets have separate first-try scores and histories. Finish Set 7, review its mistakes, then attempt Set 8 with a fresh 8/8 target. Both sets are available under the existing Day 3.5 unlock rule. The practice navigation links both sets; Set 7 completion links onward to Set 8. Set 7 questions and saved answers are unchanged. `week-oct12-set8.test.mjs` checks keys, diagram spacing, separate scores, retries, reloads, sync and navigation using only local test records.
 
 `?session=week-oct12-7` adds eight fresh questions after Extra review in the existing October 12 group. The target is **8/8 (100%) on first tries**. Six questions use typed answers; two use multiple-choice fraction concepts. Practice continues until correct, with method hints after two misses; retries never improve the original first-try score. Day 6 and Extra review both link onward to Set 7. The existing Day 3.5 completion rule also applies to Set 7; no additional lock is added.
 

@@ -24,7 +24,7 @@ test('Set 7 follows Extra review with eight fresh answers; earlier questions and
  const before=boot(t,'?group=week-2026-10-12',unlock(),false),b=boot(t,'?group=week-2026-10-12');
  assert.deepEqual(copy(b.w.HARRY_SEPT_PRACTICE.filter(s=>s.id!==ID)),copy(before.w.HARRY_SEPT_PRACTICE));
  const weekly=b.w.HARRY_SEPT_PRACTICE.filter(s=>s.group==='week-2026-10-12');
- assert.deepEqual(Array.from(weekly.slice(-2),s=>s.id),['week-oct12-extra-review',ID]);
+ assert.deepEqual(Array.from(weekly.slice(-3),s=>s.id),['week-oct12-extra-review',ID,'week-oct12-8']);
  assert.equal(b.s.questions.length,8);assert.equal(new Set(b.s.questions.map(q=>q.source)).size,8);
  assert.equal(b.s.questions.filter(q=>q.type==='number').length,6);assert.ok(b.s.questions.every(q=>q.retryUntilCorrect));
  const link=b.d.querySelector(`.session-link[href="?session=${ID}"]`);assert.match(link.textContent,/Set 7/);assert.match(link.textContent,/8\/8 \(100%\) first try/);
