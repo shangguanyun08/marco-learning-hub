@@ -151,3 +151,12 @@ test('two wrong tries stay red, and saved review attempts have their own correct
     assert.ok(t.d.querySelector('[data-attempt="0"]').classList.contains('is-correct'));
   }finally{t.close();}
 });
+
+test('finished dashboard cards retain the original light green, separate from red/green answer feedback',()=>{
+  const css=fs.readFileSync(path.join(__dirname,'styles.css'),'utf8');
+  assert.match(css,/\.card\.done\{border-color:#548d6a;background:#f4fbf2\}/);
+  assert.doesNotMatch(css,/\.card\.done\{background:#155b4f/);
+  assert.match(css,/\.choice\.answer-incorrect\{background:#fde8e7/);
+  assert.match(css,/\.choice\.answer-correct\{background:#edf5ea/);
+  const t=boot();try{assert.match(t.d.querySelector('.home-note').textContent,/Light green \+ Finished/);}finally{t.close();}
+});
