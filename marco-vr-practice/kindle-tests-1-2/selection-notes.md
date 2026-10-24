@@ -35,3 +35,11 @@ They are not necessarily mastered. Most had more transparent definitions, strong
 ## Progress
 
 The new session uses a new, isolated progress namespace. Existing mock progress schemas and identifiers are not changed. Two distinct tries are supported; a first wrong try reveals no answer, definition, or trick. A correct answer or exhausted second try reveals the explanation. First-try scores stay separate from corrections. Completion turns the session status green; it is not labeled mastery. Local/demo previews never contact the online progress service or use the live storage key.
+
+## Prediction and elimination update
+
+Each new question starts with all four choices absent from the rendered question. The student writes a brief best-guess meaning. Synonyms offer good/bad/neutral/not-sure and strong/weak/neither/not-sure cues; sentence completions offer same/supporting, opposite/contrast, or not sure. These self-reports are saved, not automatically graded. Neutral and not-applicable options avoid forcing unsuitable categories.
+
+Saving the prediction freezes a timestamped pre-choice snapshot. Then the student eliminates exactly two choices and selects from the remaining pair. Eliminations can be restored before checking and never reveal whether the correct answer has been crossed out. After a first wrong answer, that known-wrong choice stays out, the other eliminations reopen, and the student eliminates one more before retrying. The first prediction and each attempt's elimination list remain in the downloaded records. Explanations compare the answer with the original prediction and flag when the first cut removed the correct answer.
+
+The course-local sync extension merges notes per question and preserves the earliest committed prediction, while retaining existing run and answer formats. Old answered questions remain valid without fabricating a pre-choice prediction. New questions in those runs use the new workflow. The question bank and count are unchanged by this interface update.
