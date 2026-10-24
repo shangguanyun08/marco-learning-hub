@@ -2,11 +2,12 @@ const {test}=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path');
 const {JSDOM}=require('../harry-math-practice/node_modules/jsdom');
 const KEY='harry-reading-readtheory-2026-10-21-v1';
-function boot(saved){
-  const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),{url:'http://localhost/harry-reading/',runScripts:'outside-only'}),w=dom.window;
+function boot(saved,fetcher){
+  const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),{url:fetcher?'https://shangguanyun08.github.io/marco-learning-hub/harry-reading/':'http://localhost/harry-reading/',runScripts:'outside-only'}),w=dom.window;
   w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.matchMedia=()=>({matches:false});
   if(saved)w.localStorage.setItem(KEY,saved);
-  for(const f of ['data.js','grade3-practice.js','core.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));
+  if(fetcher){w.fetch=fetcher;w.AbortSignal=AbortSignal;}
+  for(const f of ['data.js','grade3-practice.js','core.js','sync.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));
   return {w,d:w.document,close:()=>w.close(),saved:()=>w.localStorage.getItem(KEY)};
 }
 function choose(t,index){const input=t.d.querySelector(`input[value="${index}"]`);input.click();}
@@ -19,6 +20,18 @@ test('All articles is in the top bar and preserves an unfinished answer and high
   assert.equal(t.d.querySelector('.workspace-head #back-home'),null);t.d.querySelector('#back-home').click();
   assert.ok(t.d.querySelector('[data-open="carla"]'));assert.equal(t.saved(),saved);
   t.d.querySelector('[data-open="carla"]').click();assert.ok(t.d.querySelector('input[value="2"]').checked);assert.ok(t.d.querySelector('#passage mark'));t.close();
+});
+
+test('existing browser work uploads automatically and appears in a second browser with original scores and highlights',async()=>{
+  const old={choice:2,checkedAt:'2026-10-22T10:00:00Z',answerOK:true,marks:[{sid:'p0s0',start:0,end:15}]};
+  const saved=JSON.stringify({version:1,articles:{carla:[{id:'old',startedAt:'2026-10-22T10:00:00Z',position:0,answers:{'carla-4':[old]}}]}});
+  let remote=null,uploads=0;
+  const fetcher=async(_url,options)=>{if(options.method==='POST'){const p=JSON.parse(options.body);remote={state:p.state,version:(remote?.version||0)+1};uploads++;return {ok:true,json:async()=>({accepted:true,progress:remote})};}return {ok:true,json:async()=>({progress:remote})};};
+  const settle=async t=>{for(let i=0;i<100&&t.d.querySelector('#save-status').textContent!=='Synced online';i++)await new Promise(r=>setTimeout(r,5));assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');};
+  const a=boot(saved,fetcher);await settle(a);assert.ok(uploads);assert.equal(a.w.localStorage.getItem(KEY+':before-cloud-sync'),saved);
+  const b=boot(null,fetcher);await settle(b);b.d.querySelector('[data-open="carla"]').click();
+  assert.equal(b.d.querySelector('input:checked').value,'2');assert.ok(b.d.querySelector('#passage mark'));assert.match(b.d.querySelector('.feedback').textContent,/correct/);
+  assert.deepEqual(JSON.parse(b.saved()).articles.carla[0].answers['carla-4'][0],old);a.close();b.close();
 });
 test('correct answer plus unrelated highlight resolves; review is manual and does not alter records',()=>{
   const t=boot();t.d.querySelector('[data-open="carla"]').click();
@@ -41,11 +54,11 @@ test('wrong choices get exactly two checks; explanation stays hidden until click
   choose(t,1);check(t);assert.equal(t.d.querySelector('#answer-form'),null);assert.equal(t.d.querySelector('.review-details').hidden,true);
   assert.match(t.d.querySelector('.feedback').textContent,/Answer: incorrect/);
   t.d.querySelector('#next').click();choose(t,1);highlight(t);check(t);t.d.querySelector('#next').click();
-  assert.match(t.d.querySelector('.stat').textContent,/1\/2/);
-  assert.equal(t.d.querySelectorAll('.question-review').length,2);assert.equal(t.d.querySelectorAll('.question-review .evidence-list').length,3);
+  assert.match(t.d.querySelector('.workspace-head').textContent,/First answers: 1\/2/);
+  assert.equal(t.d.querySelectorAll('.answer-choices .choice').length,4);assert.equal(t.d.querySelectorAll('[data-attempt]').length,2);
   for(const panel of t.d.querySelectorAll('.review-details'))assert.equal(panel.hidden,true);
   t.d.querySelector('[data-review]').click();assert.equal(t.d.querySelector('.review-details').hidden,false);
-  t.d.querySelector('#all-articles').click();assert.equal(t.d.querySelectorAll('.history-record [data-review]').length,2);
+  t.d.querySelector('#back-home').click();assert.equal(t.d.querySelectorAll('.history-record [data-review]').length,2);
   assert.doesNotMatch(t.d.querySelector('.history').textContent,/Evidence right|Evidence supported|Evidence needs/);
   const r=JSON.parse(t.saved()).articles.carla[0];assert.equal(r.answers['carla-4'].length,2);assert.equal(r.answers['carla-4'][0].choice,0);assert.equal(r.answers['carla-4'][0].marks[0].quote,'Carla is a cat. ');
   t.close();
@@ -61,14 +74,17 @@ test('reopened completed results show the full article and per-attempt highlight
   t.d.querySelector('[data-sid="p0s1"]').click();choose(t,2);check(t);t.d.querySelector('#next').click();choose(t,1);highlight(t);check(t);
   const saved=t.saved();t.close();
   const reopened=boot(saved);reopened.d.querySelector('[data-open="carla"]').click();
-  assert.ok(reopened.d.querySelector('.results-layout .results-passage'));
-  assert.match(reopened.d.querySelector('#review-passage').textContent,/And for Carla, it's good to love your job/);
-  assert.equal(reopened.d.querySelectorAll('#review-passage mark').length,1);
-  const before=reopened.saved();reopened.d.querySelector('[data-review-highlights="carla-4"][data-attempt="1"]').click();
-  assert.equal(reopened.d.querySelectorAll('#review-passage mark').length,2);
-  assert.match(reopened.d.querySelector('#review-highlight-label').textContent,/Original question 4 · Try 2/);
-  assert.equal(reopened.d.querySelectorAll('.results-answers .question-review').length,2);
-  assert.equal(reopened.d.querySelectorAll('#review-passage [role=button]').length,0);
+  assert.ok(reopened.d.querySelector('.practice-layout .passage-panel'));
+  assert.match(reopened.d.querySelector('#passage').textContent,/And for Carla, it's good to love your job/);
+  assert.equal(reopened.d.querySelectorAll('#passage mark').length,1);
+  assert.equal(reopened.d.querySelectorAll('.answer-choices .choice').length,4);
+  assert.equal(reopened.d.querySelector('input:checked').value,'0');
+  const before=reopened.saved();reopened.d.querySelector('[data-attempt="1"]').click();
+  assert.equal(reopened.d.querySelectorAll('#passage mark').length,2);
+  assert.equal(reopened.d.querySelector('input:checked').value,'2');
+  assert.equal(reopened.d.querySelectorAll('#passage [role=button]').length,0);
+  reopened.d.querySelector('#review-next').click();assert.equal(reopened.d.querySelector('input:checked').value,'1');
+  reopened.d.querySelector('#review-prev').click();assert.equal(reopened.d.querySelector('input:checked').value,'0');
   reopened.d.querySelector('[data-review]').click();assert.equal(reopened.d.querySelector('.review-details').hidden,false);
   assert.equal(reopened.saved(),before);reopened.close();
 });
@@ -77,7 +93,9 @@ test('history review opens the selected old run, not the latest, and never revea
   const old={id:'old',startedAt:'2026-10-22T10:00:00Z',answers:{'carla-4':[checked]}},fresh={id:'new',startedAt:'2026-10-23T10:00:00Z',answers:{}};
   const t=boot(JSON.stringify({version:1,articles:{carla:[old,fresh]}})),before=t.saved();
   t.d.querySelector('[data-history-review="carla"][data-run="0"]').click();
-  assert.match(t.d.querySelector('.results-header').textContent,/Practice 1/);assert.match(t.d.querySelector('.results-header').textContent,/In progress/);
-  assert.equal(t.d.querySelectorAll('.results-answers [data-review]').length,1);assert.match(t.d.querySelector('.results-answers').textContent,/Not checked yet/);
-  assert.equal(t.d.querySelector('#review-passage mark').textContent,'Carla is a cat.');assert.equal(t.saved(),before);t.close();
+  assert.match(t.d.querySelector('.workspace-head').textContent,/Practice 1/);assert.match(t.d.querySelector('.workspace-head').textContent,/In progress/);
+  assert.equal(t.d.querySelectorAll('.question-panel [data-review]').length,1);
+  assert.equal(t.d.querySelector('#passage mark').textContent,'Carla is a cat.');
+  t.d.querySelector('#review-next').click();assert.match(t.d.querySelector('.question-panel').textContent,/Not checked yet/);assert.equal(t.d.querySelector('[data-review]'),null);
+  assert.equal(t.saved(),before);t.close();
 });

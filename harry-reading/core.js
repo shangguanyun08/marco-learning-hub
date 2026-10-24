@@ -42,7 +42,7 @@
     if(!marks.length)return null;
     const checked={choice:draft.choice,answeredAt:at,marks,checkedAt:at,answerOK:draft.choice===q.answer,highlightAdded:true};
     (run.answers[q.id]??=[]).push(checked);
-    run.drafts[q.id]={choice:draft.choice,marks:marks.map(m=>({...m}))};
+    run.drafts[q.id]={choice:draft.choice,marks:marks.map(m=>({...m})),updatedAt:at};
     if(finished(article,run)===article.questions.length)run.completedAt=at;
     return checked;
   }

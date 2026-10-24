@@ -3,36 +3,38 @@
   const articles=window.READING_ARTICLES,core=window.ReadingCore,app=document.querySelector('#app');
   const key='harry-reading-readtheory-2026-10-21-v1',demo=new URLSearchParams(location.search).has('demo');
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let state={version:1,articles:{}},article=null,run=null,pending=[];
+  let state={version:1,articles:{}},article=null,run=null,pending=[],reviewMode=false,reviewIndex=0,reviewAttempt=0,largeArticle=false,sync=null;
   try{if(!demo){const saved=JSON.parse(localStorage.getItem(key)||'null');if(saved?.version===1&&saved.articles&&typeof saved.articles==='object')state=saved;}}
   catch{document.querySelector('#save-status').textContent='Progress could not be loaded';}
   for(const a of articles)for(const r of state.articles[a.id]||[])core.prepareRun(a,r);
   const now=()=>new Date().toISOString(),runs=a=>state.articles[a.id]||[],latest=a=>runs(a).at(-1);
-  const currentQ=()=>article.questions[run.position||0],attempts=q=>run.answers[q.id]||[];
+  const currentQ=()=>article.questions[reviewMode?reviewIndex:run.position||0],attempts=q=>run.answers[q.id]||[];
   const draft=()=>run.drafts[currentQ().id],isResolved=()=>core.resolved(attempts(currentQ()));
   const completed=(a,r)=>core.finished(a,r)===a.questions.length;
   const levelLabel=a=>a.lexile?`Lexile ${a.lexile}L`:`Reference Lexile ${a.referenceLexile}L`;
   const questionLabel=(a,q)=>`${a.sourceQuiz?'Original question':'Question'} ${q.number}`;
   function save(){
     if(demo){document.querySelector('#save-status').textContent='Preview · no records saved';return;}
-    try{localStorage.setItem(key,JSON.stringify(state));document.querySelector('#save-status').textContent='Saved on this device';}
+    try{localStorage.setItem(key,JSON.stringify(state));document.querySelector('#save-status').textContent='Saved on this device';sync?.queue();}
     catch{const status=document.querySelector('#save-status');status.classList.add('storage-error');status.textContent='Storage unavailable · export your progress';}
   }
+  function saveDraft(){draft().updatedAt=now();run.updatedAt=draft().updatedAt;save();}
   function newRun(a){
     const r=core.prepareRun(a,{id:crypto.randomUUID(),startedAt:now(),position:0,completedAt:null,answers:{},drafts:{}});
     (state.articles[a.id]??=[]).push(r);return r;
   }
   function openArticle(id,fresh=false){
+    reviewMode=false;
     article=articles.find(a=>a.id===id);run=fresh?newRun(article):(latest(article)||newRun(article));core.prepareRun(article,run);pending=[];save();
     if(completed(article,run))renderSummary();else renderWorkspace();window.scrollTo(0,0);
   }
   function home(){
-    article=null;run=null;pending=[];
+    article=null;run=null;pending=[];reviewMode=false;document.body.classList.remove('active-session');
     app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1></section>
       <section class="cards" aria-label="Recent article redo sessions">${renderCards(articles.filter(a=>a.kind!=='parallel'))}</section>
       <section class="practice-group" aria-labelledby="grade3-heading"><div class="practice-group-head"><h2 id="grade3-heading">Grade 3 · New practice</h2><span>10 articles · 52 multiple-choice questions</span></div><p class="meta">The Lexile labels below belong to the ReadTheory reference samples. These are original parallel passages, and their own Lexile scores have not been measured.</p><div class="cards" aria-label="Grade 3 parallel reading sessions">${renderCards(articles.filter(a=>a.kind==='parallel'))}</div></section>
       <p class="home-note">Choose an answer and highlight supporting text before checking. Only your answer is marked right or wrong; highlights are saved, not graded. Tap sentences or select words to highlight them. Wrong answers get one second try. After checking, use “Show answer and explanation” for a parent review.</p>
-      <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records stay in this browser. Export a copy to keep or share the attempts and highlighted evidence.</p></details>`;
+      <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records automatically upload and sync across devices. Open this page on the original device once to upload earlier work. Export a backup any time.</p></details>`;
     app.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openArticle(b.dataset.open));app.querySelector('#export').onclick=exportProgress;
     app.querySelectorAll('[data-history-review]').forEach(b=>b.onclick=()=>{
       article=articles.find(a=>a.id===b.dataset.historyReview);run=runs(article)[Number(b.dataset.run)];pending=[];
@@ -63,17 +65,32 @@
     a.href=url;a.download='harry-reading-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
   function renderWorkspace(focus=false){
-    pending=[];
-    const q=currentQ(),done=isResolved(),at=attempts(q).at(-1),marks=done?at.marks:draft().marks;
+    pending=[];document.body.classList.add('active-session');
+    const q=currentQ(),done=reviewMode||isResolved(),at=reviewMode?attempts(q)[reviewAttempt]:attempts(q).at(-1),marks=done?at?.marks||[]:draft().marks;
     const tryNumber=attempts(q).length+1;
-    app.innerHTML=`<div class="workspace-head"><div><p class="eyebrow">Session ${articles.indexOf(article)+1} of ${articles.length}</p><h1>${esc(article.title)}</h1><p class="meta">Question ${(run.position||0)+1} of ${article.questions.length}${article.sourceQuiz?` · Original question ${q.number}`:''} · ${esc(levelLabel(article))}</p></div></div>
-      <div class="reading-layout"><section class="passage-panel" aria-labelledby="passage-heading"><h2 id="passage-heading">${esc(article.title)}</h2>${article.referenceTitle?`<p class="reference-note">Original parallel practice · reference: “${esc(article.referenceTitle)}” (${article.referenceLexile}L). This new passage has not been Lexile-measured.</p>`:''}<p class="instructions">${done?'Reread the highlighted evidence as you review.':'Choose your answer and highlight supporting words. Tap a sentence, or select words to highlight.'}</p><div class="passage" id="passage">${renderPassage(marks,!done)}</div></section>
-      <section class="question-panel" aria-labelledby="question-title"><p class="eyebrow">${done?'Checked':tryNumber===1?'First try':'Second try'}</p><h2 id="question-title" tabindex="-1">${esc(q.prompt)}</h2><div id="question-body">${done?renderFeedback(q,at):renderForm(q,at)}</div></section></div>
+    app.innerHTML=`<div class="workspace-head"><div><h1>${esc(article.title)}</h1><p class="meta">Session ${articles.indexOf(article)+1} · Question ${(reviewMode?reviewIndex:run.position||0)+1} of ${article.questions.length}${article.sourceQuiz?` · Original question ${q.number}`:''} · ${esc(levelLabel(article))}${reviewMode?` · Practice ${runs(article).indexOf(run)+1} · ${completed(article,run)?'Complete':'In progress'} · First answers: ${core.scores(article,run).firstAnswers}/${article.questions.length}`:''}</p></div>${reviewMode?`<nav class="review-navigation" aria-label="Review questions"><button class="secondary" id="review-prev" ${reviewIndex===0?'disabled':''}>← Previous</button><label>Question <select id="review-question">${article.questions.map((item,i)=>`<option value="${i}" ${i===reviewIndex?'selected':''}>${i+1}</option>`).join('')}</select></label><button class="secondary" id="review-next" ${reviewIndex===article.questions.length-1?'disabled':''}>Next →</button></nav>`:''}</div>
+      <div class="reading-layout practice-layout"><section class="passage-panel" aria-labelledby="passage-heading"><div class="passage-tools"><h2 id="passage-heading">Article</h2><button class="quiet" id="article-size">${largeArticle?'Fit article':'Larger text'}</button></div><p class="instructions">${done?'Saved highlights · not graded':'Tap a sentence or select words to highlight supporting text.'}</p><div class="passage" id="passage" tabindex="0" aria-label="Article text">${renderPassage(marks,!done)}</div></section>
+      <section class="question-panel" aria-labelledby="question-title"><p class="eyebrow">${reviewMode?'Saved answer · review':done?'Checked':tryNumber===1?'First try':'Second try'}</p>${reviewMode&&attempts(q).length?`<div class="attempt-tabs" aria-label="Saved attempts">${attempts(q).map((a,i)=>`<button class="secondary" data-attempt="${i}" aria-pressed="${i===reviewAttempt}">Try ${i+1} · ${a.answerOK?'correct':'incorrect'}</button>`).join('')}</div>`:''}<h2 id="question-title" tabindex="-1">${esc(q.prompt)}</h2><div id="question-body">${done?at?renderFeedback(q,at):`${renderChoices(q,null,true)}<p class="meta">Not checked yet.</p>`:renderForm(q,at)}</div>${reviewMode?`<div class="actions"><button class="quiet" id="fresh-run">Practice this article again</button></div>`:''}</section></div>
       ${!done?`<div class="mobile-dock"><button class="select-action" id="mobile-add" hidden>Highlight selection</button><button class="primary" id="mobile-check" ${canCheck()?'':'disabled'}>Check ${tryNumber===1?'first':'second'} try</button></div>`:''}`;
-    if(done){app.querySelector('#next').onclick=nextQuestion;}
+    if(reviewMode){
+      const show=i=>{reviewIndex=i;reviewAttempt=0;renderWorkspace();};
+      app.querySelector('#review-prev').onclick=()=>show(reviewIndex-1);app.querySelector('#review-next').onclick=()=>show(reviewIndex+1);
+      app.querySelector('#review-question').onchange=e=>show(Number(e.target.value));
+      app.querySelectorAll('[data-attempt]').forEach(b=>b.onclick=()=>{reviewAttempt=Number(b.dataset.attempt);renderWorkspace();});
+      app.querySelector('#fresh-run').onclick=()=>openArticle(article.id,true);
+    }else if(done){app.querySelector('#next').onclick=nextQuestion;}
     else bindEditing();
+    app.querySelector('#article-size').onclick=()=>{largeArticle=!largeArticle;app.querySelector('#article-size').textContent=largeArticle?'Fit article':'Larger text';fitArticle();};fitArticle();
     if(focus)app.querySelector('#question-title').focus({preventScroll:true});
   }
+  function fitArticle(){
+    const panel=app.querySelector('.practice-layout .passage-panel'),text=app.querySelector('#passage'),question=app.querySelector('.question-panel');if(!panel||!text)return;
+    if(innerWidth>760){const height=Math.max(280,innerHeight-panel.getBoundingClientRect().top-scrollY-16);panel.style.height=question.style.height=height+'px';}else{panel.style.height='42dvh';question.style.height='auto';}
+    text.style.fontSize=(largeArticle?22:21)+'px';
+    if(!largeArticle&&text.clientHeight>0)for(let size=20;text.scrollHeight>text.clientHeight+2&&size>=17;size--)text.style.fontSize=size+'px';
+  }
+  window.addEventListener('resize',fitArticle);
+  function renderChoices(q,choice,locked=false){return `<fieldset class="answer-choices"><legend class="sr-only">Answer choices</legend>${q.choices.map((c,i)=>`<label class="choice"><input type="radio" name="answer" value="${i}" ${choice===i?'checked':''} ${locked?'disabled':''}><strong>${'ABCD'[i]}</strong><span>${esc(c)}</span></label>`).join('')}</fieldset>`;}
   function renderPassage(marks=[],interactive=false){
     return core.sentences(article).map((ss,p)=>`${article.sectionTitles?.[p]?`<h3>${esc(article.sectionTitles[p])}</h3>`:''}<p><span class="para-num" aria-hidden="true">${p+1}</span>${ss.map(s=>{
       const ranges=marks.filter(m=>m.sid===s.id).sort((a,b)=>a.start-b.start),merged=[];
@@ -88,10 +105,10 @@
   }
   function renderForm(q,previous){
     const d=draft(),tryNumber=attempts(q).length+1;
-    return `${renderFirstFeedback(previous)}<form id="answer-form"><fieldset style="border:0;padding:0;margin:0"><legend class="sr-only">Answer choices</legend>${q.choices.map((c,i)=>`<label class="choice"><input type="radio" name="answer" value="${i}" ${d.choice===i?'checked':''}><strong>${'ABCD'[i]}</strong><span>${esc(c)}</span></label>`).join('')}</fieldset><button class="select-action" id="highlight-selection" type="button" hidden>Highlight selected words</button><p class="selected-preview" id="selected-preview"></p><ul class="evidence-list" id="evidence-list">${renderEvidence(d.marks)}</ul><div class="actions"><button class="primary" id="check" ${canCheck()?'':'disabled'}>Check ${tryNumber===1?'first':'second'} try</button><button class="quiet" type="button" id="clear-marks" ${d.marks.length?'':'disabled'}>Clear highlights</button></div><p class="meta">Choose an answer and add a highlight before checking.</p></form>`;
+    return `${renderFirstFeedback(previous)}<form id="answer-form">${renderChoices(q,d.choice)}<button class="select-action" id="highlight-selection" type="button" hidden>Highlight selected words</button><p class="selected-preview" id="selected-preview"></p><ul class="evidence-list" id="evidence-list">${renderEvidence(d.marks)}</ul><div class="actions"><button class="primary" id="check" ${canCheck()?'':'disabled'}>Check ${tryNumber===1?'first':'second'} try</button><button class="quiet" type="button" id="clear-marks" ${d.marks.length?'':'disabled'}>Clear highlights</button></div><p class="meta">Choose an answer and add a highlight before checking.</p></form>`;
   }
   function renderFeedback(q,at){
-    return `<div class="locked-choice"><span class="meta">Your ${attempts(q).length===1?'first':'second'} try</span><br><strong>${'ABCD'[at.choice]}.</strong> ${esc(q.choices[at.choice])}</div><p class="meta">Your saved highlights · not graded</p><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul><div class="feedback ${at.answerOK?'':'needs-work'}" role="status"><h3>Answer: ${at.answerOK?'correct':'incorrect'}.</h3><p>Your highlighted text is saved for parent review. The site does not decide whether it supports the answer.</p></div>${renderAnswerReview(q,`review-${q.id}`)}<div class="actions"><button class="primary" id="next">${(run.position||0)===article.questions.length-1?'See session results':'Next question'} →</button></div>`;
+    return `${renderChoices(q,at.choice,true)}<div class="feedback ${at.answerOK?'':'needs-work'}" role="status"><h3>Answer: ${at.answerOK?'correct':'incorrect'}.</h3><p>Your selected choice and highlights are saved. Highlights are not graded.</p></div>${core.resolved(attempts(q))?renderAnswerReview(q,`review-${q.id}`):''}<details class="saved-highlights"><summary>Saved highlighted text</summary><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul></details>${reviewMode?'':`<div class="actions"><button class="primary" id="next">${(run.position||0)===article.questions.length-1?'Review session':'Next question'} →</button></div>`}`;
   }
   function renderAnswerReview(q,id){
     return `<div class="answer-review"><button type="button" class="secondary" data-review="${id}" aria-controls="${id}" aria-expanded="false">Show answer and explanation</button><div class="review-details" id="${id}" hidden><h3>Answer and explanation</h3><p><strong>Correct answer: ${'ABCD'[q.answer]} · ${esc(q.choices[q.answer])}</strong></p><p>${esc(q.explanation)}</p><h3>Suggested supporting text</h3>${q.evidence.map(group=>`<blockquote class="support">${esc(group[0])}</blockquote>`).join('')}<p class="meta">Compare this with Harry’s saved highlights. Other wording or selections may also support the answer; highlights are for a parent to review, not an automatic score.</p></div></div>`;
@@ -113,24 +130,24 @@
   function bindEditing(){
     bindPassage();bindEvidenceButtons();
     const form=app.querySelector('#answer-form');
-    form.onchange=()=>{const selected=form.querySelector('input:checked');draft().choice=selected?Number(selected.value):null;save();updateCheckButtons();};
+    form.onchange=()=>{const selected=form.querySelector('input:checked');draft().choice=selected?Number(selected.value):null;saveDraft();updateCheckButtons();};
     const check=()=>{
       if(!canCheck())return;
       if(!core.recordCheck(article,currentQ(),run,now()))return;
-      save();renderWorkspace(true);
+      run.updatedAt=now();save();renderWorkspace(true);
       if(matchMedia('(max-width:900px)').matches)app.querySelector('.question-panel').scrollIntoView({block:'start'});
     };
     form.onsubmit=e=>{e.preventDefault();check();};app.querySelector('#mobile-check').onclick=check;
-    const addSelection=()=>{if(!pending.length)return;draft().marks.push(...pending);pending=[];window.getSelection()?.removeAllRanges();save();refreshHighlights();};
+    const addSelection=()=>{if(!pending.length)return;draft().marks.push(...pending);pending=[];window.getSelection()?.removeAllRanges();saveDraft();refreshHighlights();};
     app.querySelector('#highlight-selection').onclick=addSelection;app.querySelector('#mobile-add').onclick=addSelection;
-    app.querySelector('#clear-marks').onclick=()=>{draft().marks=[];save();refreshHighlights();};
+    app.querySelector('#clear-marks').onclick=()=>{draft().marks=[];saveDraft();refreshHighlights();};
   }
   function nextQuestion(){
     if((run.position||0)===article.questions.length-1)renderSummary();
     else{run.position=(run.position||0)+1;save();renderWorkspace(true);}
     window.scrollTo(0,0);
   }
-  function bindEvidenceButtons(){app.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{const d=draft();d.marks=core.quoteMarks(article,d.marks);d.marks.splice(Number(b.dataset.remove),1);save();refreshHighlights();});}
+  function bindEvidenceButtons(){app.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>{const d=draft();d.marks=core.quoteMarks(article,d.marks);d.marks.splice(Number(b.dataset.remove),1);saveDraft();refreshHighlights();});}
   function bindPassage(){
     app.querySelectorAll('.sentence.selectable').forEach(el=>{
       const toggle=()=>{
@@ -138,7 +155,7 @@
         const d=draft(),sid=el.dataset.sid,existing=d.marks.some(m=>m.sid===sid);
         d.marks=d.marks.filter(m=>m.sid!==sid);
         if(!existing){const s=core.sentences(article).flat().find(s=>s.id===sid);d.marks.push({sid,start:0,end:s.text.length});}
-        const keyboardFocus=document.activeElement===el;save();refreshHighlights(keyboardFocus?sid:null);
+        const keyboardFocus=document.activeElement===el;saveDraft();refreshHighlights(keyboardFocus?sid:null);
       };
       el.onclick=toggle;el.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();window.getSelection()?.removeAllRanges();toggle();}};
     });
@@ -150,7 +167,7 @@
     bindPassage();bindEvidenceButtons();if(focusSid)app.querySelector(`[data-sid="${focusSid}"]`)?.focus({preventScroll:true});
   }
   document.addEventListener('selectionchange',()=>{
-    if(!article||!run||isResolved())return;
+    if(!article||!run||reviewMode||isResolved())return;
     const button=app.querySelector('#highlight-selection'),preview=app.querySelector('#selected-preview');if(!button)return;
     const selection=window.getSelection(),passage=app.querySelector('#passage');
     if(!selection||selection.isCollapsed||!selection.rangeCount||!passage.contains(selection.anchorNode)||!passage.contains(selection.focusNode))return;
@@ -165,24 +182,39 @@
     }
     pending=parts;button.hidden=!parts.length;app.querySelector('#mobile-add').hidden=!parts.length;preview.textContent=parts.length?`Selected: “${selection.toString().trim()}”`:'';
   });
-  function renderSummary(){
-    const score=core.scores(article,run),index=articles.indexOf(article),next=articles[index+1];
-    const firstChecked=article.questions.find(q=>attempts(q).length),initialMarks=firstChecked?attempts(firstChecked)[0].marks||[]:[];
-    app.innerHTML=`<section class="results-header"><p class="eyebrow">Session ${index+1} · ${completed(article,run)?'Complete':'In progress'} · Practice ${runs(article).indexOf(run)+1}</p><h1>${esc(article.title)} · Results</h1><p>Review the article and answers together. Select an attempt’s highlights to see them in the article. Highlights are saved, not graded.</p><div class="stat-row"><div class="stat"><strong>${score.firstAnswers}/${score.total}</strong><span>First answers correct</span></div><div class="stat"><strong>${score.firstHighlights}/${score.total}</strong><span>Highlights added on first try · not graded</span></div><div class="stat"><strong>${score.mastered}/${score.total}</strong><span>Answers correct by the second try</span></div></div><button class="quiet" id="all-articles">All articles & history</button></section>
-      <div class="reading-layout results-layout"><section class="passage-panel results-passage" aria-labelledby="review-passage-heading" tabindex="0"><h2 id="review-passage-heading">${esc(article.title)}</h2><p class="instructions" id="review-highlight-label" role="status">${firstChecked?`${questionLabel(article,firstChecked)} · Try 1 highlights`:'No highlights recorded yet'}</p><div class="passage" id="review-passage">${renderPassage(initialMarks,false)}</div></section><section class="results-answers" aria-labelledby="results-answers-heading"><h2 id="results-answers-heading">Answers & parent review</h2>${article.questions.map(q=>`<section class="question-review"><h3>${questionLabel(article,q)}</h3><p>${esc(q.prompt)}</p>${attempts(q).map((at,n)=>`<p class="meta">Try ${n+1}: ${esc(q.choices[at.choice])} · ${at.answerOK?'correct':'incorrect'}</p><ul class="evidence-list">${renderEvidence(at.marks||[],false)}</ul><button class="secondary" data-review-highlights="${q.id}" data-attempt="${n}" aria-controls="review-passage" aria-pressed="${q===firstChecked&&n===0}">Show ${questionLabel(article,q).toLowerCase()} · try ${n+1} highlights</button>`).join('')||'<p class="meta">Not checked yet.</p>'}${core.resolved(attempts(q))?renderAnswerReview(q,`summary-${q.id}`):''}</section>`).join('')}</section></div><div class="actions results-actions">${next?`<button class="primary" id="next-article">Next article →</button>`:''}<button class="secondary" id="results-home">All articles & history</button><button class="quiet" id="fresh-run">Practice this article again</button></div>`;
-    app.querySelectorAll('[data-review-highlights]').forEach(b=>b.onclick=()=>{
-      const q=article.questions.find(q=>q.id===b.dataset.reviewHighlights),n=Number(b.dataset.attempt);
-      app.querySelector('#review-passage').innerHTML=renderPassage(attempts(q)[n].marks||[],false);
-      app.querySelector('#review-highlight-label').textContent=`${questionLabel(article,q)} · Try ${n+1} highlights (not graded)`;
-      app.querySelectorAll('[data-review-highlights]').forEach(other=>other.setAttribute('aria-pressed',String(other===b)));
-      const panel=app.querySelector('.results-passage'),mark=panel.querySelector('mark');
-      if(mark)panel.scrollTop+=mark.getBoundingClientRect().top-panel.getBoundingClientRect().top-panel.clientHeight*.4;
-      b.closest('.question-review').scrollIntoView({block:'start'});
-    });
-    app.querySelector('#results-home').onclick=home;
-    app.querySelector('#all-articles').onclick=home;app.querySelector('#fresh-run').onclick=()=>openArticle(article.id,true);if(next)app.querySelector('#next-article').onclick=()=>openArticle(next.id);
-  }
+  function renderSummary(){reviewMode=true;reviewIndex=0;reviewAttempt=0;renderWorkspace();}
   document.querySelector('#back-home').onclick=()=>{home();window.scrollTo(0,0);};
   if(demo)document.querySelector('#save-status').textContent='Preview · no records saved';
   home();
+  const syncButton=document.querySelector('#sync-now');
+  const onlineEnabled=!demo&&location.hostname==='shangguanyun08.github.io'&&window.ReadingSync;
+  if(!onlineEnabled){if(syncButton)syncButton.hidden=true;}
+  else{
+    let deviceId;
+    try{
+      const original=localStorage.getItem(key);if(original&&!localStorage.getItem(key+':before-cloud-sync'))localStorage.setItem(key+':before-cloud-sync',original);
+      deviceId=localStorage.getItem(key+':device')||crypto.randomUUID();localStorage.setItem(key+':device',deviceId);
+    }catch{deviceId=crypto.randomUUID();}
+    sync=ReadingSync.create({deviceId,getState:()=>{try{return ReadingSync.merge(state,JSON.parse(localStorage.getItem(key)||'null'));}catch{return state;}},onStatus:message=>{document.querySelector('#save-status').textContent=message;},applyState:merged=>{
+      for(const a of articles)for(const r of merged.articles[a.id]||[])core.prepareRun(a,r);
+      if(ReadingSync.stable(merged)===ReadingSync.stable(state))return;
+      const previousRun=run,oldPosition=run?.position;
+      state=merged;
+      try{localStorage.setItem(key,JSON.stringify(state));}catch{throw Error('Local storage unavailable');}
+      if(article){
+        run=runs(article).find(r=>r.id===previousRun.id&&ReadingSync.compatible(previousRun,r)&&ReadingSync.compatible(r,previousRun))||runs(article).find(r=>(r.syncRoot||r.id)===(previousRun.syncRoot||previousRun.id)&&ReadingSync.compatible(previousRun,r)&&ReadingSync.compatible(r,previousRun))||latest(article);
+        if(!run){home();return;}
+        // Keep the question the reader was viewing while downloading new work.
+        if(!reviewMode&&oldPosition!==undefined)run.position=oldPosition;
+        renderWorkspace();
+      }else home();
+    }});
+    syncButton.onclick=()=>sync.sync();
+    window.addEventListener('online',()=>sync.sync());
+    window.addEventListener('focus',()=>sync.sync());
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync.sync();});
+    window.addEventListener('storage',e=>{if(e.key===key&&e.newValue)sync.sync();});
+    setInterval(()=>{if(!document.hidden)sync.sync();},30000);
+    sync.sync();
+  }
 })();
