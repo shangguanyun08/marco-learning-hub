@@ -15,7 +15,7 @@
       const question=source=>session.questions.find(q=>String(q.source)===String(source));
       return runs.every(run=>object(run)&&typeof run.id==='string'&&time(run.startedAt)&&(run.completedAt===null||time(run.completedAt))&&
         Array.isArray(run.questionSources)&&JSON.stringify(run.questionSources)===JSON.stringify(session.questions.map(q=>q.source))&&object(run.answers)&&object(run.pending)&&
-        Object.entries(run.answers).every(([source,e])=>question(source)&&object(e)&&Array.isArray(e.attempts)&&e.attempts.length<=2&&e.attempts.every(a=>object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<question(source).choices.length&&a.correct===(a.choice===question(source).correct)&&time(a.at)&&(a.eliminated===undefined||(Array.isArray(a.eliminated)&&a.eliminated.length===2&&new Set(a.eliminated).size===2&&a.eliminated.every(i=>Number.isInteger(i)&&i>=0&&i<4)))))&&
+        Object.entries(run.answers).every(([source,e])=>question(source)&&object(e)&&Array.isArray(e.attempts)&&e.attempts.length<=2&&e.attempts.every(a=>object(a)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<question(source).choices.length&&a.correct===(a.choice===question(source).correct)&&time(a.at)&&(a.eliminated===undefined||(Array.isArray(a.eliminated)&&a.eliminated.length<=2&&new Set(a.eliminated).size===a.eliminated.length&&a.eliminated.every(i=>Number.isInteger(i)&&i>=0&&i<4)))))&&
         Object.entries(run.pending).every(([source,p])=>question(source)&&object(p)&&Number.isInteger(p.choice)&&p.choice>=0&&p.choice<question(source).choices.length&&time(p.at))&&
         (run.thinking===undefined||(object(run.thinking)&&Object.entries(run.thinking).every(([source,n])=>question(source)&&T.valid(n)))));
     });

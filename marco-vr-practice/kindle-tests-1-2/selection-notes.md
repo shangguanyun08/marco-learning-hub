@@ -36,7 +36,17 @@ They are not necessarily mastered. Most had more transparent definitions, strong
 
 The new session uses a new, isolated progress namespace. Existing mock progress schemas and identifiers are not changed. Two distinct tries are supported; a first wrong try reveals no answer, definition, or trick. A correct answer or exhausted second try reveals the explanation. First-try scores stay separate from corrections. Completion turns the session status green; it is not labeled mastery. Local/demo previews never contact the online progress service or use the live storage key.
 
-## Prediction and elimination update
+## October 24: editable predictions, optional elimination, and ordered sections
+
+The display now puts all 15 synonyms before the 9 sentence completions. Synonym prompts show only the uppercase target word. The original bank order, stable source IDs, `questionSources`, choices, keys, and saved answer histories are unchanged; only the display order changes.
+
+Revealed predictions have an **Edit prediction** button. Editing hides choices while the form is open, supports Save and Cancel, and never changes scored attempts or eliminated choices. The earliest pre-choice snapshot remains in records; a separately timestamped latest revision syncs across devices and survives stale elimination notes. Legacy answers without an original prediction remain valid.
+
+Elimination is optional: zero, one, or two crossed-out choices are accepted, and an answer can be checked immediately after revealing choices. A known-wrong first choice remains unavailable on the second try. The key, meaning, and trick still stay hidden after the first wrong answer. Optional elimination lists retain their actual length in saved attempts.
+
+**Start fresh practice** appends a blank run even if the previous run is unfinished. It returns to question one with 0/24, no revealed choices, and empty predictions, while retaining all earlier work in saved history under the same sync namespace. A clean restart is performed only on user request or the explicit button click, never on page load.
+
+## Earlier prediction and elimination update
 
 All 24 questions now appear together on one scrollable page, including before starting a run. Number buttons jump within that page; they never hide other questions. Each new question initially hides its own four choices. Prediction uses one short text input: one simple word is enough. Every prediction field is optional, and the Show choices button is always available even with the whole form blank. Synonyms offer only Good/Bad and Strong/Weak; sentence completions offer only Same/Opposite. Neutral/neither/not-sure controls are removed. Old stored category values remain valid for compatibility but are not displayed.
 

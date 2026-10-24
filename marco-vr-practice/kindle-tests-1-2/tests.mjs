@@ -9,7 +9,7 @@ try{({JSDOM}=require('jsdom'));}catch{({JSDOM}=require('../../../tmp/daily-sync-
 const read=p=>readFileSync(new URL(p,import.meta.url),'utf8'), plain=x=>JSON.parse(JSON.stringify(x));
 const common=['data.js','../../marco-daily-test-review/2026-10-11/engine.js','thinking.js','sync.js'];
 const context=vm.createContext({crypto:{randomUUID},setTimeout,clearTimeout,setInterval,clearInterval,AbortController,fetch:async()=>{},localStorage:{getItem(){return null},setItem(){}},addEventListener(){},removeEventListener(){},document:{visibilityState:'visible',addEventListener(){},removeEventListener(){}}});context.window=context;for(const p of common)vm.runInContext(read(p),context);
-const bank=context.MARCO_ISEE_PRACTICE[0], E=context.MarcoTest3Engine, S=context.MarcoTest3Sync, KEY='marco-vr-kindle-tests1-2-hard-20261024-v1';
+const bank=context.MARCO_ISEE_PRACTICE[0], displayed=[...bank.questions.filter(q=>q.type==='synonym'),...bank.questions.filter(q=>q.type!=='synonym')], E=context.MarcoTest3Engine, S=context.MarcoTest3Sync, KEY='marco-vr-kindle-tests1-2-hard-20261024-v1';
 function page(t,{saved,pathname='index.html',script='all-questions.js'}={}){
  const dom=new JSDOM(read(pathname),{url:'http://localhost:8793/marco-vr-practice/kindle-tests-1-2/?demo=1',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());
  let network=0;w.fetch=()=>{network++;throw new Error('Preview must not use network');};w.scrollTo=()=>{};
@@ -19,7 +19,7 @@ function page(t,{saved,pathname='index.html',script='all-questions.js'}={}){
  return {w,doc:w.document,network:()=>network,state:()=>JSON.parse(w.localStorage.getItem(KEY+':preview')||'null')};
 }
 function prepare(p,choice){
- const i=Number(new URL(p.w.location.href).searchParams.get('q')||1)-1,q=bank.questions[i],getCard=()=>p.doc.querySelector('#q-'+(i+1)),form=getCard().querySelector('.prediction-form');
+ const i=Number(new URL(p.w.location.href).searchParams.get('q')||1)-1,q=displayed[i],getCard=()=>p.doc.querySelector('#q-'+(i+1)),form=getCard().querySelector('.prediction-form');
  if(form){const text=form.querySelector('.prediction-input');text.value='my predicted meaning';text.dispatchEvent(new p.w.Event('input',{bubbles:true}));form.querySelector('button[type=submit]').click();}
  const run=p.state().sessions[bank.id].at(-1),locked=(run.answers[q.source]?.attempts||[]).map(a=>a.choice),wanted=[...new Set([...locked,...q.choices.map((_,i)=>i).filter(i=>i!==choice&&i!==q.correct)])].slice(0,2);
  for(const button of [...getCard().querySelectorAll('[data-eliminate][aria-pressed=true]')])if(!button.disabled&&!wanted.includes(Number(button.dataset.eliminate)))button.click();
@@ -47,7 +47,7 @@ test('correct first answer reveals solution; two wrong attempts close without aw
 });
 test('all 24 can finish, green completion and per-skill summary appear, new run preserves the old',t=>{
  const p=page(t);p.doc.querySelector('[data-action=start]').click();
- bank.questions.forEach((q,i)=>{p.doc.querySelector(`[data-question="${i}"]`).click();answer(p,q.correct);});
+ displayed.forEach((q,i)=>{p.doc.querySelector(`[data-question="${i}"]`).click();answer(p,q.correct);});
  assert.ok(p.doc.querySelector('#practice-status').classList.contains('is-complete'));assert.match(p.doc.querySelector('.run-score').textContent,/24\/24/);assert.equal(p.doc.querySelectorAll('.skill-table tbody tr').length,4);assert.equal([...p.doc.querySelectorAll('.skill-table tbody tr')].reduce((n,r)=>n+Number(r.cells[1].textContent.split('/')[0]),0),24);
  assert.ok(p.state().sessions[bank.id][0].completedAt);p.doc.querySelector('[data-action=start]').click();assert.equal(p.state().sessions[bank.id].length,2);assert.ok(p.state().sessions[bank.id][0].completedAt);assert.equal(p.state().sessions[bank.id][1].completedAt,null);assert.equal(p.doc.querySelector('.solution'),null);
  assert.equal(p.w.localStorage.getItem('marco-vr-practice-oct22-test4-v1'),'original record sentinel');assert.equal(p.w.localStorage.getItem('marco-vr-word-checklist-v1'),'parent selections sentinel');assert.equal(p.w.localStorage.getItem(KEY),null);assert.equal(p.network(),0);

@@ -14,6 +14,7 @@
     return fields(n) && time(n.updatedAt) && typeof n.eventId === 'string' && n.eventId.length <= 100 &&
       (n.legacySeen === undefined || typeof n.legacySeen === 'boolean') &&
       (n.committed === null || (fields(n.committed) && time(n.committed.at) && typeof n.committed.id === 'string')) &&
+      (n.revised === undefined || (fields(n.revised) && time(n.revised.at) && typeof n.revised.id === 'string')) &&
       Array.isArray(n.eliminated) && n.eliminated.length <= 2 && new Set(n.eliminated).size === n.eliminated.length && n.eliminated.every(i => Number.isInteger(i) && i >= 0 && i < 4);
   }
   function ready(q, n) {
@@ -35,9 +36,16 @@
     const result = clone(ordered[1]);
     const snapshots = [a.committed, b.committed].filter(Boolean).sort((x, y) => (x.at + '|' + x.id).localeCompare(y.at + '|' + y.id));
     result.committed = snapshots.length ? clone(snapshots[0]) : null;
+    const revisions = [a.revised, b.revised].filter(Boolean).sort((x, y) => (x.at + '|' + x.id).localeCompare(y.at + '|' + y.id));
+    if (revisions.length) result.revised = clone(revisions.at(-1));
     if (a.legacySeen || b.legacySeen) result.legacySeen = true;
     result.eliminated.sort((x, y) => x - y);
     return result;
   }
-  root.KindleVRThinking = { make, valid, ready, touch, commit, merge };
+  function revise(q, n, values, at = new Date().toISOString(), id = root.crypto.randomUUID()) {
+    if (!ready(q, values)) return false;
+    n.revised = { prediction: values.prediction.trim(), tone: values.tone, strength: values.strength, link: values.link, at, id };
+    touch(n, {}, at, id); return true;
+  }
+  root.KindleVRThinking = { make, valid, ready, touch, commit, revise, merge };
 })(typeof window === 'undefined' ? globalThis : window);

@@ -1,12 +1,15 @@
 (function () {
   'use strict';
   const session = window.MARCO_ISEE_PRACTICE[0], E = window.MarcoTest3Engine, S = window.MarcoTest3Sync, T = window.KindleVRThinking;
+  // Display order changes only; saved questionSources and source IDs stay fixed.
+  const orderedQuestions = [...session.questions.filter(q => q.type === 'synonym'), ...session.questions.filter(q => q.type !== 'synonym')];
+  const editingPredictions = new Map();
   const demo = new URLSearchParams(location.search).has('demo');
   const preview = demo || ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
   const KEY = S.APP_ID + (preview ? ':preview' : ''), $ = s => document.querySelector(s);
   const empty = () => ({ version: 1, sessions: {} });
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const questions = new Map(session.questions.map(q => [String(q.source), q]));
+  const questions = new Map(orderedQuestions.map(q => [String(q.source), q]));
   let state = empty(), sync = null, storageOK = true, draftTimer;
   let status = preview ? 'Preview · Online records are untouched.' : 'Connecting to live online sync…', kind = preview ? 'preview' : 'connecting';
   try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (S.valid(saved)) state = S.merge(saved, empty()); } catch { storageOK = false; }
@@ -14,7 +17,7 @@
   const entry = q => current()?.answers[q.source], thought = q => current()?.thinking?.[q.source], closed = q => E.done(q, entry(q));
   const revealed = q => !!thought(q)?.committed || !!thought(q)?.legacySeen || !!entry(q)?.attempts.length || current()?.pending[q.source] !== undefined;
   const fromElement = el => questions.get(el.closest('[data-source]')?.dataset.source);
-  const card = q => document.getElementById(`q-${session.questions.indexOf(q) + 1}`);
+  const card = q => document.getElementById(`q-${orderedQuestions.indexOf(q) + 1}`);
   const label = value => ({ good: 'Good', bad: 'Bad', strong: 'Strong', weak: 'Weak', same: 'Same', opposite: 'Opposite' }[value] || '');
   function ensureRun() { if (!current()) { const r = E.start(session); r.thinking = {}; (state.sessions[session.id] ||= []).push(r); } return current(); }
   function editThought(q) { const r = ensureRun(); r.thinking ||= {}; return r.thinking[q.source] ||= T.make(); }
@@ -25,53 +28,53 @@
     const r = current(), stats = E.stats(session, r);
     $('#practice-status').className = 'practice-status' + (r?.completedAt ? ' is-complete' : '');
     $('#practice-status').innerHTML = `<h2>${r?.completedAt ? '✓ Practice complete' : 'All 24 questions · one page'}</h2><p><span class="run-score">First-try score: ${stats.first}/24</span> · ${stats.finished}/24 finished · ${stats.corrected} corrected on retry</p>`;
-    if ($('#practice-intro')) $('#practice-intro').innerHTML = `<p>Prediction is optional. One simple word is enough—or leave it blank and click <strong>Show choices</strong>.</p>${!r ? '<button type="button" data-action="start" class="primary">Start 24-question practice</button><span class="thinking-caption"> Or begin with any question below.</span>' : ''}`;
+    if ($('#practice-intro')) $('#practice-intro').innerHTML = `<p>Prediction and elimination are optional. One simple word is enough—or leave it blank and click <strong>Show choices</strong>. You can edit your prediction later.</p>${!r ? '<button type="button" data-action="start" class="primary">Start 24-question practice</button><span class="thinking-caption"> Or begin with any question below.</span>' : '<button type="button" data-action="restart" class="start-fresh">Start fresh practice</button><span class="thinking-caption"> Earlier work stays in saved history.</span>'}`;
     note();
   }
   function navigation() {
-    return `<nav class="mixed-nav" aria-label="All 24 questions in four groups of six">${[0, 6, 12, 18].map(start => `<div class="jump" role="group" aria-label="Questions ${start + 1} to ${start + 6}">${session.questions.slice(start, start + 6).map((q, j) => {
+    return `<nav class="mixed-nav" aria-label="All 24 questions in four groups of six">${[0, 6, 12, 18].map(start => `<div class="jump" role="group" aria-label="Questions ${start + 1} to ${start + 6}">${orderedQuestions.slice(start, start + 6).map((q, j) => {
       const i = start + j, tries = entry(q)?.attempts || [], cls = tries[0]?.correct ? 'first-correct' : tries[1]?.correct ? 'corrected' : tries.length === 1 ? 'retry' : tries.length === 2 ? 'incorrect' : '';
       const text = tries[0]?.correct ? 'correct first try' : tries[1]?.correct ? 'corrected on retry' : tries.length === 1 ? 'second try available' : tries.length === 2 ? 'incorrect after two tries' : 'not answered';
       return `<a href="#q-${i + 1}" data-question="${i}" class="${cls}" aria-label="Question ${i + 1}: ${text}">${i + 1}</a>`;
     }).join('')}</div>`).join('')}</nav>`;
   }
   function predictionUI(q) {
-    const n = thought(q), snapshot = n?.committed;
-    if (revealed(q) || closed(q)) {
+    const n = thought(q), snapshot = n?.revised || n?.committed, editing = editingPredictions.has(q.source);
+    if ((revealed(q) || closed(q)) && !editing) {
       const facets = snapshot ? (q.type === 'synonym' ? [snapshot.tone, snapshot.strength] : [snapshot.link]).map(label).filter(Boolean) : [];
-      return `<section class="prediction-saved"><h4>Your prediction</h4><p class="saved-prediction">${snapshot?.prediction ? esc(snapshot.prediction) : 'Skipped'}</p>${facets.length ? `<p class="thinking-caption">${facets.map(esc).join(' · ')}</p>` : ''}</section>`;
+      return `<section class="prediction-saved"><h4>Your prediction</h4><p class="saved-prediction">${snapshot?.prediction ? esc(snapshot.prediction) : 'Skipped'}</p>${facets.length ? `<p class="thinking-caption">${facets.map(esc).join(' · ')}</p>` : ''}<button type="button" class="primary edit-prediction" data-edit-prediction>Edit prediction</button></section>`;
     }
-    const values = n || { prediction: '', tone: '', strength: '', link: '' };
+    const values = editingPredictions.get(q.source) || n || { prediction: '', tone: '', strength: '', link: '' };
     const group = (name, title, options) => `<fieldset class="thinking-group"><legend>${title} <span class="optional-label">(optional)</span></legend><div class="thinking-pills">${options.map(([value, text]) => `<label><input type="radio" name="${name}" value="${value}" ${values[name] === value ? 'checked' : ''}><span>${text}</span></label>`).join('')}</div></fieldset>`;
-    return `<form class="prediction-form prediction-box" data-source="${q.source}"><label class="prediction-label" for="prediction-${q.source}">Your prediction <span class="optional-label">(optional)</span></label><input class="prediction-input" id="prediction-${q.source}" type="text" name="prediction" maxlength="160" placeholder="One simple word (optional)" autocomplete="off" value="${esc(values.prediction)}">${q.type === 'synonym' ? `<div class="quick-clues">${group('tone', 'Meaning', [['good', 'Good'], ['bad', 'Bad']])}${group('strength', 'Strength', [['strong', 'Strong'], ['weak', 'Weak']])}</div>` : group('link', 'Sentence clue', [['same', 'Same'], ['opposite', 'Opposite']])}<button type="submit" class="primary">Show choices</button><span class="thinking-caption optional-hint">Blank is OK.</span></form>`;
+    return `<form class="prediction-form prediction-box" data-source="${q.source}"><label class="prediction-label" for="prediction-${q.source}">Your prediction <span class="optional-label">(optional)</span></label><input class="prediction-input" id="prediction-${q.source}" type="text" name="prediction" maxlength="160" placeholder="One simple word (optional)" autocomplete="off" value="${esc(values.prediction)}">${q.type === 'synonym' ? `<div class="quick-clues">${group('tone', 'Meaning', [['good', 'Good'], ['bad', 'Bad']])}${group('strength', 'Strength', [['strong', 'Strong'], ['weak', 'Weak']])}</div>` : group('link', 'Sentence clue', [['same', 'Same'], ['opposite', 'Opposite']])}<button type="submit" class="primary">${editing ? 'Save prediction' : 'Show choices'}</button>${editing ? '<button type="button" class="cancel-prediction" data-cancel-prediction>Cancel</button>' : '<span class="thinking-caption optional-hint">Blank is OK.</span>'}</form>`;
   }
   function answerUI(q) {
-    const tries = entry(q)?.attempts || [], done = closed(q), eliminated = cuts(q), ready = eliminated.length === 2;
+    const tries = entry(q)?.attempts || [], done = closed(q), eliminated = cuts(q);
     const selected = current()?.pending[q.source]?.choice ?? tries.at(-1)?.choice;
-    const message = done ? tries[0].correct ? 'Correct first try.' : tries.at(-1).correct ? 'Correct on your second try. Your first-try score is unchanged.' : 'Two tries used. Read the answer and trick.' : tries.length ? 'Not quite. Your first choice is out. Reconsider the others, eliminate one more, and try again. The key is still hidden.' : ready ? 'Choose between the two left.' : 'Eliminate two choices, then choose between the two left.';
-    return `<form class="answer-form" data-source="${q.source}"><fieldset class="choices"><legend>${done ? 'Recorded answer' : 'Eliminate two → choose'}${!done ? ` <span class="elimination-count">· ${eliminated.length}/2 eliminated</span>` : ''}</legend>${q.choices.map((choice, j) => {
+    const message = done ? tries[0].correct ? 'Correct first try.' : tries.at(-1).correct ? 'Correct on your second try. Your first-try score is unchanged.' : 'Two tries used. Read the answer and trick.' : tries.length ? 'Not quite. Your first choice is out. Try another answer. Eliminating choices is optional; the key is still hidden.' : 'Choose an answer. You may cross out choices if it helps.';
+    return `<form class="answer-form" data-source="${q.source}"><fieldset class="choices"><legend>${done ? 'Recorded answer' : 'Choose your answer'}${!done ? ` <span class="elimination-count">· Elimination optional · ${eliminated.length} crossed out</span>` : ''}</legend>${q.choices.map((choice, j) => {
       const used = tries.some(a => a.choice === j), out = !done && eliminated.includes(j);
-      return `<div class="choice-row${out ? ' eliminated' : ''}"><label class="choice${done && j === q.correct ? ' correct' : ''}${done && used && j !== q.correct ? ' wrong' : ''}"><input type="radio" name="answer" value="${j}" ${done || used || out || !ready ? 'disabled' : ''} ${selected === j && !out ? 'checked' : ''}><span class="letter">${'ABCD'[j]}</span><span class="choice-text">${esc(choice)}</span></label>${!done ? `<button type="button" class="eliminate-button" data-eliminate="${j}" aria-pressed="${out}" ${used ? 'disabled' : ''} aria-label="${used ? `Choice ${'ABCD'[j]} is ruled out by your first try` : `${out ? 'Restore' : 'Eliminate'} ${'ABCD'[j]}`}">${used ? 'Ruled out' : out ? 'Restore' : 'Eliminate'}</button>` : ''}</div>`;
-    }).join('')}</fieldset>${!done ? `<button type="submit" class="primary" ${ready ? '' : 'disabled'}>${tries.length ? 'Check second try' : 'Check answer'}</button>` : ''}<p class="feedback" data-kind="${done && tries.at(-1)?.correct ? 'correct' : tries.length ? 'retry' : 'neutral'}" role="status">${message}</p></form>`;
+      return `<div class="choice-row${out ? ' eliminated' : ''}"><label class="choice${done && j === q.correct ? ' correct' : ''}${done && used && j !== q.correct ? ' wrong' : ''}"><input type="radio" name="answer" value="${j}" ${done || used || out ? 'disabled' : ''} ${selected === j && !out ? 'checked' : ''}><span class="letter">${'ABCD'[j]}</span><span class="choice-text">${esc(choice)}</span></label>${!done ? `<button type="button" class="eliminate-button" data-eliminate="${j}" aria-pressed="${out}" ${used ? 'disabled' : ''} aria-label="${used ? `Choice ${'ABCD'[j]} is ruled out by your first try` : `${out ? 'Restore' : 'Eliminate'} ${'ABCD'[j]}`}">${used ? 'Ruled out' : out ? 'Restore' : 'Eliminate'}</button>` : ''}</div>`;
+    }).join('')}</fieldset>${!done ? `<button type="submit" class="primary">${tries.length ? 'Check second try' : 'Check answer'}</button>` : ''}<p class="feedback" data-kind="${done && tries.at(-1)?.correct ? 'correct' : tries.length ? 'retry' : 'neutral'}" role="status">${message}</p></form>`;
   }
   function solution(q) {
     const firstCuts = entry(q)?.attempts[0]?.eliminated;
-    return `<section class="solution" aria-label="Answer, meaning, trick, and explanation"><p><b>Answer: ${'ABCD'[q.correct]} · ${esc(q.choices[q.correct])}</b></p><p class="meaning"><strong>${esc(q.word)}</strong> — ${esc(q.meaning)}</p><p class="trick"><strong>TRICK / WHAT TO NOTICE</strong>${esc(q.tip)}</p><p>${esc(q.explanation)}</p>${firstCuts ? `<p class="elimination-review"><strong>Your first eliminations:</strong> ${firstCuts.map(i => `${'ABCD'[i]} · ${esc(q.choices[i])}`).join('; ')}. ${firstCuts.includes(q.correct) ? 'You crossed out the correct answer. Recheck the meaning you ruled out.' : 'The correct answer stayed in your final pair.'}</p>` : ''}<p class="selection-note"><strong>Why selected:</strong> ${esc(q.selection)}</p><div class="related-links">Related past mistakes—skill links:<br>${q.related.map(([date, number, title]) => `<a href="../${date}/#q${number}">${esc(title)} · ${date.slice(5)}</a>`).join('')}</div></section>`;
+    return `<section class="solution" aria-label="Answer, meaning, trick, and explanation"><p><b>Answer: ${'ABCD'[q.correct]} · ${esc(q.choices[q.correct])}</b></p><p class="meaning"><strong>${esc(q.word)}</strong> — ${esc(q.meaning)}</p><p class="trick"><strong>TRICK / WHAT TO NOTICE</strong>${esc(q.tip)}</p><p>${esc(q.explanation)}</p>${firstCuts?.length ? `<p class="elimination-review"><strong>Your first eliminations:</strong> ${firstCuts.map(i => `${'ABCD'[i]} · ${esc(q.choices[i])}`).join('; ')}. ${firstCuts.includes(q.correct) ? 'You crossed out the correct answer. Recheck the meaning you ruled out.' : 'The correct answer was not crossed out.'}</p>` : ''}<p class="selection-note"><strong>Why selected:</strong> ${esc(q.selection)}</p><div class="related-links">Related past mistakes—skill links:<br>${q.related.map(([date, number, title]) => `<a href="../${date}/#q${number}">${esc(title)} · ${date.slice(5)}</a>`).join('')}</div></section>`;
   }
   function questionUI(q, i) {
-    return `<article class="question" id="q-${i + 1}" data-source="${q.source}" data-study-subject="words"><header><h3 id="question-title-${i + 1}" tabindex="-1">Question ${i + 1} of 24</h3><span class="source">Book Test ${q.test} · ${q.part} Q${q.number}</span></header><p class="prompt ${q.type === 'synonym' ? 'synonym' : 'completion'}">${esc(q.prompt)}</p>${predictionUI(q)}${revealed(q) || closed(q) ? answerUI(q) : '<p class="choices-hidden-note">Choices hidden · reveal whenever you are ready.</p>'}${closed(q) ? solution(q) : ''}</article>`;
+    return `<article class="question" id="q-${i + 1}" data-source="${q.source}" data-study-subject="words"><header><h3 id="question-title-${i + 1}" tabindex="-1">Question ${i + 1} of 24</h3><span class="source">Book Test ${q.test} · ${q.part} Q${q.number}</span></header><p class="prompt ${q.type === 'synonym' ? 'synonym' : 'completion'}">${esc(q.type === 'synonym' ? q.word.toUpperCase() : q.prompt)}</p>${predictionUI(q)}${!editingPredictions.has(q.source) && (revealed(q) || closed(q)) ? answerUI(q) : '<p class="choices-hidden-note">Choices hidden · reveal whenever you are ready.</p>'}${closed(q) && !editingPredictions.has(q.source) ? solution(q) : ''}</article>`;
   }
   function breakdown() {
-    return `<section class="panel complete"><h3>✓ All 24 questions finished</h3><table class="skill-table"><thead><tr><th scope="col">Skill</th><th scope="col">First try</th><th scope="col">Fixed on retry</th><th scope="col">Still missed</th></tr></thead><tbody>${[...new Set(session.questions.map(q => q.skill))].map(skill => {
-      const stats = E.stats({ questions: session.questions.filter(q => q.skill === skill) }, current());
+    return `<section class="panel complete"><h3>✓ All 24 questions finished</h3><table class="skill-table"><thead><tr><th scope="col">Skill</th><th scope="col">First try</th><th scope="col">Fixed on retry</th><th scope="col">Still missed</th></tr></thead><tbody>${[...new Set(orderedQuestions.map(q => q.skill))].map(skill => {
+      const stats = E.stats({ questions: orderedQuestions.filter(q => q.skill === skill) }, current());
       return `<tr><th scope="row">${esc(skill)}</th><td>${stats.first}/${stats.total}</td><td>${stats.corrected}</td><td>${stats.total - stats.first - stats.corrected}</td></tr>`;
     }).join('')}</tbody></table><button type="button" class="primary" data-action="start">Start another run</button></section>`;
   }
   function records() {
-    return `<details class="panel records"><summary>Saved practice runs (${runs().length})</summary>${runs().map((r, i) => { const stats = E.stats(session, r); return `<details><summary>Run ${i + 1} · ${esc(new Date(r.startedAt).toLocaleString())} · ${stats.first}/24 first try · ${r.completedAt ? 'Complete' : 'In progress'}</summary><ol>${session.questions.map(q => { const p = r.thinking?.[q.source]?.committed; return `<li>Test ${q.test}, ${q.part} Q${q.number}${p ? ` · Prediction: ${p.prediction ? `“${esc(p.prediction)}”` : 'skipped'}` : ''}: ${(r.answers[q.source]?.attempts || []).map((a, j) => `Try ${j + 1}: ${'ABCD'[a.choice]} (${a.correct ? 'correct' : 'incorrect'})${a.eliminated ? `; eliminated ${a.eliminated.map(i => 'ABCD'[i]).join(', ')}` : ''}`).join('; ') || 'Not answered'}</li>`; }).join('')}</ol></details>`; }).join('')}</details>`;
+    return `<details class="panel records"><summary>Saved practice runs (${runs().length})</summary>${runs().map((r, i) => { const stats = E.stats(session, r); return `<details><summary>Run ${i + 1} · ${esc(new Date(r.startedAt).toLocaleString())} · ${stats.first}/24 first try · ${r.completedAt ? 'Complete' : 'In progress'}</summary><ol>${orderedQuestions.map(q => { const p = r.thinking?.[q.source]?.committed, revised = r.thinking?.[q.source]?.revised; return `<li>Test ${q.test}, ${q.part} Q${q.number}${p ? ` · Prediction: ${p.prediction ? `“${esc(p.prediction)}”` : 'skipped'}` : ''}${revised ? ` · Updated prediction: ${revised.prediction ? `“${esc(revised.prediction)}”` : 'skipped'}` : ''}: ${(r.answers[q.source]?.attempts || []).map((a, j) => `Try ${j + 1}: ${'ABCD'[a.choice]} (${a.correct ? 'correct' : 'incorrect'})${a.eliminated ? `; eliminated ${a.eliminated.map(i => 'ABCD'[i]).join(', ')}` : ''}`).join('; ') || 'Not answered'}</li>`; }).join('')}</ol></details>`; }).join('')}</details>`;
   }
   function render() {
-    $('#workspace').innerHTML = `<section id="practice-intro" class="practice-intro"></section>${navigation()}<div class="questions-list">${session.questions.map((q, i) => questionUI(q, i) + ([5, 11, 17].includes(i) ? '<hr class="question-group-divider" aria-hidden="true">' : '')).join('')}</div>${current()?.completedAt ? breakdown() : ''}${records()}`;
+    $('#workspace').innerHTML = `<section id="practice-intro" class="practice-intro"></section>${navigation()}<div class="questions-list">${orderedQuestions.map((q, i) => (i === 0 || q.type !== orderedQuestions[i-1].type ? `<h2 class="question-type-heading">${q.type === 'synonym' ? 'Synonyms · 15 questions' : 'Sentence completion · 9 questions'}</h2>` : '') + questionUI(q, i) + ([5, 11, 17].includes(i) ? '<hr class="question-group-divider" aria-hidden="true">' : '')).join('')}</div>${current()?.completedAt ? breakdown() : ''}${records()}`;
     statusUI();
   }
   function refresh() {
@@ -85,6 +88,11 @@
     el.scrollIntoView?.({ block: 'start' });
   }
   document.addEventListener('click', event => {
+    const edit = event.target.closest('[data-edit-prediction]');
+    if (edit) { const q=fromElement(edit); if(!q)return; const n=thought(q), values=n?.revised||n?.committed||n||{prediction:'',tone:'',strength:'',link:''}; editingPredictions.set(q.source,{prediction:values.prediction,tone:values.tone,strength:values.strength,link:values.link}); refresh(); document.getElementById(`prediction-${q.source}`)?.focus({preventScroll:true}); return; }
+    const cancel = event.target.closest('[data-cancel-prediction]');
+    if (cancel) { const q=fromElement(cancel); if(q){editingPredictions.delete(q.source);refresh();}return; }
+    if(event.target.closest('[data-action="restart"]')) {const r=E.start(session);r.thinking={};(state.sessions[session.id]||=[]).push(r);editingPredictions.clear();save();refresh();jump(0);return;}
     const jumpLink = event.target.closest('a[data-question]');
     if (jumpLink && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); jump(Number(jumpLink.dataset.question)); return; }
     const eliminate = event.target.closest('button[data-eliminate]');
@@ -99,7 +107,9 @@
     if (event.target.closest('[data-action="start"]')) { if (current() && !current().completedAt) return; const r = E.start(session); r.thinking = {}; (state.sessions[session.id] ||= []).push(r); save(); refresh(); }
   });
   function updateDraft(event) {
-    const target = event.target, q = fromElement(target); if (!q || revealed(q) || !['prediction', 'tone', 'strength', 'link'].includes(target.name)) return;
+    const target = event.target, q = fromElement(target); if (!q || !['prediction', 'tone', 'strength', 'link'].includes(target.name)) return;
+    if(editingPredictions.has(q.source)){editingPredictions.get(q.source)[target.name]=target.value.slice(0,160);return;}
+    if(revealed(q))return;
     T.touch(editThought(q), { [target.name]: target.value.slice(0, 160) }); save(false); statusUI(); clearTimeout(draftTimer); draftTimer = setTimeout(() => void sync?.push(), 500);
   }
   document.addEventListener('input', event => { if (event.target.classList.contains('prediction-input')) updateDraft(event); });
@@ -110,12 +120,12 @@
   });
   document.addEventListener('submit', event => {
     const form = event.target, q = fromElement(form); if (!q) return;
-    if (form.classList.contains('prediction-form')) { event.preventDefault(); if (T.commit(q, editThought(q))) { save(); refresh(); } return; }
+    if (form.classList.contains('prediction-form')) { event.preventDefault(); const editing=editingPredictions.get(q.source);if(editing ? T.revise(q,editThought(q),editing) : T.commit(q, editThought(q))) { editingPredictions.delete(q.source);save(); refresh(); } return; }
     if (!form.classList.contains('answer-form')) return; event.preventDefault();
     const input = form.querySelector('input:checked:not(:disabled)');
-    if (!revealed(q) || cuts(q).length !== 2 || !input || cuts(q).includes(Number(input.value))) { form.querySelector('.feedback').textContent = 'Eliminate two choices, then choose a remaining answer. No attempt used.'; return; }
+    if (!revealed(q) || editingPredictions.has(q.source) || !input || cuts(q).includes(Number(input.value))) { form.querySelector('.feedback').textContent = 'Choose an answer first. Eliminating choices is optional. No attempt used.'; return; }
     const eliminated = cuts(q), run = current();
-    if (E.submit(run, q, Number(input.value))) { entry(q).attempts.at(-1).eliminated = eliminated; if (!closed(q)) T.touch(editThought(q), { eliminated: [Number(input.value)] }); if (session.questions.every(q => closed(q))) run.completedAt = new Date().toISOString(); save(); refresh(); }
+    if (E.submit(run, q, Number(input.value))) { entry(q).attempts.at(-1).eliminated = eliminated; if (!closed(q)) T.touch(editThought(q), { eliminated: [Number(input.value)] }); if (orderedQuestions.every(q => closed(q))) run.completedAt = new Date().toISOString(); save(); refresh(); }
   });
   $('#download').onclick = () => { const url = URL.createObjectURL(new Blob([JSON.stringify({ course: 'Kindle VR Tests 1 and 2 — selected 24', ...state }, null, 2)], { type: 'application/json' })), a = document.createElement('a'); a.href = url; a.download = 'marco-kindle-vr-tests-1-2-records.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); };
   function remote(value) { state = S.merge(state, value); save(false); refresh(); }
