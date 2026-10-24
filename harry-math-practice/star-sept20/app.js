@@ -87,11 +87,12 @@
       const repeat=completed&&latest!==completed&&r.finished!==r.total;
       const card=`<a class="session-link ${status}" href="?session=${session.id}" ${active?.id===session.id?'aria-current="page"':''}><b>${reason?'🔒 ':''}${session.weekly?esc(session.cardLabel):`${groups?.find(g=>g.id===session.group)?.unit||'Day'} ${i+1}`}</b>${session.weekly?'':`<span>${esc(session.cardLabel||(i?'Fresh check '+String.fromCharCode(64+i):'Original retry'))}</span>`}<span class="day-status">${reason?'Locked':completed?'✓ Completed':r?.attempted?'In progress':'Not started'}</span>${session.practiceOnly?`<strong class="day-score">${firstTryText(r)}</strong><small>${r?.finished||0}/${session.questions.length} completed · Practice until correct</small>`:score?`<strong class="day-score">${score.first}/${score.total} <small>(${score.percent}%)</small></strong><small>${session.weekly?'First run · first-try score':'Latest completed first-try score'}</small>`:`<small>${r?.attempted?`${r.first}/${r.total} first-try points · ${r.attempted}/${r.total} attempted` :`${session.questions.length} questions`}</small>`}${reason?`<small class="lock-hint">${esc(reason)}</small>`:''}${session.weekly&&!session.targeted&&session.id.startsWith('week-oct12-3')?'<small class="mastery-target">Day 3 target: 9/12</small>':''}${repeat?`<small class="repeat-note">New run · ${r.attempted}/${r.total} attempted</small>`:''}</a>`;return session.weekly?`<div class="session-pair">${card}${round2Link(session)}</div>`:card;
     }).join('');
+    for(const session of visibleBank().filter(s=>s.accuracyCheck))document.querySelector(`.session-link[href="?session=${session.id}"]`)?.insertAdjacentHTML('beforeend','<small class="mastery-target">Goal: 8/8 (100%) first try</small>');
     const extra=window.HarryWeekExtraReview;
     if(extra){const session=visibleBank().find(s=>s.extraReview),link=session&&document.querySelector(`.session-link[href="?session=${session.id}"]`);if(link){const run=window.HarryWeekProgress.firstRun(state.sessions[session.id])||{answers:{}};link.querySelector('.day-score').textContent='4 questions per skill';link.insertAdjacentHTML('beforeend',`<small class="skill-counts">${esc(skillText(session,run))}</small><small>Goal: 3/4 in each skill</small>`);}}
     document.querySelector('#days-progress').textContent=`${completedDays} of ${visibleBank().filter(s=>!s.retest).length} ${groups?.find(g=>g.id===groupId())?.unit==='Session'?'sessions':'days'} completed`;
     window.HarryWeekProgress?.render({bank,state,engine,groupId:groupId()});
-    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. Day 3.6 and later sessions unlock after all 6 questions in Day 3.5 are completed correctly. Retries count toward completion. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
+    const note=document.querySelector('.days-note');if(note)note.textContent=visibleBank().some(s=>s.weekly)?'Days 3.4–3.6 and Days 4–6 show a first-try percentage and let you keep trying until correct, with no separate second round. Days 4–6 have 8 questions each. Set 7 has 8 fresh questions with a goal of 100% first try. Day 3.6 and later sessions unlock after all 6 questions in Day 3.5 are completed correctly. Retries count toward completion. Earlier scores and saved answers are kept.':'Completed sessions turn green and show the latest completed first-try score. Your scores and attempt history sync across your devices.';
   }
   function renderSummary(){
     const s=engine.stats(active,current());document.querySelector('#score').textContent=active.practiceOnly?(s.firstTryPercent===null?'—':`${s.firstTryPercent}%`):`${s.first} / ${s.total}`;
@@ -109,8 +110,9 @@
   function weeklyNextStep(){
     const base=bank.find(s=>s.id===(active.baseId||active.id)),reason=W.unfinished(base,state);
     if(reason)return `You can review first-try mistakes in <a href="?session=${base.id}-round2">Round 2</a>, or choose another unlocked session.`;
-    if(base.extraReview)return 'Review any first-try mistakes with a parent. Choose any unlocked session.';
-    if(base.id==='week-oct12-6')return 'Day 6 is complete. <a href="?session=week-oct12-extra-review">Open the extra fraction review</a> when you are ready.';
+    if(base.accuracyCheck)return engine.stats(base,current()).first===base.questions.length?'Goal reached: 8/8 (100%) on your first tries!':'Review the first-try mistakes with a parent before another fresh set. The goal is 8/8 (100%) on first tries.';
+    if(base.extraReview)return 'Fraction review complete. <a href="?session=week-oct12-7">Open Set 7</a> for 8 fresh questions. Goal: 100% on first tries.';
+    if(base.id==='week-oct12-6')return 'Day 6 is complete. <a href="?session=week-oct12-7">Open Set 7</a> for 8 fresh questions. You can also <a href="?session=week-oct12-extra-review">open the extra fraction review</a>.';
     if(base.id==='week-oct12-3-4'||base.id==='week-oct12-3-5'){const next=bank[bank.indexOf(base)+1];return `Fraction review complete. <a href="?session=${next.id}">Open ${esc(next.cardLabel)}</a> for 6 fresh questions.`;}
     if(base.practiceOnly)return base.targeted?'Fraction review complete. Day 3.6 and later sessions unlock after completing Day 3.5.':'Practice complete. Choose any unlocked session.';
     if(base.id==='week-oct12-3-3')return 'Day 3.4 is a short check of the fraction skills that still need practice. <a href="?session=week-oct12-3-4">Open Day 3.4</a>';
@@ -138,7 +140,8 @@
       const completed=sessions.filter(s=>(state.sessions[s.id]||[]).some(r=>engine.stats(s,r).finished===s.questions.length)).length;
       return `<a class="group-card" href="?group=${g.id}"><span class="eyebrow">${esc(g.label)}</span><h2>${esc(g.title)}</h2><p>${esc(g.description)}</p><strong>${completed} / ${sessions.length} ${g.unit==='Day'?'days':'sessions'} completed</strong><span class="group-open">Open this test group →</span></a>`;
     }).join('');
-    document.querySelector('#day-overview').hidden=!!groups&&!groupId();
+    document.querySelector('.hero').hidden=!!active?.accuracyCheck;
+    document.querySelector('#day-overview').hidden=(!!groups&&!groupId())||!!active?.accuracyCheck;
     const group=groups?.find(g=>g.id===groupId());
     document.querySelector('#group-title').textContent=group?group.title:'Choose your day';
     document.querySelector('#back-to-group').href=group?`?group=${group.id}`:'./';

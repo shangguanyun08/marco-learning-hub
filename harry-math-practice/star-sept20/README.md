@@ -1,3 +1,11 @@
+# Set 7 · October 24 first-try accuracy follow-up
+
+`?session=week-oct12-7` adds eight fresh questions after Extra review in the existing October 12 group. The target is **8/8 (100%) on first tries**. Six questions use typed answers; two use multiple-choice fraction concepts. Practice continues until correct, with method hints after two misses; retries never improve the original first-try score. Day 6 and Extra review both link onward to Set 7. The existing Day 3.5 completion rule also applies to Set 7; no additional lock is added.
+
+Selection used the earliest answered synced run per recent session, read on October 24. Set 7 covers equivalent fractions, pounds to ounces, a mixed-number number line, two-digit multiplication, price in dollars, decimal addition, perimeter and a possible improper-fraction sum. Recurring decimal mistakes receive two questions; the remaining items check recent missed skills with new numbers. The direct Set 7 link opens the practice without placing the full week overview above it. These are observed answer patterns, not diagnoses or a guarantee of a perfect next score.
+
+Set 7 uses a new session ID under the existing storage/sync app. Earlier question definitions, attempts and first-try scores remain unchanged. Raw learner records stay outside the published repository. `week-oct12-set7.test.mjs` checks independently calculated answers, diagram intervals, first-try preservation through retries/reload/sync, 8/8 completion, navigation, and earlier-session preservation. All test submissions run locally with live sync disabled.
+
 # Extra fraction review for the October 12 practice group
 
 `?group=week-2026-10-12` includes an **Extra review** card after Day 6, with direct link `?session=week-oct12-extra-review`. This separate session has eight fresh multiple-choice questions: four mixed numbers on number lines, and four possible sums of three positive improper fractions. SVG diagrams show equally spaced intervals between labeled whole numbers. Sum explanations give the lower bound of 3 and a concrete set of fractions that produces the possible answer. An improper fraction is explicitly defined to include equality of numerator and denominator.
