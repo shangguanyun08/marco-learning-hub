@@ -1,3 +1,7 @@
+# Current practice and date archive
+
+The plain `star-sept20/` entrance opens the October 12–17 session cards directly. The Archive link opens the full date-group overview at `?archive=1`, with a Current practice link back. Existing `?group=...` and `?session=...` bookmarks continue to open their original groups and sessions. Question banks, storage, sync, saved attempts and unlocking rules are unchanged.
+
 # Sets 7 and 8 · October 24 first-try accuracy follow-up
 
 `?session=week-oct12-8` adds a second eight-question check after Set 7, using the same skill blueprint with fresh numbers and answer positions. Set 8 switches the equivalent-fraction blank to a numerator and the conversion to pints/quarts, revisiting both weak patterns. The sets have separate first-try scores and histories. Finish Set 7, review its mistakes, then attempt Set 8 with a fresh 8/8 target. Both sets are available under the existing Day 3.5 unlock rule. The practice navigation links both sets; Set 7 completion links onward to Set 8. Set 7 questions and saved answers are unchanged. `week-oct12-set8.test.mjs` checks keys, diagram spacing, separate scores, retries, reloads, sync and navigation using only local test records.

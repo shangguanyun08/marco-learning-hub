@@ -2,7 +2,12 @@
   'use strict';
   const bank=window.HARRY_SEPT_PRACTICE, engine=window.HarrySeptEngine;
   const groups=window.HARRY_STAR_GROUPS||null,R=window.HarryWeekRound2,W=window.HarryWeekRules;
-  const groupId=()=>active?.group || (groups?.find(g=>g.id===new URLSearchParams(location.search).get('group'))?.id||null);
+  const CURRENT_GROUP='week-2026-10-12';
+  const groupId=()=>{
+    if(active?.group)return active.group;
+    const params=new URLSearchParams(location.search),selected=groups?.find(g=>g.id===params.get('group'));
+    return selected?.id||(params.get('archive')==='1'?null:groups?.find(g=>g.id===CURRENT_GROUP)?.id||null);
+  };
   const visibleBank=()=>groups?bank.filter(s=>s.group===groupId()):bank;
   const KEY='harry-star-sept20-four-sessions-v1';
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -147,8 +152,13 @@
     document.querySelector('.hero').hidden=!!active?.accuracyCheck;
     document.querySelector('#day-overview').hidden=(!!groups&&!groupId())||!!active?.accuracyCheck;
     const group=groups?.find(g=>g.id===groupId());
+    const archive=!!groups&&!group;
+    const navigation=document.querySelector('#practice-navigation');
+    if(navigation){navigation.href=archive?'./':'?archive=1';navigation.textContent=archive?'Current practice':'Archive';}
+    document.querySelector('.hero h1').textContent=archive?'Practice archive':'Harry’s Daily Math';
+    document.querySelector('.hero > p:last-child').textContent=archive?'Browse the saved practice groups by date. Open Current practice to return to October 12–17.':group?.id===CURRENT_GROUP?'October 12–17 is your current practice. Choose a set below. Sets 7 and 8 each have 8 fresh questions with a goal of 100% on first tries. Earlier dates are in Archive.':'Choose a practice session below. Your scores and saved answers stay with each test group.';
     document.querySelector('#group-title').textContent=group?group.title:'Choose your day';
-    document.querySelector('#back-to-group').href=group?`?group=${group.id}`:'./';
+    document.querySelector('#back-to-group').href=group?.id===CURRENT_GROUP?'./':group?`?group=${group.id}`:'./';
     document.querySelector('#group-description').textContent=group?.description||'';
   }
   function render(){
@@ -157,7 +167,7 @@
     renderGroups();
     document.querySelector('#questions').setAttribute('aria-label',active?`${active.questions.length} practice questions`:'Practice questions');
     document.querySelector('#practice-content').hidden=!active;
-    document.title=active?`${active.title} · Harry’s Daily Math`:'Harry’s Daily Math · Test groups';
+    document.title=active?`${active.title} · Harry’s Daily Math`:groupId()?`${groups?.find(g=>g.id===groupId())?.title} · Harry’s Daily Math`:'Practice archive · Harry’s Daily Math';
     document.querySelector('#mistake-filter').hidden=true;
     if(!active){document.querySelector('#questions').innerHTML='';document.querySelector('#history').innerHTML='';renderDays();updateSaveNote();return;}
     let nav=document.querySelector('#round-navigation');if(!nav){nav=document.createElement('nav');nav.id='round-navigation';nav.className='round-navigation';document.querySelector('.session-intro').append(nav);}
