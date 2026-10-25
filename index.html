@@ -99,14 +99,7 @@
             <a href="./marco-zozeck-hard-2026/">Open mixed VR practice <span>→</span></a>
           </article>
 
-          <article class="site-card featured" id="chinese-reading-heading">
-                  <div class="card-topline"><span>中文学习 · 第六周</span><small>按日期练习</small></div>
-                  <div class="icon">中</div>
-                  <h3>Marco 中文</h3>
-                  <p>第六周新内容：26 个词语听写，《田忌赛马》、课后故事和绕口令点读。第五周练习仍可继续使用。</p>
-                  <ul><li>9月29日 · 新增第六周</li><li>26 个听写词语 · 课文与课后阅读</li><li>逐字点读 · 听写练习</li></ul>
-                  <a href="./chinese/">打开 Marco 中文 <span>→</span></a>
-                </article>
+
 
 
         </div>
@@ -187,9 +180,18 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>15 sites</span>
+                <span>16 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+          <article class="site-card archived" id="chinese-reading-heading">
+                  <div class="card-topline"><span>ARCHIVED · 中文学习 · 第六周</span><small>按日期练习</small></div>
+                  <div class="icon">中</div>
+                  <h3>Marco 中文</h3>
+                  <p>第六周新内容：26 个词语听写，《田忌赛马》、课后故事和绕口令点读。第五周练习仍可继续使用。</p>
+                  <ul><li>9月29日 · 新增第六周</li><li>26 个听写词语 · 课文与课后阅读</li><li>逐字点读 · 听写练习</li></ul>
+                  <a href="./chinese/">打开 Marco 中文 <span>→</span></a>
+                </article>
+
           <article class="site-card archived" id="science-practice-preview">
             <div class="card-topline"><span>ARCHIVED · SCIENCE PRACTICE</span><small>21 original questions</small></div>
             <div class="icon">SCI</div>
@@ -428,7 +430,7 @@
     <script src="./shared-activity-dashboard.js?v=20261021-time2-5" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive'].includes(location.hash)){
+        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#chinese-reading-heading'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
