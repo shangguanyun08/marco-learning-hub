@@ -2,12 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import {createRequire} from 'node:module';
+import {runInNewContext} from 'node:vm';
 const require=createRequire(import.meta.url),{JSDOM}=require('jsdom'),read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
 const APP='marco-vr-kindle-focused-20261024-v1',KEY=APP+':preview';
 const scripts=['../kindle-tests-1-2/data.js','../kindle-tests-1-8/questions.js','../kindle-tests-1-8/data.js','pdf-data.js','data.js','../../marco-daily-test-review/2026-10-11/engine.js','../kindle-tests-1-2/thinking.js','../kindle-tests-1-2/clues.js','../kindle-tests-1-2/sync.js'];
 const plain=x=>JSON.parse(JSON.stringify(x));
 function page(t,n=1,saved,library=false){
- const name=library?'index.html':'practice.html',dom=new JSDOM(read(name),{url:`https://example.test/marco-vr-practice/kindle-vr-focused/${name}?page=${n}&demo=1`,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};let network=0;w.fetch=()=>{network++;throw Error('No preview network');};
+ const name=library?'../index.html':'practice.html',dom=new JSDOM(read(name),{url:`https://example.test/marco-vr-practice/kindle-vr-focused/${name}?page=${n}&demo=1`,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};let network=0;w.fetch=()=>{network++;throw Error('No preview network');};
  for(const id of ['marco-vr-kindle-tests1-2-hard-20261024-v1','marco-vr-kindle-tests1-8-hard-20261024-v1'])w.localStorage.setItem(id,'legacy sentinel');
  if(saved)w.localStorage.setItem(KEY,JSON.stringify(saved));for(const f of scripts)w.eval(read(f));w.eval(read(library?'library.js':'practice.js'));
  return {w,doc:w.document,bank:w.MARCO_ISEE_PRACTICE,session:w.MARCO_ISEE_PRACTICE[n-1],E:w.MarcoTest3Engine,S:w.MarcoTest3Sync,state:()=>JSON.parse(w.localStorage.getItem(KEY)||'null'),network:()=>network};
@@ -44,13 +45,15 @@ test('six-page two-device merge preserves histories and keeps scores isolated',t
 
 test('only finished page turns green in tabs and library; library opens without creating runs',t=>{
  const p=page(t,6),r=p.E.start(p.session);r.thinking={};for(const q of p.session.questions)p.E.submit(r,q,q.correct);r.completedAt=new Date().toISOString();const saved={version:1,sessions:{[p.session.id]:[r]}};assert.ok(p.S.valid(saved));
- const next=page(t,6,saved);assert.ok(next.doc.querySelector('#practice-status.is-complete'));assert.ok(next.doc.querySelector('[data-page-tab="6"].is-complete'));assert.equal(next.doc.querySelectorAll('.page-tabs .is-complete').length,1);const lib=page(t,1,saved,true);assert.equal(lib.doc.querySelectorAll('.course-page').length,6);assert.equal(lib.doc.querySelectorAll('.course-page.is-complete').length,1);assert.match(lib.doc.querySelector('.course-page.is-complete .page-progress').textContent,/45\/45/);assert.equal(lib.network(),0);const empty=page(t,1,undefined,true);assert.equal(empty.state(),null);
+ const next=page(t,6,saved);assert.ok(next.doc.querySelector('#practice-status.is-complete'));assert.ok(next.doc.querySelector('[data-page-tab="6"].is-complete'));assert.equal(next.doc.querySelectorAll('.page-tabs .is-complete').length,1);const lib=page(t,1,saved,true);assert.match(lib.doc.querySelector('#kindle-focused-status').textContent,/45\/245 finished/);assert.equal(lib.doc.querySelector('#kindle-focused-card').classList.contains('is-complete'),false);assert.equal(lib.network(),0);const empty=page(t,1,undefined,true);assert.equal(empty.state(),null);
 });
 
 test('hub opens focused course; archives and all local assets resolve; no timing/elimination requirement',t=>{
- const hub=new JSDOM(read('../index.html'));t.after(()=>hub.window.close());assert.equal(hub.window.document.querySelector('#kindle-focused-card').getAttribute('href'),'./kindle-vr-focused/');
+ const hub=new JSDOM(read('../index.html'));t.after(()=>hub.window.close());assert.equal(hub.window.document.querySelector('#kindle-focused-card').getAttribute('href'),'./kindle-vr-focused/practice.html?page=1');
  for(const f of ['index.html','practice.html','../kindle-tests-1-8/index.html','../kindle-tests-1-2/index.html','../index.html']){const dom=new JSDOM(read(f));for(const el of dom.window.document.querySelectorAll('[src],[href]')){const raw=el.getAttribute('src')||el.getAttribute('href');if(!raw||raw.startsWith('#')||/^(https?:|data:)/.test(raw))continue;assert.ok(existsSync(new URL(raw.split(/[?#]/)[0],new URL(f,import.meta.url))),`${f}: ${raw}`);}dom.window.close();}
- assert.match(read('index.html'),/kindle-tests-1-8/);assert.match(read('index.html'),/kindle-tests-1-2/);assert.doesNotMatch(read('practice.js'),/setInterval|timer\b|Eliminate two choices/);assert.match(read('practice.js'),/Eliminating choices is optional/);
+ assert.match(read('practice.html'),/kindle-tests-1-8/);assert.match(read('practice.html'),/kindle-tests-1-2/);
+ const redirect=read('index.html').match(/<script>([\s\S]*?)<\/script>/)[1];for(const query of ['', '?demo=1', '?page=4&demo=1']){let destination;runInNewContext(redirect,{URL,location:{href:'https://example.test/kindle-vr-focused/'+query+'#previous-practice',search:query,hash:'#previous-practice',replace:url=>destination=url}});const target=new URL(destination);assert.equal(target.pathname,'/kindle-vr-focused/practice.html');assert.equal(target.searchParams.get('page'),query.includes('page=4')?'4':'1');assert.equal(target.hash,'#previous-practice');if(query.includes('demo'))assert.equal(target.searchParams.get('demo'),'1');}
+assert.doesNotMatch(read('practice.js'),/setInterval|timer\b|Eliminate two choices/);assert.match(read('practice.js'),/Eliminating choices is optional/);
 });
 
 test('focused sentence highlights save and revise without changing its first wrong answer',t=>{

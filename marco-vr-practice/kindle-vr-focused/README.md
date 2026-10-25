@@ -11,6 +11,10 @@ Selection is an editorial prioritization around recent misses involving precise 
 - `data.js` captures the old 146-question bank without altering it, retains the listed 73 source IDs, adds the PDF selections, and creates a deterministic six-page course.
 - **Do not alter membership, choices, order, or keys under these published session IDs.** Version a changed course instead, or saved `questionSources` validation and first-answer histories can break.
 
+## Direct practice entrance
+
+The VR library card opens `practice.html?page=1` directly. The folder URL and `index.html` redirect there, preserving query parameters and the hash. All six pages remain available in the practice-page tabs. Course details and Previous Practice links are now below the questions; back links return to the VR library.
+
 ## Practice and saved records
 
 App ID: `marco-vr-kindle-focused-20261024-v1`. Sessions: `kindle-vr-focused-page-{1..6}-20261024-v1`.
