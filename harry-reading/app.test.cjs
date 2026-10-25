@@ -152,11 +152,14 @@ test('two wrong tries stay red, and saved review attempts have their own correct
   }finally{t.close();}
 });
 
-test('finished dashboard cards retain the original light green, separate from red/green answer feedback',()=>{
-  const css=fs.readFileSync(path.join(__dirname,'styles.css'),'utf8');
-  assert.match(css,/\.card\.done\{border-color:#548d6a;background:#f4fbf2\}/);
-  assert.doesNotMatch(css,/\.card\.done\{background:#155b4f/);
-  assert.match(css,/\.choice\.answer-incorrect\{background:#fde8e7/);
-  assert.match(css,/\.choice\.answer-correct\{background:#edf5ea/);
-  const t=boot();try{assert.match(t.d.querySelector('.home-note').textContent,/Light green \+ Finished/);}finally{t.close();}
+test('compact finished cards show the original first-try score after a correct retry',()=>{
+  const at='2026-10-25T10:00:00Z',answers={'carla-4':[{choice:0,checkedAt:at,answerOK:false,marks:[]},{choice:2,checkedAt:at,answerOK:true,marks:[]}],'carla-5':[{choice:1,checkedAt:at,answerOK:true,marks:[]}]};
+  const saved=JSON.stringify({version:1,articles:{carla:[{id:'finished',startedAt:at,answers}]}}),t=boot(saved);
+  try{const card=t.d.querySelector('[data-open="carla"]').closest('.card');
+    assert.equal(card.querySelector('.completion-badge').textContent,'✓ Finished');
+    assert.equal(card.querySelector('.first-try-percent').textContent,'50%');
+    assert.equal(card.querySelector('.first-try-count').textContent,'1/2 correct');
+    assert.equal(card.querySelector('.num'),null);assert.equal(t.saved(),saved);
+    assert.match(t.d.querySelector('.home-note').textContent,/retries do not raise it/);
+  }finally{t.close();}
 });
