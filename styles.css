@@ -158,6 +158,9 @@ section { margin-top: 70px; }
 .site-card ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 26px; padding: 0; list-style: none; }
 .site-card li { padding: 7px 10px; border: 1px solid var(--line); border-radius: 999px; color: #53607a; background: rgba(247,249,255,.74); font-size: 11px; }
 .site-card > a { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 19px; border-top: 1px solid var(--line); color: #1c2b50; font-weight: 700; text-decoration: none; }
+.site-card > a::after { content: ""; position: absolute; inset: 0; z-index: 1; }
+.site-card:focus-within { outline: 3px solid var(--blue); outline-offset: 3px; }
+.site-card > a:focus-visible { outline: none; }
 .site-card > a span { color: var(--cyan); font-size: 22px; transition: transform .2s ease; }
 .site-card > a:hover span { transform: translateX(4px); }
 .warm > a span { color: var(--gold); }
