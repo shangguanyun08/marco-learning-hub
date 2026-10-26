@@ -2,3 +2,4 @@
 #content .choices:has(.mini-plot){grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:600px){#content .choices:has(.mini-plot){grid-template-columns:1fr}}
 .recorded .feedback[data-result=correct]{color:#206a4d;font-weight:650}.recorded .feedback[data-result=wrong]{color:#9e3022;font-weight:650}
 .jump-group{display:flex;align-items:center;gap:7px}.jump-divider{display:block;flex:0 0 4px;height:32px;margin:0 8px;border-radius:2px;background:#216998}.question-group-divider{height:6px;border:0;border-radius:3px;background:#216998;margin:38px 0}@media(max-width:360px){.jump-group{gap:5px}.jump-group a{width:30px}}@media print{.question-group-divider{margin:24px 0}}
+#sessions{grid-template-columns:repeat(3,minmax(0,1fr))}@media(max-width:750px){#sessions{grid-template-columns:1fr}}
