@@ -3,4 +3,19 @@
 .source-summary p{line-height:1.7}
 .source-evidence{font-size:14px;color:#526b7f}
 .page-tabs a.is-complete[aria-current=page]{background:#206a4d;border-color:#206a4d;color:#fff}
+.run-views{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0}
+.run-view{display:inline-block;padding:13px 20px;border:2px solid #173957;border-radius:10px;background:#fff;color:#173957;font-weight:750;text-decoration:none}
+.run-view[href*="first-wrongs"],.run-view.active{background:#173957;color:#fff}
+.run-view[aria-current=page]{outline:3px solid #b3cadb;outline-offset:3px}
+.run-view:focus-visible,.review-solution summary:focus-visible{outline:3px solid #b57718;outline-offset:4px}
+.first-wrong-intro{margin:28px 0}
+.review-choices{list-style:none;padding:0;display:grid;gap:10px}
+.review-choices li{padding:14px 18px;border:1px solid #d2dee7;border-radius:10px}
+.review-choices li>b{display:inline-block;min-width:28px}
+.review-choices .first-wrong-choice{background:#fde8e7;border-color:#d68b84;color:#842a22}
+.first-answer-label{display:block;margin-top:5px;font-size:15px}
+.review-attempt{font-size:17px}
+.review-solution{margin-top:20px}
+.review-solution>summary{display:list-item;width:fit-content;max-width:100%;box-sizing:border-box;cursor:pointer;padding:12px 20px;border-radius:9px;background:#173957;color:white;font-weight:750}
+.review-solution[open]>summary{margin-bottom:16px}
 @media(min-width:851px){.course-pages{grid-template-columns:repeat(3,minmax(0,1fr))}}

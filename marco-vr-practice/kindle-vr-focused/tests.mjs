@@ -7,8 +7,8 @@ const require=createRequire(import.meta.url),{JSDOM}=require('jsdom'),read=p=>re
 const APP='marco-vr-kindle-focused-20261024-v1',KEY=APP+':preview';
 const scripts=['../kindle-tests-1-2/data.js','../kindle-tests-1-8/questions.js','../kindle-tests-1-8/data.js','pdf-data.js','data.js','../../marco-daily-test-review/2026-10-11/engine.js','../kindle-tests-1-2/thinking.js','../kindle-tests-1-2/clues.js','../kindle-tests-1-2/sync.js'];
 const plain=x=>JSON.parse(JSON.stringify(x));
-function page(t,n=1,saved,library=false){
- const name=library?'../index.html':'practice.html',dom=new JSDOM(read(name),{url:`https://example.test/marco-vr-practice/kindle-vr-focused/${name}?page=${n}&demo=1`,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};let network=0;w.fetch=()=>{network++;throw Error('No preview network');};
+function page(t,n=1,saved,library=false,view=''){
+ const name=library?'../index.html':'practice.html',dom=new JSDOM(read(name),{url:`https://example.test/marco-vr-practice/kindle-vr-focused/${name}?page=${n}&demo=1${view?'&view='+view:''}`,runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};let network=0;w.fetch=()=>{network++;throw Error('No preview network');};
  for(const id of ['marco-vr-kindle-tests1-2-hard-20261024-v1','marco-vr-kindle-tests1-8-hard-20261024-v1'])w.localStorage.setItem(id,'legacy sentinel');
  if(saved)w.localStorage.setItem(KEY,JSON.stringify(saved));for(const f of scripts)w.eval(read(f));w.eval(read(library?'library.js':'practice.js'));
  return {w,doc:w.document,bank:w.MARCO_ISEE_PRACTICE,session:w.MARCO_ISEE_PRACTICE[n-1],E:w.MarcoTest3Engine,S:w.MarcoTest3Sync,state:()=>JSON.parse(w.localStorage.getItem(KEY)||'null'),network:()=>network};
@@ -60,4 +60,32 @@ test('focused sentence highlights save and revise without changing its first wro
  const p=page(t),el=p.doc.querySelector('.prompt.completion').closest('article'),i=Number(el.id.slice(2)),q=source(p,i);
  el.querySelector('[data-clue="0"]').click();reveal(p,i);answer(p,i,(q.correct+1)%4);const first=JSON.stringify(p.state().sessions[p.session.id][0].answers);
  p.doc.querySelector(`#q-${i} [data-edit-prediction]`).click();p.doc.querySelector(`#q-${i} [data-clue="1"]`).click();reveal(p,i);assert.equal(p.doc.querySelectorAll(`#q-${i} .clue-highlight`).length,2);assert.equal(JSON.stringify(p.state().sessions[p.session.id][0].answers),first);assert.equal(p.doc.querySelector(`#q-${i} .solution`),null);assert.ok(p.S.valid(p.state()));const next=page(t,1,p.state());assert.equal(next.doc.querySelectorAll(`#q-${i} .clue-highlight`).length,2);assert.equal(next.network(),0);
+});
+
+test('first-run review keeps all 21 original misses despite later perfect runs; read-only, answers collapsed',t=>{
+ const p=page(t),first=p.E.start(p.session,'2026-10-25T16:00:00.000Z'),later=p.E.start(p.session,'2026-10-26T17:00:00.000Z');
+ first.thinking={};later.thinking={};
+ p.session.questions.forEach((q,i)=>{p.E.submit(first,q,i<21?(q.correct+1)%4:q.correct);if(i<21)p.E.submit(first,q,i<9?q.correct:(q.correct+2)%4);p.E.submit(later,q,q.correct);});
+ first.completedAt='2026-10-25T17:00:00.000Z';later.completedAt='2026-10-26T18:00:00.000Z';
+ const saved={version:1,sessions:{[p.session.id]:[first,later]}};assert.ok(p.S.valid(saved));
+ const before=JSON.stringify(saved),review=page(t,1,saved,false,'first-wrongs');
+ assert.equal(review.doc.querySelectorAll('.first-wrong-question').length,21);
+ assert.equal(review.doc.querySelectorAll('.first-wrong-choice').length,21);
+ assert.equal(review.doc.querySelectorAll('.review-solution').length,21);
+ assert.equal(review.doc.querySelectorAll('.review-solution[open]').length,0);
+ assert.equal(review.doc.querySelectorAll('form,input,[data-action]').length,0);
+ assert.match(review.doc.querySelector('#practice-status').textContent,/19\/40.*21 first-answer misses.*9 corrected.*12 still wrong/);
+ assert.match(review.doc.querySelector('#run-views').textContent,/First-run wrongs \(21\)/);
+ assert.ok([...review.doc.querySelectorAll('[data-page-tab]')].every(a=>a.href.includes('view=first-wrongs')));
+ const expected=p.session.questions.slice(0,21).map(q=>q.source).sort((a,b)=>a-b),actual=[...review.doc.querySelectorAll('.first-wrong-question')].map(el=>Number(el.dataset.source)).sort((a,b)=>a-b);assert.deepEqual(actual,plain(expected));
+ review.doc.querySelector('.review-solution summary').click();assert.ok(review.doc.querySelector('.review-solution[open]'));assert.match(review.doc.querySelector('.review-solution .solution').textContent,/Answer:.*TRICK \/ EXPLANATION/s);
+ review.doc.querySelector('[data-question]').click();assert.match(review.w.location.search,/view=first-wrongs/);assert.ok(review.w.location.hash);
+ assert.equal(JSON.stringify(review.state()),before);assert.equal(review.network(),0);
+ const full=page(t,1,saved);assert.match(full.doc.querySelector('.run-score').textContent,/40\/40/);assert.equal(full.doc.querySelectorAll('article.question').length,40);assert.match(full.doc.querySelector('#run-views').textContent,/First-run wrongs \(21\)/);
+});
+
+test('first-run review handles unstarted pages and protects an unused second chance',t=>{
+ const p=page(t),empty=page(t,1,undefined,false,'first-wrongs');assert.equal(empty.state(),null);assert.match(empty.doc.querySelector('#workspace').textContent,/No saved first run/);assert.equal(empty.doc.querySelectorAll('article.question,form,input,[data-action]').length,0);
+ const run=p.E.start(p.session),q=p.session.questions[0];p.E.submit(run,q,(q.correct+1)%4);const saved={version:1,sessions:{[p.session.id]:[run]}};
+ const review=page(t,1,saved,false,'first-wrongs');assert.equal(review.doc.querySelectorAll('.first-wrong-question').length,1);assert.equal(review.doc.querySelectorAll('.review-solution,.solution').length,0);assert.match(review.doc.querySelector('.answer-locked').textContent,/hidden until the second try/);assert.equal(new URL(review.doc.querySelector('.answer-locked a').href).searchParams.has('view'),false);assert.equal(JSON.stringify(review.state()),JSON.stringify(saved));
 });

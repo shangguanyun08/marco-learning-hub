@@ -6,9 +6,10 @@
   const session = window.MARCO_ISEE_PRACTICE[pageNumber - 1], E = window.MarcoTest3Engine, S = window.MarcoTest3Sync, T = window.KindleVRThinking, C = window.KindleVRClues;
   if (!session) throw new Error('Unknown Kindle practice page');
   const total = session.questions.length;
+  const firstWrongView = params.get('view') === 'first-wrongs';
   document.getElementById('page-title').textContent = session.label;
   document.title = `${session.label} · Focused VR · Marco`;
-  document.getElementById('page-tabs').innerHTML = window.MARCO_ISEE_PRACTICE.map(s=>`<a data-page-tab="${s.number}" href="practice.html?page=${s.number}${params.has('demo')?'&demo=1':''}" ${s.number===pageNumber?'aria-current="page"':''}>Page ${s.number} · ${s.questions.length}</a>`).join('');
+  document.getElementById('page-tabs').innerHTML = window.MARCO_ISEE_PRACTICE.map(s=>`<a data-page-tab="${s.number}" href="practice.html?page=${s.number}${firstWrongView?'&view=first-wrongs':''}${params.has('demo')?'&demo=1':''}" ${s.number===pageNumber?'aria-current="page"':''}>Page ${s.number} · ${s.questions.length}</a>`).join('');
   // Display order changes only; saved questionSources and source IDs stay fixed.
   const orderedQuestions = [...session.questions.filter(q => q.type === 'synonym'), ...session.questions.filter(q => q.type !== 'synonym')];
   const editingPredictions = new Map();
@@ -22,6 +23,15 @@
   let status = preview ? 'Preview · Online records are untouched.' : 'Connecting to live online sync…', kind = preview ? 'preview' : 'connecting';
   try { const saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (S.valid(saved)) state = S.merge(saved, empty()); } catch { storageOK = false; }
   const runs = () => state.sessions[session.id] || [], current = () => runs().at(-1);
+  const firstRun = () => runs()[0];
+  const firstMisses = () => orderedQuestions.filter(q => { const a = firstRun()?.answers[q.source]?.attempts[0]; return a && a.choice !== q.correct; });
+  function viewURL(review = false, question) {
+    const url = new URL(location.href);
+    if (review) url.searchParams.set('view', 'first-wrongs'); else url.searchParams.delete('view');
+    url.searchParams.delete('q'); url.hash = '';
+    if (question) { url.searchParams.set('q', String(question)); url.hash = `q-${question}`; }
+    return url.pathname + url.search + url.hash;
+  }
   const entry = q => current()?.answers[q.source], thought = q => current()?.thinking?.[q.source], closed = q => E.done(q, entry(q));
   const revealed = q => !!thought(q)?.committed || !!thought(q)?.legacySeen || !!entry(q)?.attempts.length || current()?.pending[q.source] !== undefined;
   const fromElement = el => questions.get(el.closest('[data-source]')?.dataset.source);
@@ -34,8 +44,12 @@
   function save(upload = true) { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { storageOK = false; } note(); if (upload) void sync?.push(); }
   function statusUI() {
     const r = current(), stats = E.stats(session, r);
-    $('#practice-status').className = 'practice-status' + (r?.completedAt ? ' is-complete' : '');
-    $('#practice-status').innerHTML = `<h2>${r?.completedAt ? '✓ Practice complete' : `Page ${pageNumber} · ${total} questions`}</h2><p><span class="run-score">First-try score: ${stats.first}/${total}</span> · ${stats.finished}/${total} finished · ${stats.corrected} corrected on retry</p>`;
+    const first = firstRun(), original = E.stats(session, first), missed = firstMisses().length;
+    $('#run-views').innerHTML = `<a class="run-view${!firstWrongView ? ' active' : ''}" href="${esc(viewURL())}" ${!firstWrongView ? 'aria-current="page"' : ''}>Full practice</a><a class="run-view${firstWrongView ? ' active' : ''}" href="${esc(viewURL(true))}" ${firstWrongView ? 'aria-current="page"' : ''}>First-run wrongs (${missed})</a>`;
+    $('#practice-status').className = 'practice-status' + (!firstWrongView && r?.completedAt ? ' is-complete' : '');
+    $('#practice-status').innerHTML = firstWrongView
+      ? `<h2>Page ${pageNumber} · First-run wrongs</h2><p><span class="run-score">Run 1 first-try score: ${original.first}/${total}</span> · ${missed} first-answer misses · ${original.corrected} corrected on second try · ${original.finished - original.first - original.corrected} still wrong after two tries</p>`
+      : `<h2>${r?.completedAt ? '✓ Practice complete' : `Page ${pageNumber} · ${total} questions`}</h2><p><span class="run-score">First-try score: ${stats.first}/${total}</span> · ${stats.finished}/${total} finished · ${stats.corrected} corrected on retry</p>`;
     if ($('#practice-intro')) $('#practice-intro').innerHTML = `<p>For sentence completion, highlight key words in the rest of the sentence. For synonyms, predict one simple word. Both steps and elimination are optional; you can edit them later.</p>${!r ? `<button type="button" data-action="start" class="primary">Start ${total}-question practice</button><span class="thinking-caption"> Or begin with any question below.</span>` : '<button type="button" data-action="restart" class="start-fresh">Start fresh practice</button><span class="thinking-caption"> Earlier work stays in saved history.</span>'}`;
     document.querySelectorAll('[data-page-tab]').forEach(el=>{const s=window.MARCO_ISEE_PRACTICE[Number(el.dataset.pageTab)-1];el.classList.toggle('is-complete',!!state.sessions[s.id]?.at(-1)?.completedAt);});
     note();
@@ -66,8 +80,8 @@
       return `<div class="choice-row${out ? ' eliminated' : ''}"><label class="choice${done && j === q.correct ? ' correct' : ''}${done && used && j !== q.correct ? ' wrong' : ''}"><input type="radio" name="answer" value="${j}" ${done || used || out ? 'disabled' : ''} ${selected === j && !out ? 'checked' : ''}><span class="letter">${'ABCD'[j]}</span><span class="choice-text">${esc(choice)}</span></label>${!done ? `<button type="button" class="eliminate-button" data-eliminate="${j}" aria-pressed="${out}" ${used ? 'disabled' : ''} aria-label="${used ? `Choice ${'ABCD'[j]} is ruled out by your first try` : `${out ? 'Restore' : 'Eliminate'} ${'ABCD'[j]}`}">${used ? 'Ruled out' : out ? 'Restore' : 'Eliminate'}</button>` : ''}</div>`;
     }).join('')}</fieldset>${!done ? `<button type="submit" class="primary">${tries.length ? 'Check second try' : 'Check answer'}</button>` : ''}<p class="feedback" data-kind="${done && tries.at(-1)?.correct ? 'correct' : tries.length ? 'retry' : 'neutral'}" role="status">${message}</p></form>`;
   }
-  function solution(q) {
-    const firstCuts = entry(q)?.attempts[0]?.eliminated;
+  function solution(q, answer = entry(q)) {
+    const firstCuts = answer?.attempts[0]?.eliminated;
     const explanation = q.explanation.includes(q.tip) ? '' : `<p>${esc(q.explanation)}</p>`;
     const related = q.related.length ? `<div class="related-links">Related past mistakes—skill links:<br>${q.related.map(([date, number, title]) => `<a href="../${date}/#q${number}">${esc(title)} · ${date.slice(5)}</a>`).join('')}</div>` : '';
     return `<section class="solution" aria-label="Answer, meaning, trick, and explanation"><p><b>Answer: ${'ABCD'[q.correct]} · ${esc(q.choices[q.correct])}</b></p><p class="meaning"><strong>${esc(q.word)}</strong> — ${esc(q.meaning)}</p><p class="trick"><strong>TRICK / EXPLANATION</strong>${esc(q.tip)}</p>${explanation}${firstCuts?.length ? `<p class="elimination-review"><strong>Your first eliminations:</strong> ${firstCuts.map(i => `${'ABCD'[i]} · ${esc(q.choices[i])}`).join('; ')}. ${firstCuts.includes(q.correct) ? 'You crossed out the correct answer. Recheck the meaning you ruled out.' : 'The correct answer was not crossed out.'}</p>` : ''}<p class="selection-note"><strong>Why selected:</strong> ${esc(q.selection)}</p><p class="source-evidence">${esc(q.evidence)}</p>${related}</section>`;
@@ -84,8 +98,18 @@
   function records() {
     return `<details class="panel records"><summary>Saved practice runs (${runs().length})</summary>${runs().map((r, i) => { const stats = E.stats(session, r); return `<details><summary>Run ${i + 1} · ${esc(new Date(r.startedAt).toLocaleString())} · ${stats.first}/${total} first try · ${r.completedAt ? 'Complete' : 'In progress'}</summary><ol>${orderedQuestions.map(q => { const p = r.thinking?.[q.source]?.committed, revised = r.thinking?.[q.source]?.revised; return `<li>Test ${q.test}, ${q.part} Q${q.number}${p ? ` · Prediction: ${p.prediction ? `“${esc(p.prediction)}”` : 'skipped'}` : ''}${q.type !== 'synonym' && p?.clues?.length ? ` · Highlighted clues: ${esc(C.selected(q,p))}` : ''}${q.type !== 'synonym' && revised?.clues?.length ? ` · Updated clues: ${esc(C.selected(q,revised))}` : ''}${revised ? ` · Updated prediction: ${revised.prediction ? `“${esc(revised.prediction)}”` : 'skipped'}` : ''}: ${(r.answers[q.source]?.attempts || []).map((a, j) => `Try ${j + 1}: ${'ABCD'[a.choice]} (${a.correct ? 'correct' : 'incorrect'})${a.eliminated ? `; eliminated ${a.eliminated.map(i => 'ABCD'[i]).join(', ')}` : ''}`).join('; ') || 'Not answered'}</li>`; }).join('')}</ol></details>`; }).join('')}</details>`;
   }
+  function firstWrongReview() {
+    const run = firstRun(), missed = firstMisses();
+    const intro = `<section class="first-wrong-intro"><h2>Only the questions missed on Run 1</h2><p>${run ? `Run 1 started ${esc(new Date(run.startedAt).toLocaleString())}. ${E.stats(session, run).attempted}/${total} first answers recorded.` : 'No saved first run on this page yet.'} Later runs do not change this list. This is a read-only review; your scores and attempts stay unchanged.</p></section>`;
+    if (!missed.length) return intro + `<section class="panel"><p>${run && E.stats(session, run).attempted ? 'No first-answer misses recorded in Run 1 so far.' : 'Start the full practice to build your first-run record.'}</p><a href="${esc(viewURL())}">Return to full practice →</a></section>`;
+    const nav = `<nav class="mixed-nav" aria-label="First-run wrong questions"><div class="jump">${missed.map(q => { const i = orderedQuestions.indexOf(q); return `<a class="incorrect" data-question="${i}" href="#q-${i + 1}" aria-label="Practice question ${i + 1}: wrong on Run 1">${i + 1}</a>`; }).join('')}</div></nav>`;
+    return intro + nav + `<div class="questions-list">${missed.map((q, j) => {
+      const i = orderedQuestions.indexOf(q), answer = run.answers[q.source], tries = answer.attempts, snapshot = run.thinking?.[q.source]?.revised || run.thinking?.[q.source]?.committed;
+      return `<article class="question first-wrong-question" id="q-${i + 1}" data-source="${q.source}" data-study-subject="words"><header><h3 id="question-title-${i + 1}" tabindex="-1">First-run miss ${j + 1} of ${missed.length}</h3><span class="source">Practice question ${i + 1} · Book Test ${q.test} · ${q.part} Q${q.number}</span></header><p class="prompt ${q.type === 'synonym' ? 'synonym' : 'completion'}">${q.type === 'synonym' ? esc(q.word.toUpperCase()) : C.prompt(q, snapshot, true)}</p><ol class="review-choices">${q.choices.map((choice, k) => `<li class="${k === tries[0].choice ? 'first-wrong-choice' : ''}"><b>${'ABCD'[k]}</b> ${esc(choice)}${k === tries[0].choice ? ' <strong class="first-answer-label">Your first answer · incorrect</strong>' : ''}</li>`).join('')}</ol><p class="review-attempt">${tries[1] ? `Run 1 second try: <b>${'ABCD'[tries[1].choice]} · ${esc(q.choices[tries[1].choice])}</b> — ${tries[1].correct ? 'corrected' : 'still incorrect'}.` : 'No second try recorded in Run 1.'}</p>${E.done(q, answer) ? `<details class="review-solution"><summary>Show answer, meaning & trick</summary>${solution(q, answer)}</details>` : `<p class="answer-locked">The answer stays hidden until the second try. <a href="${esc(viewURL(false, i + 1))}">Return to practice →</a></p>`}</article>`;
+    }).join('')}</div>`;
+  }
   function render() {
-    $('#workspace').innerHTML = `<section id="practice-intro" class="practice-intro"></section>${navigation()}<div class="questions-list">${orderedQuestions.map((q, i) => (i === 0 || q.type !== orderedQuestions[i-1].type ? `<h2 class="question-type-heading">${q.type === 'synonym' ? 'Synonyms' : 'Sentence completion'} · ${orderedQuestions.filter(x => x.type === q.type).length} questions</h2>` : '') + questionUI(q, i) + ((i + 1) % 10 === 0 && i < total - 1 ? '<hr class="question-group-divider" aria-hidden="true">' : '')).join('')}</div>${current()?.completedAt ? breakdown() : ''}${records()}`;
+    $('#workspace').innerHTML = firstWrongView ? firstWrongReview() : `<section id="practice-intro" class="practice-intro"></section>${navigation()}<div class="questions-list">${orderedQuestions.map((q, i) => (i === 0 || q.type !== orderedQuestions[i-1].type ? `<h2 class="question-type-heading">${q.type === 'synonym' ? 'Synonyms' : 'Sentence completion'} · ${orderedQuestions.filter(x => x.type === q.type).length} questions</h2>` : '') + questionUI(q, i) + ((i + 1) % 10 === 0 && i < total - 1 ? '<hr class="question-group-divider" aria-hidden="true">' : '')).join('')}</div>${current()?.completedAt ? breakdown() : ''}${records()}`;
     statusUI();
   }
   function refresh() {
@@ -99,6 +123,11 @@
     el.scrollIntoView?.({ block: 'start' });
   }
   document.addEventListener('click', event => {
+    if (firstWrongView) {
+      const link = event.target.closest('a[data-question]');
+      if (link && !event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey) { event.preventDefault(); jump(Number(link.dataset.question)); }
+      return;
+    }
     const clue = event.target.closest('[data-clue]');
     if (clue) {
       const q=fromElement(clue);if(!q||q.type==='synonym'||((revealed(q)||closed(q))&&!editingPredictions.has(q.source)))return;
@@ -135,11 +164,13 @@
   }
   document.addEventListener('input', event => { if (event.target.classList.contains('prediction-input')) updateDraft(event); });
   document.addEventListener('change', event => {
+    if (firstWrongView) return;
     if (event.target.closest('.prediction-form')) { updateDraft(event); return; }
     if (!event.target.matches('input[name="answer"]')) return; const q = fromElement(event.target); if (!q || closed(q)) return;
     ensureRun().pending[q.source] = { choice: Number(event.target.value), at: new Date().toISOString() }; save();
   });
   document.addEventListener('submit', event => {
+    if (firstWrongView) { event.preventDefault(); return; }
     const form = event.target, q = fromElement(form); if (!q) return;
     if (form.classList.contains('prediction-form')) { event.preventDefault(); const editing=editingPredictions.get(q.source);if(editing ? T.revise(q,editThought(q),editing) : T.commit(q, editThought(q))) { editingPredictions.delete(q.source);save(); refresh(); } return; }
     if (!form.classList.contains('answer-form')) return; event.preventDefault();

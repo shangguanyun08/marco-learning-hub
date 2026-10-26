@@ -25,6 +25,10 @@ The shared sync backend registers this new namespace, applies strict version pro
 
 `?demo=1` isolates local preview storage and suppresses online progress/activity writes. Do not submit QA answers to the live production course.
 
+## First-run wrongs
+
+The dark-blue **First-run wrongs** button opens `practice.html?page=1&view=first-wrongs` (also available on Pages 2–6). It reads only the earliest saved run on the selected page and includes every incorrect first answer, even if corrected on the second try or in later runs. It shows the original first choice in light red and the original second-try result separately. Answers, meanings, and tricks are behind a disclosure, and stay unavailable if that original question still has an unused second try. This view has no answer inputs or restart controls and never creates a run. Course IDs, membership, scoring, and saved histories are unchanged.
+
 ## Verification
 
 Run `node --test marco-vr-practice/kindle-vr-focused/tests.mjs` with JSDOM available. Also run the Tests 1–2 and Tests 1–8 regression suites. Tests cover bank counts, retained-source equality, text integrity, optional controls, two attempts, reload, green completion, separate scores, two-device merges, history, archives, and link resolution. Separately, all 172 published PDF stems/choices/keys were compared against the full 1,320-question extraction before publication.
