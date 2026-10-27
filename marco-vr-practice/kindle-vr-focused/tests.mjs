@@ -101,3 +101,15 @@ test('first-run review handles unstarted pages and protects an unused second cha
  const run=p.E.start(p.session),q=p.session.questions[0];p.E.submit(run,q,(q.correct+1)%4);const saved={version:1,sessions:{[p.session.id]:[run]}};
  const review=page(t,1,saved,false,'first-wrongs');assert.equal(review.doc.querySelectorAll('.first-wrong-question').length,1);assert.equal(review.doc.querySelectorAll('.review-solution,.solution').length,0);assert.match(review.doc.querySelector('.answer-locked').textContent,/hidden until the second try/);assert.equal(new URL(review.doc.querySelector('.answer-locked a').href).searchParams.has('view'),false);assert.match(review.doc.querySelector('.review-elimination-note').textContent,/No elimination snapshot/);assert.ok([...review.doc.querySelectorAll('.review-cut-status')].every(el=>el.textContent==='Not recorded'));assert.equal(JSON.stringify(review.state()),JSON.stringify(saved));
 });
+
+test('all focused pages load compact responsive styles last without hiding question controls',t=>{
+ const html=new JSDOM(read('practice.html'));t.after(()=>html.window.close());
+ const styles=[...html.window.document.querySelectorAll('link[rel=stylesheet]')];
+ assert.equal(styles.at(-1).getAttribute('href'),'style.css?v=20261026-compact1');
+ const dom=new JSDOM(`<style>${read('style.css')}</style><article class="question first-wrong-question"><header><h3>Question 1</h3></header><p class="prompt synonym">WORD</p><div class="choice-row"><label class="choice"><input type="radio"><span class="choice-text">Answer</span></label><button class="eliminate-button">Eliminate</button></div><section class="prediction-saved review-prediction"></section></article>`);t.after(()=>dom.window.close());
+ const css=selector=>dom.window.getComputedStyle(dom.window.document.querySelector(selector));
+ assert.equal(css('body').fontSize,'16px');assert.equal(css('.prompt').fontSize,'28px');
+ assert.equal(css('.choice').minHeight,'44px');assert.equal(css('.choice').fontSize,'16px');
+ assert.notEqual(css('input').display,'none');assert.notEqual(css('button').display,'none');
+ assert.ok([...dom.window.document.styleSheets[0].cssRules].some(r=>r.conditionText==='(max-width:700px)'));
+});

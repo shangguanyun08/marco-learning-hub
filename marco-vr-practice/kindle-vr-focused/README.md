@@ -31,4 +31,6 @@ The dark-blue **First-run wrongs** button opens `practice.html?page=1&view=first
 
 ## Verification
 
+All six focused pages and the first-run wrongs view share a compact responsive layout: smaller headings, tighter prediction panels and answer rows, and side-by-side prediction/category records on desktop. The layout does not hide any recorded details or change question data, attempts, or sync. Expanded explanations can still extend below the screen.
+
 Run `node --test marco-vr-practice/kindle-vr-focused/tests.mjs` with JSDOM available. Also run the Tests 1–2 and Tests 1–8 regression suites. Tests cover bank counts, retained-source equality, text integrity, optional controls, two attempts, reload, green completion, separate scores, two-device merges, history, archives, and link resolution. Separately, all 172 published PDF stems/choices/keys were compared against the full 1,320-question extraction before publication.
