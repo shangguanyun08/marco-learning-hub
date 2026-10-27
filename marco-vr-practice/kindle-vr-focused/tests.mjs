@@ -89,7 +89,7 @@ test('full first-run format shows original prediction/categories and per-attempt
  r.thinking={};later.thinking={};
  for(const item of [q,sentence]){const n=T.make();T.touch(n,{prediction:item===q?'my first idea':'original sentence idea',tone:'bad',strength:'weak',link:'opposite',clues:item===sentence?[0,1]:[]});T.commit(item,n);T.revise(item,n,{prediction:'later changed idea',tone:'good',strength:'strong',link:'same',clues:[2]});r.thinking[item.source]=n;p.E.submit(r,item,(item.correct+1)%4);r.answers[item.source].attempts[0].eliminated=[(item.correct+2)%4];p.E.submit(r,item,item.correct);r.answers[item.source].attempts[1].eliminated=[(item.correct+1)%4,(item.correct+3)%4];p.E.submit(later,item,item.correct);const other=T.make();T.touch(other,{prediction:'not from run one',tone:'good',strength:'strong'});T.commit(item,other);later.thinking[item.source]=other;}
  const saved={version:1,sessions:{[p.session.id]:[r,later]}};assert.ok(p.S.valid(saved));const before=JSON.stringify(saved),review=page(t,1,saved,false,'first-wrongs'),card=review.doc.querySelector('#q-1');
- assert.match(card.querySelector('.saved-prediction').textContent,/my first idea/);assert.equal(card.querySelector('[name="review-'+q.source+'-tone"]:checked').value,'bad');assert.equal(card.querySelector('[name="review-'+q.source+'-strength"]:checked').value,'weak');assert.match(card.querySelector('.review-revision').textContent,/later changed idea/);assert.doesNotMatch(card.textContent,/not from run one/);
+ assert.match(card.querySelector('.saved-prediction').textContent,/my first idea/);assert.equal(card.querySelector('[name="review-'+q.source+'-tone"]:checked').value,'bad');assert.equal(card.querySelector('[name="review-'+q.source+'-strength"]'),null);assert.match(card.querySelector('.review-revision').textContent,/later changed idea/);assert.doesNotMatch(card.querySelector('.review-revision').textContent,/Strong|Weak/);assert.doesNotMatch(card.textContent,/not from run one/);
  assert.equal(card.querySelector('.choices input:checked').value,String((q.correct+1)%4));assert.equal(card.querySelectorAll('.choice-row.eliminated').length,1);assert.equal(card.querySelector('.choice-row.eliminated').dataset.recordedChoice,String((q.correct+2)%4));assert.match(card.querySelector('.review-cut-status.is-eliminated').textContent,/Eliminated/);
  card.querySelector('[data-review-attempt="1"]').click();const second=review.doc.querySelector('#q-1');assert.equal(second.querySelector('.choices input:checked').value,String(q.correct));assert.equal(second.querySelectorAll('.choice-row.eliminated').length,2);assert.match(second.querySelector('.review-elimination-note').textContent,/automatically ruled out/);assert.equal(second.querySelector('.review-attempt-tabs [aria-pressed=true]').dataset.reviewAttempt,'1');assert.ok(second.querySelector('.choice.correct'));second.querySelector('[data-review-attempt="0"]').click();assert.equal(review.doc.querySelector('#q-1 .choices input:checked').value,String((q.correct+1)%4));
  const sc=review.doc.querySelector(`[data-source="${sentence.source}"]`);assert.equal(sc.querySelectorAll('.prompt .clue-highlight').length,2);assert.equal(sc.querySelector('.review-prediction input:checked').value,'opposite');assert.match(sc.querySelector('.legacy-prediction').textContent,/original sentence idea/);assert.equal(sc.querySelector('.review-revision[open]'),null);
@@ -105,11 +105,33 @@ test('first-run review handles unstarted pages and protects an unused second cha
 test('all focused pages load compact responsive styles last without hiding question controls',t=>{
  const html=new JSDOM(read('practice.html'));t.after(()=>html.window.close());
  const styles=[...html.window.document.querySelectorAll('link[rel=stylesheet]')];
- assert.equal(styles.at(-1).getAttribute('href'),'style.css?v=20261026-compact1');
+ assert.equal(styles.at(-1).getAttribute('href'),'style.css?v=20261026-meaning1');
  const dom=new JSDOM(`<style>${read('style.css')}</style><article class="question first-wrong-question"><header><h3>Question 1</h3></header><p class="prompt synonym">WORD</p><div class="choice-row"><label class="choice"><input type="radio"><span class="choice-text">Answer</span></label><button class="eliminate-button">Eliminate</button></div><section class="prediction-saved review-prediction"></section></article>`);t.after(()=>dom.window.close());
  const css=selector=>dom.window.getComputedStyle(dom.window.document.querySelector(selector));
  assert.equal(css('body').fontSize,'16px');assert.equal(css('.prompt').fontSize,'28px');
  assert.equal(css('.choice').minHeight,'44px');assert.equal(css('.choice').fontSize,'16px');
  assert.notEqual(css('input').display,'none');assert.notEqual(css('button').display,'none');
  assert.ok([...dom.window.document.styleSheets[0].cssRules].some(r=>r.conditionText==='(max-width:700px)'));
+});
+
+test('all six pages use only I don’t know / Positive / Negative, with no strength controls',t=>{
+ for(let n=1;n<=6;n++){
+  const p=page(t,n),card=p.doc.querySelector('#q-1');
+  assert.deepEqual([...card.querySelectorAll('[name=tone]')].map(el=>el.value),['unsure','good','bad']);
+  assert.deepEqual([...card.querySelectorAll('.thinking-pills label span')].map(el=>el.textContent),['I don’t know','Positive','Negative']);
+  assert.equal(p.doc.querySelectorAll('[name=strength]').length,0);
+ }
+});
+
+test('I don’t know saves, reloads, and appears in read-only first-run review without changing attempts',t=>{
+ const p=page(t),q=source(p),choice=p.doc.querySelector('#q-1 [name=tone][value=unsure]');
+ choice.checked=true;choice.dispatchEvent(new p.w.Event('change',{bubbles:true}));reveal(p);
+ assert.equal(p.state().sessions[p.session.id][0].thinking[q.source].committed.tone,'unsure');
+ assert.match(p.doc.querySelector('#q-1 .thinking-caption').textContent,/I don’t know/);
+ answer(p,1,(q.correct+1)%4);answer(p,1,q.correct);const saved=p.state();assert.ok(p.S.valid(saved));
+ const reloaded=page(t,1,saved);assert.match(reloaded.doc.querySelector('#q-1 .thinking-caption').textContent,/I don’t know/);
+ const review=page(t,1,saved,false,'first-wrongs'),card=review.doc.querySelector('#q-1');
+ assert.equal(card.querySelector('[name="review-'+q.source+'-tone"]:checked').value,'unsure');
+ assert.equal(card.querySelectorAll('.review-prediction .thinking-pills input').length,3);
+ assert.equal(JSON.stringify(review.state()),JSON.stringify(saved));assert.equal(review.network(),0);
 });

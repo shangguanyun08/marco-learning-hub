@@ -21,6 +21,8 @@ App ID: `marco-vr-kindle-focused-20261024-v1`. Sessions: `kindle-vr-focused-page
 
 Untimed. Synonyms precede sentence completions within each page. Synonyms use an optional one-word prediction. Sentence completions instead invite Marco to tap and highlight the key words in the rest of the sentence, and think about the same idea or its opposite. Highlighting and elimination are optional. Predictions and highlights remain editable, with the original pre-choice snapshot retained. Older typed sentence predictions remain in records. A wrong first answer hides the solution until a distinct second attempt; correct first answers reveal it immediately. First-try and corrected scores are separate. Completed pages turn green; new runs preserve earlier history.
 
+Synonym meaning choices are **I don’t know / Positive / Negative**, using the already-supported saved values `unsure / good / bad`. Strong/Weak is no longer shown or requested, including in first-run review and revised-prediction summaries. Historical strength fields remain unchanged in the saved records/export for compatibility; this UI change does not migrate or rewrite old thinking snapshots.
+
 The shared sync backend registers this new namespace, applies strict version protection, and counts it as Marco word practice. Old 24- and 146-question namespaces are unchanged and remain accessible under Previous Practice.
 
 `?demo=1` isolates local preview storage and suppresses online progress/activity writes. Do not submit QA answers to the live production course.
