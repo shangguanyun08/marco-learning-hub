@@ -148,3 +148,38 @@ test('previously saved answers and notes survive removal of the setup field and 
  assert.match(reload.d.querySelector('.scorebar').textContent,/3\/4 correct first try/);assert.equal(reload.calls(),0);
 });
 test('mocked two-device sync persists notes and first-try scores, never calls production',async()=>{let recordOnServer=null,version=0;const calls=[];const fetcher=async(url,options)=>{assert.equal(url,S.API+'?appId='+D.appId);calls.push(options.method);if(options.method==='POST'){const body=JSON.parse(options.body);if(body.baseVersion!==(recordOnServer?version:null))return{ok:true,json:async()=>({accepted:false,progress:recordOnServer})};recordOnServer={state:body.state,version:++version};return{ok:true,json:async()=>({accepted:true,progress:recordOnServer})};}return{ok:true,json:async()=>({progress:recordOnServer})};};ctx.fetch=fetcher;ctx.localStorage={getItem:()=>null,setItem(){}};ctx.setTimeout=setTimeout;ctx.clearTimeout=clearTimeout;let a=E.empty(),b=E.empty();record(a,'f1',1);const one=S.create({getState:()=>a,onRemote:x=>a=x,onStatus(){},fetcher}),two=S.create({getState:()=>b,onRemote:x=>b=x,onStatus(){},fetcher});await one.push();await two.push();assert.equal(E.stats(b).first,1);record(b,'t1',0,5);await two.push();await one.push();assert.equal(E.stats(a).first,2);assert.ok(E.note(a,'t1'));assert.ok(calls.includes('POST'));});
+
+
+test('completed Practice 1 groups all 28 saved questions by seven skills with original numbers and history',t=>{
+ const saved=E.empty();
+ for(const [i,id] of D.ids.entries()){
+  const q=D.questions[id],missed=['f2','g1','t3'].includes(id);
+  record(saved,id,missed?(q.correct+1)%4:q.correct,i);
+ }
+ E.submit(saved,'g1',D.questions.g1.correct,at(40),'saved-retry');
+ const before=copy(saved),p=browser(t,'?session=1&demo=1',saved);
+ const sections=[...p.d.querySelectorAll('.skill-review-group')],nav=p.d.querySelector('.skill-jump-grid');
+ assert.equal(sections.length,7);assert.equal(p.d.querySelectorAll('.skill-jump').length,7);
+ assert.match(p.d.querySelector('.stage-head h2').textContent,/Practice 1.*Review by math skill/);
+ assert.ok(nav.compareDocumentPosition(p.d.getElementById('skill-results'))&p.w.Node.DOCUMENT_POSITION_FOLLOWING);
+ for(const [i,skill] of Object.keys(D.skills).entries()){
+  const section=sections[i],ids=D.ids.filter(id=>D.questions[id].skill===skill);
+  assert.equal(section.id,'skill-'+skill);assert.equal(section.querySelector('h2').textContent,D.skills[skill]);
+  assert.equal(section.querySelectorAll('article.question').length,4);
+  assert.deepEqual([...section.querySelectorAll('article.question')].map(q=>q.id),copy(ids.map(id=>'q-'+id)));
+  assert.match(section.querySelector('.skill-group-score').textContent,new RegExp(E.stats(saved,skill).first+'/4'));
+  for(const id of ids)assert.equal(section.querySelector('#q-'+id+' h3').textContent,`Question ${D.ids.indexOf(id)+1} of 28`);
+ }
+ const ids=[...p.d.querySelectorAll('article.question')].map(q=>q.id);assert.equal(new Set(ids).size,28);
+ assert.deepEqual([...p.d.querySelectorAll('.skill-group-summary a')].map(a=>a.hash),['#q-f2','#q-g1','#q-t3']);
+ for(const link of nav.querySelectorAll('a'))assert.ok(p.d.querySelector(link.hash));
+ assert.match(p.d.getElementById('skill-results').textContent,/25\/28/);
+ assert.deepEqual(JSON.parse(p.w.localStorage.getItem(D.appId+':demo')),before);
+ assert.equal(p.d.querySelector('.skill-jump a[href="#q-g1"]').classList.contains('missed'),true);
+ let exported;p.w.Blob=class{constructor(parts){exported=JSON.parse(parts[0]);}};p.w.URL.createObjectURL=()=> 'blob:preview';p.w.URL.revokeObjectURL=()=>{};p.w.HTMLAnchorElement.prototype.click=()=>{};
+ p.d.querySelector('#download').click();assert.deepEqual(exported.sessions,before.sessions);assert.deepEqual(exported.questionMap.map(q=>[q.id,q.number]),copy(D.ids.map((id,i)=>[id,i+1])));
+ uiAnswer(p,'f2',D.questions.f2.correct);const updated=JSON.parse(p.w.localStorage.getItem(D.appId+':demo'));
+ assert.equal(E.stats(updated).first,25);assert.equal(E.stats(updated).corrected,2);assert.deepEqual(copy(E.run(updated).notes),before.sessions[D.session][0].notes);
+ for(const id of D.ids)assert.deepEqual(copy(E.attempts(updated,id)[0]),before.sessions[D.session][0].answers[id].attempts[0]);
+ const reload=browser(t,'?session=1&demo=1',updated);assert.equal(reload.d.querySelectorAll('.skill-review-group').length,7);assert.match(reload.d.getElementById('skill-results').textContent,/25\/28/);assert.equal(reload.calls(),0);
+});
