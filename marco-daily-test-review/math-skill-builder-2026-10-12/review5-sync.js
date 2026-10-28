@@ -19,7 +19,7 @@
       }onStatus('saving','Merging answers from another device…');
     }catch{onStatus('offline','Not synced · Saved on this device. Online sync will retry automatically.');}finally{busy=false;if(again&&!stopped){again=false;root.setTimeout(refresh,250);}}}
     const visible=()=>{if(root.document.visibilityState==='visible')void refresh();};
-    return{start(){onStatus('connecting','Connecting to live online sync…');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},push:refresh,stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.document.removeEventListener('visibilitychange',visible);}};
+    return{start(){onStatus('connecting','Connecting to live online sync…');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.addEventListener('pageshow',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},push:refresh,stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.removeEventListener('pageshow',refresh);root.document.removeEventListener('visibilitychange',visible);}};
   }
   root.MarcoReview5Sync={APP_ID,API,create};
 })(typeof window==='undefined'?globalThis:window);

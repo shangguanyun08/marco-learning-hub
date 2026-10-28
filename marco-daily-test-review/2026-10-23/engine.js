@@ -1,6 +1,7 @@
 (function(root){
  'use strict';
- const D=root.MarcoQR4Data,object=x=>x&&typeof x==='object'&&!Array.isArray(x),time=x=>typeof x==='string'&&Number.isFinite(Date.parse(x));
+ function forCourse(D){
+ const object=x=>x&&typeof x==='object'&&!Array.isArray(x),time=x=>typeof x==='string'&&Number.isFinite(Date.parse(x));
  const empty=()=>({version:1,sessions:{[D.session]:[{id:D.session,answers:{},notes:{}}]}}),run=s=>s.sessions[D.session][0],attempts=(s,id)=>run(s).answers[id]?.attempts||[];
  const firstPass=s=>D.ids.every(id=>attempts(s,id).length),note=(s,id)=>run(s).notes[id]?.text||'';
  function valid(s){if(!object(s)||s.version!==1||!object(s.sessions)||Object.keys(s.sessions).length!==1)return false;const r=s.sessions[D.session];return Array.isArray(r)&&r.length===1&&r[0].id===D.session&&object(r[0].answers)&&object(r[0].notes)&&Object.entries(r[0].answers).every(([id,e])=>D.questions[id]&&object(e)&&Array.isArray(e.attempts)&&e.attempts.length>0&&e.attempts.length<=8&&e.attempts.every(a=>object(a)&&typeof a.id==='string'&&a.id.length<200&&time(a.at)&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<4&&a.correct===(a.choice===D.questions[id].correct)))&&Object.entries(r[0].notes).every(([id,n])=>D.questions[id]&&object(n)&&typeof n.text==='string'&&n.text.length<=1500&&time(n.at));}
@@ -13,5 +14,7 @@
  }
  function stats(s,skill){const ids=D.ids.filter(id=>!skill||D.questions[id].skill===skill),done=ids.filter(id=>attempts(s,id).length),first=done.filter(id=>attempts(s,id)[0].correct).length;return{total:ids.length,answered:done.length,first,wrong:done.length-first,complete:done.length===ids.length,corrected:done.filter(id=>!attempts(s,id)[0].correct&&attempts(s,id).slice(1).some(a=>a.correct)).length};}
  const reveal=(s,id)=>!!(attempts(s,id)[0]?.correct||attempts(s,id).length>=2);
- root.MarcoQR4Engine={empty,run,valid,merge,attempts,firstPass,note,saveNote,submit,stats,reveal};
+ return {empty,run,valid,merge,attempts,firstPass,note,saveNote,submit,stats,reveal};
+ }
+ root.MarcoQR4Engine={...forCourse(root.MarcoQR4Data),forCourse};
 })(typeof window==='undefined'?globalThis:window);

@@ -40,7 +40,7 @@ test('New review uses an isolated app ID and sync saves and restores results',as
 });
 
 test('Course cards and Set 7 completion lead to Review 3 before Set 8 while preserving saved scores',t=>{
- const courseFiles=['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js','review3-data.js','review3-engine.js','review4-data.js','review4-engine.js','review5-data.js','review5-engine.js'],c={crypto:{randomUUID}};for(const f of courseFiles)vm.runInNewContext(read(f),c);
+ const courseFiles=['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js','review2-data.js','review2-engine.js','review3-data.js','review3-engine.js','review4-data.js','review4-engine.js','review5-data.js','review5-engine.js'],c={crypto:{randomUUID}};for(const f of courseFiles)vm.runInNewContext(read(f),c);
  const engine=c.MarcoSkillEngine,state=engine.empty(),at='2026-10-20T03:00:00Z';
  for(let n=1;n<=7;n++){const run=engine.start(n,state,at);state.sessions[engine.sessionId(n)]=[run];for(const id of run.questionIds)engine.submit(run,id,engine.resolve(id).correct,at);}
  const saved=JSON.stringify(state),dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'http://localhost/?set=7',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};w.MarcoSkillSync={APP_ID:'marco-math-skill-builder-oct12-v1'};w.localStorage.setItem(w.MarcoSkillSync.APP_ID,saved);for(const f of [...courseFiles,'app.js'])w.eval(read(f));

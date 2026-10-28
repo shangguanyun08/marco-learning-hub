@@ -1,6 +1,6 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),{randomUUID}=require('node:crypto');
 const {JSDOM}=require('jsdom');
-const read=file=>fs.readFileSync(path.join(__dirname,file),'utf8'),files=['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js','review3-data.js','review3-engine.js','review4-data.js','review4-engine.js','review5-data.js','review5-engine.js'];
+const read=file=>fs.readFileSync(path.join(__dirname,file),'utf8'),files=['data.js','round2.js','checkpoint-data.js','review-checks-data.js','engine.js','review2-data.js','review2-engine.js','review3-data.js','review3-engine.js','review4-data.js','review4-engine.js','review5-data.js','review5-engine.js'];
 const ctx={crypto:{randomUUID}};for(const f of files)vm.runInNewContext(read(f),ctx);
 const C=ctx.MarcoSkillCourse,E=ctx.MarcoSkillEngine,copy=x=>JSON.parse(JSON.stringify(x)),at='2026-10-17T18:00:00.000Z',KEY='marco-math-skill-builder-oct12-v1';
 function finishCore(){const state=E.empty();for(let n=1;n<=6;n++){const r=E.start(n,state,at);state.sessions[E.sessionId(n)]=[r];for(const id of r.questionIds)E.submit(r,id,E.resolve(id).correct,at);}return state;}
@@ -114,8 +114,8 @@ test('Online Review 3 verification is read-only and unlocks from another device'
  const dom=new JSDOM(read('index.html').replace(/<script\b[^>]*>[\s\S]*?<\/script>/g,''),{url:'https://example.test/?set=8',runScripts:'outside-only'}),w=dom.window;t.after(()=>w.close());w.scrollTo=()=>{};
  const r4=ctx.MarcoReview4Engine.empty();for(const id of ctx.MarcoReview4Data.ids)ctx.MarcoReview4Engine.submit(r4,id,ctx.MarcoReview4Data.questions[id].correct);
  const r5=ctx.MarcoReview5Engine.empty();for(const id of ctx.MarcoReview5Data.ids)ctx.MarcoReview5Engine.submit(r5,id,ctx.MarcoReview5Data.questions[id].correct);
- const calls=[];w.fetch=async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({progress:{state:url.includes('review5-v1')?r5:url.includes('review4-v1')?r4:r,version:1}})};};
+ const calls=[];w.fetch=async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({progress:url.includes('review2-v1')?null:{state:url.includes('review5-v1')?r5:url.includes('review4-v1')?r4:r,version:1}})};};
  w.MarcoSkillSync={APP_ID:KEY,create:()=>({start:()=>Promise.resolve(),push(){throw Error('No course writes expected');}})};w.localStorage.setItem(KEY,JSON.stringify(state));
- for(const f of [...files,'app.js'])w.eval(read(f));await new Promise(resolve=>setTimeout(resolve,25));
- assert.ok(w.document.querySelector('[data-action="start"]'));assert.equal(calls.length,3);for(const call of calls){assert.equal(call.options.method,undefined);assert.equal(call.options.body,undefined);}assert.ok(calls.some(call=>call.url.endsWith('review3-v1')));assert.ok(calls.some(call=>call.url.endsWith('review4-v1')));assert.equal(w.localStorage.getItem('marco-math-skill-builder-oct12-review3-v1'),null);
+ for(const f of [...files,...[2,3,4,5].map(n=>`review${n}-sync.js`),'app.js'])w.eval(read(f));await new Promise(resolve=>setTimeout(resolve,25));
+ assert.ok(w.document.querySelector('[data-action="start"]'));assert.equal(calls.length,4);for(const call of calls){assert.equal(call.options.method,'GET');assert.equal(call.options.body,undefined);}assert.ok(calls.some(call=>call.url.endsWith('review3-v1')));assert.ok(calls.some(call=>call.url.endsWith('review4-v1')));assert.deepEqual(JSON.parse(w.localStorage.getItem('marco-math-skill-builder-oct12-review3-v1')),copy(ctx.MarcoReview3Engine.merge(r,ctx.MarcoReview3Engine.empty())));
 });

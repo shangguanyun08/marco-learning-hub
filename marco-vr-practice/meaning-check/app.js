@@ -21,5 +21,14 @@
  byId('download').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(exportData(),null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=doc.createElement('a');a.href=url;a.download='Marco-word-meaning-responses.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);byId('action-note').textContent='Downloaded the current draft and all submitted copies.';});
  byId('copy').addEventListener('click',async()=>{const text=['Please review Marco’s simple meanings. Accept accurate paraphrases and valid alternate senses; ignore minor spelling errors. Separate correct / partial / different sense / incorrect / unknown. Tone is optional, not the meaning. These are ungraded responses.','',...data.words.filter(w=>answered(current.entries[w.id])||current.entries[w.id]?.tone).map(w=>{const r=current.entries[w.id];return `${w.number}. ${w.word}: ${r.unknown?"I don't know":r.meaning||'[no meaning]'}${r.tone?' · tone: '+r.tone:''}`;})].join('\n');try{await navigator.clipboard.writeText(text);byId('action-note').textContent='Responses copied. Paste them here when you want a review.';}catch{byId('action-note').textContent='Clipboard unavailable. Use Download responses instead.';}});
  byId('print').addEventListener('click',()=>window.print());
- if(!demo){const poll=setInterval(()=>{if(!doc.hidden)void sync.flush();},12000);window.addEventListener('focus',()=>void sync.flush());window.addEventListener('online',()=>void sync.flush());window.addEventListener('pagehide',()=>{clearInterval(poll);sync.stop();});}
+ if(!demo){
+  let poll=null;
+  function resume(){if(poll===null)poll=setInterval(()=>{if(!doc.hidden)void sync.flush();},12000);void sync.flush();}
+  window.addEventListener('focus',resume);window.addEventListener('online',resume);
+  window.addEventListener('pageshow',resume);
+  doc.addEventListener('visibilitychange',()=>void sync.flush());
+  window.addEventListener('storage',event=>{if(event.key===sync.key&&event.newValue){sync.receiveLocal(event.newValue);void sync.flush();}});
+  window.addEventListener('pagehide',()=>{clearInterval(poll);poll=null;void sync.flush();});
+  resume();
+ }
 })();

@@ -155,9 +155,9 @@
     }
     const visible=()=>{if(root.document.visibilityState==='visible')void refresh();};
     return {
-      start(){onStatus('connecting','Connecting… Your saved answers will sync automatically.');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},
+      start(){onStatus('connecting','Connecting… Your saved answers will sync automatically.');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.addEventListener('pageshow',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},
       push:refresh,refresh,
-      stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.document.removeEventListener('visibilitychange',visible);}
+      stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.removeEventListener('pageshow',refresh);root.document.removeEventListener('visibilitychange',visible);}
     };
   }
   root.MarcoIseeSync={valid,merge,create};

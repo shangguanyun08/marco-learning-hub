@@ -9,6 +9,10 @@
   let active=selected(),round=new URLSearchParams(location.search).get('round')==='2'?2:1,state=E.empty(),sync=null,status='Connecting to live online sync…',kind='connecting',storageOK=true,noteTimer;
   if(active>=7)round=1;
   let accessReady=local;
+  const R2=window.MarcoReview2Engine,R2KEY='marco-math-skill-builder-oct12-review2-v1'+(demo?':demo':'');
+  let review2State=R2.empty();
+  function readReview2Cache(){try{const saved=JSON.parse(localStorage.getItem(R2KEY)||'null');if(R2.valid(saved))review2State=R2.merge(review2State,saved);}catch{}}
+  readReview2Cache();
   const R3=window.MarcoReview3Engine,R3D=window.MarcoReview3Data,R3KEY='marco-math-skill-builder-oct12-review3-v1'+(demo?':demo':'');
   let review3State=R3.empty(),review3Busy=false;
   const review3Done=()=>R3D.ids.every(id=>R3.attempts(review3State,id).some(a=>a.correct));
@@ -44,10 +48,12 @@
       if(changed)keepPositionRender();paintReviewSync();
     },onStatus(kind){entry.kind=kind;paintReviewSync();}});
   }
+  reviewChannels[2]=reviewChannel(2,R2,R2KEY,()=>review2State,x=>review2State=x,readReview2Cache);
   reviewChannels[3]=reviewChannel(3,R3,R3KEY,()=>review3State,x=>review3State=x,readReview3Cache);
   reviewChannels[4]=reviewChannel(4,R4,R4KEY,()=>review4State,x=>review4State=x,readReview4Cache);
   reviewChannels[5]=reviewChannel(5,R5,R5KEY,()=>review5State,x=>review5State=x,readReview5Cache);
   async function refreshReview(n,read,get){const before=JSON.stringify(get());read();if(!local)await reviewChannels[n].push();if(before!==JSON.stringify(get()))keepPositionRender();paintReviewSync();}
+  const refreshReview2=()=>refreshReview(2,readReview2Cache,()=>review2State);
   const refreshReview3=()=>refreshReview(3,readReview3Cache,()=>review3State);
   const refreshReview4=()=>refreshReview(4,readReview4Cache,()=>review4State);
   const refreshReview5=()=>refreshReview(5,readReview5Cache,()=>review5State);
@@ -198,11 +204,14 @@
   function remote(value){state=E.merge(state,value);save(false);if(canPractice()&&document.activeElement?.matches('textarea[data-note]')){cards();dailyBoard();report();return;}keepPositionRender();}
   document.addEventListener('focusout',event=>{if(event.target.matches('textarea[data-note]'))setTimeout(()=>{if(!document.activeElement?.matches('textarea[data-note]'))keepPositionRender();},0);});
   window.addEventListener('storage',event=>{if(event.key===KEY&&event.newValue)try{const x=JSON.parse(event.newValue);if(E.valid(x)){remote(x);void sync?.push();}}catch{}});
-  window.addEventListener('storage',event=>{if(event.key===R3KEY)void refreshReview3();if(event.key===R4KEY)void refreshReview4();if(event.key===R5KEY)void refreshReview5();});
-  window.addEventListener('focus',()=>{void refreshReview3();void refreshReview4();void refreshReview5();});
-  window.addEventListener('online',()=>{void refreshReview3();void refreshReview4();void refreshReview5();});
-  if(!local){void refreshReview3();void refreshReview4();void refreshReview5();setInterval(()=>{if(document.visibilityState==='visible'){void refreshReview3();void refreshReview4();void refreshReview5();}},10000);}
-  $('#sync-all').onclick=()=>{void sync?.push();void refreshReview3();void refreshReview4();void refreshReview5();};
+  window.addEventListener('storage',event=>{if(event.key===R2KEY)void refreshReview2();if(event.key===R3KEY)void refreshReview3();if(event.key===R4KEY)void refreshReview4();if(event.key===R5KEY)void refreshReview5();});
+  const refreshReviews=()=>{void refreshReview2();void refreshReview3();void refreshReview4();void refreshReview5();};
+  window.addEventListener('focus',refreshReviews);
+  window.addEventListener('online',refreshReviews);
+  window.addEventListener('pageshow',refreshReviews);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshReviews();});
+  if(!local){refreshReviews();setInterval(()=>{if(document.visibilityState==='visible')refreshReviews();},10000);}
+  $('#sync-all').onclick=()=>{void sync?.push();refreshReviews();};
   paintReviewSync();if(local)$('#sync-all').disabled=true;
   render();if(local){kind='preview';status='Preview · Saved on this device only. Live progress is untouched.';saveNote();}else{sync=S.create({getState:()=>state,onRemote:remote,onStatus(k,t){kind=k;status=t;saveNote();}});const started=sync.start();const ready=()=>{accessReady=true;render();};if(started?.then)started.then(ready,ready);else ready();}
 })();

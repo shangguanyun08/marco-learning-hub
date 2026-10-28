@@ -55,7 +55,7 @@
     return out;
   }
   function create({getState,onRemote,onStatus,fetcher=root.fetch.bind(root),interval=2000}){
-    let busy=false,stopped=false,timer,device;
+    let busy=false,stopped=false,timer,device,again=false;
     try{device=root.localStorage.getItem(APP_ID+':device');if(!device){device=root.crypto.randomUUID();root.localStorage.setItem(APP_ID+':device',device);}}catch{device=root.crypto.randomUUID();}
     const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b),empty=()=>({version:1,sessions:{}}),normalize=s=>merge(s,empty());
     function apply(remote){const next=merge(getState(),remote);if(!equal(normalize(getState()),next))onRemote(next);return next;}
@@ -66,7 +66,7 @@
       }finally{root.clearTimeout(timeout);}
     }
     async function refresh(){
-      if(busy||stopped)return;busy=true;
+      if(stopped)return;if(busy){again=true;return;}busy=true;
       try{for(let attempt=0;attempt<3;attempt++){
         const data=await request(),record=data.progress,remote=record?.state||empty(),next=apply(remote);
         if(equal(next,normalize(remote))){onStatus('live',record?savedMessage:connectedMessage);return;}
@@ -74,10 +74,10 @@
         const saved=await request({appId:APP_ID,studentName:'Marco',deviceId:device,state:next,progressScore:Object.values(next.sessions).flat().reduce((n,r)=>n+Object.values(r.answers).reduce((sum,e)=>sum+e.attempts.length,0),0),baseVersion:record?.version??null,clientUpdatedAt:new Date().toISOString()});
         if(!saved.progress)throw new Error('Save unconfirmed');apply(saved.progress.state);
         if(saved.accepted&&equal(normalize(getState()),normalize(saved.progress.state))){onStatus('live',savedMessage);return;}
-      }onStatus('saving','Merging changes from another device…');}catch{onStatus('offline','Not synced · Saved on this device. Online sync will retry automatically.');}finally{busy=false;}
+      }onStatus('saving','Merging changes from another device…');}catch{onStatus('offline','Not synced · Saved on this device. Online sync will retry automatically.');}finally{busy=false;if(again&&!stopped){again=false;root.setTimeout(refresh,250);}}
     }
     const visible=()=>{if(root.document.visibilityState==='visible')void refresh();};
-    return {start(){onStatus('connecting','Connecting to live online sync…');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},push:refresh,refresh,stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.document.removeEventListener('visibilitychange',visible);}};
+    return {start(){onStatus('connecting','Connecting to live online sync…');root.addEventListener('online',refresh);root.addEventListener('focus',refresh);root.addEventListener('pageshow',refresh);root.document.addEventListener('visibilitychange',visible);timer=root.setInterval(refresh,interval);return refresh();},push:refresh,refresh,stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('online',refresh);root.removeEventListener('focus',refresh);root.removeEventListener('pageshow',refresh);root.document.removeEventListener('visibilitychange',visible);}};
   }
   root.MarcoTest3Sync={APP_ID,valid,merge,create};
 })(typeof window==='undefined'?globalThis:window);
