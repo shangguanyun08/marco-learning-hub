@@ -1,10 +1,10 @@
 # Marco's application review
 
-The default view compares one complete question at a time: the counselor's original on the left and the earlier suggested version on the right. Both texts come from the unchanged `data.json`. Annotate either side by dragging an oval and adding a note. A text-reference field supports keyboard-only notes.
+The default view compares one complete question at a time: the counselor's original on the left and the earlier suggested version on the right. Both texts come from the unchanged `data.json`. Annotate either side by dragging a rectangle and adding a note. A text-reference field supports keyboard-only notes.
 
 `My working draft` opens the family's editable answer. Existing local and online edits, notes, and review decisions use their original storage keys. Whole-answer editing retains the existing paragraph IDs as storage slots and combines additional paragraphs into the final slot. Version history stores compact snapshots of all five drafts and their notes; restoring a version first saves the current draft. The starting version is saved after the initial online merge.
 
-Annotation and version fields merge independently across devices in the existing draft record. Annotation removals use tombstones so stale devices do not resurrect them. Each annotation retains its source version, question, text reference, and normalized ellipse. If the text or panel width changes, the saved reference remains available and the obsolete ellipse is hidden. Submitted feedback includes annotations from both comparison versions and from the working draft. See `FEEDBACK_WORKFLOW.md`.
+Annotation and version fields merge independently across devices in the existing draft record. Annotation removals use tombstones so stale devices do not resurrect them. Each annotation retains its source version, question, text reference, and normalized rectangle. If the text or panel width changes, the saved reference remains available and the obsolete rectangle is hidden. Submitted feedback includes annotations from both comparison versions and from the working draft. See `FEEDBACK_WORKFLOW.md`.
 
 Run the data and sync checks with:
 

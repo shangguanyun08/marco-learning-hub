@@ -53,13 +53,20 @@ test('selected-text notes persist, are editable, and keep their original text re
  }finally{e.close();}
  const reloaded=await editor(persisted);try{assert.equal(reloaded.$('[data-answer-edit]').value,'New answer after the note.');assert.equal(reloaded.$('[data-annotation-note]').value,'Use warmer wording.');}finally{reloaded.close();}
 });
-test('dragging creates a circled note with normalized geometry on the correct answer',async()=>{
+test('dragging in either direction draws a rectangle and saves its note on the correct answer',async()=>{
  const e=await editor();try{
-  const svg=e.$('[data-annotation-layer="original"]');svg.getBoundingClientRect=()=>({left:0,top:0,right:400,bottom:500,width:400,height:500});
-  e.click('[data-action="annotate"]');assert.equal(e.$('#annotation-toolbar').hidden,false);
-  for(const [type,x,y] of [['pointerdown',30,40],['pointermove',250,170],['pointerup',250,170]]){const event=new e.w.MouseEvent(type,{clientX:x,clientY:y,bubbles:true});Object.defineProperty(event,'pointerId',{value:1});svg.dispatchEvent(event);}
-  assert.equal(e.$('#modal').open,true);e.input('#annotation-note','Please shorten this part.');e.click('[data-action="save-annotation"]');
-  const a=Object.values(e.saved().annotations).filter(Boolean)[0];assert.equal(a.side,'original');assert.equal(a.question,1);assert.deepEqual(a.rect,{x:.075,y:.08,w:.55,h:.26});assert.equal(a.targetWidth,400);assert.equal(e.$('#annotation-toolbar').hidden,true);assert.deepEqual(e.errors,[]);
+  e.w.SVGElement.prototype.getBoundingClientRect=()=>({left:0,top:0,right:400,bottom:500,width:400,height:500});
+  for(const [start,end] of [[[30,40],[250,170]],[[250,170],[30,40]]]){
+   const svg=e.$('[data-annotation-layer="original"]');
+   const pointer=(type,[x,y])=>{const event=new e.w.MouseEvent(type,{clientX:x,clientY:y,bubbles:true});Object.defineProperty(event,'pointerId',{value:1});svg.dispatchEvent(event);};
+   e.click('[data-action="annotate"]');assert.equal(e.$('#annotation-toolbar').hidden,false);
+   pointer('pointerdown',start);pointer('pointermove',end);
+   const preview=svg.querySelector('rect.pending-region');assert.ok(preview);assert.equal(preview.getAttribute('x'),'30');assert.equal(preview.getAttribute('y'),'40');assert.equal(preview.getAttribute('width'),'220');assert.equal(preview.getAttribute('height'),'130');assert.equal(svg.querySelector('ellipse'),null);
+   pointer('pointerup',end);assert.equal(e.$('#modal').open,true);e.input('#annotation-note','Please shorten this part.');e.click('[data-action="save-annotation"]');
+   const a=Object.values(e.saved().annotations).filter(Boolean).at(-1);assert.equal(a.side,'original');assert.equal(a.question,1);assert.deepEqual(a.rect,{x:.075,y:.08,w:.55,h:.26});assert.equal(a.targetWidth,400);assert.equal(e.$('#annotation-toolbar').hidden,true);
+   assert.ok(e.$('[data-annotation-layer="original"] .saved-region rect'));assert.equal(e.$('[data-annotation-layer="original"] ellipse'),null);
+  }
+  assert.equal(Object.values(e.saved().annotations).filter(Boolean).length,2);assert.deepEqual(e.errors,[]);
  }finally{e.close();}
 });
 test('saving and restoring versions keeps the current draft as another version',async()=>{

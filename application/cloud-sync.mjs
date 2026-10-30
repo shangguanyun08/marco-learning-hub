@@ -1,4 +1,4 @@
-import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261030-question2';
+import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261030-rectangle1';
 
 export async function requestRecord(appId,method='GET',payload,fetcher=fetch){
  const response=await fetcher(`${ENDPOINT}?appId=${encodeURIComponent(appId)}`,{method,cache:'no-store',headers:payload?{'content-type':'application/json'}:undefined,body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(20000)});
