@@ -5,13 +5,13 @@
   const preview=['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).has('demo');
   // Retain the existing key so yellow-workbook progress stays intact.
   const KEY='marco-chinese-unit1-yellow-2026'+(preview?':preview':''), VIEW=KEY+':view';
-  let state={version:1,records:{}}, view={mode:'words',group:'all',speed:'0.65'}, queue=[],index=0;
+  let state={version:1,records:{}}, view={dataset:data.id,mode:'words',group:'all',speed:'0.65'}, queue=[],index=0;
   let phase='write',heard=false,hinted=false,sourceViewed=new Set(), speech=null, speechRun=0, speechTimer;
   const fresh=()=>({version:1,records:{}});
   function valid(value){
     return value?.version===1&&value.records&&typeof value.records==='object'&&!Array.isArray(value.records)&&Object.entries(value.records).every(([id,list])=>byId.has(id)&&Array.isArray(list)&&list.every(a=>typeof a.id==='string'&&Number.isFinite(Date.parse(a.at))&&typeof a.correct==='boolean'&&typeof a.hinted==='boolean'));
   }
-  try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(valid(saved))state=model.merge(fresh(),saved);const savedView=JSON.parse(localStorage.getItem(VIEW)||'null');if(savedView){if(['words','sentences'].includes(savedView.mode))view.mode=savedView.mode;if(savedView.group==='all'||data.groups.some(g=>g.id===savedView.group))view.group=savedView.group;if(['0.65','0.85','1'].includes(savedView.speed))view.speed=savedView.speed;}}catch{}
+  try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(valid(saved))state=model.merge(fresh(),saved);const savedView=JSON.parse(localStorage.getItem(VIEW)||'null');if(savedView){if(savedView.dataset===data.id){if(['words','sentences'].includes(savedView.mode))view.mode=savedView.mode;if(savedView.group==='all'||data.groups.some(g=>g.id===savedView.group))view.group=savedView.group;}if(['0.65','0.85','1'].includes(savedView.speed))view.speed=savedView.speed;}}catch{}
   try{if(!preview){const legacy=JSON.parse(localStorage.getItem('chinese-dictation-sept26-v1')||'null');state=model.importLegacy(state,legacy,new Date().toISOString()).state;}}catch{}
   const current=()=>byId.get(queue[index]);
   const scoped=()=>items.filter(item=>item.kind===view.mode&&(view.group==='all'||item.group===view.group));
@@ -84,7 +84,7 @@
     $('progress').max=queue.length||1;$('progress').value=finished?queue.length:index;
     $('source-label').textContent=item?item.label+' · '+(item.kind==='words'?'第四题字词':'第五题★段落'):'本轮练习';
     $('position').textContent=finished?queue.length+' / '+queue.length:'第 '+(index+1)+' / '+queue.length+' 题';
-    if(finished){$('answer').textContent='';$('chunks').replaceChildren();const mastered=queue.filter(id=>itemStatus(id)==='mastered').length;$('summary-text').textContent='本轮 '+queue.length+' 题，'+mastered+' 题已独立写对。可以重练需要复习的题，或换一个页码继续。';}
+    if(finished){$('answer').textContent='';$('chunks').replaceChildren();const mastered=queue.filter(id=>itemStatus(id)==='mastered').length;$('summary-text').textContent='本轮 '+queue.length+' 题，'+mastered+' 题已独立写对。可以重练需要复习的题，或换一个周次继续。';}
     else{renderExercise();renderChunks();}
     renderMap();
   }
