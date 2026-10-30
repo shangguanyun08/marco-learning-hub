@@ -87,3 +87,11 @@ The time log labels captured fragments separately from elapsed session windows. 
 The math dashboard also uploads locally saved Review 3–5 answers using each review’s merge-and-version sync. Per-review sync status and a retry button make missing uploads visible. Opening the dashboard on the original device recovers these answers without requiring a visit to each review. Tests: `dashboard-sync.test.cjs` covers local recovery, a second device, offline retry, and preserved first-try results.
 
 Automatic sync recovery also covers Review 2 from the math dashboard and both October 23 QR practices from either practice page. Each QR card shows its own confirmed online status. Word Meaning Check resumes automatic saving after cached Back/Forward navigation, merges drafts from other tabs, and attempts a flush when hidden. VR and math adapters refresh on restored pages; VR saves queued during a request retry promptly. Existing app IDs, first answers, and submitted copies are preserved. `node --test sync-recovery.test.cjs` checks navigation recovery and cross-device merges with a mocked progress service.
+
+### Marco application editor
+
+`application/` is the family editing desk, linked directly after Harry’s section. It preserves the exact purple counselor draft in `data.json`, with paragraph editing, comments, 34 review choices, exports, and printing. It is independent of all learning scores and activity tracking.
+
+Online edits use field-level merges in `marco-application-draft-v1`; immutable submitted snapshots and revision responses use `marco-application-feedback-v1`. Both use the existing progress service with strict version checks. A blank browser never uploads empty default fields. `?demo=1` or localhost disables online requests for QA.
+
+The scheduled editorial follow-up uses `node application/feedback-tools.mjs pending`, then `complete <response.json>` with `{submissionId,summary,details,proposedEdits:{"q1-p1":"..."}}`. It updates only paragraphs unchanged since submission and keeps proposals for newer family edits. Do not send practice scores or register application work with the learning activity dashboard. Run `node --test application/tests/*.test.mjs` for sync checks.
