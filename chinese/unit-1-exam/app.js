@@ -1,8 +1,9 @@
 (() => {
   'use strict';
-  const data=window.UNIT1_YELLOW, model=window.Unit1Model, $=id=>document.getElementById(id);
+  const data=window.UNIT1_EXAM, model=window.Unit1Model, $=id=>document.getElementById(id);
   const items=model.makeItems(data), byId=new Map(items.map(item=>[item.id,item]));
   const preview=['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).has('demo');
+  // Retain the existing key so yellow-workbook progress stays intact.
   const KEY='marco-chinese-unit1-yellow-2026'+(preview?':preview':''), VIEW=KEY+':view';
   let state={version:1,records:{}}, view={mode:'words',group:'all',speed:'0.65'}, queue=[],index=0;
   let phase='write',heard=false,hinted=false,sourceViewed=new Set(), speech=null, speechRun=0, speechTimer;
@@ -11,6 +12,7 @@
     return value?.version===1&&value.records&&typeof value.records==='object'&&!Array.isArray(value.records)&&Object.entries(value.records).every(([id,list])=>byId.has(id)&&Array.isArray(list)&&list.every(a=>typeof a.id==='string'&&Number.isFinite(Date.parse(a.at))&&typeof a.correct==='boolean'&&typeof a.hinted==='boolean'));
   }
   try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(valid(saved))state=model.merge(fresh(),saved);const savedView=JSON.parse(localStorage.getItem(VIEW)||'null');if(savedView){if(['words','sentences'].includes(savedView.mode))view.mode=savedView.mode;if(savedView.group==='all'||data.groups.some(g=>g.id===savedView.group))view.group=savedView.group;if(['0.65','0.85','1'].includes(savedView.speed))view.speed=savedView.speed;}}catch{}
+  try{if(!preview){const legacy=JSON.parse(localStorage.getItem('chinese-dictation-sept26-v1')||'null');state=model.importLegacy(state,legacy,new Date().toISOString()).state;}}catch{}
   const current=()=>byId.get(queue[index]);
   const scoped=()=>items.filter(item=>item.kind===view.mode&&(view.group==='all'||item.group===view.group));
   const itemStatus=id=>model.status(state.records[id]);
@@ -41,7 +43,8 @@
   function reset(){stop();phase='write';heard=false;hinted=sourceViewed.has(current()?.id);$('audio-status').textContent='';$('feedback').textContent='';$('source').open=false;}
   function listen(text){
     const item=current();if(!item)return;heard=true;$('source').open=false;renderExercise();
-    speak(text||(item.kind==='words'&&data.clues[item.text]?item.text+'。'+data.clues[item.text]+'。':item.text));
+    const clue=data.clues[item.text]||({年:'新年的年',月:'月亮的月',日:'日期的日',岁:'岁数的岁'})[item.text];
+    speak(text||(item.kind==='words'&&clue?item.text+'。'+clue+'。':item.text));
   }
   function showAnswer(asHint){hinted=hinted||asHint;phase='check';stop();$('audio-status').textContent='请对照纸上的字，再记录这次结果。';renderExercise();}
   function renderExercise(){
