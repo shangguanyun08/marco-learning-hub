@@ -5,7 +5,7 @@
   const preview=['localhost','127.0.0.1'].includes(location.hostname)||new URLSearchParams(location.search).has('demo');
   const KEY='marco-chinese-unit1-yellow-2026'+(preview?':preview':''), VIEW=KEY+':view';
   let state={version:1,records:{}}, view={mode:'words',group:'all',speed:'0.65'}, queue=[],index=0;
-  let phase='write',heard=false,hinted=false,sourceViewed=new Set(), sync=null, speech=null, speechRun=0, speechTimer;
+  let phase='write',heard=false,hinted=false,sourceViewed=new Set(), speech=null, speechRun=0, speechTimer;
   const fresh=()=>({version:1,records:{}});
   function valid(value){
     return value?.version===1&&value.records&&typeof value.records==='object'&&!Array.isArray(value.records)&&Object.entries(value.records).every(([id,list])=>byId.has(id)&&Array.isArray(list)&&list.every(a=>typeof a.id==='string'&&Number.isFinite(Date.parse(a.at))&&typeof a.correct==='boolean'&&typeof a.hinted==='boolean'));
@@ -15,10 +15,9 @@
   const scoped=()=>items.filter(item=>item.kind===view.mode&&(view.group==='all'||item.group===view.group));
   const itemStatus=id=>model.status(state.records[id]);
   const reviewIds=()=>scoped().filter(item=>state.records[item.id]?.length&&itemStatus(item.id)!=='mastered').map(item=>item.id);
-  function save(push=true){
-    try{localStorage.setItem(KEY,JSON.stringify(state));localStorage.setItem(VIEW,JSON.stringify(view));$('save-status').textContent='进度已保存；首次记录与后续重练分别保留。';}
+  function save(){
+    try{localStorage.setItem(KEY,JSON.stringify(state));localStorage.setItem(VIEW,JSON.stringify(view));$('save-status').textContent='进度已保存在本设备；首次记录与后续重练分别保留。';}
     catch{$('save-status').textContent='这台设备暂时不能保存，请保持页面打开。';}
-    if(push&&sync)sync.push(state);
   }
   function stop(){speechRun++;clearTimeout(speechTimer);window.speechSynthesis?.cancel();speech=null;}
   function voices(){
@@ -124,9 +123,4 @@
   window.addEventListener('pagehide',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});
   if(window.speechSynthesis){voices();window.speechSynthesis.addEventListener('voiceschanged',voices);}
   sourceList();buildQueue();
-  if(!preview&&window.MarcoOnlineSync){
-    sync=window.MarcoOnlineSync.create({appId:'marco-chinese-unit1-yellow-2026',studentName:'Marco',validate:valid,score:value=>Object.values(value.records).filter(list=>model.status(list)==='mastered').length,
-      onRemote:remote=>{const merged=model.merge(state,remote),needPush=JSON.stringify(merged)!==JSON.stringify(model.merge(fresh(),remote));state=merged;save(false);render();if(needPush)sync.push(state);}});
-    sync.start(state);
-  }
 })();
