@@ -1,0 +1,11 @@
+{
+  "name": "marco-application-editor-checks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules --test editor-dom.check.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3"
+  }
+}

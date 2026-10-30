@@ -1,4 +1,4 @@
-import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261029-application1';
+import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261030-question2';
 
 export async function requestRecord(appId,method='GET',payload,fetcher=fetch){
  const response=await fetcher(`${ENDPOINT}?appId=${encodeURIComponent(appId)}`,{method,cache:'no-store',headers:payload?{'content-type':'application/json'}:undefined,body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(20000)});
@@ -37,6 +37,7 @@ export function createCloud(options){
     fields=mergeFields(fields,remote?.fields);remember();apply();
     if(JSON.stringify(fields)===JSON.stringify(remote?.fields||{})){dirty=false;break;}
     const sending=clone(fields);
+    if(JSON.stringify(sending).length>700000)throw new Error('Online version storage is full. Download a working copy to keep your latest work.');
     const result=await requestRecord(DRAFT_APP,'POST',{appId:DRAFT_APP,studentName:'Family application',deviceId,state:{schema:2,source:SOURCE,fields:sending},progressScore:0,baseVersion:progress?.version??null,clientUpdatedAt:new Date().toISOString()},fetcher);
     if(result.progress?.state?.source===SOURCE)fields=mergeFields(fields,result.progress.state.fields);
     remember();apply();
@@ -52,7 +53,7 @@ export function createCloud(options){
  async function submit(comment){
   if(!enabled)throw new Error('This preview does not send feedback. Use the published Application page.');
   capture(options.getState());await flush();
-  const snapshot=clone(options.getState()),draft={schema:1,source:SOURCE,edits:snapshot.edits,reviews:snapshot.reviews};
+  const snapshot=clone(options.getState()),draft={schema:1,source:SOURCE,edits:snapshot.edits,reviews:snapshot.reviews,annotations:snapshot.annotations||{}};
   let submission;
   try{const cached=JSON.parse(storage.getItem(pendingKey)||'null');if(cached&&JSON.stringify(cached.draft)===JSON.stringify(draft)&&cached.comment===comment)submission=cached;}catch{}
   if(!submission){submission={id:crypto.randomUUID(),source:SOURCE,createdAt:new Date().toISOString(),comment,draft};storage.setItem(pendingKey,JSON.stringify(submission));}
