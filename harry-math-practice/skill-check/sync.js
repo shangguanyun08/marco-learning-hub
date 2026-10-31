@@ -23,4 +23,3 @@
   }
   root.HarrySkillSync={APP_ID,API,create};
 })(typeof window==='undefined'?globalThis:window);
-
