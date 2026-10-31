@@ -26,7 +26,7 @@ The generic October 11 engine and conflict-preserving sync adapter are reused wi
 
 Opening an article shows its full passage, answer choices, and highlighting together. A check requires a choice and at least one nonblank highlight from the passage. Only the answer choice is graded; highlighting is a completion habit, not an evidence-quality score. There is no phrase matching, focus limit, or automatic judgment of the highlighted support. A correct first answer resolves immediately; a wrong answer gets one second try. After a correct answer or the second try, a separate “Show answer and explanation” button reveals the key, explanation, and suggested supporting excerpts for parent review. These buttons are also available alongside saved highlights in session results and completed-question history. Legacy evidence grades are ignored without rewriting old attempts. First-answer scores remain unchanged. Sentence tapping and exact word selection both work. Checked attempts and editable drafts use the original localStorage key, with JSON export. `?demo` uses an unsaved preview. This course does not modify ReadTheory. Automatic cloud sync uses the hub’s existing progress service with isolated, strict-version namespace `harry-reading-readtheory-2026-10-21-v1`. Existing local work is backed up once and merged on first opening; first checks and highlights are retained. Conflicting checked answers become separate histories, never fabricated retries. Draft changes use per-question timestamps. Sync runs after saves, on focus/reconnect, and every 30 seconds while visible, with a manual Sync now button and clear status. Localhost and demo previews never upload. To migrate older work, open the course in the browser/device that originally saved it, then wait for Synced online.
 
-The three recent articles display their recorded ReadTheory Lexile levels: Carla 500L, Fruits and Vegetables 480L, and Leo and Jasmine 640L. `grade3-practice.js` appends 10 original parallel passages and 52 multiple-choice questions as sessions 4–13. The public course does not contain the downloaded Grade 3 PDFs or reproduce their passages/questions: those PDFs prohibit reuse/republication. Reference Lexile numbers identify the publisher’s samples; the new passages have not been measured by Lexile. They are labeled accordingly on cards and inside each session.
+The three recent articles display their recorded ReadTheory Lexile levels: Carla 500L, Fruits and Vegetables 480L, and Leo and Jasmine 640L. `grade3-practice.js` contains 10 original parallel passages and 52 multiple-choice questions; `grade4-practice.js` adds 10 more original passages and 50 MC questions, bringing the course to 23 articles and 112 questions. The three redo articles stay first. All 20 parallel passages form one continuous **Reading by Lexile** list, sorted by reference Lexile (460L–910L), without grade labels. Stable article/question IDs preserve earlier answers, scores, drafts and synced histories when display/session numbers move. The public course does not contain the downloaded PDFs or reproduce their passages/questions: those PDFs prohibit reuse/republication. Reference Lexile numbers identify the publisher’s samples; the original parallel passages have not been measured by Lexile. Cards and each workspace label these values as reference levels.
 
 | New passage | Reference sample | Reference Lexile | Questions |
 | --- | --- | --- | --- |
@@ -40,10 +40,20 @@ The three recent articles display their recorded ReadTheory Lexile levels: Carla
 | The Museum after Midnight | Tornado! | 560L | 6 |
 | The First Canoe Lesson | Roller Coaster | 570L | 6 |
 | Keeping the Bakery Moving | Calm on the Job | 580L | 6 |
+| The Pocket Magnifier | Selena's Birthday | 500L | 5 |
+| Reaching the Lookout | Cody Likes to Run | 530L | 5 |
+| Keeping the Old Maps Safe | Managing Her Illness | 530L | 5 |
+| Why I Choose Orange | My Favorite Color | 530L | 5 |
+| Plans for a Rainy Afternoon | Vacation Opinions | 610L | 5 |
+| The Missing Garden Labels | A Mystery | 630L | 5 |
+| Building Sounds for a Show | Working with Chocolate | 630L | 5 |
+| Borrowing Party Dishes | Grocery Store Bags | 640L | 5 |
+| Choosing Curtains for the Hall | Carpet Shopping | 700L | 5 |
+| Juno at the Training Field | Dorado Alerts | 910L | 5 |
 
 Completed sessions reuse the practice workspace: one original question and all four choices alongside the full article. The saved choice remains selected, and Previous/Next or the question menu navigates without modifying records. Try 1 / Try 2 buttons show each saved choice and its original highlights. The article fits the available viewport using 17–21 px text with a Larger text override; long passages scroll within their panel. On phones it is a compact panel above the question. History review opens that exact run, including older/incomplete runs, without creating checks; unchecked answers remain hidden.
 
-Validate with `node --test harry-reading/core.test.cjs harry-reading/grade3-practice.test.cjs harry-reading/app.test.cjs harry-reading/sync.test.cjs`. The UI tests use the existing `harry-math-practice` jsdom dependency. The existing storage key and original article/question IDs remain unchanged.
+Validate with `node --test harry-reading/core.test.cjs harry-reading/grade3-practice.test.cjs harry-reading/lexile-continuation.test.cjs harry-reading/app.test.cjs harry-reading/sync.test.cjs`. The UI tests use jsdom. Continuation tests verify every paragraph of all 23 live-workspace article renderings, every new MC key/evidence excerpt, ordered grade-free cards, two tries, old drafts/first scores, and sync-compatible new article histories. The existing storage key and original article/question IDs remain unchanged.
 
 The hub links to:
 

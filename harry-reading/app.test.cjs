@@ -7,7 +7,7 @@ function boot(saved,fetcher){
   w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.matchMedia=()=>({matches:false});
   if(saved)w.localStorage.setItem(KEY,saved);
   if(fetcher){w.fetch=fetcher;w.AbortSignal=AbortSignal;}
-  for(const f of ['data.js','grade3-practice.js','core.js','sync.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));
+  for(const f of ['data.js','grade3-practice.js','grade4-practice.js','core.js','sync.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));
   return {w,d:w.document,close:()=>w.close(),saved:()=>w.localStorage.getItem(KEY)};
 }
 function choose(t,index){const input=t.d.querySelector(`input[value="${index}"]`);input.click();}

@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const articles=window.READING_ARTICLES,core=window.ReadingCore,app=document.querySelector('#app');
+  const articles=[...window.READING_ARTICLES.filter(a=>a.kind!=='parallel'),...window.READING_ARTICLES.filter(a=>a.kind==='parallel').sort((a,b)=>a.referenceLexile-b.referenceLexile)],core=window.ReadingCore,app=document.querySelector('#app');
   const key='harry-reading-readtheory-2026-10-21-v1',demo=new URLSearchParams(location.search).has('demo');
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let state={version:1,articles:{}},article=null,run=null,pending=[],reviewMode=false,reviewIndex=0,reviewAttempt=0,largeArticle=false,sync=null;
@@ -32,7 +32,7 @@
     article=null;run=null;pending=[];reviewMode=false;document.body.classList.remove('active-session');
     app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1></section>
       <section class="cards" aria-label="Recent article redo sessions">${renderCards(articles.filter(a=>a.kind!=='parallel'))}</section>
-      <section class="practice-group" aria-labelledby="grade3-heading"><div class="practice-group-head"><h2 id="grade3-heading">Grade 3 · New practice</h2><span>10 articles · 52 multiple-choice questions</span></div><p class="meta">The Lexile labels below belong to the ReadTheory reference samples. These are original parallel passages, and their own Lexile scores have not been measured.</p><div class="cards" aria-label="Grade 3 parallel reading sessions">${renderCards(articles.filter(a=>a.kind==='parallel'))}</div></section>
+      <section class="practice-group" aria-labelledby="lexile-heading"><div class="practice-group-head"><h2 id="lexile-heading">Reading by Lexile</h2><span>${articles.filter(a=>a.kind==='parallel').length} articles · ${articles.filter(a=>a.kind==='parallel').reduce((n,a)=>n+a.questions.length,0)} multiple-choice questions</span></div><p class="meta">The Lexile labels below belong to the ReadTheory reference samples. These are original parallel passages, and their own Lexile scores have not been measured.</p><div class="cards" aria-label="Reading sessions in reference Lexile order">${renderCards(articles.filter(a=>a.kind==='parallel'))}</div></section>
       <p class="home-note"><strong>Finished means every question has an answer.</strong> The first-try score shows how many original answers were correct; retries do not raise it. Second tries are not needed for the finished status. Choose an answer and highlight supporting text before checking. Only your answer is marked right or wrong; highlights are saved, not graded. Tap sentences or select words to highlight them. Wrong answers get one second try. After checking, use “Show answer and explanation” for a parent review.</p>
       <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records automatically upload and sync across devices. Open this page on the original device once to upload earlier work. Export a backup any time.</p></details>`;
     app.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openArticle(b.dataset.open));app.querySelector('#export').onclick=exportProgress;
@@ -61,7 +61,7 @@
     }).join('');
   }
   function exportProgress(){
-    const exported={...state,exportedAt:now(),course:'Harry reading · recent articles and Grade 3 parallel practice',articleTitles:Object.fromEntries(articles.map(a=>[a.id,a.title]))};
+    const exported={...state,exportedAt:now(),course:'Harry reading · recent articles and Lexile practice',articleTitles:Object.fromEntries(articles.map(a=>[a.id,a.title]))};
     const blob=new Blob([JSON.stringify(exported,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');
     a.href=url;a.download='harry-reading-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   }
