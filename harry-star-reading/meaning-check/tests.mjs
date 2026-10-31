@@ -25,6 +25,18 @@ test('old removed-word drafts and original ten-word submissions survive the new 
 test('tone alone does not count as a meaning or allow incomplete submission',()=>{
  const {s}=harness();s.edit(data.words[0].id,'tone','positive');assert.equal(s.submit(1).ok,false);assert.equal(Object.keys(s.snapshot().submissions).length,0);
 });
+
+test('each reference meaning is only one to three words',()=>{
+ const c={window:{}};vm.runInNewContext(read('short-meanings.js'),c);const meanings=c.window.HARRY_SHORT_MEANINGS;
+ for(const w of data.words){assert.equal(typeof meanings[w.id],'string');assert.ok(meanings[w.id].trim().split(/\s+/).length<=3,w.id);}
+ assert.equal(meanings.ballet,'dance');assert.equal(meanings.immense,'very big');
+});
+
+test('restore loads saved learner wording without writing or inserting model answers',async()=>{
+ const remote={version:52,state:{kind:'word-meaning-check',version:1,entries:{ballet:{meaning:{value:'Dancing ',at:5}},immense:{meaning:{value:'Giga',at:6}}},submissions:{}}};let posts=0;
+ const h=harness({fetch:async(_url,init={})=>{if(init.method==='POST')posts++;return {ok:true,json:async()=>({progress:remote})};}});
+ const result=await h.s.restore();assert.equal(result.ok,true);assert.equal(result.count,2);assert.equal(h.s.view().entries.ballet.meaning,'Dancing ');assert.equal(h.s.view().entries.immense.meaning,'Giga');assert.equal(posts,0);
+});
 test('section submissions preserve the original copy when revised; all unknown is valid',()=>{
  let n=1000;const {s}=harness({now:()=>n++}),rows=data.words.filter(w=>w.section===1);for(const row of rows)s.edit(row.id,'unknown',true);assert.equal(s.submit(1).ok,true);const first=plain(s.snapshot().submissions);assert.equal(Object.keys(first).length,1);assert.equal(s.submit(1).unchanged,true);s.edit(rows[0].id,'unknown',false);s.edit(rows[0].id,'meaning','new meaning');assert.equal(s.submit(1).ok,true);const all=plain(s.snapshot().submissions);assert.equal(Object.keys(all).length,2);for(const id of Object.keys(first))assert.deepEqual(all[id],first[id]);
 });
