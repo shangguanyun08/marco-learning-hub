@@ -27,3 +27,6 @@ test('the Math landing page links to the latest full test and directly to the 14
  const landing=fs.readFileSync(path.join(__dirname,'../../index.html'),'utf8');assert.ok(landing.includes('href="./tests/2026-10-30/"'));assert.ok(landing.includes('./tests/2026-10-30/?filter=wrong'));assert.ok(landing.includes('./tests/2026-09-20/'));assert.ok(landing.includes('id="test-list"'));
  const page=fs.readFileSync(path.join(__dirname,'index.html'),'utf8');assert.ok(page.includes('id="wrong-filter"'));assert.ok(page.includes('id="all-filter"'));assert.ok(!page.includes('shared-activity-tracker'));assert.ok(!page.includes('api/shared/progress'));
 });
+test('the 14 mistakes belong to seven of the eight practice skills without inventing a unit-conversion miss',()=>{
+ assert.equal(d.skillGroups.length,8);const wrong=d.questions.filter(q=>q.selected!==q.correct);assert.ok(wrong.every(q=>d.skillGroups.some(s=>s.id===q.skill)));assert.deepEqual(Object.fromEntries(d.skillGroups.map(s=>[s.id,wrong.filter(q=>q.skill===s.id).map(q=>q.number)])),{fractions:[11,17,31,33],calculation:[6,16,24],area:[5,29],scaling:[15],rounding:[25,30],units:[],coordinates:[32],median:[34]});
+});

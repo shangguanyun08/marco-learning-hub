@@ -75,7 +75,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 1,
       "correct": 0,
-      "explanation": "Area counts the square inches covering the door. Multiply height by width: 80 × 40 = 3,200 square inches. Adding 80 + 40 gives 120, which does not give the area."
+      "explanation": "Area counts the square inches covering the door. Multiply height by width: 80 × 40 = 3,200 square inches. Adding 80 + 40 gives 120, which does not give the area.",
+      "skill": "area"
     },
     {
       "number": 6,
@@ -88,7 +89,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 2,
       "correct": 0,
-      "explanation": "25 × 234 = 5,850, leaving 2. Write the remainder over the divisor: 234 2/25. Check: 5,850 + 2 = 5,852."
+      "explanation": "25 × 234 = 5,850, leaving 2. Write the remainder over the divisor: 234 2/25. Check: 5,850 + 2 = 5,852.",
+      "skill": "calculation"
     },
     {
       "number": 7,
@@ -164,7 +166,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 2,
       "correct": 0,
-      "explanation": "Use a common denominator of 36: 1/4 = 9/36 and 2/9 = 8/36. Then 9/36 − 8/36 = 1/36."
+      "explanation": "Use a common denominator of 36: 1/4 = 9/36 and 2/9 = 8/36. Then 9/36 − 8/36 = 1/36.",
+      "skill": "fractions"
     },
     {
       "number": 12,
@@ -231,7 +234,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 2,
       "correct": 1,
-      "explanation": "The longer side grows from 10 cm to 30 cm, so the scale factor is 3. Multiply the shorter side by the same factor: 5 × 3 = 15 cm."
+      "explanation": "The longer side grows from 10 cm to 30 cm, so the scale factor is 3. Multiply the shorter side by the same factor: 5 × 3 = 15 cm.",
+      "skill": "scaling"
     },
     {
       "number": 16,
@@ -244,7 +248,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 2,
       "correct": 3,
-      "explanation": "8 × 8 = 64, leaving 1. The remaining 1 ÷ 8 = 0.125. Therefore 65 ÷ 8 = 8.125."
+      "explanation": "8 × 8 = 64, leaving 1. The remaining 1 ÷ 8 = 0.125. Therefore 65 ÷ 8 = 8.125.",
+      "skill": "calculation"
     },
     {
       "number": 17,
@@ -257,7 +262,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 1,
       "correct": 3,
-      "explanation": "Use fifteenths: 4/5 = 12/15 and 1/3 = 5/15. Subtract the numerators: 12/15 − 5/15 = 7/15."
+      "explanation": "Use fifteenths: 4/5 = 12/15 and 1/3 = 5/15. Subtract the numerators: 12/15 − 5/15 = 7/15.",
+      "skill": "fractions"
     },
     {
       "number": 18,
@@ -359,7 +365,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 1,
       "correct": 2,
-      "explanation": "The expanded numbers are 657 and 199. Subtract 200, then add 1 back: 657 − 200 + 1 = 458. In expanded form, 458 = (4 × 100) + (5 × 10) + (8 × 1)."
+      "explanation": "The expanded numbers are 657 and 199. Subtract 200, then add 1 back: 657 − 200 + 1 = 458. In expanded form, 458 = (4 × 100) + (5 × 10) + (8 × 1).",
+      "skill": "calculation"
     },
     {
       "number": 25,
@@ -372,7 +379,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 3,
       "correct": 1,
-      "explanation": "Round each mixed number to the nearest whole number: 12 8/9 is about 13, and 10 1/6 is about 10. The estimated difference is 13 − 10 = 3."
+      "explanation": "Round each mixed number to the nearest whole number: 12 8/9 is about 13, and 10 1/6 is about 10. The estimated difference is 13 − 10 = 3.",
+      "skill": "rounding"
     },
     {
       "number": 26,
@@ -424,7 +432,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 1,
       "correct": 3,
-      "explanation": "Area = length × width. Divide the area by the length: 56 ÷ 8 = 7 inches. Check: 8 × 7 = 56 square inches."
+      "explanation": "Area = length × width. Divide the area by the length: 56 ÷ 8 = 7 inches. Check: 8 × 7 = 56 square inches.",
+      "skill": "area"
     },
     {
       "number": 30,
@@ -452,7 +461,8 @@ window.STAR_REVIEW = {
           "time": 1913.3787
         }
       ],
-      "note": "Recorded answer changes: B → C → B. The final choice is recorded here."
+      "note": "Recorded answer changes: B → C → B. The final choice is recorded here.",
+      "skill": "rounding"
     },
     {
       "number": 31,
@@ -465,7 +475,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 0,
       "correct": 2,
-      "explanation": "Multiply each part by 5: (2 × 5) + (1/5 × 5) = 10 + 1 = 11. Adding 5 to 2 1/5 would give 7 1/5, but this question asks for multiplication."
+      "explanation": "Multiply each part by 5: (2 × 5) + (1/5 × 5) = 10 + 1 = 11. Adding 5 to 2 1/5 would give 7 1/5, but this question asks for multiplication.",
+      "skill": "fractions"
     },
     {
       "number": 32,
@@ -479,7 +490,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 0,
       "correct": 2,
-      "explanation": "Read coordinates in the order (x, y). From the origin, move 2 units right and 8 units up to reach K. Its coordinates are (2, 8)."
+      "explanation": "Read coordinates in the order (x, y). From the origin, move 2 units right and 8 units up to reach K. Its coordinates are (2, 8).",
+      "skill": "coordinates"
     },
     {
       "number": 33,
@@ -492,7 +504,8 @@ window.STAR_REVIEW = {
       ],
       "selected": 0,
       "correct": 2,
-      "explanation": "One half yard is two quarters of a yard. Each scrapbook uses one quarter yard, so he can decorate 2 scrapbooks. In numbers: 1/2 ÷ 1/4 = 2."
+      "explanation": "One half yard is two quarters of a yard. Each scrapbook uses one quarter yard, so he can decorate 2 scrapbooks. In numbers: 1/2 ÷ 1/4 = 2.",
+      "skill": "fractions"
     },
     {
       "number": 34,
@@ -505,7 +518,50 @@ window.STAR_REVIEW = {
       ],
       "selected": 2,
       "correct": 0,
-      "explanation": "Order the numbers: 195, 200, 226, 230. With four numbers, average the middle two: (200 + 226) ÷ 2 = 213."
+      "explanation": "Order the numbers: 195, 200, 226, 230. With four numbers, average the middle two: (200 + 226) ÷ 2 = 213.",
+      "skill": "median"
+    }
+  ],
+  "skillGroups": [
+    {
+      "id": "fractions",
+      "name": "Fraction operations",
+      "description": "Subtract unlike fractions, multiply mixed numbers, and find how many fractional groups fit."
+    },
+    {
+      "id": "calculation",
+      "name": "Calculation accuracy",
+      "description": "Multiply, regroup in subtraction, and check division and remainders."
+    },
+    {
+      "id": "area",
+      "name": "Area and missing dimensions",
+      "description": "Distinguish area from perimeter and find an unknown side."
+    },
+    {
+      "id": "scaling",
+      "name": "Scaling",
+      "description": "Use the same scale factor on corresponding dimensions."
+    },
+    {
+      "id": "rounding",
+      "name": "Rounding and estimation",
+      "description": "Round to the requested place and estimate in the requested order."
+    },
+    {
+      "id": "units",
+      "name": "Unit conversion",
+      "description": "Use pounds and ounces, liquid measures, and lengths."
+    },
+    {
+      "id": "coordinates",
+      "name": "Coordinate order",
+      "description": "Read and locate points using horizontal position first, then vertical."
+    },
+    {
+      "id": "median",
+      "name": "Median",
+      "description": "Order the data; use one middle value or average two middle values."
     }
   ]
 };
