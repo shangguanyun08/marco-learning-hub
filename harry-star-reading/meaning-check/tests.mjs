@@ -26,4 +26,3 @@ test('network save merges a concurrent remote field; empty startup never posts',
 });
 test('offline failures retain the draft and do not falsely claim online saving',async()=>{const h=harness({fetch:async()=>{throw Error('offline');}});h.s.edit(data.words[0].id,'meaning','saved locally');assert.equal(await h.s.flush(),false);assert.equal(h.status().kind,'offline');assert.equal(h.s.snapshot().entries[data.words[0].id].meaning.value,'saved locally');});
 test('normalization rejects malformed values and incomplete submitted snapshots',()=>{const {s}=harness(),bad=s.normalize({kind:'word-meaning-check',version:1,entries:{[data.words[0].id]:{meaning:{value:'x'.repeat(241),at:1},unknown:{value:'yes',at:1},tone:{value:'bad',at:1}}},submissions:{'submission-invalid':{section:1,at:'2026-10-26',responses:[]}}});assert.equal(Object.keys(bad.entries).length,0);assert.equal(Object.keys(bad.submissions).length,0);});
-
