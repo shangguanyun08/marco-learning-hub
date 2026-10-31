@@ -1,6 +1,10 @@
 # Marco's application review
 
-The default view compares one complete question at a time: the counselor's original on the left and the earlier suggested version on the right. Both texts come from the unchanged `data.json`. Annotate either side by dragging a rectangle and adding a note. A text-reference field supports keyboard-only notes.
+The default view compares one question at a time in matching paragraph rows: the counselor's original, ChatGPT's exact earlier suggestion, and an adjacent explanation of the visible changes. All 25 pairs come from the unchanged `data.json`, matched by the stable ID of each source pair, rather than independently filtering or numbering the two versions. Internal paragraph splits stay in their corresponding topic group. Both source texts remain complete. Tablet layouts put the explanation below its pair; phones stack the three cells within each paragraph group.
+
+`comparison-notes.mjs` supplies paragraph-specific explanations of clarity, selection, structure, tone, and factual qualifications. These describe the text differences and their effects, not undocumented historical intent. They do not change or fact-check the essays. Existing factual questions remain explicit.
+
+Annotate either side by dragging a rectangle within a paragraph and adding a note. A text-reference field supports keyboard-only notes. New comparison annotations retain the paragraph ID as well as the complete source reference. Old full-answer rectangles remain in saved records; where the layout no longer matches, the note and original text reference are available without drawing a misplaced rectangle. Working-draft rectangles keep their existing layout.
 
 `My working draft` opens the family's editable answer. Existing local and online edits, notes, and review decisions use their original storage keys. Whole-answer editing retains the existing paragraph IDs as storage slots and combines additional paragraphs into the final slot. Version history stores compact snapshots of all five drafts and their notes; restoring a version first saves the current draft. The starting version is saved after the initial online merge.
 

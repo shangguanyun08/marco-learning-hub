@@ -15,9 +15,10 @@ async function editor(saved,options={}){
  w.ResizeObserver=class{observe(){}disconnect(){}};w.scrollTo=()=>{};w.print=()=>{};
  w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};
  w.SVGElement.prototype.setPointerCapture=()=>{};
+ w.Range.prototype.getClientRects=()=>[]; // JSDOM has no rendered text geometry.
  if(saved)w.localStorage.setItem(key,JSON.stringify(saved));
  const context=dom.getInternalVMContext(),cache=new Map();
- for(const name of ['app.js','cloud-sync.mjs','sync-model.mjs','review-model.mjs','review-ui.mjs']){const url=new URL(name,base);cache.set(url.pathname,new vm.SourceTextModule(await readFile(url,'utf8'),{context,identifier:url.href}));}
+ for(const name of ['app.js','cloud-sync.mjs','sync-model.mjs','review-model.mjs','review-ui.mjs','comparison-notes.mjs']){const url=new URL(name,base);cache.set(url.pathname,new vm.SourceTextModule(await readFile(url,'utf8'),{context,identifier:url.href}));}
  const root=cache.get(new URL('app.js',base).pathname);await root.link((specifier,parent)=>cache.get(new URL(specifier,parent.identifier).pathname));await root.evaluate();
  const $=s=>w.document.querySelector(s),click=s=>$(s).click(),input=(s,text)=>{const el=$(s);el.value=text;el.dispatchEvent(new w.Event('input',{bubbles:true}));};
  if(options.draft!==false)click('[data-comparison-mode="draft"]');
@@ -100,14 +101,52 @@ test('online saving carries circles and versions to another device, and feedback
 });
 test('default comparison shows the counselor and exact earlier suggestion, with notes on both',async()=>{
  const e=await editor(undefined,{draft:false});try{
-  assert.equal(e.$('[data-answer-edit]'),null);assert.equal(e.w.document.querySelectorAll('.editor-pair').length,1);
+  assert.equal(e.$('[data-answer-edit]'),null);assert.equal(e.w.document.querySelectorAll('.comparison-row').length,5);
   const original=[...e.w.document.querySelectorAll('[data-annotation-target="original"] p')].map(p=>p.textContent).join('\n\n');
   const suggested=[...e.w.document.querySelectorAll('[data-annotation-target="suggested"] p')].map(p=>p.textContent).join('\n\n');
   assert.equal(original,data.questions[0].paragraphs.map(p=>p.original).join('\n\n'));assert.equal(suggested,data.questions[0].paragraphs.map(p=>p.suggested).filter(Boolean).join('\n\n'));
   e.click('[data-action="note-original"]');e.input('#annotation-note','Keep the counselor’s warmth.');e.click('[data-action="save-annotation"]');
   e.click('[data-action="note-suggested"]');e.input('#annotation-note','Use this shorter suggestion.');e.click('[data-action="save-annotation"]');
-  const notes=Object.values(e.saved().annotations).filter(Boolean);assert.equal(notes.length,2);assert.equal(notes[1].side,'suggested');assert.equal(notes[1].reference,suggested);
+  const notes=Object.values(e.saved().annotations).filter(Boolean);assert.equal(notes.length,2);assert.equal(notes[1].side,'suggested');assert.equal(notes[1].reference,suggested);assert.equal(notes[1].paragraphId,'q1-p1');
   assert.equal(e.saved().edits['q1-p1'].text,data.questions[0].paragraphs[0].original);
   e.click('[data-action="ready-next"]');assert.equal(e.saved().question,2);assert.equal(e.$('[data-answer-edit]'),null);assert.deepEqual(e.errors,[]);
  }finally{e.close();}
+});
+
+test('all 25 paragraph pairs retain both exact texts and their adjacent explanations',async()=>{
+ const e=await editor(undefined,{draft:false});try{
+  let count=0;
+  for(const q of data.questions){
+   e.click(`[data-question="${q.q}"]`);
+   const rows=[...e.w.document.querySelectorAll('[data-comparison-paragraph]')];
+   assert.equal(rows.length,q.paragraphs.length);
+   q.paragraphs.forEach((p,i)=>{
+    const row=rows[i];assert.equal(row.dataset.comparisonParagraph,p.id);
+    assert.equal(row.querySelector('[data-annotation-target="original"] p').textContent,p.original);
+    assert.equal(row.querySelector('[data-annotation-target="suggested"] p').textContent,p.suggested);
+    assert.equal(row.querySelectorAll('.comparison-reason li').length,2);
+    assert.match(row.querySelector('h3').textContent,new RegExp(`Paragraph ${i+1}`));count++;
+   });
+   assert.match(e.$('#question-word-count').textContent,/suggested words/);
+  }
+  assert.equal(count,25);assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
+});
+
+test('paragraph notes stay on their pair and old rectangles keep their text reference',async()=>{
+ const e=await editor(undefined,{draft:false});let saved;try{
+  e.click('[data-comparison-paragraph="q1-p3"] [data-action="note-suggested"]');
+  e.input('#annotation-note','Keep the reassurance.');e.click('[data-action="save-annotation"]');
+  const a=Object.values(e.saved().annotations).filter(Boolean)[0];assert.equal(a.paragraphId,'q1-p3');
+  e.click('[data-comparison-mode="draft"]');e.click(`[data-annotation-open="${a.id}"]`);
+  assert.ok(e.$('[data-comparison-paragraph="q1-p3"]'));assert.equal(e.$('#annotation-note').value,'Keep the reassurance.');
+  saved=e.saved();saved.comparisonMode='suggested';saved.annotations.legacy={id:'legacy',question:1,side:'original',quote:'Earlier selected words',reference:data.questions[0].paragraphs.map(p=>p.original).join('\n\n'),note:'Existing note',status:'open',rect:{x:.1,y:.1,w:.2,h:.2},createdAt:'2026-10-30T00:00:00Z'};
+  assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
+ const loaded=await editor(saved,{draft:false});try{
+  assert.equal(loaded.$('.saved-region'),null);
+  loaded.click('[data-annotation-open="legacy"]');assert.match(loaded.$('.reference-changed').textContent,/layout has changed/);
+  assert.equal(loaded.$('#annotation-quote').value,'Earlier selected words');assert.equal(loaded.$('#annotation-note').value,'Existing note');
+  assert.deepEqual(loaded.errors,[]);
+ }finally{loaded.close();}
 });

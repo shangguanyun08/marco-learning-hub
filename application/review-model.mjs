@@ -5,6 +5,7 @@ export function setAnswer(state, question, text) {
 }
 export const fullAnswer=(state,q)=>q.paragraphs.map(p=>state.edits[p.id].text).filter(t=>t.trim()).join('\n\n');
 export function validAnnotation(a){
+ if(a?.paragraphId!==undefined&&(typeof a.paragraphId!=='string'||!/^q[1-5]-p[1-9][0-9]*$/.test(a.paragraphId)||!a.paragraphId.startsWith(`q${a.question}-`)))return false;
  return a===null||!!(a&&typeof a.id==='string'&&/^[a-zA-Z0-9-]{1,100}$/.test(a.id)&&Number.isInteger(a.question)&&a.question>=1&&a.question<=5&&['original','suggested','revision'].includes(a.side)&&typeof a.note==='string'&&a.note.length<=12000&&typeof a.reference==='string'&&a.reference.length<=60000&&typeof a.quote==='string'&&a.quote.length<=2000&&typeof a.createdAt==='string'&&['open','done'].includes(a.status)&&(a.rect===null||a.rect&&['x','y','w','h'].every(k=>Number.isFinite(a.rect[k])&&a.rect[k]>=0&&a.rect[k]<=1)&&a.rect.x+a.rect.w<=1.001&&a.rect.y+a.rect.h<=1.001));
 }
 export function compactDraft(state, originalById){

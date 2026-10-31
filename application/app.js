@@ -1,7 +1,7 @@
 import {createCloud} from './cloud-sync.mjs?v=20261030-rectangle1';
 import {applyFields} from './sync-model.mjs?v=20261030-rectangle1';
-import {setAnswer,validAnnotation,validVersion} from './review-model.mjs?v=20261030-rectangle1';
-import {createReviewUI} from './review-ui.mjs?v=20261030-rectangle1';
+import {setAnswer,validAnnotation,validVersion} from './review-model.mjs?v=20261031-paragraphs1';
+import {createReviewUI} from './review-ui.mjs?v=20261031-paragraphs1';
 'use strict';
 const DATA=JSON.parse(document.getElementById('application-data').textContent);
 const STORAGE_KEY='marco-application-family-editor-v1';
@@ -57,10 +57,10 @@ function updateNavigation(){
 function render(){
  const q=currentQuestion();updateNavigation();$('#question-kicker').textContent=`QUESTION 0${q.q} / 05`;$('#question-title').textContent=q.title;$('#question-prompt').textContent=q.prompt;$('#work-note').hidden=state.introDismissed;
  document.querySelectorAll('[data-comparison-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.comparisonMode===state.comparisonMode)));
- $('#paragraph-nav').innerHTML=`<span class="whole-answer-label">ONE QUESTION · TWO COMPLETE ANSWERS</span><span class="paragraph-count" id="question-word-count">${questionWordLabel()}</span>`;
+ $('#paragraph-nav').innerHTML=`<span class="whole-answer-label">${state.comparisonMode==='draft'?'ONE QUESTION · YOUR COMPLETE DRAFT':'ONE QUESTION · ALIGNED PARAGRAPHS'}</span><span class="paragraph-count" id="question-word-count">${questionWordLabel()}</span>`;
  $('#editor-area').innerHTML=reviewUI.renderAnswer();document.querySelectorAll('.edit-input').forEach(resize);$('#context-section').innerHTML=reviewUI.renderNotes();updateBottom();reviewUI.afterRender();
 }
-function questionWordLabel(){const q=currentQuestion();return `${words(q.paragraphs.map(p=>p.original).join(' '))} original → ${words(q.paragraphs.map(p=>state.edits[p.id].text).join(' '))} draft words`;}
+function questionWordLabel(){const q=currentQuestion(),draft=state.comparisonMode==='draft';return `${words(q.paragraphs.map(p=>p.original).join(' '))} original → ${words(q.paragraphs.map(p=>draft?state.edits[p.id].text:p.suggested).join(' '))} ${draft?'draft':'suggested'} words`;}
 function resize(el){el.style.height='auto';el.style.height=Math.max(190,el.scrollHeight+4)+'px';}
 function updateBottom(){$('#previous').disabled=state.question===1;$('#position-label').textContent=`Question ${state.question} of 5`;$('#ready-next').textContent=state.comparisonMode!=='draft'?(state.question===5?'Review & submit feedback →':'Next question →'):(state.question===5?'Mark ready & finish ✓':'Mark answer ready & next →');}
 function navigate(q){reviewUI.stop();state.question=q;state.paragraph=0;state.view='answer';save();render();window.scrollTo({top:0,behavior:'instant'});}
