@@ -1,8 +1,11 @@
 (() => {
   'use strict';
   const root='https://readtheory.org/wp-content/uploads/2020/04/';
+  // Parent removed the then-visible easy sessions 10–13. Keep stable IDs
+  // archived so future sorting/renumbering cannot restore their active cards.
+  const retired=new Set(['practice-pocket-magnifier','practice-lookout','practice-map-storage','practice-orange']);
   function article(id,title,referenceTitle,referenceLexile,pdf,paragraphs,questions){
-    return {id,title,kind:'parallel',grade:4,lexile:null,referenceTitle,referenceLexile,referenceUrl:root+pdf,paragraphs,
+    return {id,title,kind:'parallel',grade:4,lexile:null,referenceTitle,referenceLexile,referenceUrl:root+pdf,paragraphs,...(retired.has(id)?{retired:true,retiredReason:'Parent removed easy sessions 10–13; preserve saved history only.'}:{}),
       questions:questions.map((q,i)=>({id:`${id}-${i+1}`,number:i+1,prompt:q[0],choices:q[1],answer:q[2],evidence:q[3],explanation:q[4],hint:q[5]||'Find the details that support your answer.'}))};
   }
   window.READING_ARTICLES.push(

@@ -34,22 +34,22 @@ for(const a of added)for(const q of a.questions)test(`${q.id}: complete MC item 
   assert.equal(core.scores(a,r).firstAnswers,1);
 });
 
-test('one grade-free list sorts all 20 practice cards by reference Lexile with continuous session numbers',t=>{
+test('one grade-free list sorts the 16 remaining practice cards with continuous session numbers',t=>{
   const b=boot(t),lookup=new Map(all.map(a=>[a.id,a]));
   const cards=Array.from(b.d.querySelectorAll('.practice-group .card'));
   const levels=cards.map(card=>lookup.get(card.querySelector('[data-open]').dataset.open).referenceLexile);
-  assert.equal(cards.length,20);assert.deepEqual(levels,[...levels].sort((a,b)=>a-b));
+  assert.equal(cards.length,16);assert.deepEqual(levels,[...levels].sort((a,b)=>a-b));
   assert.equal(levels[0],460);assert.equal(levels.at(-1),910);
   assert.equal(b.d.querySelector('#lexile-heading').textContent,'Reading by Lexile');
   assert.doesNotMatch(b.d.body.textContent,/\bGrade\s*[34]\b/i);
   cards.forEach((card,i)=>assert.match(card.querySelector('.eyebrow').textContent,new RegExp(`^Session ${i+4} ·`)));
-  assert.match(b.d.querySelector('.practice-group-head').textContent,/20 articles · 102 multiple-choice questions/);
+  assert.match(b.d.querySelector('.practice-group-head').textContent,/16 articles · 82 multiple-choice questions/);
   assert.match(b.d.querySelector('.practice-group .meta').textContent,/have not been measured/);
 });
 
-test('all 23 sessions display every paragraph, including new sessions, without exposing an answer key',t=>{
+test('all 19 active sessions display every paragraph without exposing an answer key',t=>{
   const b=boot(t);
-  for(const a of all){
+  for(const a of all.filter(a=>!a.retired)){
     b.d.querySelector(`[data-open="${a.id}"]`).click();
     const actual=Array.from(b.d.querySelectorAll('#passage>p'),p=>Array.from(p.querySelectorAll('.sentence'),s=>s.textContent).join(''));
     assert.deepEqual(actual,a.paragraphs,a.title);
@@ -61,7 +61,7 @@ test('all 23 sessions display every paragraph, including new sessions, without e
 });
 
 test('a new session retains both tries and highlights through reload and the existing sync format',t=>{
-  const b=boot(t),a=added[0],q=a.questions[0];
+  const b=boot(t),a=added.find(a=>!a.retired),q=a.questions[0];
   b.d.querySelector(`[data-open="${a.id}"]`).click();
   b.d.querySelector(`input[value="${(q.answer+1)%4}"]`).click();
   assert.equal(b.d.querySelector('#check').disabled,true);
@@ -88,4 +88,30 @@ test('sorting the expanded list preserves original first answers, highlights and
   assert.equal(b.d.querySelector('input:checked').value,'2');assert.ok(b.d.querySelector('#passage mark'));
   assert.deepEqual(b.saved().articles[earlier.id][0].answers[q.id][0],attempt);
   assert.equal(core.scores(earlier,b.saved().articles[earlier.id][0]).firstAnswers,1);
+  assert.match(b.d.querySelector('.workspace-head').textContent,/Session 10 ·/);
+});
+
+test('former sessions 10–13 stay excluded after reload and renumbering while saved history remains reviewable',t=>{
+  const ids=['practice-pocket-magnifier','practice-lookout','practice-map-storage','practice-orange'];
+  assert.deepEqual(all.filter(a=>a.retired).map(a=>a.id),ids);
+  const saved={version:1,articles:{}};
+  for(const id of ids){const a=all.find(a=>a.id===id),q=a.questions[0];saved.articles[id]=[{id:'saved-'+id,startedAt:'2026-10-30T12:00:00Z',position:0,answers:{[q.id]:[{choice:q.answer,answerOK:true,checkedAt:'2026-10-30T12:01:00Z',marks:[mark(a,q.evidence[0][0])]}]}}];}
+  const b=boot(t,saved);
+  assert.equal(b.d.querySelectorAll('[data-open]').length,19);
+  const labels=Array.from(b.d.querySelectorAll('.card .eyebrow'),el=>Number(el.textContent.match(/^Session (\d+)/)[1]));
+  assert.deepEqual(labels,Array.from({length:19},(_,i)=>i+1));
+  for(const id of ids){
+    assert.equal(b.d.querySelector(`[data-open="${id}"]`),null);
+    const before=b.w.localStorage.getItem(KEY);
+    b.d.querySelector(`[data-history-review="${id}"]`).click();
+    assert.match(b.d.querySelector('.workspace-head').textContent,/Archived practice/);
+    assert.equal(b.d.querySelector('#fresh-run'),null);
+    assert.ok(b.d.querySelector('#passage mark'));
+    assert.equal(b.w.localStorage.getItem(KEY),before);
+    assert.deepEqual(b.saved().articles[id],saved.articles[id]);
+    b.d.querySelector('#back-home').click();
+  }
+  const reload=boot(t,b.saved());
+  assert.equal(reload.d.querySelectorAll('[data-open]').length,19);
+  for(const id of ids)assert.equal(reload.d.querySelector(`[data-open="${id}"]`),null);
 });
