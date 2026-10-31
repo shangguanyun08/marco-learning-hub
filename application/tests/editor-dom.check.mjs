@@ -18,7 +18,7 @@ async function editor(saved,options={}){
  w.Range.prototype.getClientRects=()=>[]; // JSDOM has no rendered text geometry.
  if(saved)w.localStorage.setItem(key,JSON.stringify(saved));
  const context=dom.getInternalVMContext(),cache=new Map();
- for(const name of ['app.js','cloud-sync.mjs','sync-model.mjs','review-model.mjs','review-ui.mjs','comparison-notes.mjs']){const url=new URL(name,base);cache.set(url.pathname,new vm.SourceTextModule(await readFile(url,'utf8'),{context,identifier:url.href}));}
+ for(const name of ['app.js','cloud-sync.mjs','sync-model.mjs','review-model.mjs','review-ui.mjs','comparison-notes.mjs','change-highlights.mjs']){const url=new URL(name,base);cache.set(url.pathname,new vm.SourceTextModule(await readFile(url,'utf8'),{context,identifier:url.href}));}
  const root=cache.get(new URL('app.js',base).pathname);await root.link((specifier,parent)=>cache.get(new URL(specifier,parent.identifier).pathname));await root.evaluate();
  const $=s=>w.document.querySelector(s),click=s=>$(s).click(),input=(s,text)=>{const el=$(s);el.value=text;el.dispatchEvent(new w.Event('input',{bubbles:true}));};
  if(options.draft!==false)click('[data-comparison-mode="draft"]');
@@ -124,12 +124,44 @@ test('all 25 paragraph pairs retain both exact texts and their adjacent explanat
     const row=rows[i];assert.equal(row.dataset.comparisonParagraph,p.id);
     assert.equal(row.querySelector('[data-annotation-target="original"] p').textContent,p.original);
     assert.equal(row.querySelector('[data-annotation-target="suggested"] p').textContent,p.suggested);
+    assert.equal(row.querySelectorAll('[data-annotation-target="original"] mark').length,0);
+    assert.ok([...row.querySelectorAll('.suggested-answer mark')].every(mark=>mark.title==='Added or reworded from the counselor\'s original'));
     assert.equal(row.querySelectorAll('.comparison-reason li').length,2);
     assert.match(row.querySelector('h3').textContent,new RegExp(`Paragraph ${i+1}`));count++;
    });
    assert.match(e.$('#question-word-count').textContent,/suggested words/);
   }
   assert.equal(count,25);assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
+});
+
+test('inline highlights are partial, preserve copied wording, and leave working drafts alone',async()=>{
+ const e=await editor(undefined,{draft:false});try{
+  const p=data.questions[0].paragraphs[0],marks=[...e.w.document.querySelectorAll('[data-comparison-paragraph="q1-p1"] .suggested-answer mark')];
+  assert.ok(marks.length>0);assert.ok(marks.map(m=>m.textContent).join('').length<p.suggested.length/2);
+  assert.equal(e.$('[data-comparison-paragraph="q1-p1"] .suggested-answer p').textContent,p.suggested);
+  assert.match(e.$('.change-legend').textContent,/highlighted and underlined/);
+  let copied;Object.defineProperty(e.w.navigator,'clipboard',{value:{writeText:async text=>{copied=text;}}});
+  e.click('[data-action="copy-suggestion"]');await new Promise(r=>setImmediate(r));
+  assert.equal(copied,data.questions[0].paragraphs.map(p=>p.suggested).join('\n\n'));
+  e.click('[data-comparison-mode="draft"]');assert.equal(e.$('.change-legend'),null);
+  assert.equal(e.$('[data-answer-edit]').value,data.questions[0].paragraphs.map(p=>p.original).join('\n\n'));
+  assert.equal(e.w.document.querySelectorAll('.suggested-change').length,0);assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
+});
+
+test('rectangle quotes cross inline highlights without joining words or separating punctuation',async()=>{
+ const e=await editor(undefined,{draft:false});try{
+  e.w.SVGElement.prototype.getBoundingClientRect=()=>({left:0,top:0,right:400,bottom:500,width:400,height:500});
+  e.w.Range.prototype.getClientRects=()=>[{left:0,top:0,right:400,bottom:500}];
+  const svg=e.$('[data-annotation-layer="suggested"]');e.click('[data-action="annotate"]');
+  for(const [type,x,y] of [['pointerdown',30,40],['pointerup',250,170]]){
+   const event=new e.w.MouseEvent(type,{clientX:x,clientY:y,bubbles:true});Object.defineProperty(event,'pointerId',{value:1});svg.dispatchEvent(event);
+  }
+  assert.equal(e.$('#annotation-quote').value,data.questions[0].paragraphs[0].suggested);
+  e.input('#annotation-note','Keep this wording.');e.click('[data-action="save-annotation"]');
+  const note=Object.values(e.saved().annotations).filter(Boolean)[0];assert.equal(note.paragraphId,'q1-p1');
+  assert.equal(note.reference,data.questions[0].paragraphs.map(p=>p.suggested).join('\n\n'));assert.deepEqual(e.errors,[]);
  }finally{e.close();}
 });
 

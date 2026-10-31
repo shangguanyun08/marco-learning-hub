@@ -1,7 +1,7 @@
 import {createCloud} from './cloud-sync.mjs?v=20261030-rectangle1';
 import {applyFields} from './sync-model.mjs?v=20261030-rectangle1';
 import {setAnswer,validAnnotation,validVersion} from './review-model.mjs?v=20261031-paragraphs1';
-import {createReviewUI} from './review-ui.mjs?v=20261031-paragraphs1';
+import {createReviewUI} from './review-ui.mjs?v=20261031-highlights1';
 'use strict';
 const DATA=JSON.parse(document.getElementById('application-data').textContent);
 const STORAGE_KEY='marco-application-family-editor-v1';

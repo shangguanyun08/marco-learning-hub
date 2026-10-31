@@ -1,6 +1,7 @@
 import {fullAnswer,compactDraft,validAnnotation} from './review-model.mjs?v=20261031-paragraphs1';
 import {flatten} from './sync-model.mjs?v=20261030-rectangle1';
 import {comparisonRows} from './comparison-notes.mjs?v=20261031-paragraphs1';
+import {changeParagraphs} from './change-highlights.mjs?v=20261031-highlights1';
 
 export function createReviewUI(o){
  const {esc}=o;
@@ -13,8 +14,9 @@ export function createReviewUI(o){
  function toggle(on=!drawing){drawing=on;document.body.classList.toggle('annotate-active',on);document.querySelector('#annotation-toolbar').hidden=!on;document.querySelector('[data-action="annotate"]').setAttribute('aria-pressed',String(on));}
  function marks(side,paragraphId=''){return `<svg class="annotation-layer" data-annotation-layer="${side}" data-paragraph-id="${esc(paragraphId)}" aria-label="Select a rectangular area of the ${sideLabel(side)}" xmlns="http://www.w3.org/2000/svg"></svg>`;}
  function renderComparison(q){
-  const passage=(p,side)=>`<section class="editor-card ${side==='suggested'?'yours':''}"><div class="card-top"><h4 class="card-label">${side==='original'?"Counselor's original":"ChatGPT's earlier suggestion"}</h4></div><div class="card-body"><div class="annotation-target" data-annotation-target="${side}" data-paragraph-id="${esc(p.id)}"><div class="original-text answer-original ${side==='suggested'?'suggested-answer':''}">${p[side]?p[side].split(/\n\s*\n/).map(t=>`<p>${esc(t)}</p>`).join(''):'<span class="omitted-passage">No corresponding passage in this version.</span>'}</div>${marks(side,p.id)}</div></div><div class="card-footer"><span>${o.words(p[side]||'')} words</span><button class="quiet" data-action="note-${side}" data-note-paragraph="${esc(p.id)}" aria-label="Add a note to ${sideLabel(side)}, paragraph ${p.index+1}">Add a note</button></div></section>`;
-  return `<div class="paragraph-comparison"><p class="comparison-intro">Matching passages stay together in each row. The explanations describe the visible edits and their effect; they do not resolve facts that still need checking. Both source versions are preserved in full.</p>${comparisonRows(q).map((p,i)=>`<section class="comparison-row" data-comparison-paragraph="${esc(p.id)}" aria-labelledby="compare-${esc(p.id)}"><h3 id="compare-${esc(p.id)}" class="comparison-row-heading"><span>Paragraph ${i+1}</span>${esc(p.title)}</h3>${passage(p,'original')}${passage(p,'suggested')}<aside class="comparison-reason" aria-label="Explanation for paragraph ${i+1}"><h4>What changed &amp; why</h4><ul>${p.notes.map(([label,text])=>`<li><strong>${esc(label)}</strong><p>${esc(text)}</p></li>`).join('')}</ul></aside></section>`).join('')}<div class="comparison-actions"><span>${o.words(reference('original'))} counselor words · ${o.words(reference('suggested'))} suggested words</span><button class="button secondary" data-action="copy-suggestion">Copy suggested answer ↗</button><button class="button secondary" data-action="question-suggestion">Use suggested answer as my draft</button></div></div>`;
+  const suggestedText=p=>changeParagraphs(p.original,p.suggested).map(parts=>`<p>${parts.map(s=>s.changed?`<mark class="suggested-change" title="Added or reworded from the counselor's original">${esc(s.text)}</mark>`:esc(s.text)).join('')}</p>`).join('');
+  const passage=(p,side)=>`<section class="editor-card ${side==='suggested'?'yours':''}"><div class="card-top"><h4 class="card-label">${side==='original'?"Counselor's original":"ChatGPT's earlier suggestion"}</h4></div><div class="card-body"><div class="annotation-target" data-annotation-target="${side}" data-paragraph-id="${esc(p.id)}"><div class="original-text answer-original ${side==='suggested'?'suggested-answer':''}">${p[side]?side==='suggested'?suggestedText(p):p.original.split(/\n\s*\n/).map(t=>`<p>${esc(t)}</p>`).join(''):'<span class="omitted-passage">No corresponding passage in this version.</span>'}</div>${marks(side,p.id)}</div></div><div class="card-footer"><span>${o.words(p[side]||'')} words</span><button class="quiet" data-action="note-${side}" data-note-paragraph="${esc(p.id)}" aria-label="Add a note to ${sideLabel(side)}, paragraph ${p.index+1}">Add a note</button></div></section>`;
+  return `<div class="paragraph-comparison"><p class="comparison-intro">Matching passages stay together in each row. The explanations describe the visible edits and their effect; they do not resolve facts that still need checking. Both source versions are preserved in full.</p><p class="change-legend"><mark class="suggested-change" aria-hidden="true">Aa</mark><span>Added or reworded text is highlighted and underlined in ChatGPT’s suggestion. Omitted wording stays visible in the counselor’s original.</span></p>${comparisonRows(q).map((p,i)=>`<section class="comparison-row" data-comparison-paragraph="${esc(p.id)}" aria-labelledby="compare-${esc(p.id)}"><h3 id="compare-${esc(p.id)}" class="comparison-row-heading"><span>Paragraph ${i+1}</span>${esc(p.title)}</h3>${passage(p,'original')}${passage(p,'suggested')}<aside class="comparison-reason" aria-label="Explanation for paragraph ${i+1}"><h4>What changed &amp; why</h4><ul>${p.notes.map(([label,text])=>`<li><strong>${esc(label)}</strong><p>${esc(text)}</p></li>`).join('')}</ul></aside></section>`).join('')}<div class="comparison-actions"><span>${o.words(reference('original'))} counselor words · ${o.words(reference('suggested'))} suggested words</span><button class="button secondary" data-action="copy-suggestion">Copy suggested answer ↗</button><button class="button secondary" data-action="question-suggestion">Use suggested answer as my draft</button></div></div>`;
  }
  function renderAnswer(){
   const q=question(),draft=state().comparisonMode==='draft',side=draft?'revision':'suggested',text=reference(side),ready=q.paragraphs.every(p=>state().edits[p.id].status==='ready');
@@ -37,12 +39,19 @@ export function createReviewUI(o){
   const input=target.querySelector('textarea')||target.querySelector('.original-text'),style=getComputedStyle(input);
   if(!input.matches('textarea')){
    // Read actual rendered positions, including paragraph spacing and aligned rows.
-   const walker=document.createTreeWalker(input,NodeFilter.SHOW_TEXT),selected=[];
-   let node;while((node=walker.nextNode()))for(const token of node.textContent.matchAll(/\S+\s*/g)){
-    const range=document.createRange();range.setStart(node,token.index);range.setEnd(node,token.index+token[0].length);
-    if([...range.getClientRects()].some(b=>b.right>rect.left&&b.left<rect.right&&b.bottom>rect.top&&b.top<rect.bottom))selected.push(token[0]);
+   const selected=[],paragraphs=[...input.querySelectorAll('p')];
+   for(const paragraph of paragraphs.length?paragraphs:[input]){
+    // A word can span mark/text nodes. Build ranges from paragraph offsets so
+    // highlights never merge words or insert spaces before punctuation in quotes.
+    const walker=document.createTreeWalker(paragraph,NodeFilter.SHOW_TEXT),nodes=[];let node,offset=0;
+    while((node=walker.nextNode())){nodes.push({node,start:offset,end:offset+node.textContent.length});offset+=node.textContent.length;}
+    for(const token of paragraph.textContent.matchAll(/\S+/g)){
+     const start=token.index,end=start+token[0].length,first=nodes.find(n=>n.end>start),last=nodes.find(n=>n.end>=end);
+     const range=document.createRange();range.setStart(first.node,start-first.start);range.setEnd(last.node,end-last.start);
+     if([...range.getClientRects()].some(b=>b.right>rect.left&&b.left<rect.right&&b.bottom>rect.top&&b.top<rect.bottom))selected.push(token[0]);
+    }
    }
-   return selected.join('').trim().slice(0,2000);
+   return selected.join(' ').slice(0,2000);
   }
   const mirror=document.createElement('div');mirror.className='annotation-mirror';
   Object.assign(mirror.style,{position:'fixed',left:`${box.left}px`,top:`${box.top}px`,width:`${box.width}px`,fontFamily:style.fontFamily,fontSize:style.fontSize,lineHeight:style.lineHeight,letterSpacing:style.letterSpacing,whiteSpace:'pre-wrap',overflowWrap:'anywhere',visibility:'hidden',pointerEvents:'none'});
