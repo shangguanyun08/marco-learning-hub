@@ -219,3 +219,16 @@ test('notes remember their suggestion version and comparison printing includes h
   assert.match(e.$('#print-root').textContent,/only private middle school/);assert.deepEqual(e.errors,[]);
  }finally{e.close();}
 });
+
+
+test('an unreadable online field cannot be silently dropped by a save',async()=>{
+ let posts=0;
+ const fetcher=async(url,options)=>{
+  if(options.method!=='GET')posts++;
+  return {ok:true,json:async()=>({progress:{version:1,state:{schema:2,source:data.source,fields:{'annotation.future-format':{value:'unreadable saved note',updatedAt:1,deviceId:'another-client'}}}}})};
+ };
+ const e=await editor(undefined,{online:true,fetcher,draft:false});try{
+  e.click('[data-action="sync"]');for(let i=0;i<12;i++)await new Promise(r=>setImmediate(r));
+  assert.equal(posts,0);assert.match(e.$('#save-status').textContent,/retry online/);assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
+});

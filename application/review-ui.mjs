@@ -1,6 +1,6 @@
-import {fullAnswer,compactDraft,validAnnotation} from './review-model.mjs?v=20261101-v2';
-import {flatten} from './sync-model.mjs?v=20261101-v2';
-import {comparisonRows} from './comparison-notes.mjs?v=20261101-v2';
+import {fullAnswer,compactDraft,validAnnotation} from './review-model.mjs?v=20261101-v2sync2';
+import {flatten} from './sync-model.mjs?v=20261101-v2sync2';
+import {comparisonRows} from './comparison-notes.mjs?v=20261101-v2sync2';
 import {changeParagraphs} from './change-highlights.mjs?v=20261031-highlights1';
 
 export function createReviewUI(o){

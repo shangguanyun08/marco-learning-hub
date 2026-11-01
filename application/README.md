@@ -12,7 +12,7 @@ Annotate either side by dragging a rectangle within a paragraph and adding a not
 
 `My working draft` opens the family's editable answer. Existing local and online edits, notes, and review decisions use their original storage keys. Whole-answer editing retains the existing paragraph IDs as storage slots and combines additional paragraphs into the final slot. Version history stores compact snapshots of all five drafts and their notes; restoring a version first saves the current draft. The starting version is saved after the initial online merge.
 
-Annotation and version fields merge independently across devices in the existing draft record. Annotation removals use tombstones so stale devices do not resurrect them. Each annotation retains its source version, question, text reference, and normalized rectangle. If the text or panel width changes, the saved reference remains available and the obsolete rectangle is hidden. Submitted feedback includes annotations from both comparison versions and from the working draft. See `FEEDBACK_WORKFLOW.md`.
+A sync client that cannot validate any online field stops before posting, preserving the server record instead of dropping unreadable notes. Annotation and version fields merge independently across devices in the existing draft record. Annotation removals use tombstones so stale devices do not resurrect them. Each annotation retains its source version, question, text reference, and normalized rectangle. If the text or panel width changes, the saved reference remains available and the obsolete rectangle is hidden. Submitted feedback includes annotations from both comparison versions and from the working draft. See `FEEDBACK_WORKFLOW.md`.
 
 Run the data and sync checks with:
 

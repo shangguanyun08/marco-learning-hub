@@ -1,4 +1,4 @@
-import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261101-v2';
+import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261101-v2sync2';
 
 export async function requestRecord(appId,method='GET',payload,fetcher=fetch){
  const response=await fetcher(`${ENDPOINT}?appId=${encodeURIComponent(appId)}`,{method,cache:'no-store',headers:payload?{'content-type':'application/json'}:undefined,body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(20000)});
@@ -34,7 +34,12 @@ export function createCloud(options){
     const {progress}=await requestRecord(DRAFT_APP,'GET',undefined,fetcher);
     const remote=progress?.state;
     if(remote&&remote.source!==SOURCE)throw new Error('The online application version has changed.');
-    fields=mergeFields(fields,remote?.fields);remember();apply();
+    fields=mergeFields(fields,remote?.fields);
+    // A client that cannot read an online field must never delete it by saving
+    // its narrower view of the record. Keep the server copy intact for recovery.
+    const unreadable=Object.keys(remote?.fields||{}).filter(key=>!fields[key]);
+    if(unreadable.length){console.warn('Application sync preserved unreadable online fields:',unreadable);throw new Error('Some saved notes could not be read. Refresh the application before saving.');}
+    remember();apply();
     if(JSON.stringify(fields)===JSON.stringify(remote?.fields||{})){dirty=false;break;}
     const sending=clone(fields);
     if(JSON.stringify(sending).length>700000)throw new Error('Online version storage is full. Download a working copy to keep your latest work.');

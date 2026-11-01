@@ -1,4 +1,4 @@
-import {comparisonNotes} from './comparison-notes.mjs?v=20261101-v2';
+import {comparisonNotes} from './comparison-notes.mjs?v=20261101-v2sync2';
 // Version 1 and the counselor's original remain immutable in data.json.
 // Version 2 responds to the family's 20 saved annotations reviewed on Nov 1.
 export const revisionV2 = {

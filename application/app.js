@@ -1,8 +1,8 @@
-import {createCloud} from './cloud-sync.mjs?v=20261101-v2';
-import {applyFields} from './sync-model.mjs?v=20261101-v2';
-import {setAnswer,validAnnotation,validVersion} from './review-model.mjs?v=20261101-v2';
-import {createReviewUI} from './review-ui.mjs?v=20261101-v2';
-import {comparisonQuestion} from './revision-v2.mjs?v=20261101-v2';
+import {createCloud} from './cloud-sync.mjs?v=20261101-v2sync2';
+import {applyFields} from './sync-model.mjs?v=20261101-v2sync2';
+import {setAnswer,validAnnotation,validVersion} from './review-model.mjs?v=20261101-v2sync2';
+import {createReviewUI} from './review-ui.mjs?v=20261101-v2sync2';
+import {comparisonQuestion} from './revision-v2.mjs?v=20261101-v2sync2';
 'use strict';
 const DATA=JSON.parse(document.getElementById('application-data').textContent);
 const STORAGE_KEY='marco-application-family-editor-v1';
