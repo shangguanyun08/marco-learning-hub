@@ -1,4 +1,5 @@
 #sessions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.topnav{align-items:center;flex-wrap:wrap}.practice-history{display:flex;align-items:center;flex-wrap:wrap;gap:10px}.previous-practice{background:#173957;border-color:#173957;font-size:15px}.archive-button{display:inline-block;padding:11px 15px;border:1px solid #abc0cc;border-radius:9px;background:#fff;text-decoration:none;font-size:15px;line-height:1.4}.previous-practice:hover{background:#28536f}.archive-button:hover{background:#e7f0f7}
 .outcome-grid{border-collapse:collapse;width:100%;table-layout:fixed;margin:8px 0;background:#fff;color:#202a31;font:13px/1.3 Georgia,serif}
 .outcome-grid caption{text-align:left;color:var(--ink);font:700 16px/1.5 system-ui;margin-bottom:7px}
 .outcome-grid td{border:1px solid #66717a;text-align:center;padding:7px 3px;overflow-wrap:anywhere;vertical-align:middle}

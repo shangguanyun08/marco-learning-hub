@@ -10,6 +10,13 @@ function setup(){const w={crypto,fetch:async()=>{},AbortController,setTimeout,cl
 const plain=x=>JSON.parse(JSON.stringify(x));
 const numeric=s=>Number(s.replaceAll(',','').match(/[\d.]+/)[0]);
 
+test('top navigation links directly to the previous QR practice and all archived dates',()=>{
+ const html=read('./index.html');
+ assert.match(html,/<a class="primary previous-practice" href="\.\.\/2026-10-23\/"/);
+ assert.match(html,/<a class="archive-button" href="\.\.\/archive\.html">All previous practice<\/a>/);
+ assert(html.indexOf('primary previous-practice')<html.indexOf('<header class="hero">'));
+});
+
 test('four exact original misses and 4 x 4 mixed practice, with isolated state',()=>{
  const {D,E}=setup();assert.deepEqual(plain(D.originals.map(q=>q.number)),[41,42,44,47]);assert.deepEqual(plain(D.originals.map(q=>q.chosen)),[0,2,2,3]);assert.deepEqual(plain(D.originals.map(q=>q.correct)),[1,3,0,0]);assert.equal(D.ids.length,16);assert.equal(new Set(D.ids).size,16);
  for(const k of Object.keys(D.skills))assert.equal(D.ids.filter(id=>D.questions[id].skill===k).length,4);
