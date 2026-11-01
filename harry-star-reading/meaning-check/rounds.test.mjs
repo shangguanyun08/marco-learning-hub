@@ -18,26 +18,26 @@ function finish(s,section,round,unknown=false){
  assert.equal(s.submitRound(section,round).ok,true);
 }
 
-test('all ten sets support five independent rounds, each repeating every word',()=>{
+test('all ten sets support three independent rounds, each repeating every word',()=>{
  const {s}=harness();
  for(const section of data.sections){
   const ids=rows(section.number).map(w=>w.id);
   assert.equal(s.openRound(section.number,2).ok,false);
-  for(let round=1;round<=5;round++){
+  for(let round=1;round<=3;round++){
    const before=s.roundView(section.number,round);
    assert.deepEqual([...before.order].sort(),ids.slice().sort());
    if(round>1){assert.notDeepEqual([...before.order],ids);assert.equal(before.recorded,0);assert.equal(before.written,0);}
    finish(s,section.number,round,round===1);
    const after=s.roundView(section.number,round);assert.equal(after.recorded,section.count);assert.equal(after.written,round===1?0:section.count);assert.equal(after.submitted,true);
   }
-  for(let round=1;round<=5;round++)for(const w of rows(section.number)){
+  for(let round=1;round<=3;round++)for(const w of rows(section.number)){
    const answer=s.roundView(section.number,round).entries[w.id];assert.equal(answer.unknown,round===1);if(round>1)assert.equal(answer.meaning,`own ${section.number}/${round} ${w.id}`);
   }
-  assert.equal(new Set([1,2,3,4,5].map(round=>s.roundView(section.number,round).order.join(','))).size,5);
+  assert.equal(new Set([1,2,3].map(round=>s.roundView(section.number,round).order.join(','))).size,3);
  }
- assert.equal(Object.keys(s.snapshot().submissions).length,10);assert.equal(Object.keys(s.snapshot().roundSubmissions).length,40);
- // Repetition can continue after the five requested rounds, with all words.
- finish(s,10,6);assert.equal(s.roundView(10,6).recorded,4);assert.equal(s.roundView(10,5).entries.voluntary.meaning,'own 10/5 voluntary');
+ assert.equal(Object.keys(s.snapshot().submissions).length,10);assert.equal(Object.keys(s.snapshot().roundSubmissions).length,20);
+ assert.equal(s.openRound(10,4).ok,false);assert.equal(s.submitRound(10,4).ok,false);
+ assert.equal(s.roundView(10,3).entries.voluntary.meaning,'own 10/3 voluntary');
 });
 
 test('shuffled order and drafts survive reload, revisits, and repeated navigation',()=>{

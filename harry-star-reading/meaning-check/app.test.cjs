@@ -12,12 +12,12 @@ async function page({saved={},hash='',live=false}={}){
  return {dom,w,doc,key,requests,copied,input,download:()=>downloaded,state:()=>JSON.parse(w.localStorage.getItem(key)),click:selector=>doc.querySelector(selector).click()};
 }
 
-test('one set is visible; all ten sets run through five rounds with independent answers',async()=>{
+test('one set is visible; all ten sets run through three rounds with independent answers',async()=>{
  const p=await page(),{doc}=p;
  for(let set=1;set<=10;set++){
   p.click(`[data-set="${set}"]`);await tick();const count=set===10?4:10,original=[...doc.querySelectorAll('[data-word]')].map(el=>el.dataset.word);
   assert.equal(doc.querySelectorAll('.word-section').length,1);assert.equal(original.length,count);assert.match(doc.getElementById('overall-progress').textContent,new RegExp(`Set ${set}`));
-  for(let round=1;round<=5;round++){
+  for(let round=1;round<=3;round++){
    assert.equal(doc.getElementById('set-heading').textContent,`Round ${round}`);
    const order=[...doc.querySelectorAll('[data-word]')].map(el=>el.dataset.word);assert.deepEqual(order.slice().sort(),original.slice().sort());
    if(round>1){assert.notDeepEqual(order,original);assert.ok([...doc.querySelectorAll('.meaning')].every(el=>el.value===''));assert.match(doc.querySelector('.round-instruction').textContent,/All .* words again/);}
@@ -25,11 +25,11 @@ test('one set is visible; all ten sets run through five rounds with independent 
    if(round===1)doc.querySelectorAll('.unknown').forEach(el=>el.click());else for(const id of order)p.input(id,`my ${set}/${round} ${id}`);
    p.click('#finish-round');await tick();assert.match(doc.getElementById('finish-round').textContent,/Round saved/);
    assert.match(doc.getElementById('round-result').textContent,round===1?/Round finished/:/not a correctness score/);
-   if(round<5){p.click('#next-round');await tick();}
+   if(round<3){p.click('#next-round');await tick();}
   }
  }
- assert.equal(Object.keys(p.state().roundSubmissions).length,40);assert.equal(Object.keys(p.state().submissions).length,10);
- p.click('#next-round');await tick();assert.equal(doc.getElementById('set-heading').textContent,'Round 6');assert.equal(doc.querySelectorAll('[data-word]').length,4);
+ assert.equal(Object.keys(p.state().roundSubmissions).length,20);assert.equal(Object.keys(p.state().submissions).length,10);
+ assert.equal(doc.getElementById('next-round').hidden,true);assert.equal(doc.querySelectorAll('[data-round]').length,3);assert.equal(doc.querySelector('[data-round="4"]'),null);
  assert.ok(p.requests.every(r=>r.url.includes('dictionaryapi')),'demo must not contact student progress service');p.dom.window.close();
 });
 
