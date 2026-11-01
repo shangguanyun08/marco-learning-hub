@@ -1,0 +1,31 @@
+#sessions{grid-template-columns:repeat(2,minmax(0,1fr))}
+.outcome-grid{border-collapse:collapse;width:100%;table-layout:fixed;margin:8px 0;background:#fff;color:#202a31;font:13px/1.3 Georgia,serif}
+.outcome-grid caption{text-align:left;color:var(--ink);font:700 16px/1.5 system-ui;margin-bottom:7px}
+.outcome-grid td{border:1px solid #66717a;text-align:center;padding:7px 3px;overflow-wrap:anywhere;vertical-align:middle}
+.outcome-grid td.shaded{background:#b9bec4;color:#14202b;box-shadow:inset 0 0 0 9999px #b9bec4}
+.table-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:18px 0}
+.table-option{padding:14px;border:1px solid var(--line);border-radius:10px;background:#fff;min-width:0}
+.table-option p{font-size:14px;margin:5px 0}
+.table-option h4{margin:0 0 8px}
+.choice-content{display:block;min-width:0}
+.choice .outcome-grid{margin-top:10px}
+.choices.table-choices{grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch}
+.table-choices .choice{align-items:flex-start;min-width:0;padding:12px 9px;gap:7px}
+.table-choices .choice input{margin-top:8px;flex:0 0 auto}
+.table-choices .letter{padding-top:3px}
+.mock-source{font-size:14px;color:var(--muted)}
+.trick mark{font-weight:750;background:#ffe589;color:#173957;padding:1px 4px}
+.review-record{margin-top:18px;font-size:14px;color:var(--muted)}
+.report-question-list{font-size:15px;columns:2;column-gap:25px}
+.report-question-list li{break-inside:avoid;padding:4px 0}
+.choice.wrong{background:#ffe6e3;border-color:#bf7970}
+.choice.correct.wrong{background:#ffe6e3;border-color:#bf7970}
+.choice.correct:not(.wrong){background:#e6f4eb;border-color:#7dad90}
+.jump-group{flex-wrap:nowrap}
+.jump a{width:38px;height:38px}
+.question-group-divider{height:4px;margin:35px 0}
+.scorebar{top:0}
+.session-card.is-complete[aria-current=page]{background:#d5f0df}
+@media(max-width:760px){.choices.table-choices,.table-options{grid-template-columns:1fr}.outcome-grid{font-size:14px}.outcome-grid td{padding:8px 3px}}
+@media(max-width:600px){#sessions{grid-template-columns:1fr}.report-question-list{columns:1}.table-option{padding:10px}.jump-group{gap:5px}.jump a{width:33px;height:35px}.jump-divider{margin:0 4px}.topnav{flex-wrap:wrap}.table-choices .choice{padding:12px 8px;gap:5px}.outcome-grid{font-size:12px}}
+@media print{.outcome-grid td.shaded{print-color-adjust:exact}.table-options{grid-template-columns:1fr 1fr}.report-question-list{columns:1}.question-group-divider{break-after:avoid}}
