@@ -1,4 +1,4 @@
-import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261030-rectangle1';
+import {SOURCE,DRAFT_APP,FEEDBACK_APP,ENDPOINT,clone,flatten,mergeFields,changedFields,mergeFeedback} from './sync-model.mjs?v=20261101-v2';
 
 export async function requestRecord(appId,method='GET',payload,fetcher=fetch){
  const response=await fetcher(`${ENDPOINT}?appId=${encodeURIComponent(appId)}`,{method,cache:'no-store',headers:payload?{'content-type':'application/json'}:undefined,body:payload?JSON.stringify(payload):undefined,signal:AbortSignal.timeout(20000)});
@@ -53,7 +53,7 @@ export function createCloud(options){
  async function submit(comment){
   if(!enabled)throw new Error('This preview does not send feedback. Use the published Application page.');
   capture(options.getState());await flush();
-  const snapshot=clone(options.getState()),draft={schema:1,source:SOURCE,edits:snapshot.edits,reviews:snapshot.reviews,annotations:snapshot.annotations||{}};
+  const snapshot=clone(options.getState()),draft={schema:1,source:SOURCE,comparisonVersion:snapshot.comparisonVersion||'v2',edits:snapshot.edits,reviews:snapshot.reviews,annotations:snapshot.annotations||{}};
   let submission;
   try{const cached=JSON.parse(storage.getItem(pendingKey)||'null');if(cached&&JSON.stringify(cached.draft)===JSON.stringify(draft)&&cached.comment===comment)submission=cached;}catch{}
   if(!submission){submission={id:crypto.randomUUID(),source:SOURCE,createdAt:new Date().toISOString(),comment,draft};storage.setItem(pendingKey,JSON.stringify(submission));}

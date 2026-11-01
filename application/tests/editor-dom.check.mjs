@@ -4,6 +4,7 @@ import {readFile} from 'node:fs/promises';
 import vm from 'node:vm';
 import {webcrypto} from 'node:crypto';
 import {JSDOM} from 'jsdom';
+import {comparisonQuestion} from '../revision-v2.mjs';
 const base=new URL('../',import.meta.url);
 const data=JSON.parse(await readFile(new URL('data.json',base),'utf8'));
 const key='marco-application-family-editor-v1';
@@ -18,7 +19,7 @@ async function editor(saved,options={}){
  w.Range.prototype.getClientRects=()=>[]; // JSDOM has no rendered text geometry.
  if(saved)w.localStorage.setItem(key,JSON.stringify(saved));
  const context=dom.getInternalVMContext(),cache=new Map();
- for(const name of ['app.js','cloud-sync.mjs','sync-model.mjs','review-model.mjs','review-ui.mjs','comparison-notes.mjs','change-highlights.mjs']){const url=new URL(name,base);cache.set(url.pathname,new vm.SourceTextModule(await readFile(url,'utf8'),{context,identifier:url.href}));}
+ for(const name of ['app.js','cloud-sync.mjs','sync-model.mjs','review-model.mjs','review-ui.mjs','comparison-notes.mjs','change-highlights.mjs','revision-v2.mjs']){const url=new URL(name,base);cache.set(url.pathname,new vm.SourceTextModule(await readFile(url,'utf8'),{context,identifier:url.href}));}
  const root=cache.get(new URL('app.js',base).pathname);await root.link((specifier,parent)=>cache.get(new URL(specifier,parent.identifier).pathname));await root.evaluate();
  const $=s=>w.document.querySelector(s),click=s=>$(s).click(),input=(s,text)=>{const el=$(s);el.value=text;el.dispatchEvent(new w.Event('input',{bubbles:true}));};
  if(options.draft!==false)click('[data-comparison-mode="draft"]');
@@ -116,7 +117,8 @@ test('default comparison shows the counselor and exact earlier suggestion, with 
 test('all 25 paragraph pairs retain both exact texts and their adjacent explanations',async()=>{
  const e=await editor(undefined,{draft:false});try{
   let count=0;
-  for(const q of data.questions){
+  for(const source of data.questions){
+   const q=comparisonQuestion(source);
    e.click(`[data-question="${q.q}"]`);
    const rows=[...e.w.document.querySelectorAll('[data-comparison-paragraph]')];
    assert.equal(rows.length,q.paragraphs.length);
@@ -129,7 +131,7 @@ test('all 25 paragraph pairs retain both exact texts and their adjacent explanat
     assert.equal(row.querySelectorAll('.comparison-reason li').length,2);
     assert.match(row.querySelector('h3').textContent,new RegExp(`Paragraph ${i+1}`));count++;
    });
-   assert.match(e.$('#question-word-count').textContent,/suggested words/);
+   assert.match(e.$('#question-word-count').textContent,/version 2 words/);
   }
   assert.equal(count,25);assert.deepEqual(e.errors,[]);
  }finally{e.close();}
@@ -181,4 +183,39 @@ test('paragraph notes stay on their pair and old rectangles keep their text refe
   assert.equal(loaded.$('#annotation-quote').value,'Earlier selected words');assert.equal(loaded.$('#annotation-note').value,'Existing note');
   assert.deepEqual(loaded.errors,[]);
  }finally{loaded.close();}
+});
+
+test('version 2 follows family notes, preserves version 1 and family wording, and copies the selected answer',async()=>{
+ const e=await editor(undefined,{draft:false});try{
+  const selectVersion=value=>{const el=e.$('#comparison-version');el.value=value;el.dispatchEvent(new e.w.Event('change',{bubbles:true}));};
+  const middle=id=>e.$(`[data-comparison-paragraph="${id}"] [data-annotation-target="suggested"]`).textContent;
+  assert.equal(e.$('#comparison-version').value,'v2');e.click('[data-question="2"]');
+  assert.equal(middle('q2-p2'),data.questions[1].paragraphs[1].original);
+  assert.match(middle('q2-p5'),/only private middle school we are applying to/);
+  assert.match(e.$('[data-comparison-paragraph="q2-p2"] .comparison-reason').textContent,/necessary to name every colleague/);
+  selectVersion('v1');assert.equal(middle('q2-p2'),data.questions[1].paragraphs[1].suggested);assert.doesNotMatch(middle('q2-p5'),/only private/);
+  selectVersion('v2');let copied;Object.defineProperty(e.w.navigator,'clipboard',{value:{writeText:async text=>{copied=text;}}});
+  e.click('[data-action="copy-suggestion"]');await new Promise(r=>setImmediate(r));assert.equal(copied,comparisonQuestion(data.questions[1]).paragraphs.map(p=>p.suggested).join('\n\n'));
+  e.click('[data-question="3"]');assert.match(middle('q3-p1'),/^Marco's mother volunteers/);
+  e.click('[data-question="4"]');assert.match(middle('q4-p1'),/occasionally/);assert.doesNotMatch(middle('q4-p1'),/\bbut\b/);assert.match(middle('q4-p2'),/first grade/);
+  e.click('[data-action="question-suggestion"]');e.click('[data-action="confirm"]');
+  assert.equal(e.$('[data-answer-edit]').value,comparisonQuestion(data.questions[3]).paragraphs.map(p=>p.suggested).join('\n\n'));
+  assert.ok(Object.values(e.saved().versions).some(v=>v.label==='Before using suggested answer'));
+  e.click('[data-comparison-mode="suggested"]');selectVersion('v1');e.click('[data-comparison-mode="draft"]');
+  assert.match(e.$('[data-answer-edit]').value,/first grade/);assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
+});
+
+test('notes remember their suggestion version and comparison printing includes highlights and feedback',async()=>{
+ const e=await editor(undefined,{draft:false});try{
+  const selectVersion=value=>{const el=e.$('#comparison-version');el.value=value;el.dispatchEvent(new e.w.Event('change',{bubbles:true}));};
+  e.click('[data-question="4"]');e.click('[data-comparison-paragraph="q4-p2"] [data-action="note-suggested"]');
+  e.input('#annotation-note','Keep this new first-grade memory.');e.click('[data-action="save-annotation"]');
+  const note=Object.values(e.saved().annotations).filter(Boolean).at(-1);assert.equal(note.suggestionVersion,'v2');assert.match(note.reference,/first grade/);
+  selectVersion('v1');e.click(`[data-annotation-open="${note.id}"]`);assert.equal(e.$('#comparison-version').value,'v2');assert.equal(e.$('.reference-changed'),null);e.click('[data-action="close-modal"]');
+  let printed=0;e.w.print=()=>printed++;e.click('[data-action="export"]');e.click('[data-action="print-comparison"]');
+  assert.equal(printed,1);assert.equal(e.w.document.querySelectorAll('#print-root .comparison-row').length,25);
+  assert.equal(e.w.document.querySelectorAll('#print-root .comparison-reason').length,25);assert.ok(e.$('#print-root .suggested-change'));
+  assert.match(e.$('#print-root').textContent,/only private middle school/);assert.deepEqual(e.errors,[]);
+ }finally{e.close();}
 });

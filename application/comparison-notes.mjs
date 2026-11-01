@@ -107,5 +107,5 @@ export function comparisonRows(question) {
  // Each source object already pairs corresponding passages by a stable ID.
  // Keep any internal paragraph splits in that same topic group, never zip two
  // independently filtered arrays (which would shift later pairs after an omission).
- return question.paragraphs.map(p=>({...p,notes:comparisonNotes[p.id]||[]}));
+ return question.paragraphs.map(p=>({...p,notes:p.notes||comparisonNotes[p.id]||[]}));
 }

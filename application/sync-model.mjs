@@ -1,4 +1,4 @@
-import {validAnnotation,validVersion} from './review-model.mjs?v=20261030-rectangle1';
+import {validAnnotation,validVersion} from './review-model.mjs?v=20261101-v2';
 export const SOURCE='marco-purple-draft2-20261026';
 export const DRAFT_APP='marco-application-draft-v1';
 export const FEEDBACK_APP='marco-application-feedback-v1';
