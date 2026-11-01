@@ -13,3 +13,8 @@
 @media(max-width:1000px){.section-nav{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:720px){.round-nav{gap:6px}.round-nav button{min-width:0;flex:1 1 28%;font-size:13px;padding:9px 6px}.section-nav{gap:5px}.section-nav button{font-size:13px}.section-nav button small{font-size:11px}.word-section{scroll-margin-top:15px}.section-heading{gap:12px}.continue-actions button{width:100%}#round-history dl>div{grid-template-columns:minmax(80px,110px) 1fr}}
 @media print{.round-nav,.continue-actions,#saved-copies{display:none}.word-section:nth-child(odd){break-before:auto}.word-section{break-inside:auto}.section-heading .eyebrow{font-size:10px}}
+
+/* Sentences are the main reading task; three recall rounds per set. */
+.column-head{display:none}.word-row{align-items:start;gap:12px 16px;padding-top:22px;padding-bottom:22px}.word{grid-column:2/-1}.usage{font-size:22px;line-height:1.55;font-weight:500;color:#173d34;background:#f8f5e9;border:1px solid #e3dac0;border-left:4px solid #b89d51;border-radius:8px;padding:14px 17px;margin-top:12px;letter-spacing:0}.usage mark{color:#173d34;background:#ffe6a0;font-weight:800;border-radius:3px;padding:1px 3px;box-decoration-break:clone;-webkit-box-decoration-break:clone}.meaning{grid-column:2/4;grid-row:2;font-size:18px}.unknown{grid-column:4;grid-row:2;align-self:center}.revealed-meaning{grid-column:2/-1;grid-row:3}
+@media(max-width:720px){.usage{font-size:20px;padding:12px 13px;line-height:1.55}.word{grid-column:2/-1}.meaning{grid-column:2/-1;grid-row:2}.unknown{grid-column:2;grid-row:3;justify-self:start}.revealed-meaning{grid-column:2;grid-row:4}}
+@media print{.usage{font-size:14px;padding:8px;background:white;color:black}.usage mark{background:none;text-decoration:underline}.meaning{font-size:13px}}
