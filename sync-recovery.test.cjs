@@ -23,15 +23,15 @@ function open(t,file,server,{prepare,query=''}={}){
 }
 
 test('Word Meaning Check resumes auto-save after cached Back navigation and preserves other-tab drafts',async t=>{
- const server=new Map(),p=open(t,'marco-vr-practice/meaning-check/index.html',server),w=p.w,id=w.MARCO_MEANING_CHECK.words[0].id,key=w.MARCO_MEANING_CHECK.appId;
+ const server=new Map(),p=open(t,'marco-vr-practice/meaning-check/index.html',server),w=p.w,id=w.document.querySelector('[data-word]').dataset.word,key=w.MARCO_MEANING_CHECK.appId;
  await until(()=>w.document.querySelector('#save-note').dataset.kind==='live');
  w.dispatchEvent(new w.Event('pagehide'));w.dispatchEvent(new w.Event('pageshow'));
  const input=w.document.querySelector('#meaning-'+id.replace(/^word-/,''))||w.document.querySelector('.meaning');
  input.value='a saved meaning';input.dispatchEvent(new w.Event('input',{bubbles:true}));
- await until(()=>server.get(key)?.state.entries[id]?.meaning?.value==='a saved meaning');
- const other=copy(server.get(key).state);other.entries[id].tone={value:'positive',at:Date.now()+100};p.storage(key,other);
- await until(()=>server.get(key).state.entries[id].tone?.value==='positive');
- assert.equal(server.get(key).state.entries[id].meaning.value,'a saved meaning');
+ await until(()=>server.get(key)?.state.rounds['1:1'].entries[id]?.meaning?.value==='a saved meaning');
+ const other=copy(server.get(key).state);other.rounds['1:1'].entries[id].tone={value:'positive',at:Date.now()+100};p.storage(key+':rounds-v2',other);
+ await until(()=>server.get(key).state.rounds['1:1'].entries[id].tone?.value==='positive');
+ assert.equal(server.get(key).state.rounds['1:1'].entries[id].meaning.value,'a saved meaning');
  assert.equal(Object.keys(server.get(key).state.submissions).length,0);
  const second=open(t,'marco-vr-practice/meaning-check/index.html',server);await until(()=>second.w.document.querySelector('.meaning').value==='a saved meaning');
  assert.equal(second.calls.filter(c=>c.method==='POST').length,0);
