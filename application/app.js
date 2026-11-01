@@ -1,7 +1,7 @@
 import {createCloud} from './cloud-sync.mjs?v=20261101-v2sync2';
 import {applyFields} from './sync-model.mjs?v=20261101-v2sync2';
 import {setAnswer,validAnnotation,validVersion} from './review-model.mjs?v=20261101-v2sync2';
-import {createReviewUI} from './review-ui.mjs?v=20261101-v2sync2';
+import {createReviewUI} from './review-ui.mjs?v=20261101-version-buttons';
 import {comparisonQuestion} from './revision-v2.mjs?v=20261101-v2sync2';
 'use strict';
 const DATA=JSON.parse(document.getElementById('application-data').textContent);
@@ -14,6 +14,7 @@ const validStatuses=['review','editing','ready'];
 let cloud=null,reviewUI=null,feedbackRecord=null,submitting=false;
 let saveFailed=false,toastTimer,confirmCallback=null;
 let state=loadState(),reviewFilter='current';
+state.comparisonVersion='v2';state.comparisonMode='suggested';
 
 function blankState(){return {schema:1,source:DATA.source,question:1,paragraph:0,view:'answer',comparisonMode:'suggested',comparisonVersion:'v2',introDismissed:false,edits:Object.fromEntries([...byId].map(([id,p])=>[id,{text:p.original,note:'',status:'review'}])),reviews:{},annotations:{},versions:{},submissionNote:'',updatedAt:null};}
 function validateState(value){
@@ -57,8 +58,8 @@ function updateNavigation(){
  $('#review-count').textContent=`${Object.values(state.reviews).filter(r=>r.choice).length}/34`;
 }
 function render(){
- const q=currentQuestion();updateNavigation();$('#comparison-version').value=state.comparisonVersion;$('#comparison-version-label').hidden=state.comparisonMode==='draft';$('#question-kicker').textContent=`QUESTION 0${q.q} / 05`;$('#question-title').textContent=q.title;$('#question-prompt').textContent=q.prompt;$('#work-note').hidden=state.introDismissed;
- document.querySelectorAll('[data-comparison-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.comparisonMode===state.comparisonMode)));
+ const q=currentQuestion();updateNavigation();$('#question-kicker').textContent=`QUESTION 0${q.q} / 05`;$('#question-title').textContent=q.title;$('#question-prompt').textContent=q.prompt;$('#work-note').hidden=state.introDismissed;
+ document.querySelectorAll('[data-comparison-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.comparisonMode===state.comparisonMode&&(!b.dataset.comparisonVersion||b.dataset.comparisonVersion===state.comparisonVersion))));
  $('#paragraph-nav').innerHTML=`<span class="whole-answer-label">${state.comparisonMode==='draft'?'ONE QUESTION · YOUR COMPLETE DRAFT':'ONE QUESTION · ALIGNED PARAGRAPHS'}</span><span class="paragraph-count" id="question-word-count">${questionWordLabel()}</span>`;
  $('#editor-area').innerHTML=reviewUI.renderAnswer();document.querySelectorAll('.edit-input').forEach(resize);$('#context-section').innerHTML=reviewUI.renderNotes();updateBottom();reviewUI.afterRender();
 }
@@ -69,7 +70,7 @@ function navigate(q){reviewUI.stop();state.question=q;state.paragraph=0;state.vi
 function move(delta){const next=state.question+delta;if(next>=1&&next<=5)navigate(next);}
 function openModal(kicker,title,html){$('#modal-kicker').textContent=kicker;$('#modal-title').textContent=title;$('#modal-content').innerHTML=html;if(!$('#modal').open)$('#modal').showModal();}
 function confirmDialog(title,description,fn,button='Continue'){confirmCallback=fn;openModal('CHECK BEFORE REPLACING',title,`<p class="modal-lead">${esc(description)}</p><div class="confirm-actions"><button class="button secondary" data-action="close-modal">Cancel</button><button class="button primary" data-action="confirm">${esc(button)}</button></div>`);}
-function help(){openModal('YOUR FAMILY EDITING DESK','Read, select, revise',`<ol class="steps"><li><strong>Read one complete question.</strong> The counselor’s original is on the left, the highlighted ChatGPT version is in the middle, and my comments are on the right. Choose Version 1 or Version 2 above the answer. You can annotate both. Open My working draft when you want to edit your own wording.</li><li><strong>Box the area you want changed.</strong> Choose Annotate, drag across an area of either answer, then add your note. On a keyboard, select words in your answer and choose Add a note.</li><li><strong>Keep your versions.</strong> Open Versions and choose Save my version before a new round of edits. You can read or restore any saved copy; restoring also keeps your current draft.</li><li><strong>Submit feedback.</strong> Your five answers, selections, notes, earlier paragraph comments, and review decisions are sent for revision. Keep editing while you wait.</li></ol><div class="help-callout">Wait for <strong>Saved online</strong> before switching devices. Selections retain their original text reference if the wording or layout changes.</div>`);}
+function help(){openModal('YOUR FAMILY EDITING DESK','Read, select, revise',`<ol class="steps"><li><strong>Read one complete question.</strong> The counselor’s original is on the left, the highlighted ChatGPT version is in the middle, and my comments are on the right. Use the Version 2 and Version 1 buttons above the answer. You can annotate both. Open My working draft when you want to edit your own wording.</li><li><strong>Box the area you want changed.</strong> Choose Annotate, drag across an area of either answer, then add your note. On a keyboard, select words in your answer and choose Add a note.</li><li><strong>Keep your versions.</strong> Open Versions and choose Save my version before a new round of edits. You can read or restore any saved copy; restoring also keeps your current draft.</li><li><strong>Submit feedback.</strong> Your five answers, selections, notes, earlier paragraph comments, and review decisions are sent for revision. Keep editing while you wait.</li></ol><div class="help-callout">Wait for <strong>Saved online</strong> before switching devices. Selections retain their original text reference if the wording or layout changes.</div>`);}
 function showExport(){openModal('SAVE, SHARE, OR PRINT','Take your work with you',`<p class="modal-lead">Download your draft for the counselor, keep a working backup, or print a copy to review together.</p><div class="export-grid"><button class="export-tile" data-action="download-text"><strong>↓ Revised answers (.txt)</strong><span>All five answers in order, with your current wording. Ready to copy into the application.</span></button><button class="export-tile" data-action="backup"><strong>↓ Working copy (.json)</strong><span>All answers, selections, notes, saved versions, and review decisions. Import to continue on another device.</span></button><button class="export-tile" data-action="print-clean"><strong>↗ Print revised answers</strong><span>A clean copy of all five answers. Choose Save as PDF in your browser to make a PDF.</span></button><button class="export-tile" data-action="print-comparison"><strong>↗ Print side-by-side</strong><span>Print the complete answers shown in your current comparison view.</span></button></div><div class="export-divider"><div class="export-bottom"><div><strong style="font-size:12px">Continue from a working copy</strong><p class="small-note">Import replaces this browser's draft after confirmation.<br>Download a backup first if you want to keep both versions.</p></div><button class="button secondary" data-action="import">Import working copy ↗</button></div></div><p class="small-note">Your draft saves online. Download a working copy whenever you want an extra backup.</p>`);}
 function download(content,name,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),15000);toast('Download prepared.');}
 function dateStamp(){return new Date().toISOString().slice(0,10);}
@@ -96,11 +97,11 @@ document.addEventListener('input',event=>{
   if(el.matches('[data-note]')){state.edits[el.dataset.note].note=el.value;save();}
   if(el.matches('[data-review-note]')){const id=el.dataset.reviewNote;state.reviews[id]={...(state.reviews[id]||{choice:''}),note:el.value};save();}
 });
-document.addEventListener('change',event=>{const el=event.target;if(el.id==='comparison-version'){reviewUI.stop();state.comparisonVersion=el.value==='v1'?'v1':'v2';save();render();return;}if(el.matches('[data-question-status]')){currentQuestion().paragraphs.forEach(p=>state.edits[p.id].status=el.value);save();updateNavigation();}if(el.matches('[data-status]')){state.edits[el.dataset.status].status=el.value;save();render();}});
+document.addEventListener('change',event=>{const el=event.target;if(el.matches('[data-question-status]')){currentQuestion().paragraphs.forEach(p=>state.edits[p.id].status=el.value);save();updateNavigation();}if(el.matches('[data-status]')){state.edits[el.dataset.status].status=el.value;save();render();}});
 document.addEventListener('click',event=>{
   const el=event.target.closest('button,a.brand');if(!el)return;
   if(el.matches('a.brand')){event.preventDefault();navigate(1);return;}
-  if(el.dataset.comparisonMode){reviewUI.stop();state.comparisonMode=el.dataset.comparisonMode;save();render();return;}
+  if(el.dataset.comparisonMode){reviewUI.stop();state.comparisonMode=el.dataset.comparisonMode;if(el.dataset.comparisonVersion)state.comparisonVersion=el.dataset.comparisonVersion;save();render();return;}
   if(el.dataset.question){const q=DATA.questions.find(q=>q.q===Number(el.dataset.question));navigate(q.q);return;}
   if(el.dataset.reviewFilter){showChecklist(el.dataset.reviewFilter);return;}
   if(el.dataset.review){const id=el.dataset.review;state.reviews[id]={...(state.reviews[id]||{note:''}),choice:el.dataset.choice};save();updateNavigation();const group=el.closest('.review-choices');group.querySelectorAll('button').forEach(b=>{const selected=b.dataset.choice===el.dataset.choice;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',selected);});return;}

@@ -1,6 +1,6 @@
 # Marco's application review
 
-Version 2 is the default comparison. Each row keeps the counselor's exact original on the left, ChatGPT's highlighted Version 2 in the middle, and paragraph-specific comments and feedback on the right. The revision selector also opens the exact earlier Version 1. Both remain read-only and annotatable. The separate family working draft, online fields, source identifier, and saved histories are retained.
+Version 2 is the default comparison. Each row keeps the counselor's exact original on the left, ChatGPT's highlighted Version 2 in the middle, and paragraph-specific comments and feedback on the right. The page opens in Version 2, with a visible Version 1 button beside it to open the exact earlier suggestion. Both remain read-only and annotatable. The separate family working draft, online fields, source identifier, and saved histories are retained.
 
 `revision-v2.mjs` applies the family's 20 saved annotations reviewed on November 1, 2026. It preserves approved passages, restores the counselor's colleagues paragraph at the family's request, adds the only-private-middle-school and formative-years conclusion, identifies Marco's mother in the volunteering answer, uses “occasionally” in the strengths opening, and adds the first-grade taekwondo memory. Its feedback explains each choice and retains unresolved factual questions. `data.json` and its embedded copy in `index.html` remain unchanged; they preserve all counselor originals and Version 1 suggestions.
 

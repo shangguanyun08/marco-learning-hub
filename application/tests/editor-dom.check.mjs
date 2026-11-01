@@ -187,9 +187,9 @@ test('paragraph notes stay on their pair and old rectangles keep their text refe
 
 test('version 2 follows family notes, preserves version 1 and family wording, and copies the selected answer',async()=>{
  const e=await editor(undefined,{draft:false});try{
-  const selectVersion=value=>{const el=e.$('#comparison-version');el.value=value;el.dispatchEvent(new e.w.Event('change',{bubbles:true}));};
+  const selectVersion=value=>e.click(`[data-comparison-version="${value}"]`);
   const middle=id=>e.$(`[data-comparison-paragraph="${id}"] [data-annotation-target="suggested"]`).textContent;
-  assert.equal(e.$('#comparison-version').value,'v2');e.click('[data-question="2"]');
+  assert.equal(e.$('[data-comparison-version="v2"]').getAttribute('aria-pressed'),'true');e.click('[data-question="2"]');
   assert.equal(middle('q2-p2'),data.questions[1].paragraphs[1].original);
   assert.match(middle('q2-p5'),/only private middle school we are applying to/);
   assert.match(e.$('[data-comparison-paragraph="q2-p2"] .comparison-reason').textContent,/necessary to name every colleague/);
@@ -208,11 +208,11 @@ test('version 2 follows family notes, preserves version 1 and family wording, an
 
 test('notes remember their suggestion version and comparison printing includes highlights and feedback',async()=>{
  const e=await editor(undefined,{draft:false});try{
-  const selectVersion=value=>{const el=e.$('#comparison-version');el.value=value;el.dispatchEvent(new e.w.Event('change',{bubbles:true}));};
+  const selectVersion=value=>e.click(`[data-comparison-version="${value}"]`);
   e.click('[data-question="4"]');e.click('[data-comparison-paragraph="q4-p2"] [data-action="note-suggested"]');
   e.input('#annotation-note','Keep this new first-grade memory.');e.click('[data-action="save-annotation"]');
   const note=Object.values(e.saved().annotations).filter(Boolean).at(-1);assert.equal(note.suggestionVersion,'v2');assert.match(note.reference,/first grade/);
-  selectVersion('v1');e.click(`[data-annotation-open="${note.id}"]`);assert.equal(e.$('#comparison-version').value,'v2');assert.equal(e.$('.reference-changed'),null);e.click('[data-action="close-modal"]');
+  selectVersion('v1');e.click(`[data-annotation-open="${note.id}"]`);assert.equal(e.$('[data-comparison-version="v2"]').getAttribute('aria-pressed'),'true');assert.equal(e.$('.reference-changed'),null);e.click('[data-action="close-modal"]');
   let printed=0;e.w.print=()=>printed++;e.click('[data-action="export"]');e.click('[data-action="print-comparison"]');
   assert.equal(printed,1);assert.equal(e.w.document.querySelectorAll('#print-root .comparison-row').length,25);
   assert.equal(e.w.document.querySelectorAll('#print-root .comparison-reason').length,25);assert.ok(e.$('#print-root .suggested-change'));
