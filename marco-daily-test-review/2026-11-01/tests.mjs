@@ -22,8 +22,25 @@ test('four exact original misses and 4 x 4 mixed practice, with isolated state',
  for(const k of Object.keys(D.skills))assert.equal(D.ids.filter(id=>D.questions[id].skill===k).length,4);
  for(let i=0;i<16;i+=4)assert.equal(new Set(D.ids.slice(i,i+4).map(id=>D.questions[id].skill)).size,4);
  for(const q of Object.values(D.questions)){assert.equal(q.choices.length,4);assert.equal(new Set(q.choices).size,4);assert(q.tip&&q.explanation&&q.focus);}
- const counts=[0,0,0,0];for(const q of Object.values(D.questions))counts[q.correct]++;assert.deepEqual(counts,[4,4,4,4]);
+ const counts=[0,0,0,0];for(const id of D.ids)counts[D.questions[id].correct]++;assert.deepEqual(counts,[4,4,4,4]);
  assert.equal(D.appId,'marco-ma-nov01-test4-v1');assert(E.valid(E.empty()));assert.equal(E.stats(E.empty()).answered,0);
+});
+
+test('Mock 0 example preserves the original tables and the fresh spinner question counts factors',()=>{
+ const{D}=setup(),q=D.reviewExamples[0];assert.equal(q.number,32);assert.match(q.source,/Mock 0.*116/);assert.equal(q.correct,0);
+ const expected=[];['Red','Blue','Yellow'].forEach((color,i)=>[1,2,3,4,5,6].forEach((n,j)=>{if(color==='Red'&&6%n===0)expected.push([i,j]);}));
+ assert.deepEqual(plain(q.choiceTables[q.correct].shaded),expected);assert.deepEqual(plain(q.choiceTables.map(g=>g.shaded.length)),[4,12,9,3]);
+ assert.equal(q.choiceTables.filter(g=>JSON.stringify(plain(g.shaded))===JSON.stringify(expected)).length,1);
+ const fresh=D.questions.p2;assert.equal(D.ids[7],fresh.id);assert.match(fresh.prompt,/BLUE AND.*FACTOR OF 8/);
+ const winning=[];fresh.choiceTables[0].rows.forEach((color,i)=>fresh.choiceTables[0].columns.forEach((n,j)=>{if(color==='Blue'&&8%n===0)winning.push([i,j]);}));
+ assert.deepEqual(winning,[[1,0],[1,1],[1,3]]);assert.deepEqual(plain(fresh.choiceTables[fresh.correct].shaded),winning);
+});
+
+test('the 16 item IDs still match the activity service completion contract',()=>{
+ const{D,E}=setup(),s=E.empty(),trackedIds=['r1','p1','c1','u1','c2','r2','u2','p2','u3','c3','p3','r3','p4','u4','r4','c4'];
+ assert.deepEqual(plain(D.ids),trackedIds);
+ for(const id of trackedIds)assert(E.submit(s,id,D.questions[id].correct));
+ assert(E.valid(s));assert(E.firstPass(s));assert.equal(E.stats(s).first,16);
 });
 test('independent arithmetic checks of rates, cumulative totals, and units',()=>{
  const{D}=setup();for(const q of Object.values(D.questions)){const a=q.audit;let expected;
@@ -71,7 +88,11 @@ test('DOM: hidden review, 16 forms, four-question dividers, two tries and final 
  const dom=new JSDOM(read('./index.html'),{url:'https://shangguanyun08.github.io/marco-learning-hub/marco-daily-test-review/2026-11-01/?demo=1',runScripts:'outside-only'}),w=dom.window;
  w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.fetch=()=>{throw Error('Preview must not use live sync');};
  for(const s of[data,engine,syncCode,app])w.eval(s);
- const doc=w.document;assert.equal(doc.querySelectorAll('.question').length,4);assert.equal(doc.querySelectorAll('.solution').length,0);assert.equal(doc.querySelectorAll('.outcome-grid').length,4);
+ const doc=w.document;assert.equal(doc.querySelectorAll('.question').length,5);assert.equal(doc.querySelectorAll('.solution').length,0);assert.equal(doc.querySelectorAll('.outcome-grid').length,8);
+ const example=doc.querySelector('#mock0-32');assert(example);assert.match(example.textContent,/18 possible results/);assert.match(doc.querySelector('#original-42 .outcome-guide').textContent,/20 possible results/);assert.match(example.textContent,/It does not mean someone already tried/);
+ assert.equal(example.querySelector('[data-kind="his"]'),null);assert.equal(example.querySelectorAll('.solution').length,0);
+ example.querySelector('[data-kind="answer"]').click();assert.match(doc.querySelector('#answer-32').textContent,/Red 1, Red 2, Red 3, and Red 6/);assert.match(doc.querySelector('#answer-32').textContent,/4\/18 = 2\/9/);
+ doc.querySelector('#mock0-32 [data-kind="answer"]').click();assert.equal(doc.querySelectorAll('.solution').length,0);
  doc.querySelector('[data-review="41"][data-kind="his"]').click();assert.match(doc.querySelector('#his-41').textContent,/0.14/);assert.equal(doc.querySelectorAll('.solution').length,0);
  doc.querySelector('[data-review="41"][data-kind="answer"]').click();assert.match(doc.querySelector('#answer-41').textContent,/0.20/);assert.equal(doc.querySelectorAll('.trick mark').length,2);
  doc.querySelector('#sessions a[href*="session=1"]').click();assert.equal(doc.querySelectorAll('form[data-question]').length,16);assert.equal(doc.querySelectorAll('textarea').length,0);assert.equal(doc.querySelectorAll('.question-group-divider').length,3);assert.equal(doc.querySelectorAll('.jump-divider').length,3);assert.equal(doc.querySelectorAll('.outcome-grid').length,16);assert.equal(doc.querySelector('#skill-results'),null);

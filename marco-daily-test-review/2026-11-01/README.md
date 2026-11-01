@@ -11,6 +11,12 @@ grids in accessible HTML. Original masks: A = row 2 OR Blue column; B = only
 The data table for Q44 retains both readers' original cumulative totals.
 His choice and the correct answer/trick have separate dark-blue reveal buttons.
 
+The earlier Mock 0 MA Q32 (printed page 116; source PDF page 41) appears directly
+after Q42. Its original spinner/number-cube wording and all four shading masks are
+rebuilt in HTML. The correct answer and explanation start hidden. Reading guides
+explain that boxes are possible results, one try produces one result, and shading
+marks the results that match the rule rather than recording completed tries.
+
 Practice 1 has 16 authored questions: four per missed pattern, mixed in four groups
 of four. No topic labels before the first pass is finished. Rate questions vary
 remaining/whole time and minutes/hours/percent wording. All four probability
@@ -18,6 +24,11 @@ questions use four shaded tables; AND, OR, NOT, and numerical restrictions vary.
 All four running-total questions include real HTML data tables. Volume questions
 keep rectangular solids, changing the number of mixed units, requested unit, and
 whether volume or a missing dimension is requested.
+
+Mixed question 8 (`p2`) is now a fresh spinner/number-cube question about blue AND
+a factor of 8. The practice remains 16 questions, four per skill. The live course
+had no saved answers when this item was replaced. All 16 item IDs, course/session
+IDs, and the other 15 items remain compatible with the activity completion service.
 
 Untimed, no required written setup, instant feedback, second chance after a first
 miss, answer/trick available only after correct first answer or second attempt.

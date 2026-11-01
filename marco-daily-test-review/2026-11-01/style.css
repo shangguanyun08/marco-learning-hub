@@ -17,6 +17,10 @@
 .mock-source{font-size:14px;color:var(--muted)}
 .trick mark{font-weight:750;background:#ffe589;color:#173957;padding:1px 4px}
 .review-record{margin-top:18px;font-size:14px;color:var(--muted)}
+.outcome-guide{margin:20px 0;padding:16px 18px;border-left:4px solid #426d8b;border-radius:8px;background:#edf4f9}
+.outcome-guide h4{margin:0 0 9px;font-size:17px;color:var(--ink)}
+.outcome-guide p{margin:8px 0;font-size:16px;line-height:1.6}
+.jump .example-jump{width:auto;min-width:120px;padding:0 12px;white-space:nowrap}
 .report-question-list{font-size:15px;columns:2;column-gap:25px}
 .report-question-list li{break-inside:avoid;padding:4px 0}
 .choice.wrong{background:#ffe6e3;border-color:#bf7970}
