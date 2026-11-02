@@ -30,6 +30,6 @@ npm test --prefix application/tests
 
 ## Counselor copy
 
-The visible Counselor copy link opens `counselor.html`: all five Version 2 answers in one continuous document, word-level highlights against the counselor original, exactly 5 main changes, and an optional message to copy. Rich clipboard copy provides HTML with inline yellow backgrounds and plain text. Printing omits navigation and the optional message, retains highlights, and starts the changes on a fresh page. The page is static and does not read or write any online draft.
+The visible Counselor copy link opens `counselor.html`: all five Version 2 answers in one continuous document, word-level highlights against the counselor original, exactly 5 main changes, and an optional message to copy. Rich clipboard copy provides HTML with inline yellow backgrounds and plain text. Printing omits navigation and the optional message, retains highlights, and places the five-change summary before the essays. The page is static and does not read or write any online draft.
 
 After changing Version 2 or the source essays, regenerate it with `node application/build-counselor-copy.mjs`.
