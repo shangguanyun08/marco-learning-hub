@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const articles=[...window.READING_ARTICLES.filter(a=>a.kind!=='parallel'),...window.READING_ARTICLES.filter(a=>a.kind==='parallel').sort((a,b)=>a.referenceLexile-b.referenceLexile)],core=window.ReadingCore,app=document.querySelector('#app');
+  const articles=[...window.READING_ARTICLES.filter(a=>a.kind!=='parallel'),...window.READING_ARTICLES.filter(a=>a.kind==='parallel').sort((a,b)=>(a.practiceOrder??a.referenceLexile)-(b.practiceOrder??b.referenceLexile))],core=window.ReadingCore,app=document.querySelector('#app');
   const activeArticles=articles.filter(a=>!a.retired),practiceArticles=activeArticles.filter(a=>a.kind==='parallel');
   const key='harry-reading-readtheory-2026-10-21-v1',demo=new URLSearchParams(location.search).has('demo');
   const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,7 +12,7 @@
   const currentQ=()=>article.questions[reviewMode?reviewIndex:run.position||0],attempts=q=>run.answers[q.id]||[];
   const draft=()=>run.drafts[currentQ().id],isResolved=()=>core.resolved(attempts(currentQ()));
   const completed=(a,r)=>core.finished(a,r)===a.questions.length;
-  const levelLabel=a=>a.lexile?`Lexile ${a.lexile}L`:`Reference Lexile ${a.referenceLexile}L`;
+  const levelLabel=a=>a.targetLexile?`Lexile ${a.targetLexile}L target`:a.lexile?`Lexile ${a.lexile}L`:`Reference Lexile ${a.referenceLexile}L`;
   const questionLabel=(a,q)=>`${a.sourceQuiz?'Original question':'Question'} ${q.number}`;
   const dateFormat=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
   function renderFinishedAt(a,r,tag='p'){
@@ -39,7 +39,7 @@
     article=null;run=null;pending=[];reviewMode=false;document.body.classList.remove('active-session');
     app.innerHTML=`<section class="intro"><p class="eyebrow">Read it again. Find the proof.</p><h1>Harry’s reading<br>practice</h1></section>
       <section class="cards" aria-label="Recent article redo sessions">${renderCards(activeArticles.filter(a=>a.kind!=='parallel'))}</section>
-      <section class="practice-group" aria-labelledby="lexile-heading"><div class="practice-group-head"><h2 id="lexile-heading">Reading by Lexile</h2><span>${practiceArticles.length} articles · ${practiceArticles.reduce((n,a)=>n+a.questions.length,0)} multiple-choice questions</span></div><p class="meta">The Lexile labels below belong to the ReadTheory reference samples. These are original parallel passages, and their own Lexile scores have not been measured.</p><div class="cards" aria-label="Reading sessions in reference Lexile order">${renderCards(practiceArticles)}</div></section>
+      <section class="practice-group" aria-labelledby="lexile-heading"><div class="practice-group-head"><h2 id="lexile-heading">Reading by Lexile</h2><span>${practiceArticles.length} articles · ${practiceArticles.reduce((n,a)=>n+a.questions.length,0)} multiple-choice questions</span></div><p class="meta">Sessions 15–20 use original passages written for a 600L target, with shorter sentences and familiar words. Their Lexile scores have not been measured. Earlier reference labels describe the ReadTheory samples, not a measured score for these practice passages.</p><div class="cards" aria-label="Reading sessions in session order">${renderCards(practiceArticles)}</div></section>
       <p class="home-note"><strong>Finished means every question has an answer.</strong> The first-try score shows how many original answers were correct; retries do not raise it. Second tries are not needed for the finished status. Choose an answer and highlight supporting text before checking. Only your answer is marked right or wrong; highlights are saved, not graded. Tap sentences or select words to highlight them. Wrong answers get one second try. After checking, use “Show answer and explanation” for a parent review.</p>
       <details class="history"><summary>Practice history & progress</summary><div class="history-list">${renderHistory()}</div><button class="secondary" id="export">Export progress</button><p class="meta">Records automatically upload and sync across devices. Open this page on the original device once to upload earlier work. Export a backup any time.</p></details>`;
     app.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openArticle(b.dataset.open));app.querySelector('#export').onclick=exportProgress;
@@ -226,3 +226,4 @@
     sync.sync();
   }
 })();
+
