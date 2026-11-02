@@ -2,7 +2,7 @@
  'use strict';
  const D=root.HarrySkillData,E=root.HarrySkillEngine,KEY=D.appId+':state',local=/^(localhost|127\.0\.0\.1)$/.test(location.hostname),demo=new URLSearchParams(location.search).has('demo');let sync=null,state=E.empty(),filter='all',onlyWrong=false;
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),math=x=>esc(x).replace(/\b(\d+)\/(\d+)\b/g,'<span class="fraction" aria-label="$1 over $2"><span>$1</span><span>$2</span></span>'),skillName=id=>D.skills.find(s=>s.id===id).name;
- const drafts=new Map();let storageOK=true;try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(E.valid(saved))state=saved;}catch{storageOK=false;}
+ const drafts=new Map();let storageOK=true;try{const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(E.valid(saved))state=E.merge(saved,E.empty());}catch{storageOK=false;}
  const RETRY_KEY=D.appId+':retry-practice-v1',revealed=new Set();let retryRecords={};
  try{const saved=JSON.parse(localStorage.getItem(RETRY_KEY)||'{}');if(saved&&typeof saved==='object'&&!Array.isArray(saved))for(const [id,record] of Object.entries(saved)){const q=E.question(id);if(q&&record&&typeof record.answerId==='string'&&Array.isArray(record.attempts)&&record.attempts.every(a=>a&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<q.choices.length&&typeof a.at==='string'&&Number.isFinite(Date.parse(a.at))))retryRecords[id]=record;}}catch{}
  function retries(q,a){return a&&!a.correct&&retryRecords[q.id]?.answerId===a.id?retryRecords[q.id].attempts:[];}

@@ -12,7 +12,7 @@
     }finally{root.clearTimeout(timeout);}}
     async function refresh(){if(stopped)return;if(busy){again=true;return;}busy=true;try{
       for(let i=0;i<3;i++){const d=await request(),record=d.progress,remote=record?.state||E.empty(),next=apply(remote);
-        if(equal(next,normalize(remote))){onStatus('live','Live online sync · Answers and method notes saved across your devices.');return;}
+        if(equal(next,remote)){onStatus('live','Live online sync · Answers and method notes saved across your devices.');return;}
         onStatus('saving','Saving online… Your answers are already saved on this device.');
         const saved=await request({appId:APP_ID,studentName:'Harry',deviceId:device,state:next,progressScore:Object.values(next.sessions).reduce((sum,r)=>sum+Object.keys(r.answers).length,0),baseVersion:record?.version??null,clientUpdatedAt:new Date().toISOString()});
         if(!saved.progress)throw new Error('Save unconfirmed');apply(saved.progress.state);if(saved.accepted&&equal(normalize(getState()),normalize(saved.progress.state))){onStatus('live','Live online sync · Answers and method notes saved across your devices.');return;}
