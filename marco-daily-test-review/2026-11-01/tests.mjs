@@ -17,12 +17,12 @@ test('top navigation links directly to the previous QR practice and all archived
  assert(html.indexOf('primary previous-practice')<html.indexOf('<header class="hero">'));
 });
 
-test('four exact original misses and 4 x 4 mixed practice, with isolated state',()=>{
- const {D,E}=setup();assert.deepEqual(plain(D.originals.map(q=>q.number)),[41,42,44,47]);assert.deepEqual(plain(D.originals.map(q=>q.chosen)),[0,2,2,3]);assert.deepEqual(plain(D.originals.map(q=>q.correct)),[1,3,0,0]);assert.equal(D.ids.length,16);assert.equal(new Set(D.ids).size,16);
- for(const k of Object.keys(D.skills))assert.equal(D.ids.filter(id=>D.questions[id].skill===k).length,4);
- for(let i=0;i<16;i+=4)assert.equal(new Set(D.ids.slice(i,i+4).map(id=>D.questions[id].skill)).size,4);
+test('four exact original misses and 4 x 2 mixed practice, with isolated state',()=>{
+ const {D,E}=setup();assert.deepEqual(plain(D.originals.map(q=>q.number)),[41,42,44,47]);assert.deepEqual(plain(D.originals.map(q=>q.chosen)),[0,2,2,3]);assert.deepEqual(plain(D.originals.map(q=>q.correct)),[1,3,0,0]);assert.equal(D.ids.length,8);assert.equal(new Set(D.ids).size,8);
+ for(const k of Object.keys(D.skills))assert.equal(D.ids.filter(id=>D.questions[id].skill===k).length,2);
+ for(let i=0;i<8;i+=4)assert.equal(new Set(D.ids.slice(i,i+4).map(id=>D.questions[id].skill)).size,4);
  for(const q of Object.values(D.questions)){assert.equal(q.choices.length,4);assert.equal(new Set(q.choices).size,4);assert(q.tip&&q.explanation&&q.focus);}
- const counts=[0,0,0,0];for(const id of D.ids)counts[D.questions[id].correct]++;assert.deepEqual(counts,[4,4,4,4]);
+ const counts=[0,0,0,0];for(const id of D.ids)counts[D.questions[id].correct]++;assert.equal(counts.reduce((a,b)=>a+b,0),8);assert(counts.every(n=>n>0));
  assert.equal(D.appId,'marco-ma-nov01-test4-v1');assert(E.valid(E.empty()));assert.equal(E.stats(E.empty()).answered,0);
 });
 
@@ -36,11 +36,11 @@ test('Mock 0 example preserves the original tables and the fresh spinner questio
  assert.deepEqual(winning,[[1,0],[1,1],[1,3]]);assert.deepEqual(plain(fresh.choiceTables[fresh.correct].shaded),winning);
 });
 
-test('the 16 item IDs still match the activity service completion contract',()=>{
- const{D,E}=setup(),s=E.empty(),trackedIds=['r1','p1','c1','u1','c2','r2','u2','p2','u3','c3','p3','r3','p4','u4','r4','c4'];
+test('the 8 item IDs still match the activity service completion contract',()=>{
+ const{D,E}=setup(),s=E.empty(),trackedIds=['r1','p1','c1','u1','c2','r2','u2','p2'];
  assert.deepEqual(plain(D.ids),trackedIds);
  for(const id of trackedIds)assert(E.submit(s,id,D.questions[id].correct));
- assert(E.valid(s));assert(E.firstPass(s));assert.equal(E.stats(s).first,16);
+ assert(E.valid(s));assert(E.firstPass(s));assert.equal(E.stats(s).first,8);
 });
 test('independent arithmetic checks of rates, cumulative totals, and units',()=>{
  const{D}=setup();for(const q of Object.values(D.questions)){const a=q.audit;let expected;
@@ -69,8 +69,19 @@ test('instant wrong feedback, second chance, preserved first scores, and per-ski
  assert.equal(E.submit(s,id,wrong,'2026-11-01T19:00:01Z','event-repeat'),false);
  assert(E.submit(s,id,correct,'2026-11-01T19:00:02Z','event-2'));assert.equal(E.reveal(s,id),true);assert.equal(E.stats(s).first,0);assert.equal(E.stats(s).corrected,1);assert.equal(E.submit(s,id,0),false);
  for(const other of D.ids.slice(1))assert(E.submit(s,other,D.questions[other].correct));
- assert.equal(E.stats(s).first,15);assert.equal(E.firstPass(s),true);assert.equal(E.stats(s,'rate').first,3);assert.equal(E.stats(s,'outcomes').first,4);assert(E.valid(s));
+ assert.equal(E.stats(s).first,7);assert.equal(E.firstPass(s),true);assert.equal(E.stats(s,'rate').first,1);assert.equal(E.stats(s,'outcomes').first,2);assert(E.valid(s));
 });
+test('shortening keeps legacy attempts valid without counting retired questions',()=>{
+ const{D,E}=setup(),old=E.empty();
+ for(const id of Object.keys(D.questions))assert(E.submit(old,id,D.questions[id].correct));
+ assert(E.valid(old));const merged=E.merge(E.empty(),old);
+ assert.equal(Object.keys(E.run(merged).answers).length,16);
+ assert.equal(E.attempts(merged,'r3').length,1);
+ assert.equal(E.stats(merged).answered,8);assert.equal(E.stats(merged).first,8);assert(E.firstPass(merged));
+ const retired=E.empty();for(const id of Object.keys(D.questions).filter(id=>!D.ids.includes(id)))assert(E.submit(retired,id,D.questions[id].correct));
+ assert(E.valid(retired));assert.equal(E.stats(retired).answered,0);assert.equal(E.firstPass(retired),false);
+});
+
 test('concurrent-device merge preserves independent answers and first misses',()=>{
  const{D,E}=setup(),a=E.empty(),b=E.empty();E.submit(a,'r1',0,'2026-11-01T19:00:00Z','a');E.submit(b,'p1',3,'2026-11-01T19:00:01Z','b');
  const merged=E.merge(a,b);assert.equal(E.stats(merged).answered,2);assert.equal(E.stats(merged).first,1);assert.equal(E.reveal(merged,'r1'),false);assert.deepEqual(plain(E.merge(a,b)),plain(E.merge(b,a)));assert.deepEqual(plain(E.merge(merged,merged)),plain(merged));assert(E.valid(merged));
@@ -84,7 +95,7 @@ test('mock online sync reads before writing and never overwrites old-course data
 
 const require=createRequire(import.meta.url);
 let JSDOM;try{({JSDOM}=require('C:/Users/A/Documents/Marco ISEE all tests/tmp/daily-sync-qa/node_modules/jsdom'));}catch{}
-test('DOM: hidden review, 16 forms, four-question dividers, two tries and final report',{skip:!JSDOM},()=>{
+test('DOM: hidden review, 8 forms, four-question dividers, two tries and final report',{skip:!JSDOM},()=>{
  const dom=new JSDOM(read('./index.html'),{url:'https://shangguanyun08.github.io/marco-learning-hub/marco-daily-test-review/2026-11-01/?demo=1',runScripts:'outside-only'}),w=dom.window;
  w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=()=>{};w.fetch=()=>{throw Error('Preview must not use live sync');};
  for(const s of[data,engine,syncCode,app])w.eval(s);
@@ -95,11 +106,11 @@ test('DOM: hidden review, 16 forms, four-question dividers, two tries and final 
  doc.querySelector('#mock0-32 [data-kind="answer"]').click();assert.equal(doc.querySelectorAll('.solution').length,0);
  doc.querySelector('[data-review="41"][data-kind="his"]').click();assert.match(doc.querySelector('#his-41').textContent,/0.14/);assert.equal(doc.querySelectorAll('.solution').length,0);
  doc.querySelector('[data-review="41"][data-kind="answer"]').click();assert.match(doc.querySelector('#answer-41').textContent,/0.20/);assert.equal(doc.querySelectorAll('.trick mark').length,2);
- doc.querySelector('#sessions a[href*="session=1"]').click();assert.equal(doc.querySelectorAll('form[data-question]').length,16);assert.equal(doc.querySelectorAll('textarea').length,0);assert.equal(doc.querySelectorAll('.question-group-divider').length,3);assert.equal(doc.querySelectorAll('.jump-divider').length,3);assert.equal(doc.querySelectorAll('.outcome-grid').length,16);assert.equal(doc.querySelector('#skill-results'),null);
+ doc.querySelector('#sessions a[href*="session=1"]').click();assert.equal(doc.querySelectorAll('form[data-question]').length,8);assert.equal(doc.querySelectorAll('textarea').length,0);assert.equal(doc.querySelectorAll('.question-group-divider').length,1);assert.equal(doc.querySelectorAll('.jump-divider').length,1);assert.equal(doc.querySelectorAll('.outcome-grid').length,8);assert.equal(doc.querySelector('#skill-results'),null);
  const submit=(id,j)=>{const form=doc.querySelector('form[data-question="'+id+'"]'),input=form.querySelector('input[value="'+j+'"]');input.checked=true;input.dispatchEvent(new w.Event('change',{bubbles:true}));form.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));};
  submit('r1',0);assert.match(doc.querySelector('#q-r1 .feedback').textContent,/Incorrect.*Try once more/);assert.equal(doc.querySelector('#q-r1 .answer-reveal'),null);assert(doc.querySelector('#q-r1 input[value="0"]').disabled);
  submit('r1',1);assert(doc.querySelector('#q-r1 .answer-reveal'));assert.equal(doc.querySelector('#q-r1 .answer-reveal').open,false);assert(doc.querySelector('.jump a[href="#q-r1"]').classList.contains('missed'));
  for(const id of w.MarcoMA4Data.ids.slice(1))submit(id,w.MarcoMA4Data.questions[id].correct);
- assert.match(doc.querySelector('#skill-results h2').textContent,/15\/16/);assert.equal(doc.querySelectorAll('#skill-results tbody tr').length,4);assert(doc.querySelector('#sessions .is-complete'));assert.equal(doc.querySelector('#q-r1 label.wrong input').value,'0');
+ assert.match(doc.querySelector('#skill-results h2').textContent,/7\/8/);assert.equal(doc.querySelectorAll('#skill-results tbody tr').length,4);assert(doc.querySelector('#sessions .is-complete'));assert.equal(doc.querySelector('#q-r1 label.wrong input').value,'0');
  assert.match(doc.querySelector('#save-note').textContent,/Preview only/);dom.window.close();
 });

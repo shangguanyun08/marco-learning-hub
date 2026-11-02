@@ -17,25 +17,25 @@ rebuilt in HTML. The correct answer and explanation start hidden. Reading guides
 explain that boxes are possible results, one try produces one result, and shading
 marks the results that match the rule rather than recording completed tries.
 
-Practice 1 has 16 authored questions: four per missed pattern, mixed in four groups
-of four. No topic labels before the first pass is finished. Rate questions vary
-remaining/whole time and minutes/hours/percent wording. All four probability
-questions use four shaded tables; AND, OR, NOT, and numerical restrictions vary.
-All four running-total questions include real HTML data tables. Volume questions
-keep rectangular solids, changing the number of mixed units, requested unit, and
-whether volume or a missing dimension is requested.
+Practice 1 now has 8 active authored questions: two per missed pattern, mixed in
+two groups of four. Active IDs: r1, p1, c1, u1, c2, r2, u2, p2. Each group includes
+one question from each pattern. Rate questions ask remaining hours and minutes.
+Both probability questions use four shaded tables, including the fresh
+spinner/number-cube question about blue AND a factor of 8. Both running-total
+questions retain HTML data tables. The two volume questions use one and two
+inch-to-foot conversions respectively.
 
-Mixed question 8 (`p2`) is now a fresh spinner/number-cube question about blue AND
-a factor of 8. The practice remains 16 questions, four per skill. The live course
-had no saved answers when this item was replaced. All 16 item IDs, course/session
-IDs, and the other 15 items remain compatible with the activity completion service.
+The four original misses and earlier Mock 0 Q32 review remain unchanged.
+The other eight question definitions and the original course/session IDs are
+retained so existing saved attempts and downloads remain valid. Only the eight
+active IDs count toward scores and completion, including activity tracking.
 
 Untimed, no required written setup, instant feedback, second chance after a first
 miss, answer/trick available only after correct first answer or second attempt.
 First-try misses remain red in numbering and choices, even after correction.
-The first-pass completion card is light green. Report appears after all 16 first
+The first-pass completion card is light green. Report appears after all 8 first
 answers, with four per-pattern scores and links to missed variants. Completion
-and 4/4 are not described as permanent mastery.
+and 2/2 are not described as permanent mastery.
 
 The October 23 engine and sync client are reused without changing their files.
 Separate app ID `marco-ma-nov01-test4-v1`, session `mixed-16-ma-test4-v1`.

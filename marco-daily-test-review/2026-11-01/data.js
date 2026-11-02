@@ -56,7 +56,9 @@
  add('u3','units','A rectangular storage crate has a volume of 12 cubic feet. It is 4 feet long and 2 feet wide. How many INCHES deep is the crate?',['1.5 inches','12 inches','18 inches','72 inches'],2,'Find the missing depth in feet, then convert it to the unit requested.','Depth = 12 ÷ (4 × 2) = 1.5 feet. Since 1 foot = 12 inches, the depth is 1.5 × 12 = 18 inches. The value 1.5 has the wrong unit for the answer.','Same rectangular volume relationship; asks a missing length in inches',{kind:'depth',volumeFt3:12,lengthFt:4,widthFt:2,target:'in',value:18});
  add('u4','units','A rectangular foam block is 36 inches long, 2 feet wide, and 9 inches deep. What is its volume in CUBIC INCHES?',['648 in³','1,944 in³','2,592 in³','7,776 in³'],3,'The requested volume is in cubic inches, so convert the feet to inches.','2 feet = 24 inches. Volume = 36 × 24 × 9 = 7,776 in³. Multiplying 36 × 2 × 9 uses mixed units and gives the tempting 648.','Original mixed-unit form; answer requested in cubic inches',{kind:'volume',dimensions:[[36,'in'],[2,'ft'],[9,'in']],target:'in',value:7776});
 
- const ids=['r1','p1','c1','u1','c2','r2','u2','p2','u3','c3','p3','r3','p4','u4','r4','c4'];
+ // Keep all original question definitions and the session key for saved-answer compatibility.
+ // Only these eight questions count toward the shortened practice and its report.
+ const ids=['r1','p1','c1','u1','c2','r2','u2','p2'];
  const data={appId:'marco-ma-nov01-test4-v1',session:'mixed-16-ma-test4-v1',title:'11/01/2026 MA Practice Test 4',skills,questions,ids,originals,reviewExamples,groupSize:4};
  root.MarcoMA4Data=data;
  // Reuse the October 23 engine and sync protocol with a separate data namespace.
