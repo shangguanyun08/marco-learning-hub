@@ -10,11 +10,11 @@ const script=await readFile(new URL('counselor.js',base),'utf8');
 const data=JSON.parse(await readFile(new URL('data.json',base),'utf8'));
 const settle=async()=>{for(let i=0;i<4;i++)await new Promise(r=>setImmediate(r));};
 
-test('counselor copy contains the exact five Version 2 answers and 15 main changes',()=>{
+test('counselor copy contains the exact five Version 2 answers and 5 main changes',()=>{
  const dom=new JSDOM(html);try{
   const d=dom.window.document;
   assert.equal(d.querySelectorAll('.answer').length,5);
-  assert.equal(d.querySelectorAll('#main-changes li').length,15);
+  assert.equal(d.querySelectorAll('#main-changes li').length,5);
   for(const q of data.questions)for(const p of comparisonQuestion(q).paragraphs){
    assert.equal([...d.querySelectorAll(`[data-essay-paragraph="${p.id}"]`)].map(el=>el.textContent).join('\n\n'),p.suggested);
   }
@@ -36,9 +36,9 @@ test('rich copy includes highlight HTML and all answers while plain copy and pri
   d.querySelector('#copy-all').click();await settle();
   const copied=await rich[0].items['text/html'].text();
   assert.match(copied,/background-color:#fff0a3/);
-  assert.match(copied,/15 main changes/);assert.match(copied,/Question 5/);
+  assert.match(copied,/5 main changes/);assert.match(copied,/Question 5/);
   assert.doesNotMatch(copied,/Copy all with highlights|Copy message|Thank you for your earlier draft/);
-  d.querySelector('#copy-plain').click();await settle();assert.match(plain,/Question 5/);assert.match(plain,/15 main changes/);
+  d.querySelector('#copy-plain').click();await settle();assert.match(plain,/Question 5/);assert.match(plain,/5 main changes/);
   d.querySelector('#copy-message').click();await settle();assert.match(plain,/Thank you for your earlier draft/);
   d.querySelector('#print-copy').click();assert.equal(prints,1);
   w.navigator.clipboard.write=async()=>{throw new Error('HTML clipboard unavailable');};

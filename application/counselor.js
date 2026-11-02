@@ -12,9 +12,9 @@ document.querySelector('#copy-all').addEventListener('click',async()=>{
   copy.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));
   const html=`<div style="font-family:Georgia,serif;color:#000;line-height:1.6">${copy.innerHTML}</div>`;
   await navigator.clipboard.write([new ClipboardItem({'text/html':new Blob([html],{type:'text/html'}),'text/plain':new Blob([text],{type:'text/plain'})})]);
-  announce('Copied all five answers and the 15 changes with highlights. Paste using Keep Source Formatting if your email or Word asks.');
+  announce('Copied all five answers and the 5 changes with highlights. Paste using Keep Source Formatting if your email or Word asks.');
  }catch{await copyPlain(text,'Copied as plain text. Use Print / Save PDF to keep the yellow highlights.');}
 });
-document.querySelector('#copy-plain').addEventListener('click',()=>copyPlain(document.querySelector('#counselor-content').innerText,'Copied all five answers and the 15 changes as plain text.'));
+document.querySelector('#copy-plain').addEventListener('click',()=>copyPlain(document.querySelector('#counselor-content').innerText,'Copied all five answers and the 5 changes as plain text.'));
 document.querySelector('#copy-message').addEventListener('click',()=>copyPlain(document.querySelector('#counselor-message').innerText,'Copied the message for your counselor.'));
 document.querySelector('#print-copy').addEventListener('click',()=>window.print());
