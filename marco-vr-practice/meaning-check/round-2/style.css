@@ -30,3 +30,16 @@
 @media(max-width:1000px) and (min-width:701px){.review-card{grid-template-columns:22px minmax(205px,1.1fr) minmax(120px,.7fr) minmax(180px,1fr);gap:10px;padding:10px 14px}.review-card h3{font-size:14px}.example{font-size:16px}}
 @media(max-width:700px){.review-card{grid-template-columns:minmax(185px,1.2fr) minmax(85px,.8fr);gap:5px 8px;padding:10px}.review-number{display:none}.review-card h3{font-size:13px;letter-spacing:0}.review-card .word-heading{gap:4px}.review-meaning{font-size:14px}.review-card .example{grid-column:1/-1;font-size:16px;padding-left:22px}.review-card .word-mark{min-height:36px}.review-card .word-mark input{width:16px;height:16px}.review-card .pronounce{width:28px}}
 @media print{.review-card{grid-template-columns:20px 140px 120px 1fr;gap:10px;padding:8px 0;min-height:0}.review-number{display:block}.review-card h3{font-size:12px}.review-meaning,.example{font-size:11px}.review-card .example{grid-column:auto;padding-left:0}}
+
+/* Keep the word and its short meaning equally prominent. */
+@media screen{
+ .review-card h3,.review-card .review-meaning{font:800 16px/1.3 system-ui;color:var(--ink);letter-spacing:0}
+ .review-card .example{font:400 14px/1.45 system-ui;color:var(--muted)}
+ .review-card .example strong{font-weight:600;color:inherit}
+}
+@media screen and (max-width:1000px){
+ .review-card h3,.review-card .review-meaning{font-size:14px}
+}
+@media screen and (max-width:700px){
+ .review-card .example{font-size:12.5px}
+}
