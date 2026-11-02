@@ -13,6 +13,53 @@ function boot(saved,fetcher){
 function choose(t,index){const input=t.d.querySelector(`input[value="${index}"]`);input.click();}
 function check(t){t.d.querySelector('#answer-form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));}
 function highlight(t){t.d.querySelector('[data-sid="p0s0"]').click();}
+
+test('finished date appears on the card, collapsed history, and review without rewriting progress',()=>{
+  const first='2026-11-01T17:05:00Z',retry='2026-11-02T18:15:00Z';
+  const saved=JSON.stringify({version:1,articles:{carla:[{id:'finish-date',startedAt:'2026-11-01T16:55:00Z',completedAt:retry,answers:{
+    'carla-4':[{choice:0,checkedAt:'2026-11-01T17:00:00Z',answerOK:false,marks:[]},{choice:2,checkedAt:retry,answerOK:true,marks:[]}],
+    'carla-5':[{choice:0,checkedAt:first,answerOK:false,marks:[]}]
+  }}]}}),t=boot(saved);
+  try{
+    const card=t.d.querySelector('[data-open="carla"]').closest('.card'),date=card.querySelector('time');
+    assert.equal(date.dateTime,'2026-11-01T17:05:00.000Z');
+    assert.match(date.textContent,/Nov 1, 2026/);assert.match(date.textContent,/9:05 AM PST/);
+    assert.equal(card.querySelector('.first-try-percent').textContent,'0%');
+    assert.equal(t.d.querySelector('.history-record summary time').dateTime,date.dateTime);
+    assert.equal(t.saved(),saved);
+    t.d.querySelector('[data-open="carla"]').click();
+    assert.equal(t.d.querySelector('.workspace-head time').dateTime,date.dateTime);
+    t.d.querySelector('#back-home').click();
+    assert.deepEqual(JSON.parse(t.saved()).articles.carla[0].answers,JSON.parse(saved).articles.carla[0].answers);
+    assert.equal(JSON.parse(t.saved()).articles.carla[0].completedAt,retry);
+    const reload=boot(t.saved());try{assert.equal(reload.d.querySelector('.card time').dateTime,date.dateTime);}finally{reload.close();}
+  }finally{t.close();}
+});
+
+test('unfinished cards have no finish date; undated finished records do not invent one',()=>{
+  const saved=JSON.stringify({version:1,articles:{carla:[{id:'undated',answers:{
+    'carla-4':[{choice:2,checkedAt:'old',answerOK:true,marks:[]}],
+    'carla-5':[{choice:1,checkedAt:'old',answerOK:true,marks:[]}]
+  }}]}}),t=boot(saved);
+  try{
+    assert.equal(t.d.querySelector('[data-open="fruits"]').closest('.card').querySelector('.completion-time'),null);
+    const card=t.d.querySelector('[data-open="carla"]').closest('.card');
+    assert.match(card.querySelector('.completion-time').textContent,/time not recorded/);
+    assert.equal(card.querySelector('time'),null);assert.equal(t.saved(),saved);
+  }finally{t.close();}
+});
+
+test('checking the last first answer displays a finish date immediately and keeps it after a retry',()=>{
+  const t=boot();try{
+    t.d.querySelector('[data-open="carla"]').click();choose(t,2);highlight(t);check(t);t.d.querySelector('#next').click();
+    assert.equal(t.d.querySelector('.workspace-head time'),null);
+    choose(t,0);highlight(t);check(t);
+    const first=t.d.querySelector('.workspace-head time').dateTime;
+    assert.equal(first,t.w.ReadingCore.finishedAt(t.w.READING_ARTICLES[0],JSON.parse(t.saved()).articles.carla[0]));
+    choose(t,1);check(t);assert.equal(t.d.querySelector('.workspace-head time').dateTime,first);
+    t.d.querySelector('#back-home').click();assert.equal(t.d.querySelector('.card time').dateTime,first);
+  }finally{t.close();}
+});
 test('All articles is in the top bar and preserves an unfinished answer and highlight',()=>{
   const t=boot();assert.equal(t.d.querySelectorAll('#back-home').length,1);assert.ok(t.d.querySelector('.topbar #back-home'));
   assert.doesNotMatch(t.d.querySelector('.topbar').textContent,/HARRY’S READING/);

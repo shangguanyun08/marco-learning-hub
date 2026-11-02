@@ -108,3 +108,27 @@ test('first-pass answered count includes single wrong checks, but not drafts or 
   r.answers[a.questions[0].id]=[{choice:0,checkedAt:null}];assert.equal(core.answered(a,r),1);
   r.answers[a.questions[0].id]=[{choice:99,checkedAt:'first'}];assert.equal(core.answered(a,r),1);
 });
+
+test('finish time is the last original check, independent of scores and later retries',()=>{
+  const a=articles[0],r={completedAt:'2026-11-02T20:00:00Z',answers:{
+    'carla-4':[{choice:0,checkedAt:'2026-11-01T17:01:00Z',answerOK:false},{choice:2,checkedAt:'2026-11-02T20:00:00Z',answerOK:true}],
+    'carla-5':[{choice:0,checkedAt:'2026-11-01T17:05:00Z',answerOK:false}]
+  }};
+  const before=JSON.stringify(r);
+  assert.equal(core.answered(a,r),2);assert.equal(core.finished(a,r),1);
+  assert.equal(core.finishedAt(a,r),'2026-11-01T17:05:00.000Z');
+  assert.equal(JSON.stringify(r),before);
+  r.answers['carla-5'].push({choice:1,checkedAt:'2026-11-03T20:00:00Z',answerOK:true});
+  assert.equal(core.finishedAt(a,r),'2026-11-01T17:05:00.000Z');
+});
+
+test('finish time requires checked answers to every question and recoverable dates',()=>{
+  const a=articles[0],r={completedAt:'2026-11-02T20:00:00Z',answers:{}};
+  assert.equal(core.finishedAt(a,r),null);
+  r.answers['carla-4']=[{choice:2,checkedAt:'2026-11-01T17:05:00Z'}];
+  r.answers['carla-5']=[{choice:1,checkedAt:null}];assert.equal(core.finishedAt(a,r),null);
+  r.answers['carla-5']=[{choice:99,checkedAt:'2026-11-01T17:10:00Z'}];assert.equal(core.finishedAt(a,r),null);
+  r.answers['carla-5']=[{choice:1,checkedAt:'unknown'}];assert.equal(core.finishedAt(a,r),null);
+  r.answers['carla-5']=[{choice:1,checkedAt:'2026-11-01T17:00:00Z'}];
+  assert.equal(core.finishedAt(a,r),'2026-11-01T17:05:00.000Z');
+});

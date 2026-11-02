@@ -34,5 +34,9 @@
 .practice-group{margin-top:36px}
 .practice-group-head h2{font-size:28px}
 .practice-group>.meta{font-size:13px;line-height:1.55;margin-bottom:18px}
+.completion-time{display:block;color:var(--muted);font-size:12px;font-weight:600;line-height:1.5;font-variant-numeric:tabular-nums;margin:0 0 12px}
+.cards .card .completion-time{font-size:12px;margin:0 0 12px}
+.history-record summary .completion-time{margin:5px 0 0;font-weight:500}
+.workspace-head .completion-time{margin:5px 0 0}
 @media(min-width:640px) and (max-width:900px){.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:639px){.cards{grid-template-columns:1fr;gap:12px}.cards .card{padding:16px}.cards .card h2{font-size:21px}.practice-group-head h2{font-size:25px}}

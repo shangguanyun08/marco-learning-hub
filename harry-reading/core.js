@@ -21,6 +21,16 @@
   function finished(article,run){return article.questions.filter(q=>resolved(run?.answers[q.id])).length;}
   // First-pass completion is independent of accuracy and optional second tries.
   function answered(article,run){return article.questions.filter(q=>(run?.answers[q.id]||[]).some(a=>a.checkedAt&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<q.choices.length)).length;}
+  // Match the card's first-pass Finished status, including incorrect answers.
+  // Derive old finish times from original checks; retries/completedAt can be later.
+  function finishedAt(article,run){
+    if(!article.questions.length)return null;
+    const times=article.questions.map(q=>{
+      const first=(run?.answers[q.id]||[]).find(a=>a.checkedAt&&Number.isInteger(a.choice)&&a.choice>=0&&a.choice<q.choices.length);
+      return first?Date.parse(first.checkedAt):NaN;
+    });
+    return times.every(Number.isFinite)?new Date(Math.max(...times)).toISOString():null;
+  }
   function prepareRun(article,run){
     run.answers??={};run.drafts??={};
     for(const q of article.questions){
@@ -56,7 +66,7 @@
       total:article.questions.length
     };
   }
-  const api={sentences,quoteMarks,passed,resolved,finished,answered,prepareRun,recordCheck,scores};
+  const api={sentences,quoteMarks,passed,resolved,finished,answered,finishedAt,prepareRun,recordCheck,scores};
   if(typeof module!=='undefined')module.exports=api;
   else root.ReadingCore=api;
 })(typeof window==='undefined'?{}:window);
