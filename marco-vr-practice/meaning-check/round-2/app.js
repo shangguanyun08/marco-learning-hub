@@ -8,7 +8,7 @@
  function readPlace(){const hash=location.hash.match(/^#section-(\d+)$/);if(hash)return Number(hash[1]);try{return Number(localStorage.getItem(placeKey));}catch{return 1;}}
  const initial=readPlace();if(valid(initial))section=initial;
  $('list-summary').textContent=`${data.total} words · ${data.sections.length} sections · 50 words at a time (${data.sections.at(-1).count} in the last section).`;
- $('selection-note').textContent=`Selected after reviewing all ${data.sourceTotal} Round 1 answers: ${data.counts.unknown} “I don’t know” responses and ${data.counts['not-close']} meanings to revisit. ${data.counts.close} close-enough answers are left out of this round.`;
+ $('selection-note').textContent=`Selected after reviewing all ${data.sourceTotal} Round 1 answers: ${data.counts.unknown} “I don’t know” responses and ${data.counts['not-close']} meanings to revisit. ${data.counts.close} close-enough answers are left out of this round. Four extra words have been added to Section 6: MIRTH, DOUSE, PERPETUAL, and IMPENETRABLE.`;
  $('sections').innerHTML=data.sections.map(s=>`<button type="button" data-section="${s.number}">Section ${s.number}<small>0/${s.count}</small></button>`).join('');
  function select(n){if(!valid(n))return;section=n;touched=true;try{localStorage.setItem(placeKey,String(n));}catch{}location.hash=`section-${n}`;update();$('section-heading').focus();}
  function render(v){

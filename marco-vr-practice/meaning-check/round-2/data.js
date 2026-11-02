@@ -2,7 +2,7 @@
 window.MARCO_FOCUSED_ROUND2 = {
   "appId": "marco-vr-meaning-round2-20261101-v1",
   "title": "Marco · Focused Round 2",
-  "total": 295,
+  "total": 299,
   "sectionSize": 50,
   "reviewDate": "2026-11-01",
   "sourceTotal": 425,
@@ -34,7 +34,7 @@ window.MARCO_FOCUSED_ROUND2 = {
     },
     {
       "number": 6,
-      "count": 45
+      "count": 49
     }
   ],
   "words": [
@@ -2102,6 +2102,40 @@ window.MARCO_FOCUSED_ROUND2 = {
       "number": 295,
       "section": 6,
       "meaning": "disrespect something sacred"
+    },
+    {
+      "id": "mirth",
+      "word": "MIRTH",
+      "number": 296,
+      "section": 6,
+      "meaning": "joyful laughter"
+    },
+    {
+      "id": "douse",
+      "word": "DOUSE",
+      "number": 297,
+      "section": 6,
+      "meaning": "soak or extinguish"
+    },
+    {
+      "id": "perpetual",
+      "word": "PERPETUAL",
+      "number": 298,
+      "section": 6,
+      "meaning": "never ending"
+    },
+    {
+      "id": "impenetrable",
+      "word": "IMPENETRABLE",
+      "number": 299,
+      "section": 6,
+      "meaning": "cannot pass through"
     }
+  ],
+  "additionalWords": [
+    "mirth",
+    "douse",
+    "perpetual",
+    "impenetrable"
   ]
 };
