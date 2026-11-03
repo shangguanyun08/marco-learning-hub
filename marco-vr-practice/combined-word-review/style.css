@@ -44,7 +44,8 @@ thead th:last-child { border-top-right-radius: 11px; }
 .sound { background: transparent; color: var(--ink); border: 0; border-radius: 50%; padding: 4px; min-height: 30px; min-width: 30px; font-size: 15px; flex-shrink: 0; }
 .group-row th { text-align: left; padding: 13px 17px; background: #edf4f3; color: var(--teal); font-size: 13px; font-weight: 750; border-bottom: 1px solid var(--line); }
 .row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; }
-.reveal { background: #b75336; border-color: #b75336; min-width: 118px; }
+.reveal, .know { width: 144px; min-width: 144px; height: 40px; padding: 8px 12px; white-space: nowrap; }
+.reveal { background: #b75336; border-color: #b75336; }
 .reveal[aria-pressed="true"] { background: #fff0e9; color: #903e29; border-color: #dfb5a4; }
 .know { background: #edf7f0; color: #256047; border-color: #a2cbb0; }
 .know[aria-pressed="true"] { background: #256047; color: white; border-color: #256047; }
@@ -72,6 +73,6 @@ footer p { max-width: 750px; }
   .word-content { gap: 5px; flex-wrap: wrap; }
   .number { min-width: 20px; font-size: 10px; }
   .sound { font-size: 13px; min-width: 26px; min-height: 28px; }
-  .reveal, .know { min-width: 0; padding: 8px 10px; font-size: 12px; }
+  .reveal, .know { width: 128px; min-width: 128px; height: 38px; padding: 8px 10px; font-size: 12px; }
   .group-row th { padding: 11px 10px; }
 }

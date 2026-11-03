@@ -69,22 +69,16 @@
       reveal.dataset.action = 'reveal';
       reveal.setAttribute('aria-label', 'I don’t know ' + word.word);
       reveal.setAttribute('aria-controls', 'meaning-' + word.id);
-      const undo = document.createElement('button');
-      undo.type = 'button';
-      undo.className = 'text-button';
-      undo.dataset.action = 'undo';
-      undo.textContent = 'Undo';
-      undo.setAttribute('aria-label', 'Undo choice for ' + word.word);
       const meaning = document.createElement('p');
       meaning.className = 'meaning';
       meaning.id = 'meaning-' + word.id;
       meaning.setAttribute('aria-live', 'polite');
       meaning.hidden = true;
-      actions.append(know, reveal, undo);
+      actions.append(know, reveal);
       answerCell.append(actions, meaning);
       row.append(wordCell, answerCell);
       container.append(row);
-      rows.set(word.id, { row, know, reveal, undo, meaning });
+      rows.set(word.id, { row, know, reveal, meaning });
     }
   }
 
@@ -110,7 +104,6 @@
       elements.know.setAttribute('aria-pressed', String(known));
       elements.reveal.textContent = marked ? 'I don’t know ✓' : 'I don’t know';
       elements.reveal.setAttribute('aria-pressed', String(marked));
-      elements.undo.hidden = !marked && !known;
       elements.meaning.hidden = !showMeaning;
       elements.meaning.textContent = showMeaning ? word.meaning : '';
       elements.reveal.setAttribute('aria-expanded', String(showMeaning));
@@ -150,17 +143,17 @@
     const row = button.closest('[data-word-id]');
     const id = row.dataset.wordId;
     if (button.dataset.action === 'pronounce') { pronounce(wordMap.get(id).word); return; }
-    if (button.dataset.action === 'reveal') {
-      revealed.add(id);
-      if (sync.snapshot().opened[id]?.review) refresh();
-      else sync.open(id);
-      return;
-    }
+    const choice = sync.snapshot().opened[id];
+    const isKnowButton = button.dataset.action === 'know';
+    const isSelected = isKnowButton ? choice?.known : choice?.review;
     revealed.delete(id);
-    if (button.dataset.action === 'know') sync.know(id);
-    else sync.unmark(id);
-    if (view === 'marked') byId('marked-view').focus({ preventScroll: true });
-    else if (button.dataset.action === 'undo') rows.get(id).know.focus({ preventScroll: true });
+    if (isSelected) sync.unmark(id);
+    else if (isKnowButton) sync.know(id);
+    else {
+      revealed.add(id);
+      sync.open(id);
+    }
+    if (view === 'marked' && (isSelected || isKnowButton)) byId('marked-view').focus({ preventScroll: true });
   });
   byId('all-view').addEventListener('click', () => { view = 'all'; refresh(); });
   byId('marked-view').addEventListener('click', () => { view = 'marked'; refresh(); });
