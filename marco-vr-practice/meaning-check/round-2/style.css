@@ -43,3 +43,16 @@
 @media screen and (max-width:700px){
  .review-card .example{font-size:12.5px}
 }
+
+/* Scored tests for the same focused word list. */
+.ai-test-launch { background: #edf5f8; border: 1px solid #b5cddc; border-radius: 14px; padding: 22px; margin: 22px 0; }
+.ai-test-launch h2 { color: #173957; margin: 0 0 10px; font-size: 24px; }
+.ai-test-launch p { max-width: 850px; line-height: 1.5; }
+.ai-test-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 9px; margin: 18px 0; }
+.ai-test-links a { display: block; text-align: center; padding: 11px 12px; color: #fff; background: #175b79; border: 1px solid #175b79; border-radius: 9px; font-weight: 700; text-decoration: none; }
+.ai-test-links a:hover { background: #123f55; }
+.ai-test-links a:focus-visible { outline: 3px solid #d89932; outline-offset: 3px; }
+.ai-test-links small { display: block; margin-top: 3px; font-size: 12px; font-weight: 400; }
+.ai-test-note { font-size: 13px; color: #526c7e; margin-bottom: 0; }
+@media (max-width: 600px) { .ai-test-launch { padding: 16px; } .ai-test-links { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media print { .ai-test-launch { display: none; } }
