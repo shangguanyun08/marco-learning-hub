@@ -1,51 +1,39 @@
-/* Recall targets; original examples identify the tested sense. No definitions or grades. */
+/* Recall targets; original examples identify the tested sense. */
 window.HARRY_MEANING_CHECK = {
-  "version": "20261031-context-v2",
+  "version": "20261102-fifteen-word-sections",
   "appId": "harry-word-meaning-check-20261031-v1",
   "title": "Harry · Word Meaning Check",
   "studentName": "Harry",
-  "sectionSize": 10,
+  "sectionSize": 15,
   "total": 94,
   "excluded": [],
   "sections": [
     {
       "number": 1,
-      "count": 10
+      "count": 15
     },
     {
       "number": 2,
-      "count": 10
+      "count": 15
     },
     {
       "number": 3,
-      "count": 10
+      "count": 15
     },
     {
       "number": 4,
-      "count": 10
+      "count": 15
     },
     {
       "number": 5,
-      "count": 10
+      "count": 15
     },
     {
       "number": 6,
-      "count": 10
+      "count": 15
     },
     {
       "number": 7,
-      "count": 10
-    },
-    {
-      "number": 8,
-      "count": 10
-    },
-    {
-      "number": 9,
-      "count": 10
-    },
-    {
-      "number": 10,
       "count": 4
     }
   ],
@@ -194,7 +182,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "deny",
       "word": "deny",
       "number": 11,
-      "section": 2,
+      "section": 1,
       "source": "reading",
       "partOfSpeech": "verb",
       "context": "I know what happened, so I won't deny it.",
@@ -208,7 +196,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "mileage",
       "word": "mileage",
       "number": 12,
-      "section": 2,
+      "section": 1,
       "source": "reading",
       "partOfSpeech": "noun",
       "context": "On our vacation, we put a lot of mileage on our car.",
@@ -222,7 +210,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "immense",
       "word": "immense",
       "number": 13,
-      "section": 2,
+      "section": 1,
       "source": "reading",
       "partOfSpeech": "adjective",
       "context": "I've seen very large pumpkins but never one as immense as this.",
@@ -236,7 +224,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "brief",
       "word": "brief",
       "number": 14,
-      "section": 2,
+      "section": 1,
       "source": "reading",
       "partOfSpeech": "adjective",
       "context": "Because there was so little time left, her speech had to be brief.",
@@ -250,7 +238,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "applied",
       "word": "apply",
       "number": 15,
-      "section": 2,
+      "section": 1,
       "source": "reading",
       "context": "Graciela wanted to become a doctor so she applied to several colleges.",
       "partOfSpeech": "verb",
@@ -330,7 +318,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "suggest",
       "word": "suggest",
       "number": 21,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Can you suggest a game for us to play?",
@@ -343,7 +331,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "distribute",
       "word": "distribute",
       "number": 22,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Volunteers will distribute food after the storm.",
@@ -356,7 +344,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "emphasis",
       "word": "emphasis",
       "number": 23,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The coach placed special emphasis on teamwork.",
@@ -369,7 +357,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "furthest",
       "word": "far",
       "number": 24,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "That cabin is the furthest one from the lake.",
@@ -382,7 +370,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "contrast",
       "word": "contrast",
       "number": 25,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "context": "There is a strong contrast between the white walls and dark floor.",
       "partOfSpeech": "noun",
@@ -395,7 +383,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "subtle",
       "word": "subtle",
       "number": 26,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "A subtle change made the room feel warmer.",
@@ -408,7 +396,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "derive",
       "word": "derive",
       "number": 27,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "context": "Many English words derive from Latin.",
       "partOfSpeech": "verb",
@@ -421,7 +409,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "aspect",
       "word": "aspect",
       "number": 28,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Cost is one important aspect of the plan.",
@@ -434,7 +422,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "patent",
       "word": "patent",
       "number": 29,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "context": "The inventor applied for a patent.",
       "partOfSpeech": "noun",
@@ -447,7 +435,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "ambiguous",
       "word": "ambiguous",
       "number": 30,
-      "section": 3,
+      "section": 2,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "The ambiguous message had two possible meanings.",
@@ -460,7 +448,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "descend",
       "word": "descend",
       "number": 31,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "The hikers began to descend the mountain.",
@@ -473,7 +461,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "flatter",
       "word": "flatter",
       "number": 32,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Do not flatter me just to get a favor.",
@@ -486,7 +474,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "magnitude",
       "word": "magnitude",
       "number": 33,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "We did not understand the magnitude of the damage.",
@@ -499,7 +487,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "prominent",
       "word": "prominent",
       "number": 34,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "A prominent tower rises above the town.",
@@ -512,7 +500,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "without-delay",
       "word": "delay",
       "number": 35,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The injured child needs treatment without delay.",
@@ -525,7 +513,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "compatible",
       "word": "compatible",
       "number": 36,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "This software is compatible with my computer.",
@@ -538,7 +526,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "abstract",
       "word": "abstract",
       "number": 37,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Freedom is an abstract idea.",
@@ -551,7 +539,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "adequate",
       "word": "adequate",
       "number": 38,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "One sandwich was adequate for lunch.",
@@ -564,7 +552,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "adjacent",
       "word": "adjacent",
       "number": 39,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Our classroom is adjacent to the library.",
@@ -577,7 +565,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "advocate",
       "word": "advocate",
       "number": 40,
-      "section": 4,
+      "section": 3,
       "source": "practice",
       "context": "She continues to advocate for safer streets.",
       "partOfSpeech": "verb",
@@ -590,7 +578,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "consider",
       "word": "consider",
       "number": 41,
-      "section": 5,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Please consider all your choices carefully.",
@@ -603,7 +591,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "eliminate",
       "word": "eliminate",
       "number": 42,
-      "section": 5,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "A filter can eliminate dust from the air.",
@@ -616,7 +604,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "indicate",
       "word": "indicate",
       "number": 43,
-      "section": 5,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Dark clouds indicate that rain is coming.",
@@ -629,7 +617,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "kettle",
       "word": "kettle",
       "number": 44,
-      "section": 5,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The kettle began to whistle.",
@@ -642,7 +630,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "resist",
       "word": "resist",
       "number": 45,
-      "section": 5,
+      "section": 3,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "We must resist the urge to give up.",
@@ -655,7 +643,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "temporary",
       "word": "temporary",
       "number": 46,
-      "section": 5,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "The road closure is only temporary.",
@@ -668,7 +656,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "industry",
       "word": "industry",
       "number": 47,
-      "section": 5,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Tourism is the island's largest industry.",
@@ -681,7 +669,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "inhibit",
       "word": "inhibit",
       "number": 48,
-      "section": 5,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Fear can inhibit clear thinking.",
@@ -694,7 +682,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "parcel",
       "word": "parcel",
       "number": 49,
-      "section": 5,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "A parcel arrived for you this morning.",
@@ -707,7 +695,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "principle",
       "word": "principle",
       "number": 50,
-      "section": 5,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Fairness is an important principle in our family.",
@@ -720,7 +708,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "alternate",
       "word": "alternate",
       "number": 51,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "context": "We take alternate routes to avoid traffic.",
       "partOfSpeech": "adjective",
@@ -733,7 +721,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "errand",
       "word": "errand",
       "number": 52,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "I ran an errand to the post office.",
@@ -746,7 +734,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "scarce",
       "word": "scarce",
       "number": 53,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Fresh water is scarce in the desert.",
@@ -759,7 +747,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "associate",
       "word": "associate",
       "number": 54,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "Many people associate bells with celebrations.",
@@ -772,7 +760,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "priest",
       "word": "priest",
       "number": 55,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The priest welcomed everyone to the church.",
@@ -785,7 +773,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "revise",
       "word": "revise",
       "number": 56,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "I need to revise my essay before Friday.",
@@ -798,7 +786,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "coherent",
       "word": "coherent",
       "number": 57,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Her essay presents a coherent argument.",
@@ -811,7 +799,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "constitution",
       "word": "constitution",
       "number": 58,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The constitution protects basic rights.",
@@ -824,7 +812,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "convention",
       "word": "convention",
       "number": 59,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Hundreds of teachers attended the convention.",
@@ -837,7 +825,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "credible",
       "word": "credible",
       "number": 60,
-      "section": 6,
+      "section": 4,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "The witness gave a credible account.",
@@ -850,7 +838,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "abundant",
       "word": "abundant",
       "number": 61,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Wildflowers are abundant after the spring rain.",
@@ -863,7 +851,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "fortunate",
       "word": "fortunate",
       "number": 62,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "We were fortunate to catch the last bus.",
@@ -876,7 +864,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "insight",
       "word": "insight",
       "number": 63,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The diary offers insight into his daily life.",
@@ -889,7 +877,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "the-public-s",
       "word": "public",
       "number": 64,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "context": "The public's response to the plan was positive.",
       "partOfSpeech": "noun",
@@ -902,7 +890,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "be-welcome-to",
       "word": "welcome",
       "number": 65,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "context": "You are welcome to borrow my notes.",
       "partOfSpeech": "adjective",
@@ -915,7 +903,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "frantic",
       "word": "frantic",
       "number": 66,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "The lost child became frantic.",
@@ -928,7 +916,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "mutual",
       "word": "mutual",
       "number": 67,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Their mutual respect made teamwork easy.",
@@ -941,7 +929,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "passive",
       "word": "passive",
       "number": 68,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "He remained passive and let others decide.",
@@ -954,7 +942,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "sustain",
       "word": "sustain",
       "number": 69,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "The bridge can sustain heavy traffic.",
@@ -967,7 +955,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "crucial",
       "word": "crucial",
       "number": 70,
-      "section": 7,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Clean water is crucial for good health.",
@@ -980,7 +968,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "integrate",
       "word": "integrate",
       "number": 71,
-      "section": 8,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "The school helps new students integrate into the community.",
@@ -993,7 +981,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "permit",
       "word": "permit",
       "number": 72,
-      "section": 8,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "The rules do not permit food in the library.",
@@ -1006,7 +994,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "pioneer",
       "word": "pioneer",
       "number": 73,
-      "section": 8,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The pioneer crossed the mountains in a wagon.",
@@ -1019,7 +1007,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "prairie",
       "word": "prairie",
       "number": 74,
-      "section": 8,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Tall grass covered the wide prairie.",
@@ -1032,7 +1020,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "switched-off",
       "word": "switch off",
       "number": 75,
-      "section": 8,
+      "section": 5,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "She switched off the oven after baking.",
@@ -1045,7 +1033,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "agency",
       "word": "agency",
       "number": 76,
-      "section": 8,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The travel agency booked our flights.",
@@ -1058,7 +1046,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "analogy",
       "word": "analogy",
       "number": 77,
-      "section": 8,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The teacher used an analogy to explain electricity.",
@@ -1071,7 +1059,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "bias",
       "word": "bias",
       "number": 78,
-      "section": 8,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "A fair judge must avoid personal bias.",
@@ -1084,7 +1072,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "crisis",
       "word": "crisis",
       "number": 79,
-      "section": 8,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The hospital opened extra rooms during the crisis.",
@@ -1097,7 +1085,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "in-addition",
       "word": "addition",
       "number": 80,
-      "section": 8,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The apartment is bright; in addition, it has a balcony.",
@@ -1110,7 +1098,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "lengthy",
       "word": "lengthy",
       "number": 81,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Restoring the old house was a lengthy process.",
@@ -1123,7 +1111,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "sequence",
       "word": "sequence",
       "number": 82,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Put the pictures in the correct sequence.",
@@ -1136,7 +1124,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "stunned",
       "word": "stun",
       "number": 83,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "The unexpected news left everyone stunned.",
@@ -1149,7 +1137,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "animated",
       "word": "animated",
       "number": 84,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "They had an animated discussion about the game.",
@@ -1162,7 +1150,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "anticipate",
       "word": "anticipate",
       "number": 85,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "We anticipate heavy traffic this weekend.",
@@ -1175,7 +1163,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "criterion",
       "word": "criterion",
       "number": 86,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Price is only one criterion for choosing a laptop.",
@@ -1188,7 +1176,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "crossing",
       "word": "crossing",
       "number": 87,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "context": "Use the pedestrian crossing to cross the road.",
       "partOfSpeech": "noun",
@@ -1201,7 +1189,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "cruel",
       "word": "cruel",
       "number": 88,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "It was cruel to leave the dog outside in the cold.",
@@ -1214,7 +1202,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "endure",
       "word": "endure",
       "number": 89,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "verb",
       "context": "The hikers had to endure freezing rain.",
@@ -1227,7 +1215,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "hoax",
       "word": "hoax",
       "number": 90,
-      "section": 9,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "The story about the giant fish was a hoax.",
@@ -1240,7 +1228,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "parliament",
       "word": "parliament",
       "number": 91,
-      "section": 10,
+      "section": 7,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Parliament passed the new law.",
@@ -1253,7 +1241,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "spinach",
       "word": "spinach",
       "number": 92,
-      "section": 10,
+      "section": 7,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "Fresh spinach is rich in vitamins.",
@@ -1266,7 +1254,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "takeaway",
       "word": "takeaway",
       "number": 93,
-      "section": 10,
+      "section": 7,
       "source": "practice",
       "partOfSpeech": "noun",
       "context": "We brought home a takeaway for dinner.",
@@ -1279,7 +1267,7 @@ window.HARRY_MEANING_CHECK = {
       "id": "voluntary",
       "word": "voluntary",
       "number": 94,
-      "section": 10,
+      "section": 7,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Attendance at the evening workshop is voluntary.",
@@ -2003,6 +1991,384 @@ window.HARRY_MEANING_CHECK = {
       "number": 100,
       "section": 10,
       "source": "practice"
+    }
+  ],
+  "previousLayoutWords": [
+    {
+      "id": "ballet",
+      "section": 1
+    },
+    {
+      "id": "acre",
+      "section": 1
+    },
+    {
+      "id": "cooperate",
+      "section": 1
+    },
+    {
+      "id": "apprentice",
+      "section": 1
+    },
+    {
+      "id": "gruesome",
+      "section": 1
+    },
+    {
+      "id": "detect",
+      "section": 1
+    },
+    {
+      "id": "deteriorate",
+      "section": 1
+    },
+    {
+      "id": "fundamental",
+      "section": 1
+    },
+    {
+      "id": "articles",
+      "section": 1
+    },
+    {
+      "id": "exploit",
+      "section": 1
+    },
+    {
+      "id": "deny",
+      "section": 2
+    },
+    {
+      "id": "mileage",
+      "section": 2
+    },
+    {
+      "id": "immense",
+      "section": 2
+    },
+    {
+      "id": "brief",
+      "section": 2
+    },
+    {
+      "id": "applied",
+      "section": 2
+    },
+    {
+      "id": "inexpensive",
+      "section": 2
+    },
+    {
+      "id": "alter",
+      "section": 2
+    },
+    {
+      "id": "obscure",
+      "section": 2
+    },
+    {
+      "id": "irrigate",
+      "section": 2
+    },
+    {
+      "id": "coincide",
+      "section": 2
+    },
+    {
+      "id": "suggest",
+      "section": 3
+    },
+    {
+      "id": "distribute",
+      "section": 3
+    },
+    {
+      "id": "emphasis",
+      "section": 3
+    },
+    {
+      "id": "furthest",
+      "section": 3
+    },
+    {
+      "id": "contrast",
+      "section": 3
+    },
+    {
+      "id": "subtle",
+      "section": 3
+    },
+    {
+      "id": "derive",
+      "section": 3
+    },
+    {
+      "id": "aspect",
+      "section": 3
+    },
+    {
+      "id": "patent",
+      "section": 3
+    },
+    {
+      "id": "ambiguous",
+      "section": 3
+    },
+    {
+      "id": "descend",
+      "section": 4
+    },
+    {
+      "id": "flatter",
+      "section": 4
+    },
+    {
+      "id": "magnitude",
+      "section": 4
+    },
+    {
+      "id": "prominent",
+      "section": 4
+    },
+    {
+      "id": "without-delay",
+      "section": 4
+    },
+    {
+      "id": "compatible",
+      "section": 4
+    },
+    {
+      "id": "abstract",
+      "section": 4
+    },
+    {
+      "id": "adequate",
+      "section": 4
+    },
+    {
+      "id": "adjacent",
+      "section": 4
+    },
+    {
+      "id": "advocate",
+      "section": 4
+    },
+    {
+      "id": "consider",
+      "section": 5
+    },
+    {
+      "id": "eliminate",
+      "section": 5
+    },
+    {
+      "id": "indicate",
+      "section": 5
+    },
+    {
+      "id": "kettle",
+      "section": 5
+    },
+    {
+      "id": "resist",
+      "section": 5
+    },
+    {
+      "id": "temporary",
+      "section": 5
+    },
+    {
+      "id": "industry",
+      "section": 5
+    },
+    {
+      "id": "inhibit",
+      "section": 5
+    },
+    {
+      "id": "parcel",
+      "section": 5
+    },
+    {
+      "id": "principle",
+      "section": 5
+    },
+    {
+      "id": "alternate",
+      "section": 6
+    },
+    {
+      "id": "errand",
+      "section": 6
+    },
+    {
+      "id": "scarce",
+      "section": 6
+    },
+    {
+      "id": "associate",
+      "section": 6
+    },
+    {
+      "id": "priest",
+      "section": 6
+    },
+    {
+      "id": "revise",
+      "section": 6
+    },
+    {
+      "id": "coherent",
+      "section": 6
+    },
+    {
+      "id": "constitution",
+      "section": 6
+    },
+    {
+      "id": "convention",
+      "section": 6
+    },
+    {
+      "id": "credible",
+      "section": 6
+    },
+    {
+      "id": "abundant",
+      "section": 7
+    },
+    {
+      "id": "fortunate",
+      "section": 7
+    },
+    {
+      "id": "insight",
+      "section": 7
+    },
+    {
+      "id": "the-public-s",
+      "section": 7
+    },
+    {
+      "id": "be-welcome-to",
+      "section": 7
+    },
+    {
+      "id": "frantic",
+      "section": 7
+    },
+    {
+      "id": "mutual",
+      "section": 7
+    },
+    {
+      "id": "passive",
+      "section": 7
+    },
+    {
+      "id": "sustain",
+      "section": 7
+    },
+    {
+      "id": "crucial",
+      "section": 7
+    },
+    {
+      "id": "integrate",
+      "section": 8
+    },
+    {
+      "id": "permit",
+      "section": 8
+    },
+    {
+      "id": "pioneer",
+      "section": 8
+    },
+    {
+      "id": "prairie",
+      "section": 8
+    },
+    {
+      "id": "switched-off",
+      "section": 8
+    },
+    {
+      "id": "agency",
+      "section": 8
+    },
+    {
+      "id": "analogy",
+      "section": 8
+    },
+    {
+      "id": "bias",
+      "section": 8
+    },
+    {
+      "id": "crisis",
+      "section": 8
+    },
+    {
+      "id": "in-addition",
+      "section": 8
+    },
+    {
+      "id": "lengthy",
+      "section": 9
+    },
+    {
+      "id": "sequence",
+      "section": 9
+    },
+    {
+      "id": "stunned",
+      "section": 9
+    },
+    {
+      "id": "animated",
+      "section": 9
+    },
+    {
+      "id": "anticipate",
+      "section": 9
+    },
+    {
+      "id": "criterion",
+      "section": 9
+    },
+    {
+      "id": "crossing",
+      "section": 9
+    },
+    {
+      "id": "cruel",
+      "section": 9
+    },
+    {
+      "id": "endure",
+      "section": 9
+    },
+    {
+      "id": "hoax",
+      "section": 9
+    },
+    {
+      "id": "parliament",
+      "section": 10
+    },
+    {
+      "id": "spinach",
+      "section": 10
+    },
+    {
+      "id": "takeaway",
+      "section": 10
+    },
+    {
+      "id": "voluntary",
+      "section": 10
     }
   ]
 };

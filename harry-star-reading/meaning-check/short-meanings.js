@@ -35,7 +35,7 @@ window.HARRY_SHORT_MEANINGS = {
   "prominent": "stands out",
   "without-delay": "wait",
   "compatible": "work well together",
-  "abstract": "an idea",
+  "abstract": "not physical",
   "adequate": "enough",
   "adjacent": "next to",
   "advocate": "speak for",

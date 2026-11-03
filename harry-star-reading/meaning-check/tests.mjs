@@ -7,7 +7,7 @@ import vm from 'node:vm';
 const read=f=>readFileSync(new URL(f,import.meta.url),'utf8'),plain=x=>JSON.parse(JSON.stringify(x)),data=(()=>{const c={window:{}};vm.runInNewContext(read('data.js'),c);return plain(c.window.HARRY_MEANING_CHECK);})();
 function harness({saved,remote,fetch,now=()=>1000}={}){let record=saved&&JSON.stringify(saved);const storage={getItem:k=>k.endsWith(':device')?JSON.stringify('test-device-000001'):record||null,setItem(k,v){if(!k.endsWith(':device'))record=v;}};const c={};c.globalThis=c;vm.runInNewContext(read('sync.js'),c);let status;const s=c.MeaningCheckSync.create({data,storage,now,disabled:!fetch,fetch,setTimeout:()=>1,clearTimeout(){},onStatus:(kind,text)=>status={kind,text}});return {s,status:()=>status};}
 test('94 base-form targets retain all requested examples and part-of-speech labels',()=>{
- assert.equal(data.total,94);assert.deepEqual(data.sections.map(s=>s.count),[10,10,10,10,10,10,10,10,10,4]);assert.equal(new Set(data.words.map(w=>w.word)).size,94);assert.equal(data.words.filter(w=>w.source==='reading').length,16);assert.equal(data.words.filter(w=>w.source==='practice').length,78);
+ assert.equal(data.total,94);assert.deepEqual(data.sections.map(s=>s.count),[15,15,15,15,15,15,4]);assert.equal(new Set(data.words.map(w=>w.word)).size,94);assert.equal(data.words.filter(w=>w.source==='reading').length,16);assert.equal(data.words.filter(w=>w.source==='practice').length,78);
  for(const id of ['cull','aerial','still','phrasal-verb','been-meaning','all-of-the-above'])assert.ok(!data.words.some(w=>w.id===id),id);
  for(const [id,word]of Object.entries({articles:'article',applied:'apply','the-public-s':'public','be-welcome-to':'welcome','switched-off':'switch off','without-delay':'delay','in-addition':'addition',stunned:'stun',furthest:'far'}))assert.equal(data.words.find(w=>w.id===id).word,word);
  const review=JSON.parse(read('../../../source/docs/review/data.json'));
@@ -19,7 +19,7 @@ test('old removed-word drafts and original ten-word submissions survive the new 
  const responses=data.previousWords.filter(w=>w.section===1).map(w=>({id:w.id,meaning:'saved original meaning',unknown:false,tone:''}));
  const old={kind:'word-meaning-check',version:1,entries:{cull:{meaning:{value:'original typed draft',at:12}}},submissions:{'submission-legacy-0001':{section:1,at:'2026-10-31T16:00:00.000Z',responses}}};
  const s=harness({saved:old}).s;assert.deepEqual(plain(s.snapshot().submissions),old.submissions);assert.equal(s.snapshot().entries.cull.meaning.value,'original typed draft');
- for(const w of data.words.filter(w=>w.section===10))s.edit(w.id,'unknown',true);assert.equal(s.submit(10).ok,true);assert.equal(Object.values(s.snapshot().submissions).find(x=>x.section===10).responses.length,4);assert.deepEqual(plain(s.snapshot().submissions['submission-legacy-0001']),old.submissions['submission-legacy-0001']);
+ for(const w of data.words.filter(w=>w.section===7))s.edit(w.id,'unknown',true);assert.equal(s.submit(7).ok,true);assert.equal(Object.values(s.snapshot().submissions).find(x=>x.section===7).responses.length,4);assert.deepEqual(plain(s.snapshot().submissions['submission-legacy-0001']),old.submissions['submission-legacy-0001']);
 });
 
 test('tone alone does not count as a meaning or allow incomplete submission',()=>{

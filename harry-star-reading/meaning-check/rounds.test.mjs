@@ -7,7 +7,7 @@ const read=f=>readFileSync(new URL(f,import.meta.url),'utf8'),plain=x=>JSON.pars
 const context={window:{}};vm.runInNewContext(read('data.js'),context);const data=plain(context.window.HARRY_MEANING_CHECK);
 const rows=section=>data.words.filter(w=>w.section===section);
 function harness({saved,fetch,clock=1000,values=new Map()}={}){
- if(saved)values.set(data.appId+(!fetch?':demo':'')+(saved.version===2?':rounds-v2':''),JSON.stringify(saved));const storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
+ if(saved)values.set(data.appId+(!fetch?':demo':'')+(saved.version===3?':rounds-v3-fifteen':saved.version===2?':rounds-v2':''),JSON.stringify(saved));const storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
  const c={};c.globalThis=c;vm.runInNewContext(read('sync.js'),c);
  let status;const s=c.MeaningCheckSync.create({data,storage,disabled:!fetch,fetch,now:()=>clock++,setTimeout:()=>1,clearTimeout(){},onStatus:(kind,text)=>status={kind,text}});
  return {s,values,status:()=>status};
@@ -18,7 +18,7 @@ function finish(s,section,round,unknown=false){
  assert.equal(s.submitRound(section,round).ok,true);
 }
 
-test('all ten sets support three independent rounds, each repeating every word',()=>{
+test('all seven sets support three independent rounds, each repeating every word',()=>{
  const {s}=harness();
  for(const section of data.sections){
   const ids=rows(section.number).map(w=>w.id);
@@ -35,9 +35,9 @@ test('all ten sets support three independent rounds, each repeating every word',
   }
   assert.equal(new Set([1,2,3].map(round=>s.roundView(section.number,round).order.join(','))).size,3);
  }
- assert.equal(Object.keys(s.snapshot().submissions).length,10);assert.equal(Object.keys(s.snapshot().roundSubmissions).length,20);
- assert.equal(s.openRound(10,4).ok,false);assert.equal(s.submitRound(10,4).ok,false);
- assert.equal(s.roundView(10,3).entries.voluntary.meaning,'own 10/3 voluntary');
+ assert.equal(Object.keys(s.snapshot().submissions).length,7);assert.equal(Object.keys(s.snapshot().roundSubmissions).length,14);
+ assert.equal(s.openRound(7,4).ok,false);assert.equal(s.submitRound(7,4).ok,false);
+ assert.equal(s.roundView(7,3).entries.voluntary.meaning,'own 7/3 voluntary');
 });
 
 test('shuffled order and drafts survive reload, revisits, and repeated navigation',()=>{
@@ -52,9 +52,9 @@ test('round revisions keep all finished copies and do not claim correctness',()=
  const {s}=harness();finish(s,1,1,true);finish(s,1,2);
  const before=plain(s.snapshot()),id=rows(1)[0].id;s.editRound(1,2,id,'meaning','arbitrary text');assert.equal(s.roundView(1,2).submitted,false);assert.equal(s.submitRound(1,2).ok,true);
  assert.equal(s.roundView(1,2).copies.length,2);for(const [key,value]of Object.entries(before.roundSubmissions))assert.deepEqual(plain(s.snapshot().roundSubmissions[key]),value);
- assert.deepEqual(plain(s.snapshot().submissions),before.submissions);assert.equal(s.roundView(1,2).written,10);assert.equal(s.roundView(1,2).correct,undefined);
+ assert.deepEqual(plain(s.snapshot().submissions),before.submissions);assert.equal(s.roundView(1,2).written,15);assert.equal(s.roundView(1,2).correct,undefined);
  s.editRound(1,2,id,'meaning','');assert.equal(s.submitRound(1,2).ok,false);s.editRound(1,2,id,'unknown',true);assert.equal(s.submitRound(1,2).ok,true);
- assert.equal(s.roundView(1,2).written,9);assert.equal(s.roundView(1,3).available,true);
+ assert.equal(s.roundView(1,2).written,14);assert.equal(s.roundView(1,3).available,true);
 });
 
 test('the additive upgrade preserves every original field, removed word and submitted copy',()=>{
@@ -84,7 +84,7 @@ test('online conflict retries preserve rounds; restore is read-only; blank start
 
 test('malformed rounds cannot move words between sets, skip rounds or overwrite round one',()=>{
  const {s}=harness();const state=s.snapshot();state.rounds={'1:1':{section:1,round:1,entries:{ballet:{meaning:{value:'overwrite',at:100}}}},'1:2':{section:1,round:2,order:['hoax'],entries:{hoax:{meaning:{value:'wrong set',at:100}},ballet:{unknown:{value:'yes',at:2}}}},'1:0':{section:1,round:0,entries:{}}};state.roundSubmissions={'round-copy-bad-0001':{section:1,round:2,at:'2026-11-01',responses:[]}};
- const normalized=s.normalize(state);assert.equal(normalized.rounds['1:1'],undefined);assert.deepEqual(plain(normalized.rounds['1:2'].entries),{});assert.equal(normalized.rounds['1:2'].order.length,10);assert.equal(Object.keys(normalized.roundSubmissions).length,0);assert.equal(s.submitRound(1,4).ok,false);
+ const normalized=s.normalize(state);assert.equal(normalized.rounds['1:1'],undefined);assert.deepEqual(plain(normalized.rounds['1:2'].entries),{});assert.equal(normalized.rounds['1:2'].order.length,15);assert.equal(Object.keys(normalized.roundSubmissions).length,0);assert.equal(s.submitRound(1,4).ok,false);
 });
 
 test('offline later-round drafts recover on reload and survive a remote legacy-only record',async()=>{
@@ -95,9 +95,30 @@ test('offline later-round drafts recover on reload and survive a remote legacy-o
  const restarted=harness({saved:h.s.snapshot(),fetch}).s;assert.equal(restarted.roundView(1,2).entries.ballet.meaning,'offline wording');connected=true;assert.equal(await restarted.flush(),true);assert.equal(posts,1);assert.equal(remote.state.rounds['1:2'].entries.ballet.meaning.value,'offline wording');assert.deepEqual(plain(remote.state.submissions),plain(seed.snapshot().submissions));
 });
 
-test('v2 uses a separate device key and imports later legacy edits without losing rounds',()=>{
+test('v3 uses a separate device key and imports later legacy edits without losing rounds',()=>{
  const legacy={kind:'word-meaning-check',version:1,entries:{ballet:{meaning:{value:'original answer',at:1}}},submissions:{}},h=harness({saved:legacy});finish(h.s,1,1,true);finish(h.s,1,2);
- assert.equal(h.s.snapshot().version,2);assert.notEqual(h.s.key,h.s.legacyKey);assert.equal(h.values.get(h.s.legacyKey),JSON.stringify(legacy));
+ assert.equal(h.s.snapshot().version,3);assert.notEqual(h.s.key,h.s.legacyKey);assert.equal(h.values.get(h.s.legacyKey),JSON.stringify(legacy));
  const edited=plain(legacy);edited.entries.ballet.meaning={value:'typed in an older tab',at:9999};h.values.set(h.s.legacyKey,JSON.stringify(edited));const reopened=harness({values:h.values}).s;
  assert.equal(reopened.roundView(1,1).entries.ballet.meaning,'typed in an older tab');assert.equal(reopened.roundView(1,2).entries.ballet.meaning,'own 1/2 ballet');assert.equal(reopened.roundView(1,2).copies.length,1);assert.equal(h.values.get(h.s.legacyKey),JSON.stringify(edited));assert.equal(h.values.get(h.s.legacyKey+':before-rounds'),JSON.stringify(legacy));
+});
+
+test('all old ten-word drafts and immutable copies survive regrouping by word ID',()=>{
+ const oldRows=n=>data.previousLayoutWords.filter(w=>w.section===n),copy=rows=>rows.map(w=>({id:w.id,meaning:'earlier '+w.id,unknown:false,tone:''}));
+ const old={kind:'word-meaning-check',version:2,entries:{ballet:{meaning:{value:'my first wording',at:1}}},submissions:{},rounds:{},roundSubmissions:{}};
+ for(let section=1;section<=10;section++){
+  const rows=oldRows(section);
+  old.submissions['submission-old-set-'+section]={section,at:'2026-11-01T00:00:00.000Z',responses:copy(rows)};
+  for(let round=2;round<=3;round++){
+   old.rounds[section+':'+round]={section,round,order:rows.map(w=>w.id).reverse(),entries:Object.fromEntries(rows.map(w=>[w.id,{meaning:{value:`old ${round} ${w.id}`,at:round}}]))};
+   old.roundSubmissions[`round-copy-old-${section}-${round}`]={section,round,at:'2026-11-01T01:00:00.000Z',responses:copy(rows)};
+  }
+ }
+ const {s,values}=harness({saved:old}),migrated=plain(s.snapshot());
+ assert.equal(migrated.version,3);assert.deepEqual(migrated.submissions,old.submissions);assert.deepEqual(migrated.roundSubmissions,old.roundSubmissions);assert.deepEqual(migrated.archivedRounds,old.rounds);
+ assert.equal(values.get(s.previousKey),JSON.stringify(old));assert.equal(values.get(s.previousKey+':before-fifteen'),JSON.stringify(old));
+ for(const w of data.words)for(let round=2;round<=3;round++)assert.equal(s.roundView(w.section,round).entries[w.id].meaning,`old ${round} ${w.id}`);
+ for(const section of data.sections)assert.equal(s.roundView(section.number,2).finished,false,'old ten-word completion must not complete a new fifteen-word round');
+ const w=data.words[20];s.editRound(w.section,2,w.id,'meaning','');
+ const merged=s.merge(s.normalize(old),s.snapshot());assert.equal(merged.rounds[w.section+':2'].entries[w.id].meaning.value,'');assert.deepEqual(plain(merged.archivedRounds),old.rounds);
+ assert.deepEqual(plain(harness({saved:merged}).s.snapshot()),plain(merged));
 });
