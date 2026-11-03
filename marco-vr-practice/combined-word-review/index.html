@@ -7,10 +7,10 @@
   <meta name="description" content="Quickly scan Marco’s 820 selected words from easier to harder. Tap I don’t know to reveal a short meaning and build a trimmed review list.">
   <meta name="theme-color" content="#175b79">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css?v=20261103-list2">
+  <link rel="stylesheet" href="style.css?v=20261103-know1">
   <script defer src="data.js?v=20261103-1"></script>
-  <script defer src="sync.js?v=20261103-list2"></script>
-  <script defer src="app.js?v=20261103-list2"></script>
+  <script defer src="sync.js?v=20261103-know1"></script>
+  <script defer src="app.js?v=20261103-know1"></script>
 </head>
 <body>
 <main>
@@ -37,12 +37,12 @@
       <button id="download" class="secondary" type="button" disabled>Download review list</button>
     </div>
     <div class="list-info"><p id="list-description" role="status">820 words · Easier → harder</p><a id="resume" href="#" hidden>Resume</a></div>
-    <p class="hint">Marked words form your trimmed list. Use Undo beside a marked word to take it out.</p>
+    <p class="hint">Green <strong>I know</strong> crosses a word out. Orange <strong>I don’t know</strong> adds it to your review list. Undo clears either choice.</p>
   </section>
 
   <table>
-    <caption class="sr-only">820 vocabulary words from easier to harder, with I don’t know buttons in the second column</caption>
-    <thead><tr><th scope="col">Word</th><th scope="col">I don’t know · Show meaning</th></tr></thead>
+    <caption class="sr-only">820 vocabulary words from easier to harder, with I know and I don’t know buttons in the second column</caption>
+    <thead><tr><th scope="col">Word</th><th scope="col">I know / I don’t know</th></tr></thead>
     <tbody id="word-list"></tbody>
   </table>
   <p id="empty-message" class="empty" hidden></p>

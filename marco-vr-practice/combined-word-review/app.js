@@ -58,6 +58,11 @@
       const answerCell = document.createElement('td');
       const actions = document.createElement('div');
       actions.className = 'row-actions';
+      const know = document.createElement('button');
+      know.type = 'button';
+      know.className = 'know';
+      know.dataset.action = 'know';
+      know.setAttribute('aria-label', 'I know ' + word.word);
       const reveal = document.createElement('button');
       reveal.type = 'button';
       reveal.className = 'reveal';
@@ -69,17 +74,17 @@
       undo.className = 'text-button';
       undo.dataset.action = 'undo';
       undo.textContent = 'Undo';
-      undo.setAttribute('aria-label', 'Undo review mark for ' + word.word);
+      undo.setAttribute('aria-label', 'Undo choice for ' + word.word);
       const meaning = document.createElement('p');
       meaning.className = 'meaning';
       meaning.id = 'meaning-' + word.id;
       meaning.setAttribute('aria-live', 'polite');
       meaning.hidden = true;
-      actions.append(reveal, undo);
+      actions.append(know, reveal, undo);
       answerCell.append(actions, meaning);
       row.append(wordCell, answerCell);
       container.append(row);
-      rows.set(word.id, { row, reveal, undo, meaning });
+      rows.set(word.id, { row, know, reveal, undo, meaning });
     }
   }
 
@@ -93,17 +98,22 @@
     for (const word of words) {
       const elements = rows.get(word.id);
       const marked = state.opened[word.id]?.review === true;
+      const known = state.opened[word.id]?.known === true;
+      const showMeaning = marked && revealed.has(word.id);
       if (marked) markedCount++;
       const visible = word.word.toLowerCase().includes(query) && (view === 'all' || marked);
       elements.row.hidden = !visible;
       if (visible) { visibleCount++; visibleGroups.add(word.difficulty); }
       elements.row.classList.toggle('marked', marked);
+      elements.row.classList.toggle('known', known);
+      elements.know.textContent = known ? 'I know ✓' : 'I know';
+      elements.know.setAttribute('aria-pressed', String(known));
       elements.reveal.textContent = marked ? 'I don’t know ✓' : 'I don’t know';
       elements.reveal.setAttribute('aria-pressed', String(marked));
-      elements.undo.hidden = !marked;
-      elements.meaning.hidden = !revealed.has(word.id);
-      elements.meaning.textContent = revealed.has(word.id) ? word.meaning : '';
-      elements.reveal.setAttribute('aria-expanded', String(revealed.has(word.id)));
+      elements.undo.hidden = !marked && !known;
+      elements.meaning.hidden = !showMeaning;
+      elements.meaning.textContent = showMeaning ? word.meaning : '';
+      elements.reveal.setAttribute('aria-expanded', String(showMeaning));
     }
     for (const [level, heading] of groups) heading.hidden = !visibleGroups.has(level);
     byId('marked-count').textContent = markedCount;
@@ -140,16 +150,17 @@
     const row = button.closest('[data-word-id]');
     const id = row.dataset.wordId;
     if (button.dataset.action === 'pronounce') { pronounce(wordMap.get(id).word); return; }
-    if (button.dataset.action === 'undo') {
-      revealed.delete(id);
-      sync.unmark(id);
-      if (view === 'marked') byId('marked-view').focus({ preventScroll: true });
-      else rows.get(id).reveal.focus({ preventScroll: true });
+    if (button.dataset.action === 'reveal') {
+      revealed.add(id);
+      if (sync.snapshot().opened[id]?.review) refresh();
+      else sync.open(id);
       return;
     }
-    revealed.add(id);
-    if (sync.snapshot().opened[id]?.review) refresh();
-    else sync.open(id);
+    revealed.delete(id);
+    if (button.dataset.action === 'know') sync.know(id);
+    else sync.unmark(id);
+    if (view === 'marked') byId('marked-view').focus({ preventScroll: true });
+    else if (button.dataset.action === 'undo') rows.get(id).know.focus({ preventScroll: true });
   });
   byId('all-view').addEventListener('click', () => { view = 'all'; refresh(); });
   byId('marked-view').addEventListener('click', () => { view = 'marked'; refresh(); });

@@ -30,8 +30,13 @@
       for (const id of Object.keys(raw.opened).sort()) {
         if (!ids.has(id)) throw Error('Invalid saved word.');
         const entry = raw.opened[id];
+        const timestamp = stamp(entry);
         if (entry.review !== undefined && typeof entry.review !== 'boolean') throw Error('Invalid saved review choice.');
-        result.opened[id] = { ...stamp(entry), review: entry.review ?? true };
+        if (entry.known !== undefined && typeof entry.known !== 'boolean') throw Error('Invalid saved known choice.');
+        const review = entry.review ?? true;
+        const known = entry.known ?? false;
+        if (review && known) throw Error('Conflicting saved word choices.');
+        result.opened[id] = { ...timestamp, review, known };
       }
       if (raw.position != null) {
         if (!ids.has(raw.position.id)) throw Error('Invalid saved position.');
@@ -106,13 +111,13 @@
       timer = root.setTimeout(() => { timer = null; void flush(); }, 450);
     }
 
-    function update(id, review) {
+    function update(id, review, known = false) {
       if (!ids.has(id)) return;
       let at = Math.max(1, now(), (state.position?.at || 0) + 1);
       for (const entry of Object.values(state.opened)) at = Math.max(at, entry.at + 1);
       const entry = { at, op: 'review-' + uuid() };
       state.position = { id, ...entry };
-      if (typeof review === 'boolean') state.opened[id] = { ...entry, review };
+      if (typeof review === 'boolean') state.opened[id] = { ...entry, review, known };
       state = normalize(state);
       changed();
       status(options.demo ? 'Preview · Saved on this device.' : 'Saved on this device · Saving online…');
@@ -182,6 +187,7 @@
       key, endpoint, normalize, merge,
       snapshot: () => copy(state),
       open: id => update(id, true),
+      know: id => update(id, false, true),
       unmark: id => update(id, false),
       move: id => update(id, null),
       flush,
