@@ -90,14 +90,7 @@
             <a href="./marco-vr-practice/combined-word-review/">Start the 820-word review <span>→</span></a>
           </article>
 
-          <article class="site-card" id="marco-vocabulary-selection">
-            <div class="card-topline"><span>PARENT VOCABULARY SELECTION</span><small>528 recommended · 1,302 available</small></div>
-            <div class="icon">528</div>
-            <h3>Choose Marco’s Review Words</h3>
-            <p>Review the recommended words from easier to harder. Remove any you do not want, or restore words from the 774 set aside.</p>
-            <ul><li>Meanings + pronunciation</li><li>Every excluded word available to restore</li><li>Selections save online</li></ul>
-            <a href="./marco-vr-practice/vocabulary-selection/">Choose review words <span>→</span></a>
-          </article>
+
 
           <article class="site-card featured" id="marco-vr-practice">
             <div class="card-topline"><span>VR MOCK TEST REVIEWS</span><small>Practice Tests 1–4</small></div>
@@ -108,14 +101,7 @@
             <a href="./marco-vr-practice/">Choose a VR mock test <span>→</span></a>
           </article>
 
-          <article class="site-card featured" id="marco-zozeck-hard-2026">
-            <div class="card-topline"><span>VERBAL REASONING · MIXED PRACTICE</span><small>9 sessions · 360 questions</small></div>
-            <div class="icon">360</div>
-            <h3>Marco’s Mixed VR Zozeck</h3>
-            <p>Nine sessions of 40 historical questions, mixing synonyms, sentence completions, and difficulty. Every round is untimed; later rounds repeat only misses until mastered. Completed sessions turn green. Previous sessions and scores remain in the archive.</p>
-            <ul><li>40 questions per session · mixed difficulty</li><li>Rounds 1, 2, 3, … · answers and tricks after a second try</li><li>Live online sync</li></ul>
-            <a href="./marco-zozeck-hard-2026/">Open mixed VR practice <span>→</span></a>
-          </article>
+
 
 
 
@@ -223,9 +209,26 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>16 sites</span>
+                <span>18 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+          <article class="site-card archived" id="marco-vocabulary-selection">
+            <div class="card-topline"><span>ARCHIVED · PARENT VOCABULARY SELECTION</span><small>528 recommended · 1,302 available</small></div>
+            <div class="icon">528</div>
+            <h3>Choose Marco’s Review Words</h3>
+            <p>Review the recommended words from easier to harder. Remove any you do not want, or restore words from the 774 set aside.</p>
+            <ul><li>Meanings + pronunciation</li><li>Every excluded word available to restore</li><li>Selections save online</li></ul>
+            <a href="./marco-vr-practice/vocabulary-selection/">Open archived word selection <span>→</span></a>
+          </article>
+
+          <article class="site-card archived" id="marco-zozeck-hard-2026">
+            <div class="card-topline"><span>ARCHIVED · VERBAL REASONING · MIXED PRACTICE</span><small>9 sessions · 360 questions</small></div>
+            <div class="icon">360</div>
+            <h3>Marco’s Mixed VR Zozeck</h3>
+            <p>Nine sessions of 40 historical questions, mixing synonyms, sentence completions, and difficulty. Every round is untimed; later rounds repeat only misses until mastered. Completed sessions turn green. Previous sessions and scores remain in the archive.</p>
+            <ul><li>40 questions per session · mixed difficulty</li><li>Rounds 1, 2, 3, … · answers and tricks after a second try</li><li>Live online sync</li></ul>
+            <a href="./marco-zozeck-hard-2026/">Open archived mixed VR practice <span>→</span></a>
+          </article>
                 <article class="site-card archived" id="chinese-reading-heading" lang="zh-CN">
                   <div class="card-topline"><span>ARCHIVED · 中文 · 第一单元听写备考</span><small>第1—8周</small></div>
                   <div class="icon">中</div>
@@ -473,7 +476,7 @@
     <script src="./shared-activity-dashboard.js?v=20261021-time2-5" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#chinese-reading-heading'].includes(location.hash)){
+        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
