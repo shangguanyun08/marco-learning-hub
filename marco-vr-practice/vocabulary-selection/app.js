@@ -28,12 +28,10 @@
    const title=el('div','word-title'),head=el('div','word-head');head.append(el('h2','',word.word));
    const sound=el('button','speak','🔊');sound.type='button';sound.setAttribute('aria-label','Pronounce '+word.word);sound.addEventListener('click',()=>speak(word.word));head.append(sound);title.append(head,el('div','difficulty',word.difficultyLabel));row.append(title);
    const body=el('div','word-main');body.append(el('p','meaning',word.meaning));
-   if(word.focus)body.append(el('p','focus',word.focus));
    if(!word.recommended)body.append(el('span','badge',word.originalDecision==='easy-medium'?'Originally easy / medium':'Originally lower priority'));
    if(word.recommended&&!keep)body.append(el('span','badge removed','Removed by you'));
    if(!word.recommended&&keep)body.append(el('span','badge restored','Restored by you'));
-   if(word.cutReason)body.append(el('p','focus',word.cutReason));
-   if(word.sources.length){const source=el('details','source');source.append(el('summary','',word.sources.length+' source set'+(word.sources.length===1?'':'s')));for(const item of word.sources){const p=el('p','');const a=el('a','',item.title);a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';p.append(a);source.append(p)}body.append(source);}
+   if(word.focus||word.cutReason||word.sources.length){const source=el('details','source');source.append(el('summary','','More detail'));if(word.focus)source.append(el('p','focus',word.focus));if(word.cutReason)source.append(el('p','focus',word.cutReason));for(const item of word.sources){const p=el('p','');const a=el('a','',item.title);a.href=item.url;a.target='_blank';a.rel='noopener noreferrer';p.append(a);source.append(p)}body.append(source);}
    row.append(body);
    const action=el('button','word-action '+(keep?'remove':'restore'),keep?'Remove':'Restore');action.type='button';action.setAttribute('aria-label',(keep?'Remove ':'Restore ')+word.word);action.addEventListener('click',()=>{const index=visible.findIndex(w=>w.id===word.id);choice(word,!keep);const actions=$('word-list').querySelectorAll('.word-action');actions[Math.min(index,actions.length-1)]?.focus({preventScroll:true});});row.append(action);fragment.append(row);
   }
