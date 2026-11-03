@@ -4,100 +4,126 @@
   const words = data.words;
   const labels = { 2: '1 · More familiar', 3: '2 · Moderate & tricky', 4: '3 · Challenging', 5: '4 · Most challenging' };
   const byId = id => document.getElementById(id);
+  const wordMap = new Map(words.map(word => [word.id, word]));
+  const rows = new Map();
+  const groups = new Map();
+  const revealed = new Set();
   const demo = new URLSearchParams(location.search).get('demo') === '1';
-  let index = 0;
-  let revealed = false;
-  let interacted = false;
+  let view = 'all';
   const sync = window.VocabularyRevealSync.create({
     data, demo,
     onStatus: text => { byId('save-status').textContent = text; },
-    onChange: state => { byId('opened-count').textContent = Object.keys(state.opened).length; }
+    onChange: refresh
   });
 
-  function renderDirectory() {
-    const query = byId('search').value.trim().toLowerCase();
-    const matches = words.filter(word => word.word.toLowerCase().includes(query));
-    const container = byId('word-directory');
-    container.replaceChildren();
-    byId('search-count').textContent = matches.length + (matches.length === 1 ? ' word' : ' words');
-    for (const level of [2, 3, 4, 5]) {
-      const group = matches.filter(word => word.difficulty === level);
-      if (!group.length) continue;
-      const heading = document.createElement('h3');
-      heading.textContent = labels[level] + ' · ' + group.length;
-      const grid = document.createElement('div');
-      grid.className = 'word-grid';
-      for (const word of group) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = word.word;
-        button.dataset.wordId = word.id;
-        if (word.id === words[index].id) button.setAttribute('aria-current', 'true');
-        grid.append(button);
+  function buildList() {
+    const container = byId('word-list');
+    let previousLevel = null;
+    for (const [index, word] of words.entries()) {
+      if (word.difficulty !== previousLevel) {
+        const heading = document.createElement('tr');
+        heading.className = 'group-row';
+        const cell = document.createElement('th');
+        cell.colSpan = 2;
+        cell.textContent = labels[word.difficulty];
+        heading.append(cell);
+        container.append(heading);
+        groups.set(word.difficulty, heading);
+        previousLevel = word.difficulty;
       }
-      container.append(heading, grid);
+      const row = document.createElement('tr');
+      row.className = 'word-row';
+      row.id = 'row-' + word.id;
+      row.dataset.wordId = word.id;
+      const wordCell = document.createElement('th');
+      wordCell.scope = 'row';
+      const content = document.createElement('div');
+      content.className = 'word-content';
+      const number = document.createElement('span');
+      number.className = 'number';
+      number.textContent = index + 1;
+      const label = document.createElement('span');
+      label.className = 'word-label';
+      label.textContent = word.word;
+      const pronounce = document.createElement('button');
+      pronounce.type = 'button';
+      pronounce.className = 'sound';
+      pronounce.dataset.action = 'pronounce';
+      pronounce.textContent = '🔊';
+      pronounce.setAttribute('aria-label', 'Pronounce ' + word.word);
+      pronounce.disabled = !window.speechSynthesis || !window.SpeechSynthesisUtterance;
+      content.append(number, label, pronounce);
+      wordCell.append(content);
+
+      const answerCell = document.createElement('td');
+      const actions = document.createElement('div');
+      actions.className = 'row-actions';
+      const reveal = document.createElement('button');
+      reveal.type = 'button';
+      reveal.className = 'reveal';
+      reveal.dataset.action = 'reveal';
+      reveal.setAttribute('aria-label', 'I don’t know ' + word.word);
+      reveal.setAttribute('aria-controls', 'meaning-' + word.id);
+      const undo = document.createElement('button');
+      undo.type = 'button';
+      undo.className = 'text-button';
+      undo.dataset.action = 'undo';
+      undo.textContent = 'Undo';
+      undo.setAttribute('aria-label', 'Undo review mark for ' + word.word);
+      const meaning = document.createElement('p');
+      meaning.className = 'meaning';
+      meaning.id = 'meaning-' + word.id;
+      meaning.setAttribute('aria-live', 'polite');
+      meaning.hidden = true;
+      actions.append(reveal, undo);
+      answerCell.append(actions, meaning);
+      row.append(wordCell, answerCell);
+      container.append(row);
+      rows.set(word.id, { row, reveal, undo, meaning });
     }
   }
 
-  function render() {
-    const word = words[index];
-    byId('word').textContent = word.word;
-    byId('difficulty').textContent = labels[word.difficulty];
-    byId('position').textContent = 'Word ' + (index + 1) + ' of ' + words.length;
-    byId('progress').value = index + 1;
-    byId('meaning').textContent = revealed ? word.meaning : '';
-    byId('meaning').hidden = !revealed;
-    byId('prompt').hidden = revealed;
-    byId('reveal').hidden = revealed;
-    byId('hide').hidden = !revealed;
-    byId('opened-note').hidden = revealed || !sync.snapshot().opened[word.id];
-    byId('previous').disabled = index === 0;
-    byId('next').disabled = index === words.length - 1;
-    byId('opened-count').textContent = Object.keys(sync.snapshot().opened).length;
-    byId('pronounce').setAttribute('aria-label', 'Pronounce ' + word.word);
-    for (const button of document.querySelectorAll('[data-word-id]')) {
-      if (button.dataset.wordId === word.id) button.setAttribute('aria-current', 'true');
-      else button.removeAttribute('aria-current');
+  function refresh() {
+    if (!rows.size) return;
+    const state = sync.snapshot();
+    let markedCount = 0;
+    let visibleCount = 0;
+    const visibleGroups = new Set();
+    const query = byId('search').value.trim().toLowerCase();
+    for (const word of words) {
+      const elements = rows.get(word.id);
+      const marked = state.opened[word.id]?.review === true;
+      if (marked) markedCount++;
+      const visible = word.word.toLowerCase().includes(query) && (view === 'all' || marked);
+      elements.row.hidden = !visible;
+      if (visible) { visibleCount++; visibleGroups.add(word.difficulty); }
+      elements.row.classList.toggle('marked', marked);
+      elements.reveal.textContent = marked ? 'I don’t know ✓' : 'I don’t know';
+      elements.reveal.setAttribute('aria-pressed', String(marked));
+      elements.undo.hidden = !marked;
+      elements.meaning.hidden = !revealed.has(word.id);
+      elements.meaning.textContent = revealed.has(word.id) ? word.meaning : '';
+      elements.reveal.setAttribute('aria-expanded', String(revealed.has(word.id)));
+    }
+    for (const [level, heading] of groups) heading.hidden = !visibleGroups.has(level);
+    byId('marked-count').textContent = markedCount;
+    byId('marked-tab-count').textContent = markedCount;
+    byId('download').disabled = markedCount === 0;
+    byId('all-view').setAttribute('aria-pressed', String(view === 'all'));
+    byId('marked-view').setAttribute('aria-pressed', String(view === 'marked'));
+    const countLabel = visibleCount === 1 ? '1 word' : visibleCount + ' words';
+    byId('list-description').textContent = countLabel + (view === 'marked' ? ' marked for review' : '') + ' · Easier → harder';
+    byId('empty-message').hidden = visibleCount > 0;
+    byId('empty-message').textContent = query ? 'No matching words.' : 'Tap I don’t know beside any word to start your trimmed review list.';
+    const lastWord = wordMap.get(state.position?.id);
+    byId('resume').hidden = !lastWord;
+    if (lastWord) {
+      byId('resume').href = '#row-' + lastWord.id;
+      byId('resume').textContent = 'Resume at ' + lastWord.word;
     }
   }
 
-  function move(nextIndex) {
-    if (nextIndex < 0 || nextIndex >= words.length) return;
-    interacted = true;
-    index = nextIndex;
-    revealed = false;
-    window.speechSynthesis?.cancel();
-    sync.move(words[index].id);
-    render();
-  }
-
-  byId('reveal').addEventListener('click', () => {
-    interacted = true;
-    revealed = true;
-    sync.open(words[index].id);
-    render();
-    byId('hide').focus({ preventScroll: true });
-  });
-  byId('hide').addEventListener('click', () => {
-    revealed = false;
-    render();
-    byId('reveal').focus({ preventScroll: true });
-  });
-  byId('previous').addEventListener('click', () => move(index - 1));
-  byId('next').addEventListener('click', () => move(index + 1));
-  byId('save').addEventListener('click', () => void sync.flush());
-  byId('search').addEventListener('input', renderDirectory);
-  byId('word-directory').addEventListener('click', event => {
-    const button = event.target.closest('[data-word-id]');
-    if (!button) return;
-    move(words.findIndex(word => word.id === button.dataset.wordId));
-    document.querySelector('.directory').open = false;
-    document.querySelector('.study').scrollIntoView({ block: 'center' });
-    byId('reveal').focus({ preventScroll: true });
-  });
-  byId('pronounce').disabled = !window.speechSynthesis || !window.SpeechSynthesisUtterance;
-  byId('pronounce').addEventListener('click', () => {
-    const word = words[index].word;
+  function pronounce(word) {
     const text = word === 'minute' ? 'a minute detail' : word === 'defect' ? 'to defect' : word;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'en-US';
@@ -106,6 +132,44 @@
     if (voice) utterance.voice = voice;
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
+  }
+
+  byId('word-list').addEventListener('click', event => {
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+    const row = button.closest('[data-word-id]');
+    const id = row.dataset.wordId;
+    if (button.dataset.action === 'pronounce') { pronounce(wordMap.get(id).word); return; }
+    if (button.dataset.action === 'undo') {
+      revealed.delete(id);
+      sync.unmark(id);
+      if (view === 'marked') byId('marked-view').focus({ preventScroll: true });
+      else rows.get(id).reveal.focus({ preventScroll: true });
+      return;
+    }
+    revealed.add(id);
+    if (sync.snapshot().opened[id]?.review) refresh();
+    else sync.open(id);
+  });
+  byId('all-view').addEventListener('click', () => { view = 'all'; refresh(); });
+  byId('marked-view').addEventListener('click', () => { view = 'marked'; refresh(); });
+  byId('search').addEventListener('input', refresh);
+  byId('save').addEventListener('click', () => void sync.flush());
+  byId('resume').addEventListener('click', () => {
+    view = 'all';
+    byId('search').value = '';
+    refresh();
+  });
+  byId('download').addEventListener('click', () => {
+    const state = sync.snapshot();
+    const marked = words.filter(word => state.opened[word.id]?.review);
+    const text = ['Marco’s trimmed review list', marked.length + ' words · Easier to harder', '', ...marked.map(word => word.word + ' — ' + word.meaning)].join('\n');
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Marco-trimmed-review-words.txt';
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   });
   window.addEventListener('storage', event => {
     if (event.key === sync.key && event.newValue) sync.receiveLocal(event.newValue);
@@ -113,14 +177,7 @@
   window.addEventListener('online', () => void sync.flush());
   window.addEventListener('pagehide', () => void sync.flush());
 
-  const savedIndex = words.findIndex(word => word.id === sync.snapshot().position?.id);
-  if (savedIndex >= 0) index = savedIndex;
-  renderDirectory();
-  render();
-  void sync.flush().then(() => {
-    if (interacted) return;
-    const remoteIndex = words.findIndex(word => word.id === sync.snapshot().position?.id);
-    if (remoteIndex >= 0) index = remoteIndex;
-    render();
-  });
+  buildList();
+  refresh();
+  void sync.flush();
 })();
