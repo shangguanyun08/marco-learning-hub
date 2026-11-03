@@ -27,6 +27,16 @@
   if(!r||!q||r.answers[qid]||r.completedAt||!Number.isInteger(choice)||choice<0||choice>=q.choices.length)return false;
   r.answers[qid]={id:eventId,choice,correct:choice===q.correct,at};if(complete(r))r.completedAt=stamp(r);return true;
  }
+ function submitSet(state,sid,choices,at=new Date().toISOString(),eventId=()=>root.crypto.randomUUID()){
+  const s=session(sid),r=state.sessions[sid];
+  if(!s||complete(r)||!object(choices)||!time(at)||Object.keys(choices).some(id=>!s.questions.some(q=>q.id===id)))return false;
+  const pending=s.questions.filter(q=>!r?.answers[q.id]);
+  if(pending.some(q=>!Number.isInteger(choices[q.id])||choices[q.id]<0||choices[q.id]>=q.choices.length))return false;
+  // Stage the whole submission so an incomplete set never records first answers.
+  const next=clone(state);if(!start(next,sid,at))return false;
+  for(const q of pending)if(!submit(next,sid,q.id,choices[q.id],at,eventId()))return false;
+  state.sessions[sid]=next.sessions[sid];return true;
+ }
  function merge(local,remote){
   local=repair(local);remote=repair(remote);
   const out=empty();
@@ -56,5 +66,5 @@
   const recent=scores.slice(-2),accuracyReady=recent.length===2&&recent.every(s=>s.correct>=22),ready=scores.length===3&&days.length>=2&&skills.every(s=>s.strong)&&accuracyReady;
   return{scores,skills,studyDays:days.length,completed:scores.length,ready,accuracyReady,rule:'Complete three fresh sessions across at least two study days. Reach at least 8/9 first try in every skill, with a correct answer in every checked subskill, and at least 22/24 in each of the final two sessions.'};
  }
- root.HarrySkillEngine={empty,valid,start,submit,merge,complete,stats,report,question,session};
+ root.HarrySkillEngine={empty,valid,start,submit,submitSet,merge,complete,stats,report,question,session};
 })(typeof window==='undefined'?globalThis:window);

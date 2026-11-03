@@ -53,3 +53,30 @@ test('progress requires fresh coverage, separate days, strong results in every s
 test('parent review never improves a first-try score and partial records cannot claim completion',()=>{
  const {D,E}=setup(),state=E.empty();fill(E,D,state,0,at,[0]);const before=E.stats(state.sessions['mixed-1']).correct,q=D.sessions[0].questions[0];state.sessions['mixed-1'].reviewed[q.id]=at;assert.equal(E.stats(state.sessions['mixed-1']).correct,before);assert.ok(E.valid(state));const tampered=plain(state);delete tampered.sessions['mixed-1'].answers[q.id];assert.equal(E.valid(tampered),false);
 });
+test('whole-set submission rejects missing or invalid choices without recording any first answers',()=>{
+ const {D,E}=setup(),state=E.empty(),s=D.sessions[0],choices=Object.fromEntries(s.questions.map(q=>[q.id,q.correct])),before=plain(state);
+ const missing={...choices};delete missing[s.questions[23].id];
+ assert.equal(E.submitSet(state,s.id,missing,at,()=> 'set-event-000001'),false);assert.deepEqual(plain(state),before);
+ for(const invalid of [-1,4,1.5,'1',null]){assert.equal(E.submitSet(state,s.id,{...choices,[s.questions[0].id]:invalid},at,()=> 'set-event-000001'),false);assert.deepEqual(plain(state),before);}
+ assert.equal(E.submitSet(state,'mixed-2',Object.fromEntries(D.sessions[1].questions.map(q=>[q.id,q.correct])),at,()=> 'set-event-000001'),false);assert.deepEqual(plain(state),before);
+});
+test('each set saves all first answers together, fixes the score, and unlocks the next set',()=>{
+ const {D,E}=setup(),state=E.empty();let event=0;
+ for(const s of D.sessions){
+  const choices=Object.fromEntries(s.questions.map((q,i)=>[q.id,i<2?(q.correct+1)%4:q.correct]));
+  assert.equal(E.submitSet(state,s.id,choices,at,()=>`set-event-${++event}`),true);
+  assert.equal(E.complete(state.sessions[s.id]),true);assert.equal(E.stats(state.sessions[s.id]).correct,22);assert.ok(E.valid(state));
+  const scored=plain(state.sessions[s.id]);
+  assert.equal(E.submitSet(state,s.id,Object.fromEntries(s.questions.map(q=>[q.id,q.correct])),at,()=>`set-event-${++event}`),false);
+  assert.deepEqual(plain(state.sessions[s.id]),scored);
+ }
+ assert.equal(E.report(state).completed,3);
+});
+test('finishing a legacy partial set preserves earlier submitted first answers and syncs a valid complete record',()=>{
+ const {D,E}=setup(),state=E.empty(),s=D.sessions[0],q=s.questions[0];
+ E.start(state,s.id,at);E.submit(state,s.id,q.id,(q.correct+1)%4,at,'legacy-first-event');
+ const original=plain(state.sessions[s.id].answers[q.id]),remote=plain(state);let event=0;
+ assert.equal(E.submitSet(state,s.id,Object.fromEntries(s.questions.map(q=>[q.id,q.correct])),at,()=>`new-set-event-${++event}`),true);
+ assert.deepEqual(plain(state.sessions[s.id].answers[q.id]),original);assert.equal(E.stats(state.sessions[s.id]).correct,23);
+ const merged=E.merge(state,remote);assert.ok(E.valid(merged));assert.equal(E.complete(merged.sessions[s.id]),true);assert.equal(E.stats(merged.sessions[s.id]).correct,23);
+});
