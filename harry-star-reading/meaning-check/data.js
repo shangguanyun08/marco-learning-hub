@@ -1,11 +1,11 @@
 /* Recall targets; original examples identify the tested sense. */
 window.HARRY_MEANING_CHECK = {
-  "version": "20261102-fifteen-word-sections",
+  "version": "20261103-six-sets",
   "appId": "harry-word-meaning-check-20261031-v1",
   "title": "Harry · Word Meaning Check",
   "studentName": "Harry",
   "sectionSize": 15,
-  "total": 94,
+  "total": 92,
   "excluded": [],
   "sections": [
     {
@@ -26,15 +26,11 @@ window.HARRY_MEANING_CHECK = {
     },
     {
       "number": 5,
-      "count": 15
+      "count": 16
     },
     {
       "number": 6,
-      "count": 15
-    },
-    {
-      "number": 7,
-      "count": 4
+      "count": 16
     }
   ],
   "words": [
@@ -1030,9 +1026,22 @@ window.HARRY_MEANING_CHECK = {
       }
     },
     {
+      "id": "parliament",
+      "word": "parliament",
+      "number": 76,
+      "section": 5,
+      "source": "practice",
+      "partOfSpeech": "noun",
+      "context": "Parliament passed the new law.",
+      "contextSource": {
+        "kind": "Daily Vocabulary Review",
+        "wordId": 526
+      }
+    },
+    {
       "id": "agency",
       "word": "agency",
-      "number": 76,
+      "number": 77,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1045,7 +1054,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "analogy",
       "word": "analogy",
-      "number": 77,
+      "number": 78,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1058,7 +1067,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "bias",
       "word": "bias",
-      "number": 78,
+      "number": 79,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1071,7 +1080,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "crisis",
       "word": "crisis",
-      "number": 79,
+      "number": 80,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1084,7 +1093,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "in-addition",
       "word": "addition",
-      "number": 80,
+      "number": 81,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1097,7 +1106,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "lengthy",
       "word": "lengthy",
-      "number": 81,
+      "number": 82,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
@@ -1110,7 +1119,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "sequence",
       "word": "sequence",
-      "number": 82,
+      "number": 83,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1123,7 +1132,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "stunned",
       "word": "stun",
-      "number": 83,
+      "number": 84,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "verb",
@@ -1136,7 +1145,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "animated",
       "word": "animated",
-      "number": 84,
+      "number": 85,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
@@ -1149,7 +1158,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "anticipate",
       "word": "anticipate",
-      "number": 85,
+      "number": 86,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "verb",
@@ -1162,7 +1171,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "criterion",
       "word": "criterion",
-      "number": 86,
+      "number": 87,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1175,7 +1184,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "crossing",
       "word": "crossing",
-      "number": 87,
+      "number": 88,
       "section": 6,
       "source": "practice",
       "context": "Use the pedestrian crossing to cross the road.",
@@ -1188,7 +1197,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "cruel",
       "word": "cruel",
-      "number": 88,
+      "number": 89,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
@@ -1201,7 +1210,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "endure",
       "word": "endure",
-      "number": 89,
+      "number": 90,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "verb",
@@ -1214,7 +1223,7 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "hoax",
       "word": "hoax",
-      "number": 90,
+      "number": 91,
       "section": 6,
       "source": "practice",
       "partOfSpeech": "noun",
@@ -1225,49 +1234,10 @@ window.HARRY_MEANING_CHECK = {
       }
     },
     {
-      "id": "parliament",
-      "word": "parliament",
-      "number": 91,
-      "section": 7,
-      "source": "practice",
-      "partOfSpeech": "noun",
-      "context": "Parliament passed the new law.",
-      "contextSource": {
-        "kind": "Daily Vocabulary Review",
-        "wordId": 526
-      }
-    },
-    {
-      "id": "spinach",
-      "word": "spinach",
-      "number": 92,
-      "section": 7,
-      "source": "practice",
-      "partOfSpeech": "noun",
-      "context": "Fresh spinach is rich in vitamins.",
-      "contextSource": {
-        "kind": "Daily Vocabulary Review",
-        "wordId": 370
-      }
-    },
-    {
-      "id": "takeaway",
-      "word": "takeaway",
-      "number": 93,
-      "section": 7,
-      "source": "practice",
-      "partOfSpeech": "noun",
-      "context": "We brought home a takeaway for dinner.",
-      "contextSource": {
-        "kind": "Daily Vocabulary Review",
-        "wordId": 768
-      }
-    },
-    {
       "id": "voluntary",
       "word": "voluntary",
-      "number": 94,
-      "section": 7,
+      "number": 92,
+      "section": 6,
       "source": "practice",
       "partOfSpeech": "adjective",
       "context": "Attendance at the evening workshop is voluntary.",
@@ -2369,6 +2339,60 @@ window.HARRY_MEANING_CHECK = {
     {
       "id": "voluntary",
       "section": 10
+    }
+  ],
+  "previousSet7Words": [
+    {
+      "id": "parliament",
+      "word": "parliament",
+      "number": 91,
+      "section": 7,
+      "source": "practice",
+      "partOfSpeech": "noun",
+      "context": "Parliament passed the new law.",
+      "contextSource": {
+        "kind": "Daily Vocabulary Review",
+        "wordId": 526
+      }
+    },
+    {
+      "id": "spinach",
+      "word": "spinach",
+      "number": 92,
+      "section": 7,
+      "source": "practice",
+      "partOfSpeech": "noun",
+      "context": "Fresh spinach is rich in vitamins.",
+      "contextSource": {
+        "kind": "Daily Vocabulary Review",
+        "wordId": 370
+      }
+    },
+    {
+      "id": "takeaway",
+      "word": "takeaway",
+      "number": 93,
+      "section": 7,
+      "source": "practice",
+      "partOfSpeech": "noun",
+      "context": "We brought home a takeaway for dinner.",
+      "contextSource": {
+        "kind": "Daily Vocabulary Review",
+        "wordId": 768
+      }
+    },
+    {
+      "id": "voluntary",
+      "word": "voluntary",
+      "number": 94,
+      "section": 7,
+      "source": "practice",
+      "partOfSpeech": "adjective",
+      "context": "Attendance at the evening workshop is voluntary.",
+      "contextSource": {
+        "kind": "Daily Vocabulary Review",
+        "wordId": 796
+      }
     }
   ]
 };
