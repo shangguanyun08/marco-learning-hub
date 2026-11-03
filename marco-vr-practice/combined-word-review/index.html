@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>820 Word Review · Marco’s Learning Hub</title>
+  <meta name="description" content="Marco’s selected 500 + 320 review words, ordered from easier to harder. Reveal a short meaning with I don’t know.">
+  <meta name="theme-color" content="#175b79">
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css?v=20261103-1">
+  <script defer src="data.js?v=20261103-1"></script>
+  <script defer src="sync.js?v=20261103-1"></script>
+  <script defer src="app.js?v=20261103-1"></script>
+</head>
+<body>
+<main>
+  <nav><a href="../../#marco-heading">← Learning Hub</a><a href="../">VR practice</a></nav>
+  <header>
+    <p class="eyebrow">MARCO · VOCABULARY RECALL</p>
+    <h1>A word at a time.</h1>
+    <p class="lead">Your 500 + 320 selected words, from easier to harder.<br>Say the meaning first. Tap <strong>I don’t know</strong> whenever you need help.</p>
+  </header>
+
+  <section class="overview" aria-label="Review overview">
+    <div><strong>820</strong><span>selected words</span></div>
+    <div><strong id="opened-count">0</strong><span>meanings opened</span></div>
+    <div class="save"><span id="save-status" role="status" aria-live="polite">Loading your saved place…</span><button id="save" class="text-button" type="button">Save online</button></div>
+  </section>
+
+  <section class="study" aria-label="Current word">
+    <div class="card-top"><span id="difficulty" class="badge"></span><span id="position"></span></div>
+    <progress id="progress" max="820" value="1" aria-label="Position in the word list"></progress>
+    <div class="word-area"><h2 id="word"></h2><button id="pronounce" class="sound" type="button" aria-label="Pronounce current word">🔊</button></div>
+    <div class="meaning-space" aria-live="polite">
+      <p id="prompt">What does this word mean?</p>
+      <p id="meaning" hidden></p>
+      <p id="opened-note" hidden>You opened this meaning before.</p>
+    </div>
+    <div class="reveal-actions"><button id="reveal" class="primary" type="button">I don’t know</button><button id="hide" class="secondary" type="button" hidden>Hide meaning</button></div>
+    <div class="navigation"><button id="previous" class="secondary" type="button">← Previous</button><button id="next" type="button">Next word →</button></div>
+  </section>
+
+  <details class="directory">
+    <summary>Find a word · All 820 words</summary>
+    <label for="search">Jump to a word</label>
+    <input id="search" type="search" placeholder="Search the word list…" autocomplete="off">
+    <p class="small" id="search-count" role="status"></p>
+    <div id="word-directory"></div>
+  </details>
+
+  <footer>
+    <p>Difficulty uses four broad groups, with alphabetical order inside each group. Short meanings use 2–3 words. Your place and opened meanings save automatically.</p>
+    <p>Combined from your saved selections on November 3, 2026.</p>
+    <div class="footer-links"><a href="../vocabulary-selection/">Main word selection</a><a href="../vocabulary-selection/extra-400/">Additional word selection</a></div>
+  </footer>
+  <noscript><p>Enable JavaScript to open the word review.</p></noscript>
+</main>
+</body>
+</html>
