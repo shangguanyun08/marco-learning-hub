@@ -57,14 +57,14 @@
  const stats=r=>({answered:Object.keys(r?.answers||{}).length,total:24,correct:Object.values(r?.answers||{}).filter(a=>a.correct).length,wrong:Object.values(r?.answers||{}).filter(a=>!a.correct).length});
  const studyDate=at=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(at));
  function report(state){
-  const finished=D.sessions.filter(s=>complete(state.sessions[s.id])),scores=finished.map(s=>({id:s.id,number:s.number,...stats(state.sessions[s.id]),completedAt:state.sessions[s.id].completedAt})),days=[...new Set(scores.map(s=>studyDate(s.completedAt)))];
-  const skills=D.skills.map(skill=>{const items=finished.flatMap(s=>s.questions.filter(q=>q.skill===skill.id).map(q=>({q,a:state.sessions[s.id].answers[q.id],session:s.number}))),facets={};
+  const finished=D.sessions.filter(s=>complete(state.sessions[s.id])),evidence=finished.slice(-3),scores=finished.map(s=>({id:s.id,number:s.number,...stats(state.sessions[s.id]),completedAt:state.sessions[s.id].completedAt})),days=[...new Set(scores.map(s=>studyDate(s.completedAt)))];
+  const skills=D.skills.map(skill=>{const history=finished.flatMap(s=>s.questions.filter(q=>q.skill===skill.id).map(q=>({q,a:state.sessions[s.id].answers[q.id],session:s.number}))),items=history.filter(x=>evidence.some(s=>s.number===x.session)),facets={};
    for(const {q,a}of items){facets[q.facet]||={correct:0,total:0};facets[q.facet].total++;if(a.correct)facets[q.facet].correct++;}
    const correct=items.filter(x=>x.a.correct).length,total=items.length,strong=total>=9&&correct>=8&&Object.values(facets).every(f=>f.correct>0);
-   return{...skill,correct,total,percent:total?Math.round(correct/total*100):null,strong,status:total<9?'Evidence building':strong?'Strong first-try evidence':'Needs more practice',facets,misses:items.filter(x=>!x.a.correct).map(({q,a,session})=>({questionId:q.id,session,facet:q.facet,prompt:q.prompt,selected:q.choices[a.choice],answer:q.choices[q.correct],explanation:q.explanation}))};
+   return{...skill,correct,total,percent:total?Math.round(correct/total*100):null,strong,status:total<9?'Evidence building':strong?'Strong first-try evidence':'Needs more practice',facets,misses:history.filter(x=>!x.a.correct).map(({q,a,session})=>({questionId:q.id,session,facet:q.facet,prompt:q.prompt,selected:q.choices[a.choice],answer:q.choices[q.correct],explanation:q.explanation}))};
   });
-  const recent=scores.slice(-2),accuracyReady=recent.length===2&&recent.every(s=>s.correct>=22),ready=scores.length===3&&days.length>=2&&skills.every(s=>s.strong)&&accuracyReady;
-  return{scores,skills,studyDays:days.length,completed:scores.length,ready,accuracyReady,rule:'Complete three fresh sessions across at least two study days. Reach at least 8/9 first try in every skill, with a correct answer in every checked subskill, and at least 22/24 in each of the final two sessions.'};
+  const recent=scores.slice(-2),accuracyReady=recent.length===2&&recent.every(s=>s.correct>=22),ready=scores.length>=3&&days.length>=2&&skills.every(s=>s.strong)&&accuracyReady;
+  return{scores,skills,evidenceSessions:evidence.map(s=>s.number),studyDays:days.length,completed:scores.length,ready,accuracyReady,rule:'Complete at least three fresh sessions across at least two study days. In the most recent three finished sessions, reach at least 8/9 first try in every skill with a correct answer in every checked subskill, and at least 22/24 in each of the most recent two sessions.'};
  }
  root.HarrySkillEngine={empty,valid,start,submit,submitSet,merge,complete,stats,report,question,session};
 })(typeof window==='undefined'?globalThis:window);

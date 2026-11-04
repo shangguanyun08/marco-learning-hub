@@ -3,12 +3,12 @@ function setup(){const c={};c.globalThis=c;for(const f of ['data.js','engine.js'
 const plain=x=>JSON.parse(JSON.stringify(x));
 const numeric=s=>Number(String(s).replace(/[$,]/g,'').match(/^\d+(?:\.\d+)?/)?.[0]);
 function value(s){const m=String(s).match(/^(?:(\d+) )?(\d+)\/(\d+)$/);return m?Number(m[1]||0)+Number(m[2])/Number(m[3]):numeric(s);}
-test('three balanced mixed sessions have unique questions and three questions per skill',()=>{
- const {D}=setup(),all=D.sessions.flatMap(s=>s.questions);assert.equal(all.length,72);assert.equal(new Set(all.map(q=>q.id)).size,72);assert.equal(new Set(all.map(q=>q.prompt+JSON.stringify(q.visual||null))).size,72);
+test('five balanced mixed sessions have unique questions and three questions per skill',()=>{
+ const {D}=setup(),all=D.sessions.flatMap(s=>s.questions);assert.equal(D.sessions.length,5);assert.equal(all.length,120);assert.equal(new Set(all.map(q=>q.id)).size,120);assert.equal(new Set(all.map(q=>q.prompt+JSON.stringify(q.visual||null))).size,120);
  for(const s of D.sessions){assert.equal(s.questions.length,24);for(const k of D.skills)assert.equal(s.questions.filter(q=>q.skill===k.id).length,3);for(const [i,q]of s.questions.entries()){assert.equal(q.choices.length,4);assert.equal(new Set(q.choices).size,4);assert.ok(q.explanation.length>35);if(i)assert.notEqual(q.skill,s.questions[i-1].skill);}}
- assert.equal(all.filter(q=>q.visual).length,9);
+ assert.equal(all.filter(q=>q.visual).length,15);
 });
-test('all 72 answer keys agree with independent arithmetic and diagram checks',()=>{
+test('all 120 answer keys agree with independent arithmetic and diagram checks',()=>{
  const {D}=setup();for(const q of D.sessions.flatMap(s=>s.questions)){
   const c=q.check,a=c.args||[],answer=q.choices[q.correct];let expected;
   switch(c.kind){
@@ -70,7 +70,16 @@ test('each set saves all first answers together, fixes the score, and unlocks th
   assert.equal(E.submitSet(state,s.id,Object.fromEntries(s.questions.map(q=>[q.id,q.correct])),at,()=>`set-event-${++event}`),false);
   assert.deepEqual(plain(state.sessions[s.id]),scored);
  }
- assert.equal(E.report(state).completed,3);
+ assert.equal(E.report(state).completed,5);
+});
+test('sessions four and five provide fresh evidence while keeping earlier scores and mistakes',()=>{
+ const {D,E}=setup(),state=E.empty();
+ for(let i=0;i<3;i++)fill(E,D,state,i,`2026-11-0${i+1}T17:00:00.000Z`,i<2?D.sessions[i].questions.map((_,j)=>j):[]);
+ assert.equal(E.report(state).ready,false);const original=plain(state.sessions['mixed-1']);
+ fill(E,D,state,3,'2026-11-04T17:00:00.000Z');assert.equal(E.report(state).ready,false);
+ fill(E,D,state,4,'2026-11-05T17:00:00.000Z');const r=E.report(state);
+ assert.equal(r.completed,5);assert.equal(r.ready,true);assert.deepEqual(plain(r.evidenceSessions),[3,4,5]);assert.ok(r.skills.every(s=>s.correct===9&&s.total===9));
+ assert.equal(r.scores[0].correct,0);assert.ok(r.skills.every(s=>s.misses.length===6));assert.deepEqual(plain(state.sessions['mixed-1']),original);assert.ok(E.valid(E.merge(state,E.empty())));
 });
 test('finishing a legacy partial set preserves earlier submitted first answers and syncs a valid complete record',()=>{
  const {D,E}=setup(),state=E.empty(),s=D.sessions[0],q=s.questions[0];
