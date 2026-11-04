@@ -61,7 +61,7 @@
  window.addEventListener('storage',e=>{if(e.key===marksKey||e.key===null){marks=readMarks();updateMarks();}});
  $('sections').addEventListener('click',e=>{const b=e.target.closest('[data-section]');if(b)resume(Number(b.dataset.section));});
  $('rounds').addEventListener('click',e=>{const b=e.target.closest('[data-round]');if(b&&!b.disabled)select(selected.section,Number(b.dataset.round));});
- window.addEventListener('hashchange',()=>{const p=readPlace();if(p&&validSection(p.section))select(p.section,p.round);});
+ window.addEventListener('hashchange',()=>{if(!/^#section-\d+(?:-round-\d+)?$/.test(location.hash))return;const p=readPlace();if(p&&validSection(p.section))select(p.section,p.round);});
  $('word-list').addEventListener('input',e=>{if(e.target.matches('.meaning'))sync.editRound(selected.section,selected.round,e.target.closest('[data-word]').dataset.word,'meaning',e.target.value);});
  $('word-list').addEventListener('click',async e=>{
   const pronunciation=e.target.closest('[data-pronounce]');if(pronunciation){const w=words.get(pronunciation.dataset.pronounce),utterance=new window.SpeechSynthesisUtterance(w.word.toLowerCase());utterance.lang='en-US';utterance.rate=.8;const voice=window.speechSynthesis.getVoices().find(v=>v.lang==='en-US');if(voice)utterance.voice=voice;window.speechSynthesis.cancel();window.speechSynthesis.speak(utterance);return;}
