@@ -39,7 +39,7 @@ thead th:last-child { border-top-right-radius: 11px; }
 .word-row th, .word-row td { text-align: left; border-bottom: 1px solid #e8edee; padding: 9px 17px; vertical-align: middle; }
 .word-row th { font-size: 17px; font-weight: 600; }
 .word-content { display: flex; align-items: center; gap: 10px; }
-.word-label { overflow-wrap: anywhere; }
+.word-label { overflow-wrap: anywhere; flex-shrink: 0; }
 .number { color: #87969e; font-size: 11px; min-width: 25px; font-weight: 400; }
 .sound { background: transparent; color: var(--ink); border: 0; border-radius: 50%; padding: 4px; min-height: 30px; min-width: 30px; font-size: 15px; flex-shrink: 0; }
 .group-row th { text-align: left; padding: 13px 17px; background: #edf4f3; color: var(--teal); font-size: 13px; font-weight: 750; border-bottom: 1px solid var(--line); }
@@ -49,7 +49,7 @@ thead th:last-child { border-top-right-radius: 11px; }
 .reveal[aria-pressed="true"] { background: #fff0e9; color: #903e29; border-color: #dfb5a4; }
 .know { background: #edf7f0; color: #256047; border-color: #a2cbb0; }
 .know[aria-pressed="true"] { background: #256047; color: white; border-color: #256047; }
-.meaning { display: block; font-size: 15px; font-weight: 650; color: var(--teal); margin: 6px 0 0; }
+.meaning { flex: 1; min-width: 0; font-size: 15px; font-weight: 650; color: var(--teal); margin: 0; line-height: 1.4; }
 .word-row.marked { background: #fffaf6; }
 .word-row.known { background: #f5f8f5; }
 .word-row.known .word-label { color: #6b7e73; text-decoration: line-through; text-decoration-thickness: 2px; }
@@ -70,7 +70,17 @@ footer p { max-width: 750px; }
   thead th:first-child { width: 48%; }
   .word-row th, .word-row td { padding: 8px 10px; }
   .word-row th { font-size: 15px; }
-  .word-content { gap: 5px; flex-wrap: wrap; }
+  table, thead, tbody { display: block; }
+  thead tr { display: grid; grid-template-columns: 1fr 1fr; }
+  thead th:first-child { width: auto; }
+  .group-row, .group-row th { display: block; }
+  .word-row { display: block; border-bottom: 1px solid #e8edee; }
+  .word-row:last-child { border-bottom: 0; }
+  .word-row th, .word-row td { display: block; border-bottom: 0; }
+  .word-row th { padding-bottom: 2px; }
+  .word-row td { padding-top: 4px; }
+  .word-content { gap: 5px; flex-wrap: nowrap; }
+  .word-content .meaning { font-size: 13px; }
   .number { min-width: 20px; font-size: 10px; }
   .sound { font-size: 13px; min-width: 26px; min-height: 28px; }
   .reveal, .know { width: 128px; min-width: 128px; height: 38px; padding: 8px 10px; font-size: 12px; }

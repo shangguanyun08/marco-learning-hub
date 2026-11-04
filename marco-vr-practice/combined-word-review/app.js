@@ -69,13 +69,14 @@
       reveal.dataset.action = 'reveal';
       reveal.setAttribute('aria-label', 'I don’t know ' + word.word);
       reveal.setAttribute('aria-controls', 'meaning-' + word.id);
-      const meaning = document.createElement('p');
+      const meaning = document.createElement('span');
       meaning.className = 'meaning';
       meaning.id = 'meaning-' + word.id;
       meaning.setAttribute('aria-live', 'polite');
       meaning.hidden = true;
+      content.append(meaning);
       actions.append(know, reveal);
-      answerCell.append(actions, meaning);
+      answerCell.append(actions);
       row.append(wordCell, answerCell);
       container.append(row);
       rows.set(word.id, { row, know, reveal, meaning });
