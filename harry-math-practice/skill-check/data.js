@@ -6,7 +6,7 @@
     {
       "id": "fractions",
       "name": "Fraction operations",
-      "description": "Subtract unlike fractions, multiply simple fractions, and find how many fractional groups fit."
+      "description": "Subtract unlike fractions, multiply fractions and mixed numbers, and find how many fractional groups fit."
     },
     {
       "id": "calculation",
@@ -1888,24 +1888,25 @@
           }
         },
         {
-          "id": "s4-fractions-3-simple",
+          "id": "s4-fractions-2",
           "skill": "fractions",
-          "facet": "fraction-multiplication",
-          "prompt": "Multiply: 1/4 × 8",
+          "facet": "mixed-multiplication",
+          "prompt": "Each bag holds 3 1/2 kilograms of rice. How many kilograms do 4 bags hold?",
           "choices": [
-            "4",
-            "2",
-            "8",
-            "1"
+            "14",
+            "12 1/2",
+            "7",
+            "16"
           ],
-          "correct": 1,
-          "explanation": "One fourth of 8 is 2. Split 8 into four equal groups: 8 ÷ 4 = 2. So eight quarters make 2 wholes.",
+          "correct": 0,
+          "explanation": "Multiply each part by 4: 3 × 4 = 12 and 1/2 × 4 = 2. Add 12 + 2 = 14 kilograms.",
           "check": {
-            "kind": "fractionMultiply",
+            "kind": "mixedMultiply",
             "args": [
+              3,
               1,
-              4,
-              8
+              2,
+              4
             ]
           }
         },
@@ -2141,29 +2142,6 @@
             "x": 7,
             "y": 2,
             "label": "T"
-          }
-        },
-        {
-          "id": "s4-fractions-2",
-          "skill": "fractions",
-          "facet": "mixed-multiplication",
-          "prompt": "Each bag holds 3 1/2 kilograms of rice. How many kilograms do 4 bags hold?",
-          "choices": [
-            "14",
-            "12 1/2",
-            "7",
-            "16"
-          ],
-          "correct": 0,
-          "explanation": "Multiply each part by 4: 3 × 4 = 12 and 1/2 × 4 = 2. Add 12 + 2 = 14 kilograms.",
-          "check": {
-            "kind": "mixedMultiply",
-            "args": [
-              3,
-              1,
-              2,
-              4
-            ]
           }
         },
         {
@@ -2445,6 +2423,28 @@
               25
             ]
           }
+        },
+        {
+          "id": "s4-fractions-3-simple",
+          "skill": "fractions",
+          "facet": "fraction-multiplication",
+          "prompt": "Multiply: 1/4 × 8",
+          "choices": [
+            "4",
+            "2",
+            "8",
+            "1"
+          ],
+          "correct": 1,
+          "explanation": "One fourth of 8 is 2. Split 8 into four equal groups: 8 ÷ 4 = 2. So eight quarters make 2 wholes.",
+          "check": {
+            "kind": "fractionMultiply",
+            "args": [
+              1,
+              4,
+              8
+            ]
+          }
         }
       ]
     },
@@ -2566,23 +2566,24 @@
           }
         },
         {
-          "id": "s5-fractions-2-simple",
+          "id": "s5-fractions-2",
           "skill": "fractions",
-          "facet": "fraction-multiplication",
-          "prompt": "Multiply: 1/2 × 6",
+          "facet": "mixed-multiplication",
+          "prompt": "Multiply: 1 5/6 × 6",
           "choices": [
-            "6",
-            "12",
-            "3",
-            "4"
+            "6 5/6",
+            "10",
+            "11",
+            "7"
           ],
           "correct": 2,
-          "explanation": "One half of 6 is 3. Split 6 into two equal groups: 6 ÷ 2 = 3. So six halves make 3 wholes.",
+          "explanation": "1 5/6 = 11/6. Multiplying 11/6 by 6 gives 11. Or multiply the whole and fractional parts: 6 + 5 = 11.",
           "check": {
-            "kind": "fractionMultiply",
+            "kind": "mixedMultiply",
             "args": [
               1,
-              2,
+              5,
+              6,
               6
             ]
           }
@@ -3018,29 +3019,6 @@
           }
         },
         {
-          "id": "s5-fractions-2",
-          "skill": "fractions",
-          "facet": "mixed-multiplication",
-          "prompt": "Multiply: 1 5/6 × 6",
-          "choices": [
-            "6 5/6",
-            "10",
-            "11",
-            "7"
-          ],
-          "correct": 2,
-          "explanation": "1 5/6 = 11/6. Multiplying 11/6 by 6 gives 11. Or multiply the whole and fractional parts: 6 + 5 = 11.",
-          "check": {
-            "kind": "mixedMultiply",
-            "args": [
-              1,
-              5,
-              6,
-              6
-            ]
-          }
-        },
-        {
           "id": "s5-area-3",
           "skill": "area",
           "facet": "area-perimeter",
@@ -3102,6 +3080,28 @@
               36
             ]
           }
+        },
+        {
+          "id": "s5-fractions-2-simple",
+          "skill": "fractions",
+          "facet": "fraction-multiplication",
+          "prompt": "Multiply: 1/2 × 6",
+          "choices": [
+            "6",
+            "12",
+            "3",
+            "4"
+          ],
+          "correct": 2,
+          "explanation": "One half of 6 is 3. Split 6 into two equal groups: 6 ÷ 2 = 3. So six halves make 3 wholes.",
+          "check": {
+            "kind": "fractionMultiply",
+            "args": [
+              1,
+              2,
+              6
+            ]
+          }
         }
       ]
     }
@@ -3148,11 +3148,7 @@
   "multiplicationPolicy": {
     "fromSession": 4,
     "maxWholeFactor": 10,
-    "unitFractionDenominators": [
-      2,
-      4
-    ],
-    "wholeNumberFractionResults": true
+    "allowMixedFractionMultiplication": true
   }
 };
 })(typeof window==='undefined'?globalThis:window);

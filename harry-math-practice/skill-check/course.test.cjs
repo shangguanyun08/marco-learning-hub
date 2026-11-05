@@ -37,17 +37,22 @@ test('all active and archived answer keys agree with independent arithmetic and 
   assert.ok(Math.abs(value(answer)-expected)<1e-10,`${q.id}: ${answer}, expected ${expected}`);assert.ok(q.choices.filter(x=>Math.abs(value(x)-expected)<1e-10).length===1,`Multiple numeric correct choices ${q.id}`);
  }
 });
-test('session four and every later session use only simple multiplication, including worked examples',()=>{
+test('sessions four and five restore mixed fraction multiplication while other multiplication stays simple',()=>{
  const {D}=setup(),p=D.multiplicationPolicy;assert.equal(p.fromSession,4);assert.equal(p.maxWholeFactor,10);
+ assert.equal(p.allowMixedFractionMultiplication,true);
+ for(const [sessionId,questionId] of [['mixed-4','s4-fractions-2'],['mixed-5','s5-fractions-2']]){
+  const session=D.sessions.find(item=>item.id===sessionId);
+  assert.equal(session.questions.find(question=>question.id===questionId)?.check.kind,'mixedMultiply');
+ }
  const small=n=>Number.isInteger(n)&&n>=1&&n<=p.maxWholeFactor;
  for(const s of D.sessions.filter(s=>s.number>=p.fromSession))for(const q of s.questions){
+  if(q.skill==='fractions')continue;
   const {kind,args:a=[]}=q.check,ok=(...ns)=>assert.ok(ns.every(small),`${q.id}: multiplication factors ${ns}`);
   assert.ok(!['mixedMultiply','moneyMultiply'].includes(kind),`${q.id}: complex multiplication`);
   if(['multiply','area','areaPerimeter'].includes(kind))ok(...a);
   if(kind==='multiplyAdd'&&a[0]!==1&&a[1]!==1)ok(a[0],a[1]);
   if(kind==='scaledPair')ok(...a);
   if(kind==='scale'){const f=a[2]/a[1];f>=1?ok(a[0],a[1],f):ok(a[0]/(1/f),a[1]/(1/f),1/f);}
-  if(kind==='fractionMultiply'){assert.equal(a[0],1);assert.ok(p.unitFractionDenominators.includes(a[1]));ok(a[2]);assert.ok(Number.isInteger(a[2]/a[1]));}
   for(const m of (q.prompt+' '+q.explanation).matchAll(/(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)/g))ok(Number(m[1]),Number(m[2]));
  }
 });
