@@ -84,13 +84,13 @@
 
 
 
-          <article class="site-card featured" id="marco-vr-practice">
-            <div class="card-topline"><span>VR MOCK TEST REVIEWS</span><small>Practice Tests 1–4</small></div>
+          <article class="site-card featured" id="marco-meaning-round2">
+            <div class="card-topline"><span>WORD MEANING CHECK</span><small>Round 2</small></div>
             <div class="icon">VR</div>
-            <h3>Marco’s VR Test Review</h3>
-            <p>Review the VR mistakes from Test Innovators Practice Tests 1–4, organized by date and difficulty. See Marco’s wrong choices, keyword meanings, simplified publisher explanations, and matching earlier main-word questions. Tests 2 and 3 show only the second-attempt misses.</p>
-            <ul><li>Original mistakes + earlier matching practice</li><li>Unscored review · Key meanings always visible</li><li>Live online sync · Optional redo records preserved</li></ul>
-            <a href="./marco-vr-practice/">Choose a VR mock test <span>→</span></a>
+            <h3>Marco’s Word Meaning Check</h3>
+            <p>Review each word with a simple meaning, an example, and pronunciation. Practise recall one section at a time, repeat unknown words in shuffled rounds, and open the AI-scored meaning tests.</p>
+            <ul><li>Word review and recall</li><li>AI-scored meaning tests</li><li>Saved rounds and scores</li></ul>
+            <a href="./marco-vr-practice/meaning-check/round-2/">Open Word Meaning Check · Round 2 <span>→</span></a>
           </article>
 
 
@@ -122,8 +122,8 @@
             <div class="card-topline"><span>DAILY · MIXED MATH CHECKS</span><small>24 questions · 8 skills</small></div>
             <div class="icon">×÷</div>
             <h3>Harry's Daily Math</h3>
-            <p>Five mixed sessions across eight skills: 24 questions in Sessions 1–2, then 16 questions in Sessions 3–5 (two per skill). Save first answers, review mistakes together after finishing, and check progress before another STAR Math test.</p>
-            <ul><li>24 questions per session</li><li>Eight-skill progress report</li><li>Live online sync</li></ul>
+            <p>Five mixed sessions across eight skills: 24 questions in Sessions 1–2, then 16 questions in Sessions 3–5 (two per skill). Submit each set for a first-try score, then take a second try on each mistake.</p>
+            <ul><li>Two or three questions per skill</li><li>First-try percentage scores</li><li>Live online sync</li></ul>
             <a href="./harry-math-practice/skill-check/">Open daily math <span>→</span></a>
           </article>
 
@@ -201,9 +201,17 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>19 sites</span>
+                <span>20 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+          <article class="site-card archived" id="marco-vr-practice">
+            <div class="card-topline"><span>ARCHIVED · VR MOCK TEST REVIEWS</span><small>Practice Tests 1–4</small></div>
+            <div class="icon">VR</div>
+            <h3>Marco’s VR Test Review</h3>
+            <p>Review the VR mistakes from Test Innovators Practice Tests 1–4, organized by date and difficulty. See Marco’s wrong choices, keyword meanings, simplified publisher explanations, and matching earlier main-word questions. Tests 2 and 3 show only the second-attempt misses.</p>
+            <ul><li>Original mistakes + earlier matching practice</li><li>Unscored review · Key meanings always visible</li><li>Live online sync · Optional redo records preserved</li></ul>
+            <a href="./marco-vr-practice/">Open archived VR mock reviews <span>→</span></a>
+          </article>
           <article class="site-card archived" id="marco-combined-word-review">
             <div class="card-topline"><span>ARCHIVED · VOCABULARY RECALL</span><small>500 + 320 selected words</small></div>
             <div class="icon">820</div>
@@ -476,7 +484,7 @@
     <script src="./shared-activity-dashboard.js?v=20261021-time2-5" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
+        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-vr-practice','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
