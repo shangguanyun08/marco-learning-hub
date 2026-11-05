@@ -3,6 +3,34 @@
   const endpoint = 'https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/meaning-scores';
   const testUrl = 'https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/marco?test=';
   const status = document.getElementById('ai-score-status');
+  const data = window.MARCO_FOCUSED_ROUND2;
+  const picker = document.getElementById('ai-section-filter');
+  const allSections = document.createElement('option');
+  allSections.value = '';
+  allSections.textContent = 'All sections';
+  picker.append(allSections);
+  for (const section of data.sections) {
+    const option = document.createElement('option');
+    option.value = String(section.number);
+    option.textContent = 'Section ' + section.number + ' · ' + section.count + ' words';
+    picker.append(option);
+  }
+  function sectionFromHash() {
+    const section = location.hash.match(/^#section-(\d+)/);
+    if (section) return Number(section[1]);
+    const test = location.hash.match(/^#ai-test-(\d+)$/);
+    return test ? data.aiTests.find(item => item.number === Number(test[1]))?.section : null;
+  }
+  function filterCards() {
+    for (const test of data.aiTests) document.getElementById('ai-test-' + test.number).hidden = Boolean(picker.value) && test.section !== Number(picker.value);
+  }
+  picker.value = String(sectionFromHash() || 7);
+  picker.addEventListener('change', filterCards);
+  window.addEventListener('hashchange', () => {
+    const section = sectionFromHash();
+    if (section && data.sections.some(item => item.number === section)) { picker.value = String(section); filterCards(); }
+  });
+  filterCards();
   let loading = false;
 
   function render(test) {
