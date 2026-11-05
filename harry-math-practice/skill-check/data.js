@@ -1513,7 +1513,9 @@
               578
             ]
           }
-        },
+        }
+      ],
+      "retiredQuestions": [
         {
           "id": "s3-median-3",
           "skill": "median",
@@ -1886,186 +1888,6 @@
           }
         },
         {
-          "id": "s4-rounding-2",
-          "skill": "rounding",
-          "facet": "round-first",
-          "prompt": "Round each number to the nearest hundredth FIRST, then subtract: 0.078 − 0.024",
-          "choices": [
-            "0.05",
-            "0.06",
-            "0.054",
-            "0.10"
-          ],
-          "correct": 1,
-          "explanation": "Round 0.078 to 0.08 and 0.024 to 0.02. Then subtract: 0.08 − 0.02 = 0.06. Rounding the difference gives a different result.",
-          "check": {
-            "kind": "roundDifference",
-            "args": [
-              0.078,
-              0.024,
-              1
-            ]
-          }
-        },
-        {
-          "id": "s4-median-2",
-          "skill": "median",
-          "facet": "even",
-          "prompt": "Four players scored 125, 148, 132, and 140 points. What is the median score?",
-          "choices": [
-            "132",
-            "136",
-            "140",
-            "136.25"
-          ],
-          "correct": 1,
-          "explanation": "Order the scores: 125, 132, 140, 148. Average the two middle values: (132 + 140) ÷ 2 = 136.",
-          "check": {
-            "kind": "median",
-            "args": [
-              125,
-              148,
-              132,
-              140
-            ]
-          }
-        },
-        {
-          "id": "s4-coordinates-2",
-          "skill": "coordinates",
-          "facet": "read-point",
-          "prompt": "What are the coordinates of point T?",
-          "choices": [
-            "(2, 7)",
-            "(8, 2)",
-            "(7, 2)",
-            "(7, 3)"
-          ],
-          "correct": 2,
-          "explanation": "Read the horizontal x position first, then the vertical y position. Point T has x = 7 and y = 2, so its coordinates are (7, 2).",
-          "check": {
-            "kind": "coordinate",
-            "args": [
-              7,
-              2
-            ]
-          },
-          "visual": {
-            "type": "coordinate-grid",
-            "x": 7,
-            "y": 2,
-            "label": "T"
-          }
-        },
-        {
-          "id": "s4-fractions-2",
-          "skill": "fractions",
-          "facet": "mixed-multiplication",
-          "prompt": "Each bag holds 3 1/2 kilograms of rice. How many kilograms do 4 bags hold?",
-          "choices": [
-            "14",
-            "12 1/2",
-            "7",
-            "16"
-          ],
-          "correct": 0,
-          "explanation": "Multiply each part by 4: 3 × 4 = 12 and 1/2 × 4 = 2. Add 12 + 2 = 14 kilograms.",
-          "check": {
-            "kind": "mixedMultiply",
-            "args": [
-              3,
-              1,
-              2,
-              4
-            ]
-          }
-        },
-        {
-          "id": "s4-scaling-2",
-          "skill": "scaling",
-          "facet": "reduce",
-          "prompt": "A 30 cm by 18 cm picture is reduced. The 30 cm side becomes 10 cm. What does the 18 cm side become?",
-          "choices": [
-            "6 cm",
-            "8 cm",
-            "54 cm",
-            "12 cm"
-          ],
-          "correct": 0,
-          "explanation": "The 30 cm side is divided by 3 to become 10 cm. Divide the other side by 3 too: 18 ÷ 3 = 6 cm.",
-          "check": {
-            "kind": "scale",
-            "args": [
-              18,
-              30,
-              10
-            ]
-          }
-        },
-        {
-          "id": "s4-units-2",
-          "skill": "units",
-          "facet": "liquid",
-          "prompt": "5 gallons = ____ quarts",
-          "choices": [
-            "10",
-            "40",
-            "20",
-            "80"
-          ],
-          "correct": 2,
-          "explanation": "One gallon equals 4 quarts. Multiply the number of gallons by 4: 5 × 4 = 20 quarts.",
-          "check": {
-            "kind": "multiply",
-            "args": [
-              5,
-              4
-            ]
-          }
-        },
-        {
-          "id": "s4-area-2",
-          "skill": "area",
-          "facet": "missing-side",
-          "prompt": "A rectangle has an area of 168 square centimeters and a length of 12 centimeters. What is its width?",
-          "choices": [
-            "14 centimeters",
-            "156 centimeters",
-            "180 centimeters",
-            "16 centimeters"
-          ],
-          "correct": 0,
-          "explanation": "Divide the area by the known side: 168 ÷ 12 = 14 centimeters. Check: 12 × 14 = 168 square centimeters.",
-          "check": {
-            "kind": "divide",
-            "args": [
-              168,
-              12
-            ]
-          }
-        },
-        {
-          "id": "s4-calculation-2",
-          "skill": "calculation",
-          "facet": "regrouping",
-          "prompt": "Subtract: 1,204 − 687",
-          "choices": [
-            "617",
-            "527",
-            "517",
-            "583"
-          ],
-          "correct": 2,
-          "explanation": "Subtract 700, then add back 13: 1,204 − 700 = 504 and 504 + 13 = 517. Check: 687 + 517 = 1,204.",
-          "check": {
-            "kind": "subtract",
-            "args": [
-              1204,
-              687
-            ]
-          }
-        },
-        {
           "id": "s4-fractions-3",
           "skill": "fractions",
           "facet": "fraction-division",
@@ -2248,6 +2070,188 @@
             "label": "V"
           }
         }
+      ],
+      "retiredQuestions": [
+        {
+          "id": "s4-rounding-2",
+          "skill": "rounding",
+          "facet": "round-first",
+          "prompt": "Round each number to the nearest hundredth FIRST, then subtract: 0.078 − 0.024",
+          "choices": [
+            "0.05",
+            "0.06",
+            "0.054",
+            "0.10"
+          ],
+          "correct": 1,
+          "explanation": "Round 0.078 to 0.08 and 0.024 to 0.02. Then subtract: 0.08 − 0.02 = 0.06. Rounding the difference gives a different result.",
+          "check": {
+            "kind": "roundDifference",
+            "args": [
+              0.078,
+              0.024,
+              1
+            ]
+          }
+        },
+        {
+          "id": "s4-median-2",
+          "skill": "median",
+          "facet": "even",
+          "prompt": "Four players scored 125, 148, 132, and 140 points. What is the median score?",
+          "choices": [
+            "132",
+            "136",
+            "140",
+            "136.25"
+          ],
+          "correct": 1,
+          "explanation": "Order the scores: 125, 132, 140, 148. Average the two middle values: (132 + 140) ÷ 2 = 136.",
+          "check": {
+            "kind": "median",
+            "args": [
+              125,
+              148,
+              132,
+              140
+            ]
+          }
+        },
+        {
+          "id": "s4-coordinates-2",
+          "skill": "coordinates",
+          "facet": "read-point",
+          "prompt": "What are the coordinates of point T?",
+          "choices": [
+            "(2, 7)",
+            "(8, 2)",
+            "(7, 2)",
+            "(7, 3)"
+          ],
+          "correct": 2,
+          "explanation": "Read the horizontal x position first, then the vertical y position. Point T has x = 7 and y = 2, so its coordinates are (7, 2).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              7,
+              2
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 7,
+            "y": 2,
+            "label": "T"
+          }
+        },
+        {
+          "id": "s4-fractions-2",
+          "skill": "fractions",
+          "facet": "mixed-multiplication",
+          "prompt": "Each bag holds 3 1/2 kilograms of rice. How many kilograms do 4 bags hold?",
+          "choices": [
+            "14",
+            "12 1/2",
+            "7",
+            "16"
+          ],
+          "correct": 0,
+          "explanation": "Multiply each part by 4: 3 × 4 = 12 and 1/2 × 4 = 2. Add 12 + 2 = 14 kilograms.",
+          "check": {
+            "kind": "mixedMultiply",
+            "args": [
+              3,
+              1,
+              2,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s4-scaling-2",
+          "skill": "scaling",
+          "facet": "reduce",
+          "prompt": "A 30 cm by 18 cm picture is reduced. The 30 cm side becomes 10 cm. What does the 18 cm side become?",
+          "choices": [
+            "6 cm",
+            "8 cm",
+            "54 cm",
+            "12 cm"
+          ],
+          "correct": 0,
+          "explanation": "The 30 cm side is divided by 3 to become 10 cm. Divide the other side by 3 too: 18 ÷ 3 = 6 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              18,
+              30,
+              10
+            ]
+          }
+        },
+        {
+          "id": "s4-units-2",
+          "skill": "units",
+          "facet": "liquid",
+          "prompt": "5 gallons = ____ quarts",
+          "choices": [
+            "10",
+            "40",
+            "20",
+            "80"
+          ],
+          "correct": 2,
+          "explanation": "One gallon equals 4 quarts. Multiply the number of gallons by 4: 5 × 4 = 20 quarts.",
+          "check": {
+            "kind": "multiply",
+            "args": [
+              5,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s4-area-2",
+          "skill": "area",
+          "facet": "missing-side",
+          "prompt": "A rectangle has an area of 168 square centimeters and a length of 12 centimeters. What is its width?",
+          "choices": [
+            "14 centimeters",
+            "156 centimeters",
+            "180 centimeters",
+            "16 centimeters"
+          ],
+          "correct": 0,
+          "explanation": "Divide the area by the known side: 168 ÷ 12 = 14 centimeters. Check: 12 × 14 = 168 square centimeters.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              168,
+              12
+            ]
+          }
+        },
+        {
+          "id": "s4-calculation-2",
+          "skill": "calculation",
+          "facet": "regrouping",
+          "prompt": "Subtract: 1,204 − 687",
+          "choices": [
+            "617",
+            "527",
+            "517",
+            "583"
+          ],
+          "correct": 2,
+          "explanation": "Subtract 700, then add back 13: 1,204 − 700 = 504 and 504 + 13 = 517. Check: 687 + 517 = 1,204.",
+          "check": {
+            "kind": "subtract",
+            "args": [
+              1204,
+              687
+            ]
+          }
+        }
       ]
     },
     {
@@ -2255,190 +2259,6 @@
       "number": 5,
       "title": "Session 5",
       "questions": [
-        {
-          "id": "s5-fractions-1",
-          "skill": "fractions",
-          "facet": "unlike-subtraction",
-          "prompt": "A jug contains 11/12 liter of water. Harry uses 2/9 liter. How much water remains?",
-          "choices": [
-            "9/3",
-            "25/36",
-            "7/12",
-            "29/36"
-          ],
-          "correct": 1,
-          "explanation": "Use thirty-sixths: 11/12 = 33/36 and 2/9 = 8/36. Then 33/36 − 8/36 = 25/36 liter.",
-          "check": {
-            "kind": "subtractFractions",
-            "args": [
-              11,
-              12,
-              2,
-              9
-            ]
-          }
-        },
-        {
-          "id": "s5-median-1",
-          "skill": "median",
-          "facet": "odd",
-          "prompt": "Find the median: 83, 56, 71, 94, 68",
-          "choices": [
-            "68",
-            "83",
-            "71",
-            "74.4"
-          ],
-          "correct": 2,
-          "explanation": "Order the numbers: 56, 68, 71, 83, 94. The third number is the middle value, so the median is 71.",
-          "check": {
-            "kind": "median",
-            "args": [
-              83,
-              56,
-              71,
-              94,
-              68
-            ]
-          }
-        },
-        {
-          "id": "s5-scaling-1",
-          "skill": "scaling",
-          "facet": "enlarge",
-          "prompt": "A drawing is 8 cm wide and 15 cm tall. An enlarged copy is 45 cm tall. What is its width?",
-          "choices": [
-            "38 cm",
-            "24 cm",
-            "23 cm",
-            "16 cm"
-          ],
-          "correct": 1,
-          "explanation": "The height is multiplied by 3: 15 × 3 = 45. Multiply the width by the same factor: 8 × 3 = 24 cm.",
-          "check": {
-            "kind": "scale",
-            "args": [
-              8,
-              15,
-              45
-            ]
-          }
-        },
-        {
-          "id": "s5-calculation-1",
-          "skill": "calculation",
-          "facet": "multiplication",
-          "prompt": "A notebook costs $0.85. What is the cost of 32 notebooks?",
-          "choices": [
-            "$25.60",
-            "$272.00",
-            "$27.02",
-            "$27.20"
-          ],
-          "correct": 3,
-          "explanation": "32 × 85 cents = 2,720 cents. Divide by 100 to convert cents to dollars: $27.20.",
-          "check": {
-            "kind": "moneyMultiply",
-            "args": [
-              32,
-              85
-            ]
-          }
-        },
-        {
-          "id": "s5-coordinates-1",
-          "skill": "coordinates",
-          "facet": "read-point",
-          "prompt": "What are the coordinates of point S?",
-          "choices": [
-            "(8, 2)",
-            "(3, 8)",
-            "(2, 9)",
-            "(2, 8)"
-          ],
-          "correct": 3,
-          "explanation": "Read the horizontal x position first, then the vertical y position. Point S has x = 2 and y = 8, so its coordinates are (2, 8).",
-          "check": {
-            "kind": "coordinate",
-            "args": [
-              2,
-              8
-            ]
-          },
-          "visual": {
-            "type": "coordinate-grid",
-            "x": 2,
-            "y": 8,
-            "label": "S"
-          }
-        },
-        {
-          "id": "s5-units-1",
-          "skill": "units",
-          "facet": "weight",
-          "prompt": "A box weighs 112 ounces. How many pounds is that?",
-          "choices": [
-            "8 pounds",
-            "14 pounds",
-            "9 pounds",
-            "7 pounds"
-          ],
-          "correct": 3,
-          "explanation": "There are 16 ounces in one pound. Divide: 112 ÷ 16 = 7 pounds. Check: 7 × 16 = 112 ounces.",
-          "check": {
-            "kind": "divide",
-            "args": [
-              112,
-              16
-            ]
-          }
-        },
-        {
-          "id": "s5-rounding-1",
-          "skill": "rounding",
-          "facet": "mixed-estimate",
-          "prompt": "Estimate by rounding each mixed number to the nearest whole number: 12 7/8 + 6 1/6",
-          "choices": [
-            "18",
-            "20",
-            "19",
-            "7"
-          ],
-          "correct": 2,
-          "explanation": "12 7/8 rounds to 13 and 6 1/6 rounds to 6. Add the rounded numbers: 13 + 6 = 19.",
-          "check": {
-            "kind": "mixedSumEstimate",
-            "args": [
-              12,
-              7,
-              8,
-              6,
-              1,
-              6
-            ]
-          }
-        },
-        {
-          "id": "s5-area-1",
-          "skill": "area",
-          "facet": "find-area",
-          "prompt": "A rectangular play area measures 35 feet by 18 feet. How many square feet does it cover?",
-          "choices": [
-            "106 square feet",
-            "630 square feet",
-            "53 square feet",
-            "530 square feet"
-          ],
-          "correct": 1,
-          "explanation": "Multiply the dimensions: 35 × 18 = 35 × (20 − 2) = 700 − 70 = 630 square feet.",
-          "check": {
-            "kind": "area",
-            "args": [
-              35,
-              18
-            ]
-          }
-        },
         {
           "id": "s5-calculation-2",
           "skill": "calculation",
@@ -2794,6 +2614,192 @@
             "args": [
               180,
               36
+            ]
+          }
+        }
+      ],
+      "retiredQuestions": [
+        {
+          "id": "s5-fractions-1",
+          "skill": "fractions",
+          "facet": "unlike-subtraction",
+          "prompt": "A jug contains 11/12 liter of water. Harry uses 2/9 liter. How much water remains?",
+          "choices": [
+            "9/3",
+            "25/36",
+            "7/12",
+            "29/36"
+          ],
+          "correct": 1,
+          "explanation": "Use thirty-sixths: 11/12 = 33/36 and 2/9 = 8/36. Then 33/36 − 8/36 = 25/36 liter.",
+          "check": {
+            "kind": "subtractFractions",
+            "args": [
+              11,
+              12,
+              2,
+              9
+            ]
+          }
+        },
+        {
+          "id": "s5-median-1",
+          "skill": "median",
+          "facet": "odd",
+          "prompt": "Find the median: 83, 56, 71, 94, 68",
+          "choices": [
+            "68",
+            "83",
+            "71",
+            "74.4"
+          ],
+          "correct": 2,
+          "explanation": "Order the numbers: 56, 68, 71, 83, 94. The third number is the middle value, so the median is 71.",
+          "check": {
+            "kind": "median",
+            "args": [
+              83,
+              56,
+              71,
+              94,
+              68
+            ]
+          }
+        },
+        {
+          "id": "s5-scaling-1",
+          "skill": "scaling",
+          "facet": "enlarge",
+          "prompt": "A drawing is 8 cm wide and 15 cm tall. An enlarged copy is 45 cm tall. What is its width?",
+          "choices": [
+            "38 cm",
+            "24 cm",
+            "23 cm",
+            "16 cm"
+          ],
+          "correct": 1,
+          "explanation": "The height is multiplied by 3: 15 × 3 = 45. Multiply the width by the same factor: 8 × 3 = 24 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              8,
+              15,
+              45
+            ]
+          }
+        },
+        {
+          "id": "s5-calculation-1",
+          "skill": "calculation",
+          "facet": "multiplication",
+          "prompt": "A notebook costs $0.85. What is the cost of 32 notebooks?",
+          "choices": [
+            "$25.60",
+            "$272.00",
+            "$27.02",
+            "$27.20"
+          ],
+          "correct": 3,
+          "explanation": "32 × 85 cents = 2,720 cents. Divide by 100 to convert cents to dollars: $27.20.",
+          "check": {
+            "kind": "moneyMultiply",
+            "args": [
+              32,
+              85
+            ]
+          }
+        },
+        {
+          "id": "s5-coordinates-1",
+          "skill": "coordinates",
+          "facet": "read-point",
+          "prompt": "What are the coordinates of point S?",
+          "choices": [
+            "(8, 2)",
+            "(3, 8)",
+            "(2, 9)",
+            "(2, 8)"
+          ],
+          "correct": 3,
+          "explanation": "Read the horizontal x position first, then the vertical y position. Point S has x = 2 and y = 8, so its coordinates are (2, 8).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              2,
+              8
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 2,
+            "y": 8,
+            "label": "S"
+          }
+        },
+        {
+          "id": "s5-units-1",
+          "skill": "units",
+          "facet": "weight",
+          "prompt": "A box weighs 112 ounces. How many pounds is that?",
+          "choices": [
+            "8 pounds",
+            "14 pounds",
+            "9 pounds",
+            "7 pounds"
+          ],
+          "correct": 3,
+          "explanation": "There are 16 ounces in one pound. Divide: 112 ÷ 16 = 7 pounds. Check: 7 × 16 = 112 ounces.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              112,
+              16
+            ]
+          }
+        },
+        {
+          "id": "s5-rounding-1",
+          "skill": "rounding",
+          "facet": "mixed-estimate",
+          "prompt": "Estimate by rounding each mixed number to the nearest whole number: 12 7/8 + 6 1/6",
+          "choices": [
+            "18",
+            "20",
+            "19",
+            "7"
+          ],
+          "correct": 2,
+          "explanation": "12 7/8 rounds to 13 and 6 1/6 rounds to 6. Add the rounded numbers: 13 + 6 = 19.",
+          "check": {
+            "kind": "mixedSumEstimate",
+            "args": [
+              12,
+              7,
+              8,
+              6,
+              1,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s5-area-1",
+          "skill": "area",
+          "facet": "find-area",
+          "prompt": "A rectangular play area measures 35 feet by 18 feet. How many square feet does it cover?",
+          "choices": [
+            "106 square feet",
+            "630 square feet",
+            "53 square feet",
+            "530 square feet"
+          ],
+          "correct": 1,
+          "explanation": "Multiply the dimensions: 35 × 18 = 35 × (20 − 2) = 700 − 70 = 630 square feet.",
+          "check": {
+            "kind": "area",
+            "args": [
+              35,
+              18
             ]
           }
         }
