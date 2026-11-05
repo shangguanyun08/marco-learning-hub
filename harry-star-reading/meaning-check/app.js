@@ -24,7 +24,6 @@
   if(navigate)location.hash=round?`set-${section}-round-${round}`:`set-${section}-review`;
   update(sync.view());void loadPronunciations();
  }
- byId('list-summary').textContent=`${data.total} words · ${data.sections.length} sets · 15–16 words per set · Review, then recall.`;
  byId('sections').innerHTML=data.sections.map(s=>`<button type="button" data-set="${s.number}">Set ${s.number}<small>${s.count} words</small></button>`).join('');
  function sentenceMarkup(w){
   const old=(data.previousWords||[]).find(x=>x.id===w.id);
