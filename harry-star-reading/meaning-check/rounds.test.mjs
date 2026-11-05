@@ -7,7 +7,7 @@ const read=f=>readFileSync(new URL(f,import.meta.url),'utf8'),plain=x=>JSON.pars
 const context={window:{}};vm.runInNewContext(read('data.js'),context);const data=plain(context.window.HARRY_MEANING_CHECK);
 const rows=section=>data.words.filter(w=>w.section===section);
 function harness({saved,fetch,clock=1000,values=new Map()}={}){
- if(saved)values.set(data.appId+(!fetch?':demo':'')+(saved.version===3?':rounds-v3-fifteen':saved.version===2?':rounds-v2':''),JSON.stringify(saved));const storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
+ if(saved)values.set(data.appId+(!fetch?':demo':'')+(saved.version===4?':rounds-v4-six-sets':saved.version===3?':rounds-v3-fifteen':saved.version===2?':rounds-v2':''),JSON.stringify(saved));const storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
  const c={};c.globalThis=c;vm.runInNewContext(read('sync.js'),c);
  let status;const s=c.MeaningCheckSync.create({data,storage,disabled:!fetch,fetch,now:()=>clock++,setTimeout:()=>1,clearTimeout(){},onStatus:(kind,text)=>status={kind,text}});
  return {s,values,status:()=>status};
@@ -18,7 +18,7 @@ function finish(s,section,round,unknown=false){
  assert.equal(s.submitRound(section,round).ok,true);
 }
 
-test('all seven sets support three independent rounds, each repeating every word',()=>{
+test('all six sets preserve three independent written-round histories, each repeating every word',()=>{
  const {s}=harness();
  for(const section of data.sections){
   const ids=rows(section.number).map(w=>w.id);
@@ -35,9 +35,9 @@ test('all seven sets support three independent rounds, each repeating every word
   }
   assert.equal(new Set([1,2,3].map(round=>s.roundView(section.number,round).order.join(','))).size,3);
  }
- assert.equal(Object.keys(s.snapshot().submissions).length,7);assert.equal(Object.keys(s.snapshot().roundSubmissions).length,14);
- assert.equal(s.openRound(7,4).ok,false);assert.equal(s.submitRound(7,4).ok,false);
- assert.equal(s.roundView(7,3).entries.voluntary.meaning,'own 7/3 voluntary');
+ assert.equal(Object.keys(s.snapshot().submissions).length,6);assert.equal(Object.keys(s.snapshot().roundSubmissions).length,12);
+ assert.equal(s.openRound(6,4).ok,false);assert.equal(s.submitRound(6,4).ok,false);
+ assert.equal(s.roundView(6,3).entries.voluntary.meaning,'own 6/3 voluntary');
 });
 
 test('shuffled order and drafts survive reload, revisits, and repeated navigation',()=>{
@@ -95,9 +95,9 @@ test('offline later-round drafts recover on reload and survive a remote legacy-o
  const restarted=harness({saved:h.s.snapshot(),fetch}).s;assert.equal(restarted.roundView(1,2).entries.ballet.meaning,'offline wording');connected=true;assert.equal(await restarted.flush(),true);assert.equal(posts,1);assert.equal(remote.state.rounds['1:2'].entries.ballet.meaning.value,'offline wording');assert.deepEqual(plain(remote.state.submissions),plain(seed.snapshot().submissions));
 });
 
-test('v3 uses a separate device key and imports later legacy edits without losing rounds',()=>{
+test('v4 uses a separate device key and imports later legacy edits without losing rounds',()=>{
  const legacy={kind:'word-meaning-check',version:1,entries:{ballet:{meaning:{value:'original answer',at:1}}},submissions:{}},h=harness({saved:legacy});finish(h.s,1,1,true);finish(h.s,1,2);
- assert.equal(h.s.snapshot().version,3);assert.notEqual(h.s.key,h.s.legacyKey);assert.equal(h.values.get(h.s.legacyKey),JSON.stringify(legacy));
+ assert.equal(h.s.snapshot().version,4);assert.notEqual(h.s.key,h.s.legacyKey);assert.equal(h.values.get(h.s.legacyKey),JSON.stringify(legacy));
  const edited=plain(legacy);edited.entries.ballet.meaning={value:'typed in an older tab',at:9999};h.values.set(h.s.legacyKey,JSON.stringify(edited));const reopened=harness({values:h.values}).s;
  assert.equal(reopened.roundView(1,1).entries.ballet.meaning,'typed in an older tab');assert.equal(reopened.roundView(1,2).entries.ballet.meaning,'own 1/2 ballet');assert.equal(reopened.roundView(1,2).copies.length,1);assert.equal(h.values.get(h.s.legacyKey),JSON.stringify(edited));assert.equal(h.values.get(h.s.legacyKey+':before-rounds'),JSON.stringify(legacy));
 });
@@ -114,7 +114,7 @@ test('all old ten-word drafts and immutable copies survive regrouping by word ID
   }
  }
  const {s,values}=harness({saved:old}),migrated=plain(s.snapshot());
- assert.equal(migrated.version,3);assert.deepEqual(migrated.submissions,old.submissions);assert.deepEqual(migrated.roundSubmissions,old.roundSubmissions);assert.deepEqual(migrated.archivedRounds,old.rounds);
+ assert.equal(migrated.version,4);assert.deepEqual(migrated.submissions,old.submissions);assert.deepEqual(migrated.roundSubmissions,old.roundSubmissions);assert.deepEqual(migrated.archivedRounds,old.rounds);
  assert.equal(values.get(s.previousKey),JSON.stringify(old));assert.equal(values.get(s.previousKey+':before-fifteen'),JSON.stringify(old));
  for(const w of data.words)for(let round=2;round<=3;round++)assert.equal(s.roundView(w.section,round).entries[w.id].meaning,`old ${round} ${w.id}`);
  for(const section of data.sections)assert.equal(s.roundView(section.number,2).finished,false,'old ten-word completion must not complete a new fifteen-word round');

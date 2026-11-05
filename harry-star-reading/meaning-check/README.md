@@ -1,6 +1,16 @@
 # Harry’s Word Meaning Check
 
-94 active headwords, after six user-requested removals: cull, aerial, still, phrasal verb, been meaning, all of the above. Includes 16 remaining reading targets and 78 practice priorities. Six sections of fifteen and a final section of four.
+92 active headwords: 16 reading targets and 76 practice priorities. Six sets contain 15, 15, 15, 15, 16 and 16 words. The separate AI-test dashboard card is removed; the original meaning-check card opens this combined GitHub page.
+
+## AI meaning tests on GitHub
+
+Every set has a Round 3 AI test directly on this page, including Sets 1–3. Round 3 can be opened independently so earlier written practice does not need to be repeated. Review and written Rounds 1–2 retain their existing storage, answers and submitted copies. Earlier ungraded Round 3 copies remain visible below the scored test.
+
+`ai-test.js` renders the scored interface and calls the existing progress service’s narrow Harry proxy. On first use, Connect AI checking uses the current private meaning service’s sign-in and returns to this same GitHub page. A signed Harry-only capability lasts 30 days and stays in browser storage, outside response exports; its one-time return state is checked and the fragment credential is immediately removed from the address bar. No API key or private service credential is published to GitHub. The private service’s audience and API key are unchanged.
+
+Each Start creates a separately saved test with a stable request ID. Checked first answers cannot be changed. Written English or Chinese and 20-second voice recording are supported; permission failures offer typing/dictation. Reference meanings stay hidden until all words are checked. Retakes retain their own score, and comparisons require identical word lists. Failed checks retain the draft and never create a grade locally. Opening, reloading or switching sets performs reads only. Demo mode disables test writes. The original test database and all previous attempts remain in place.
+
+`voice-capture.js` is the existing tested microphone helper transpiled for the static page. `ai.test.cjs` covers state-bound connection returns and score comparisons. Browser QA covers every set, separate retakes, preserved first answers, failed checks, voice submission, reload and phone layout using mocked APIs only. No student answers are inserted for QA.
 
 ## Review and printing
 
@@ -16,7 +26,7 @@ Unknown-word reveals use curated reference meanings of 1–3 simple words, inste
 
 ## Sets and repeated recall
 
-Only one Set and Review/Round is displayed at a time. Sets 1–6 contain fifteen words each; Set 7 contains four. Round 1 uses the existing saved answers, including unknown flags and original wording. Finish a round by writing a meaning or choosing “I don’t know” for every word. This saves a review copy and unlocks the next round. Rounds 2–3 repeat **every word in the same set**, with a deterministic shuffled order saved with the round. New rounds start blank; earlier answers are never copied in as model answers. There are exactly three active rounds; sets can be revisited independently. Older higher-round records remain preserved in exports.
+Only one Set and Review/Round is displayed at a time. Round 1 uses existing saved answers, including unknown flags and original wording. Finishing written Round 1 saves a review copy and unlocks written Round 2, which repeats every word with blank fields and a saved shuffle. Round 3 is now the separately scored AI test described above. There are exactly three active rounds; sets can be revisited independently. Earlier written Round 3 and higher-round records remain preserved in exports and history.
 
 Response counts, explanations written, and unknown responses are shown separately. Finishing a round means every response was recorded; it does not assert correctness or mastery. Completed rounds and revised submitted copies can be opened in the set’s review drawer. Copy for review uses the current review/round; Print opens the current set's word-and-meaning table. Download responses includes every round and all legacy records. The selected set/round resumes on this device and is also represented in the URL, including Back/Forward navigation.
 
