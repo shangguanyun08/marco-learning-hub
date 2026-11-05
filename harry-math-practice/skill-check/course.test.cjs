@@ -6,14 +6,15 @@ function value(s){const m=String(s).match(/^(?:(\d+) )?(\d+)\/(\d+)$/);return m?
 test('five balanced mixed sessions have the requested 24/24/16/16/16 question counts',()=>{
  const {D}=setup(),all=D.sessions.flatMap(s=>s.questions);assert.equal(D.sessions.length,5);assert.equal(all.length,96);assert.equal(new Set(all.map(q=>q.id)).size,96);assert.equal(new Set(all.map(q=>q.prompt+JSON.stringify(q.visual||null))).size,96);
  for(const s of D.sessions){assert.equal(s.questions.length,s.number<=2?24:16);for(const k of D.skills)assert.equal(s.questions.filter(q=>q.skill===k.id).length,s.number<=2?3:2);for(const [i,q]of s.questions.entries()){assert.equal(q.choices.length,4);assert.equal(new Set(q.choices).size,4);assert.ok(q.explanation.length>35);if(i)assert.notEqual(q.skill,s.questions[i-1].skill);}}
- assert.equal(all.filter(q=>q.visual).length,12);assert.equal(D.sessions.flatMap(s=>s.retiredQuestions||[]).length,24);
+ assert.equal(all.filter(q=>q.visual).length,12);assert.equal(D.sessions.flatMap(s=>s.retiredQuestions||[]).length,38);
 });
-test('all 120 answer keys agree with independent arithmetic and diagram checks',()=>{
+test('all active and archived answer keys agree with independent arithmetic and diagram checks',()=>{
  const {D}=setup();for(const q of D.sessions.flatMap(s=>[...s.questions,...(s.retiredQuestions||[])])){
   const c=q.check,a=c.args||[],answer=q.choices[q.correct];let expected;
   switch(c.kind){
    case'subtractFractions':expected=(a[0]*a[3]-a[2]*a[1])/(a[1]*a[3]);break;
    case'mixedMultiply':expected=(a[0]*a[2]+a[1])*a[3]/a[2];break;
+   case'fractionMultiply':expected=a[0]*a[2]/a[1];break;
    case'divideFractions':expected=a[0]*a[3]/(a[1]*a[2]);break;
    case'multiply':case'area':expected=a[0]*a[1];break;
    case'subtract':expected=a[0]-a[1];break;
@@ -34,6 +35,20 @@ test('all 120 answer keys agree with independent arithmetic and diagram checks',
    default:throw Error(c.kind);
   }
   assert.ok(Math.abs(value(answer)-expected)<1e-10,`${q.id}: ${answer}, expected ${expected}`);assert.ok(q.choices.filter(x=>Math.abs(value(x)-expected)<1e-10).length===1,`Multiple numeric correct choices ${q.id}`);
+ }
+});
+test('session four and every later session use only simple multiplication, including worked examples',()=>{
+ const {D}=setup(),p=D.multiplicationPolicy;assert.equal(p.fromSession,4);assert.equal(p.maxWholeFactor,10);
+ const small=n=>Number.isInteger(n)&&n>=1&&n<=p.maxWholeFactor;
+ for(const s of D.sessions.filter(s=>s.number>=p.fromSession))for(const q of s.questions){
+  const {kind,args:a=[]}=q.check,ok=(...ns)=>assert.ok(ns.every(small),`${q.id}: multiplication factors ${ns}`);
+  assert.ok(!['mixedMultiply','moneyMultiply'].includes(kind),`${q.id}: complex multiplication`);
+  if(['multiply','area','areaPerimeter'].includes(kind))ok(...a);
+  if(kind==='multiplyAdd'&&a[0]!==1&&a[1]!==1)ok(a[0],a[1]);
+  if(kind==='scaledPair')ok(...a);
+  if(kind==='scale'){const f=a[2]/a[1];f>=1?ok(a[0],a[1],f):ok(a[0]/(1/f),a[1]/(1/f),1/f);}
+  if(kind==='fractionMultiply'){assert.equal(a[0],1);assert.ok(p.unitFractionDenominators.includes(a[1]));ok(a[2]);assert.ok(Number.isInteger(a[2]/a[1]));}
+  for(const m of (q.prompt+' '+q.explanation).matchAll(/(\d+(?:\.\d+)?)\s*×\s*(\d+(?:\.\d+)?)/g))ok(Number(m[1]),Number(m[2]));
  }
 });
 const at='2026-10-31T17:00:00.000Z';

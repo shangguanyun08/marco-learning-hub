@@ -6,7 +6,7 @@
     {
       "id": "fractions",
       "name": "Fraction operations",
-      "description": "Subtract unlike fractions, multiply mixed numbers, and find how many fractional groups fit."
+      "description": "Subtract unlike fractions, multiply simple fractions, and find how many fractional groups fit."
     },
     {
       "id": "calculation",
@@ -1703,66 +1703,66 @@
       "title": "Session 4",
       "questions": [
         {
-          "id": "s4-units-1",
+          "id": "s4-units-1-simple",
           "skill": "units",
           "facet": "weight",
-          "prompt": "A parcel weighs 4 pounds 6 ounces. What is its weight in ounces?",
+          "prompt": "A parcel weighs 1 pound 6 ounces. What is its weight in ounces?",
           "choices": [
-            "64 ounces",
-            "70 ounces",
-            "46 ounces",
-            "60 ounces"
+            "16 ounces",
+            "22 ounces",
+            "7 ounces",
+            "20 ounces"
           ],
           "correct": 1,
-          "explanation": "Each pound is 16 ounces. Four pounds is 4 × 16 = 64 ounces. Add 6 more ounces: 64 + 6 = 70 ounces.",
+          "explanation": "One pound is 16 ounces. Add the 6 extra ounces: 16 + 6 = 22 ounces.",
           "check": {
             "kind": "multiplyAdd",
             "args": [
-              4,
+              1,
               16,
               6
             ]
           }
         },
         {
-          "id": "s4-area-1",
+          "id": "s4-area-1-simple",
           "skill": "area",
           "facet": "find-area",
-          "prompt": "A rectangular patio is 24 meters long and 9 meters wide. What is its area?",
+          "prompt": "A rectangular patio is 6 meters long and 9 meters wide. What is its area?",
           "choices": [
-            "66 m²",
-            "33 m²",
-            "206 m²",
-            "216 m²"
+            "30 m²",
+            "15 m²",
+            "45 m²",
+            "54 m²"
           ],
           "correct": 3,
-          "explanation": "Area = length × width. Calculate 24 × 9 = 216 square meters. The sum of the sides describes perimeter instead.",
+          "explanation": "Area = length × width. Multiply 6 × 9 = 54 square meters. Adding all four sides gives the perimeter instead.",
           "check": {
             "kind": "area",
             "args": [
-              24,
+              6,
               9
             ]
           }
         },
         {
-          "id": "s4-calculation-1",
+          "id": "s4-calculation-1-simple",
           "skill": "calculation",
           "facet": "multiplication",
-          "prompt": "Multiply: 58 × 34",
+          "prompt": "Multiply: 6 × 8",
           "choices": [
-            "1,872",
-            "1,972",
-            "1,932",
-            "1,982"
+            "42",
+            "48",
+            "46",
+            "56"
           ],
           "correct": 1,
-          "explanation": "58 × 30 = 1,740 and 58 × 4 = 232. Add the partial products: 1,740 + 232 = 1,972.",
+          "explanation": "Six groups of 8 make 48. You can start with 5 × 8 = 40, then add one more group of 8: 40 + 8 = 48.",
           "check": {
             "kind": "multiply",
             "args": [
-              58,
-              34
+              6,
+              8
             ]
           }
         },
@@ -1866,133 +1866,132 @@
           }
         },
         {
-          "id": "s4-scaling-1",
+          "id": "s4-scaling-1-simple",
           "skill": "scaling",
           "facet": "enlarge",
-          "prompt": "A card is 5 cm wide and 12 cm long. An enlarged copy is 48 cm long. How wide is it?",
+          "prompt": "A card is 4 cm wide and 6 cm long. An enlarged copy is 18 cm long. How wide is it?",
           "choices": [
-            "41 cm",
-            "17 cm",
+            "16 cm",
             "10 cm",
-            "20 cm"
+            "8 cm",
+            "12 cm"
           ],
           "correct": 3,
-          "explanation": "The length is multiplied by 4 because 12 × 4 = 48. Multiply the width by the same factor: 5 × 4 = 20 cm.",
+          "explanation": "The length is multiplied by 3 because 6 × 3 = 18. Multiply the width by the same factor: 4 × 3 = 12 cm.",
           "check": {
             "kind": "scale",
             "args": [
-              5,
-              12,
-              48
+              4,
+              6,
+              18
             ]
           }
         },
         {
-          "id": "s4-fractions-3",
+          "id": "s4-fractions-3-simple",
           "skill": "fractions",
-          "facet": "fraction-division",
-          "prompt": "A strip is 7/8 meter long. Each small piece is 1/16 meter long. How many pieces can be cut?",
+          "facet": "fraction-multiplication",
+          "prompt": "Multiply: 1/4 × 8",
           "choices": [
-            "7",
-            "14",
+            "4",
+            "2",
             "8",
-            "16"
+            "1"
           ],
           "correct": 1,
-          "explanation": "Rewrite 7/8 as 14/16. Fourteen pieces of 1/16 meter fit into 14/16 meter, so there are 14 pieces.",
+          "explanation": "One fourth of 8 is 2. Split 8 into four equal groups: 8 ÷ 4 = 2. So eight quarters make 2 wholes.",
           "check": {
-            "kind": "divideFractions",
+            "kind": "fractionMultiply",
             "args": [
-              7,
-              8,
               1,
-              16
+              4,
+              8
             ]
           }
         },
         {
-          "id": "s4-scaling-3",
+          "id": "s4-scaling-3-simple",
           "skill": "scaling",
           "facet": "same-factor",
-          "prompt": "A 4 cm by 11 cm card is enlarged by a scale factor of 3. What are the new dimensions?",
+          "prompt": "A 4 cm by 7 cm card is enlarged by a scale factor of 3. What are the new dimensions?",
           "choices": [
-            "7 cm by 14 cm",
-            "12 cm by 33 cm",
-            "12 cm by 11 cm",
-            "4 cm by 33 cm"
+            "7 cm by 10 cm",
+            "12 cm by 21 cm",
+            "12 cm by 7 cm",
+            "4 cm by 21 cm"
           ],
           "correct": 1,
-          "explanation": "Apply the same factor to both sides: 4 × 3 = 12 cm and 11 × 3 = 33 cm. The proportions stay the same.",
+          "explanation": "Apply the same factor to both sides: 4 × 3 = 12 cm and 7 × 3 = 21 cm. The proportions stay the same.",
           "check": {
             "kind": "scaledPair",
             "args": [
               4,
-              11,
+              7,
               3
             ]
           }
         },
         {
-          "id": "s4-units-3",
+          "id": "s4-units-3-simple",
           "skill": "units",
           "facet": "length",
-          "prompt": "3 yards 2 feet = ____ inches",
+          "prompt": "2 yards 1 foot = ____ feet",
           "choices": [
-            "108",
-            "60",
-            "120",
-            "132"
+            "6",
+            "3",
+            "9",
+            "7"
           ],
           "correct": 3,
-          "explanation": "Three yards is 3 × 36 = 108 inches. Two feet is 24 inches. Add: 108 + 24 = 132 inches.",
+          "explanation": "One yard is 3 feet. Two yards is 2 × 3 = 6 feet. Add the extra foot: 6 + 1 = 7 feet.",
           "check": {
             "kind": "multiplyAdd",
             "args": [
+              2,
               3,
-              36,
-              24
+              1
             ]
           }
         },
         {
-          "id": "s4-area-3",
+          "id": "s4-area-3-simple",
           "skill": "area",
           "facet": "area-perimeter",
-          "prompt": "A frame is 17 inches long and 6 inches wide. What is the distance around all four sides?",
+          "prompt": "A frame is 6 inches long and 4 inches wide. What is the distance around all four sides?",
           "choices": [
-            "102 inches",
-            "46 inches",
-            "23 inches",
-            "40 inches"
+            "24 inches",
+            "20 inches",
+            "10 inches",
+            "16 inches"
           ],
           "correct": 1,
-          "explanation": "The distance around a rectangle is its perimeter. Add 17 + 6 + 17 + 6 = 46 inches, or calculate 2 × (17 + 6).",
+          "explanation": "The distance around a rectangle is its perimeter. Add all four sides: 6 + 4 + 6 + 4 = 20 inches.",
           "check": {
             "kind": "perimeter",
             "args": [
-              17,
-              6
+              6,
+              4
             ]
           }
         },
         {
-          "id": "s4-calculation-3",
+          "id": "s4-calculation-3-simple",
           "skill": "calculation",
           "facet": "remainder",
-          "prompt": "Divide 5,939 by 25. Express the quotient as a mixed number.",
+          "prompt": "Divide 29 by 4. Express the quotient as a mixed number.",
           "choices": [
-            "237 4/25",
-            "238 14/25",
-            "237 14/100",
-            "237 14/25"
+            "7 1/2",
+            "8 1/4",
+            "7 1/10",
+            "7 1/4"
           ],
           "correct": 3,
-          "explanation": "25 × 237 = 5,925, leaving 14. Put the remainder over the divisor to get 237 14/25. Check: 5,925 + 14 = 5,939.",
+          "explanation": "4 × 7 = 28, leaving 1. Put the remainder over the divisor: 29 ÷ 4 = 7 1/4. Check: 28 + 1 = 29.",
           "check": {
             "kind": "mixedDivide",
             "args": [
-              5939,
-              25
+              29,
+              4
             ]
           }
         },
@@ -2251,6 +2250,201 @@
               687
             ]
           }
+        },
+        {
+          "id": "s4-units-1",
+          "skill": "units",
+          "facet": "weight",
+          "prompt": "A parcel weighs 4 pounds 6 ounces. What is its weight in ounces?",
+          "choices": [
+            "64 ounces",
+            "70 ounces",
+            "46 ounces",
+            "60 ounces"
+          ],
+          "correct": 1,
+          "explanation": "Each pound is 16 ounces. Four pounds is 4 × 16 = 64 ounces. Add 6 more ounces: 64 + 6 = 70 ounces.",
+          "check": {
+            "kind": "multiplyAdd",
+            "args": [
+              4,
+              16,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s4-area-1",
+          "skill": "area",
+          "facet": "find-area",
+          "prompt": "A rectangular patio is 24 meters long and 9 meters wide. What is its area?",
+          "choices": [
+            "66 m²",
+            "33 m²",
+            "206 m²",
+            "216 m²"
+          ],
+          "correct": 3,
+          "explanation": "Area = length × width. Calculate 24 × 9 = 216 square meters. The sum of the sides describes perimeter instead.",
+          "check": {
+            "kind": "area",
+            "args": [
+              24,
+              9
+            ]
+          }
+        },
+        {
+          "id": "s4-calculation-1",
+          "skill": "calculation",
+          "facet": "multiplication",
+          "prompt": "Multiply: 58 × 34",
+          "choices": [
+            "1,872",
+            "1,972",
+            "1,932",
+            "1,982"
+          ],
+          "correct": 1,
+          "explanation": "58 × 30 = 1,740 and 58 × 4 = 232. Add the partial products: 1,740 + 232 = 1,972.",
+          "check": {
+            "kind": "multiply",
+            "args": [
+              58,
+              34
+            ]
+          }
+        },
+        {
+          "id": "s4-scaling-1",
+          "skill": "scaling",
+          "facet": "enlarge",
+          "prompt": "A card is 5 cm wide and 12 cm long. An enlarged copy is 48 cm long. How wide is it?",
+          "choices": [
+            "41 cm",
+            "17 cm",
+            "10 cm",
+            "20 cm"
+          ],
+          "correct": 3,
+          "explanation": "The length is multiplied by 4 because 12 × 4 = 48. Multiply the width by the same factor: 5 × 4 = 20 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              5,
+              12,
+              48
+            ]
+          }
+        },
+        {
+          "id": "s4-fractions-3",
+          "skill": "fractions",
+          "facet": "fraction-division",
+          "prompt": "A strip is 7/8 meter long. Each small piece is 1/16 meter long. How many pieces can be cut?",
+          "choices": [
+            "7",
+            "14",
+            "8",
+            "16"
+          ],
+          "correct": 1,
+          "explanation": "Rewrite 7/8 as 14/16. Fourteen pieces of 1/16 meter fit into 14/16 meter, so there are 14 pieces.",
+          "check": {
+            "kind": "divideFractions",
+            "args": [
+              7,
+              8,
+              1,
+              16
+            ]
+          }
+        },
+        {
+          "id": "s4-scaling-3",
+          "skill": "scaling",
+          "facet": "same-factor",
+          "prompt": "A 4 cm by 11 cm card is enlarged by a scale factor of 3. What are the new dimensions?",
+          "choices": [
+            "7 cm by 14 cm",
+            "12 cm by 33 cm",
+            "12 cm by 11 cm",
+            "4 cm by 33 cm"
+          ],
+          "correct": 1,
+          "explanation": "Apply the same factor to both sides: 4 × 3 = 12 cm and 11 × 3 = 33 cm. The proportions stay the same.",
+          "check": {
+            "kind": "scaledPair",
+            "args": [
+              4,
+              11,
+              3
+            ]
+          }
+        },
+        {
+          "id": "s4-units-3",
+          "skill": "units",
+          "facet": "length",
+          "prompt": "3 yards 2 feet = ____ inches",
+          "choices": [
+            "108",
+            "60",
+            "120",
+            "132"
+          ],
+          "correct": 3,
+          "explanation": "Three yards is 3 × 36 = 108 inches. Two feet is 24 inches. Add: 108 + 24 = 132 inches.",
+          "check": {
+            "kind": "multiplyAdd",
+            "args": [
+              3,
+              36,
+              24
+            ]
+          }
+        },
+        {
+          "id": "s4-area-3",
+          "skill": "area",
+          "facet": "area-perimeter",
+          "prompt": "A frame is 17 inches long and 6 inches wide. What is the distance around all four sides?",
+          "choices": [
+            "102 inches",
+            "46 inches",
+            "23 inches",
+            "40 inches"
+          ],
+          "correct": 1,
+          "explanation": "The distance around a rectangle is its perimeter. Add 17 + 6 + 17 + 6 = 46 inches, or calculate 2 × (17 + 6).",
+          "check": {
+            "kind": "perimeter",
+            "args": [
+              17,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s4-calculation-3",
+          "skill": "calculation",
+          "facet": "remainder",
+          "prompt": "Divide 5,939 by 25. Express the quotient as a mixed number.",
+          "choices": [
+            "237 4/25",
+            "238 14/25",
+            "237 14/100",
+            "237 14/25"
+          ],
+          "correct": 3,
+          "explanation": "25 × 237 = 5,925, leaving 14. Put the remainder over the divisor to get 237 14/25. Check: 5,925 + 14 = 5,939.",
+          "check": {
+            "kind": "mixedDivide",
+            "args": [
+              5939,
+              25
+            ]
+          }
         }
       ]
     },
@@ -2351,45 +2545,44 @@
           }
         },
         {
-          "id": "s5-area-2",
+          "id": "s5-area-2-simple",
           "skill": "area",
           "facet": "missing-side",
-          "prompt": "A rectangular garden covers 154 square meters. It is 11 meters wide. How long is it?",
+          "prompt": "A rectangular garden covers 48 square meters. It is 6 meters wide. How long is it?",
           "choices": [
-            "143 meters",
-            "165 meters",
-            "14 meters",
-            "13 meters"
+            "42 meters",
+            "54 meters",
+            "8 meters",
+            "7 meters"
           ],
           "correct": 2,
-          "explanation": "Area = length × width, so length = area ÷ width. Calculate 154 ÷ 11 = 14 meters.",
+          "explanation": "Area = length × width, so divide the area by the width: 48 ÷ 6 = 8 meters. Check: 6 × 8 = 48.",
           "check": {
             "kind": "divide",
             "args": [
-              154,
-              11
+              48,
+              6
             ]
           }
         },
         {
-          "id": "s5-fractions-2",
+          "id": "s5-fractions-2-simple",
           "skill": "fractions",
-          "facet": "mixed-multiplication",
-          "prompt": "Multiply: 1 5/6 × 6",
+          "facet": "fraction-multiplication",
+          "prompt": "Multiply: 1/2 × 6",
           "choices": [
-            "6 5/6",
-            "10",
-            "11",
-            "7"
+            "6",
+            "12",
+            "3",
+            "4"
           ],
           "correct": 2,
-          "explanation": "1 5/6 = 11/6. Multiplying 11/6 by 6 gives 11. Or multiply the whole and fractional parts: 6 + 5 = 11.",
+          "explanation": "One half of 6 is 3. Split 6 into two equal groups: 6 ÷ 2 = 3. So six halves make 3 wholes.",
           "check": {
-            "kind": "mixedMultiply",
+            "kind": "fractionMultiply",
             "args": [
               1,
-              5,
-              6,
+              2,
               6
             ]
           }
@@ -2462,23 +2655,23 @@
           }
         },
         {
-          "id": "s5-area-3",
+          "id": "s5-area-3-simple",
           "skill": "area",
           "facet": "area-perimeter",
-          "prompt": "A rectangle is 14 meters long and 9 meters wide. Which pair gives its area and perimeter?",
+          "prompt": "A rectangle is 8 meters long and 5 meters wide. Which pair gives its area and perimeter?",
           "choices": [
-            "Area 46 m²; perimeter 126 m",
-            "Area 23 m²; perimeter 126 m",
-            "Area 126 m²; perimeter 23 m",
-            "Area 126 m²; perimeter 46 m"
+            "Area 26 m²; perimeter 40 m",
+            "Area 13 m²; perimeter 40 m",
+            "Area 40 m²; perimeter 13 m",
+            "Area 40 m²; perimeter 26 m"
           ],
           "correct": 3,
-          "explanation": "Area = 14 × 9 = 126 square meters. Perimeter = 2 × (14 + 9) = 46 meters.",
+          "explanation": "Area = 8 × 5 = 40 square meters. For the perimeter, add all four sides: 8 + 5 + 8 + 5 = 26 meters.",
           "check": {
             "kind": "areaPerimeter",
             "args": [
-              14,
-              9
+              8,
+              5
             ]
           }
         },
@@ -2549,23 +2742,23 @@
           }
         },
         {
-          "id": "s5-calculation-3",
+          "id": "s5-calculation-3-simple",
           "skill": "calculation",
           "facet": "decimal-division",
-          "prompt": "A 115-meter cable is cut into 8 equal pieces. How long is each piece?",
+          "prompt": "A 27-meter cable is cut into 4 equal pieces. How long is each piece?",
           "choices": [
-            "14.35 meters",
-            "14.375 meters",
-            "14.75 meters",
-            "14.0375 meters"
+            "6.25 meters",
+            "6.75 meters",
+            "6.5 meters",
+            "7.25 meters"
           ],
           "correct": 1,
-          "explanation": "115 ÷ 8 = 14 with 3 left. Three eighths equals 0.375, so each piece is 14.375 meters. Check: 14.375 × 8 = 115.",
+          "explanation": "4 × 6 = 24, leaving 3 meters. Share the remaining 3 meters into four equal parts: 3/4 = 0.75. Each piece is 6 + 0.75 = 6.75 meters.",
           "check": {
             "kind": "divide",
             "args": [
-              115,
-              8
+              27,
+              4
             ]
           }
         },
@@ -2597,23 +2790,23 @@
           }
         },
         {
-          "id": "s5-units-3",
+          "id": "s5-units-3-simple",
           "skill": "units",
           "facet": "length",
-          "prompt": "A rope is 180 inches long. How many yards long is it?",
+          "prompt": "A rope is 6 feet long. How many yards long is it?",
           "choices": [
-            "15 yards",
-            "5 yards",
-            "6 yards",
-            "60 yards"
+            "3 yards",
+            "2 yards",
+            "18 yards",
+            "6 yards"
           ],
           "correct": 1,
-          "explanation": "There are 36 inches in a yard. Divide 180 by 36: 180 ÷ 36 = 5 yards. Check: 5 × 36 = 180 inches.",
+          "explanation": "There are 3 feet in one yard. Divide 6 by 3 to get 2 yards. Check: 2 × 3 = 6 feet.",
           "check": {
             "kind": "divide",
             "args": [
-              180,
-              36
+              6,
+              3
             ]
           }
         }
@@ -2802,6 +2995,113 @@
               18
             ]
           }
+        },
+        {
+          "id": "s5-area-2",
+          "skill": "area",
+          "facet": "missing-side",
+          "prompt": "A rectangular garden covers 154 square meters. It is 11 meters wide. How long is it?",
+          "choices": [
+            "143 meters",
+            "165 meters",
+            "14 meters",
+            "13 meters"
+          ],
+          "correct": 2,
+          "explanation": "Area = length × width, so length = area ÷ width. Calculate 154 ÷ 11 = 14 meters.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              154,
+              11
+            ]
+          }
+        },
+        {
+          "id": "s5-fractions-2",
+          "skill": "fractions",
+          "facet": "mixed-multiplication",
+          "prompt": "Multiply: 1 5/6 × 6",
+          "choices": [
+            "6 5/6",
+            "10",
+            "11",
+            "7"
+          ],
+          "correct": 2,
+          "explanation": "1 5/6 = 11/6. Multiplying 11/6 by 6 gives 11. Or multiply the whole and fractional parts: 6 + 5 = 11.",
+          "check": {
+            "kind": "mixedMultiply",
+            "args": [
+              1,
+              5,
+              6,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s5-area-3",
+          "skill": "area",
+          "facet": "area-perimeter",
+          "prompt": "A rectangle is 14 meters long and 9 meters wide. Which pair gives its area and perimeter?",
+          "choices": [
+            "Area 46 m²; perimeter 126 m",
+            "Area 23 m²; perimeter 126 m",
+            "Area 126 m²; perimeter 23 m",
+            "Area 126 m²; perimeter 46 m"
+          ],
+          "correct": 3,
+          "explanation": "Area = 14 × 9 = 126 square meters. Perimeter = 2 × (14 + 9) = 46 meters.",
+          "check": {
+            "kind": "areaPerimeter",
+            "args": [
+              14,
+              9
+            ]
+          }
+        },
+        {
+          "id": "s5-calculation-3",
+          "skill": "calculation",
+          "facet": "decimal-division",
+          "prompt": "A 115-meter cable is cut into 8 equal pieces. How long is each piece?",
+          "choices": [
+            "14.35 meters",
+            "14.375 meters",
+            "14.75 meters",
+            "14.0375 meters"
+          ],
+          "correct": 1,
+          "explanation": "115 ÷ 8 = 14 with 3 left. Three eighths equals 0.375, so each piece is 14.375 meters. Check: 14.375 × 8 = 115.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              115,
+              8
+            ]
+          }
+        },
+        {
+          "id": "s5-units-3",
+          "skill": "units",
+          "facet": "length",
+          "prompt": "A rope is 180 inches long. How many yards long is it?",
+          "choices": [
+            "15 yards",
+            "5 yards",
+            "6 yards",
+            "60 yards"
+          ],
+          "correct": 1,
+          "explanation": "There are 36 inches in a yard. Divide 180 by 36: 180 ÷ 36 = 5 yards. Check: 5 × 36 = 180 inches.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              180,
+              36
+            ]
+          }
         }
       ]
     }
@@ -2844,6 +3144,15 @@
     "median": [
       34
     ]
+  },
+  "multiplicationPolicy": {
+    "fromSession": 4,
+    "maxWholeFactor": 10,
+    "unitFractionDenominators": [
+      2,
+      4
+    ],
+    "wholeNumberFractionResults": true
   }
 };
 })(typeof window==='undefined'?globalThis:window);
