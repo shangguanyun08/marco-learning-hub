@@ -81,14 +81,6 @@
             <a href="./marco-daily-test-review/">Choose a review date <span>→</span></a>
           </article>
 
-          <article class="site-card featured" id="marco-combined-word-review">
-            <div class="card-topline"><span>VOCABULARY RECALL</span><small>500 + 320 selected words</small></div>
-            <div class="icon">820</div>
-            <h3>Marco’s 820-Word Review</h3>
-            <p>Scan all 820 selected words from easier to harder. Tap “I don’t know” beside a word to reveal its meaning and add it to your trimmed review list.</p>
-            <ul><li>2–3-word meanings</li><li>Pronunciation</li><li>Your place saves online</li></ul>
-            <a href="./marco-vr-practice/combined-word-review/">Start the 820-word review <span>→</span></a>
-          </article>
 
 
 
@@ -209,9 +201,17 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>18 sites</span>
+                <span>19 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+          <article class="site-card archived" id="marco-combined-word-review">
+            <div class="card-topline"><span>ARCHIVED · VOCABULARY RECALL</span><small>500 + 320 selected words</small></div>
+            <div class="icon">820</div>
+            <h3>Marco’s 820-Word Review</h3>
+            <p>Scan all 820 selected words from easier to harder. Tap “I don’t know” beside a word to reveal its meaning and add it to your trimmed review list.</p>
+            <ul><li>2–3-word meanings</li><li>Pronunciation</li><li>Your place saves online</li></ul>
+            <a href="./marco-vr-practice/combined-word-review/">Open archived 820-word review <span>→</span></a>
+          </article>
           <article class="site-card archived" id="marco-vocabulary-selection">
             <div class="card-topline"><span>ARCHIVED · PARENT VOCABULARY SELECTION</span><small>528 recommended · 1,302 available</small></div>
             <div class="icon">528</div>
@@ -476,7 +476,7 @@
     <script src="./shared-activity-dashboard.js?v=20261021-time2-5" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
+        if(['#archives','#archive-heading','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
