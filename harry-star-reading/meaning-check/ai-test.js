@@ -262,7 +262,7 @@
      </div>
      ${micStatus ? `<p class="ai-mic-status" role="status">${micStatus}</p>` : ''}
      ${rowError[word.id] ? `<p class="ai-error" role="alert">${esc(rowError[word.id])}</p>` : ''}
-     ${result ? `<p class="ai-result ${result.close ? 'is-close' : 'needs-review'}"><strong>${result.close ? '✓ Close enough · 1 point' : result.unknown ? 'I don’t know · 0 points' : 'Review this word · 0 points'}</strong>${complete ? `<span class="ai-short-meaning">${esc(result.meaning || '')}</span>` : ''}</p>` : ''}
+     ${result ? `<p class="ai-result ${result.close ? 'is-close' : 'needs-review'}"><strong>${result.close ? '✓ Close enough · 1 point' : result.unknown ? 'I don’t know · 0 points' : 'Review this word · 0 points'}</strong>${result.meaning ? `<span class="ai-short-meaning">${result.close ? '' : 'Correct meaning · '}${esc(result.meaning)}</span>` : ''}</p>` : ''}
     </div>
    </article>`;
   }
@@ -299,7 +299,7 @@
    </div>`;
    if (test) onProgress?.(`Set ${section} · AI Round ${round}/3 · ${test.score}/${test.total} · ${test.answered}/${test.total} checked`);
    if (test?.previousLayout && round === 1) html += '<p class="small">This saved attempt uses an earlier word list. A full retake uses the current set.</p>';
-   html += '<p class="ai-test-rules">Round 1 tests all words. Rounds 2 and 3 test the previous round’s missed words after a review. Each round keeps your first checked answers and score. Full retakes keep the earlier records.</p>';
+   html += '<p class="ai-test-rules">Round 1 tests all words. Rounds 2 and 3 test the previous round’s missed words after a review. Wrong answers and “I don’t know” show the correct meaning immediately. Each round keeps your first checked answers and score. Full retakes keep the earlier records.</p>';
    if (complete) {
     html += `<section class="ai-finished"><h3>Round ${round} complete · ${test.score} / ${test.total} · ${Math.round(test.score / test.total * 100)}%</h3><p>${missed.length} ${missed.length === 1 ? 'word' : 'words'} to review.${missed.length === 0 ? ' All meanings were close enough. This test is finished.' : round === 3 ? ' Three rounds are finished. Review the short meanings below or start a full retake.' : ''}</p>
      ${next ? `<button type="button" data-ai-open="${esc(next)}" ${locked ? 'disabled' : ''}>Continue Round ${round + 1}</button>` : !finished && !reviewing ? `<button type="button" data-ai-review ${locked ? 'disabled' : ''}>Review missed words before Round ${round + 1}</button>` : ''}

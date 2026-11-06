@@ -62,3 +62,20 @@ test('a slow overview refresh preserves a newer checked test score',async()=>{
  assert.match(overview.innerHTML,/History \(1\)/);
  dashboard.destroy();widget.destroy();
 });
+
+test('a wrong checked answer shows its meaning while the rest of the test is unfinished',async()=>{
+ const word={id:'harry-temporary',word:'temporary',section:4,partOfSpeech:'adjective',context:'The road closure is only temporary.'};
+ const unchecked={id:'harry-parcel',word:'parcel',section:4};
+ const attempt={id:'partial-feedback',section:4,startedAt:'2026-11-06T12:00:00Z',answered:1,total:2,score:0,wordIds:[word.id,unchecked.id]};
+ const record={...attempt,completedAt:null,words:[word,unchecked],answers:{[word.id]:{answer:'forever',close:false,unknown:false,meaning:'not lasting'}}};
+ const fetch=async url=>({ok:true,status:200,json:async()=>url.includes('&id=')?{test:record}:{attempts:[attempt]}});
+ const {ai,local}=load('','',{fetch,AbortController,AbortSignal,document:{hidden:false,addEventListener(){},removeEventListener(){}}});
+ local.set('harry-meaning-ai:connection-v1','fixture-session');
+ const host={innerHTML:'',addEventListener(){},removeEventListener(){}};
+ const widget=ai.mount(host,{section:4,count:2,wordIds:attempt.wordIds,demo:false});
+ await new Promise(setImmediate);
+ assert.match(host.innerHTML,/Correct meaning · not lasting/);
+ assert.match(host.innerHTML,/Review this word · 0 points/);
+ assert.doesNotMatch(host.innerHTML,/Round 1 complete/);
+ widget.destroy();
+});
