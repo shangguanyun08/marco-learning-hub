@@ -9,11 +9,11 @@ function load(hash='',validState='',extra={}){
 test('AI connection consumes only a matching one-time return state and removes the fragment credential',()=>{
  const valid=load('#set-1-round-3&ai_session=fixture-token&ai_state=fixture-state','fixture-state');
  assert.equal(valid.local.get('harry-meaning-ai:connection-v1'),'fixture-token');
- assert.equal(valid.session.size,0);assert.deepEqual(valid.changes,['/meaning-check/#set-1-round-3']);
+ assert.equal(valid.session.size,0);assert.deepEqual(valid.changes,['/meaning-check/#ai-test-1']);
  assert.equal(valid.local.get('existing-practice-key'),'saved learner words');
  const bad=load('#set-2-round-3&ai_session=fixture-token&ai_state=other-state','fixture-state');
  assert.equal(bad.local.has('harry-meaning-ai:connection-v1'),false);
- assert.deepEqual(bad.changes,['/meaning-check/#set-2-round-3']);
+ assert.deepEqual(bad.changes,['/meaning-check/#ai-test-2']);
 });
 test('AI score history compares completed matching lists and retains separate retakes',()=>{
  const {ai}=load(),ids=['a','b'],attempt=(id,score,wordIds=ids,answered=2)=>({id,score,wordIds,answered,total:2,startedAt:'2026-11-0'+id+'T12:00:00Z'});
