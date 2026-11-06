@@ -23,6 +23,20 @@ test('AI score history compares completed matching lists and retains separate re
  assert.equal(new Set(ai.shuffle(ids,'fixture')).size,2);
 });
 
+test('missed-only round scores stay separate from full-test comparisons',()=>{
+ const {ai}=load();
+ const rows=[
+  {id:'root',runId:'root',round:1,startedAt:'2026-11-05T12:00:00Z',wordIds:['a','b'],answered:2,total:2,score:1},
+  {id:'next',runId:'root',parentId:'root',round:2,startedAt:'2026-11-05T12:01:00Z',wordIds:['b'],answered:1,total:1,score:1},
+  {id:'retake',runId:'retake',round:1,startedAt:'2026-11-05T12:02:00Z',wordIds:['a','b'],answered:2,total:2,score:2}
+ ];
+ const result=ai.comparison(rows,['a','b']);
+ assert.equal(result.first.score,1);assert.equal(result.latest.score,2);assert.equal(result.best.total,2);
+ assert.equal(result.rows.find(row=>row.id==='next').number,1);
+ assert.equal(result.rows.find(row=>row.id==='next').change,null);
+ assert.equal(result.rows.find(row=>row.id==='retake').number,2);
+});
+
 test('a slow overview refresh preserves a newer checked test score',async()=>{
  let finishOverview;
  let requests=0;

@@ -10,6 +10,8 @@ The top overview opens independent AI tests for Sets 1–6 at `#ai-test-1` throu
 
 Each Start creates a separately saved test with a stable request ID. Checked first answers cannot be changed. Written English or Chinese and 20-second voice recording are supported; permission failures offer typing/dictation. Reference meanings stay hidden until all words are checked. Retakes retain their own score, and comparisons require identical word lists. Failed checks retain the draft and never create a grade locally. Opening, reloading or switching sets performs reads only. Demo mode disables test writes. The original test database and all previous attempts remain in place.
 
+Each AI test now has up to three rounds. Round 1 tests the full set. Rounds 2 and 3 use only the previous round’s missed or unknown words. A review screen shows those words, their sentences, Harry’s answers and short reference meanings before starting the next round. The service records the review acknowledgement and permits one child round per parent, including concurrent starts and retries. Perfect rounds finish early. A full retake starts a separate Round 1 with every current word, retaining every earlier round and first answer. Saved attempts from before this upgrade are Round 1 records. Dashboard comparisons use full Round 1 scores, while history shows every round separately.
+
 `voice-capture.js` is the existing tested microphone helper transpiled for the static page. `ai.test.cjs` covers state-bound connection returns and score comparisons. Browser QA covers every set, separate retakes, preserved first answers, failed checks, voice submission, reload and phone layout using mocked APIs only. No student answers are inserted for QA.
 
 ## Review and printing
