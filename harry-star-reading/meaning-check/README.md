@@ -4,7 +4,7 @@
 
 ## AI meaning tests on GitHub
 
-Every set has a Round 3 AI test directly on this page, including Sets 1–3. Round 3 can be opened independently so earlier written practice does not need to be repeated. Review and written Rounds 1–2 retain their existing storage, answers and submitted copies. Earlier ungraded Round 3 copies remain visible below the scored test.
+The top overview opens independent AI tests for Sets 1–6 at `#ai-test-1` through `#ai-test-6`. Set navigation contains Review, Round 1 and Round 2. Earlier `#set-N-round-3` bookmarks and authentication returns open the matching independent AI test. Earlier ungraded practice copies remain available below the scored test.
 
 `ai-test.js` renders the scored interface and calls the existing progress service’s narrow Harry proxy. On first use, Connect AI checking uses the current private meaning service’s sign-in and returns to this same GitHub page. A signed Harry-only capability lasts 30 days and stays in browser storage, outside response exports; its one-time return state is checked and the fragment credential is immediately removed from the address bar. No API key or private service credential is published to GitHub. The private service’s audience and API key are unchanged.
 
@@ -26,7 +26,7 @@ Unknown-word reveals use curated reference meanings of 1–3 simple words, inste
 
 ## Sets and repeated recall
 
-Only one Set and Review/Round is displayed at a time. Round 1 uses existing saved answers, including unknown flags and original wording. Finishing written Round 1 saves a review copy and unlocks written Round 2, which repeats every word with blank fields and a saved shuffle. Round 3 is now the separately scored AI test described above. There are exactly three active rounds; sets can be revisited independently. Earlier written Round 3 and higher-round records remain preserved in exports and history.
+Only one Set and Review/Round is displayed at a time. Round 1 uses existing saved answers, including unknown flags and original wording. Finishing written Round 1 saves a review copy and unlocks written Round 2, which repeats every word with blank fields and a saved shuffle. Written practice finishes after Round 2. The top overview opens the separate scored AI tests. Earlier round records remain available in saved history.
 
 Response counts, explanations written, and unknown responses are shown separately. Finishing a round means every response was recorded; it does not assert correctness or mastery. Completed rounds and revised submitted copies can be opened in the set’s review drawer. Copy for review uses the current review/round; Print opens the current set's word-and-meaning table. Download responses includes every round and all legacy records. The selected set/round resumes on this device and is also represented in the URL, including Back/Forward navigation.
 

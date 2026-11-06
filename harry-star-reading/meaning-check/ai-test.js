@@ -1,4 +1,4 @@
-/* GitHub-hosted Round 3. Keys and grading stay on the authenticated service. */
+/* GitHub-hosted AI meaning tests. Keys and grading stay on the authenticated service. */
 (function(){
  'use strict';
  const API='https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/harry-meaning',CONNECT='https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/harry/connect';
@@ -249,7 +249,7 @@
     <button type="button" class="${test ? 'ai-retest' : ''}" data-ai-start ${locked ? 'disabled' : ''}>${test ? 'Retest' : `Start Set ${section}`}</button>
     <button type="button" class="secondary" data-ai-reload ${locked ? 'disabled' : ''}>Reload saved tests</button>
    </div>`;
-   if (test) onProgress?.(`Set ${section} · Round 3 AI test · ${test.score}/${test.total} · ${test.answered}/${test.total} checked`);
+   if (test) onProgress?.(`Set ${section} · AI test · ${test.score}/${test.total} · ${test.answered}/${test.total} checked`);
    if (test?.previousLayout) html += '<p class="small">This saved attempt uses an earlier word list. Start a new retake for the current set.</p>';
    html += '<p class="ai-test-rules">Your first checked answer counts. Retest saves a separate score. Meanings appear after every word has been checked.</p>';
    if (complete) html += `<section class="ai-finished"><h3>Test complete · ${test.score} / ${test.total} · ${Math.round(test.score / test.total * 100)}%</h3><p>${test.total - test.score} words to review. Compare your answers with the short meanings below.</p></section>`;

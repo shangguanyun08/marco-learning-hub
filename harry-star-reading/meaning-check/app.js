@@ -3,25 +3,47 @@
  const data=window.HARRY_MEANING_CHECK,doc=document,byId=id=>doc.getElementById(id),demo=new URLSearchParams(location.search).has('demo');
  const esc=x=>String(x).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const shortMeanings=window.HARRY_SHORT_MEANINGS||{},posLabel=w=>({noun:'noun',verb:'verb',adjective:'adj.',adverb:'adv.'}[w.partOfSpeech]||w.partOfSpeech);
- const ROUND_COUNT=3;
- const isAITest=()=>selected.round===3;
+ const ROUND_COUNT=2;
+ const isAITest=()=>selected.mode==='ai';
  const words=new Map([...(data.previousWords||[]),...(data.previousSet7Words||[]),...data.words].map(w=>[w.id,w])),phonetics=new Map(),viewKey=data.appId+(demo?':demo':'')+':fifteen-place';
  let current={},selected={section:1,round:0},initialPlace=selected,rendered='',historyRendered='',touched=false,sync,aiClient=null,dashboard=null;
- function readPlace(){const match=location.hash.match(/^#(?:set-|section-)(\d+)(?:-round-(\d+)|-review)?$/);if(match)return Number(match[1])===7?{section:5,round:0}:{section:Number(match[1]),round:Number(match[2]||0)};try{return JSON.parse(localStorage.getItem(viewKey));}catch{return null;}}
- const savedPlace=readPlace();
- function validPlace(p){return p&&data.sections.some(s=>s.number===p.section)&&Number.isSafeInteger(p.round)&&p.round>=0&&p.round<=ROUND_COUNT;}
+ function readPlace() {
+  const test = location.hash.match(/^#ai-test-(\d+)$/);
+  if (test) return { section: Number(test[1]), round: 0, mode: 'ai' };
+  const practice = location.hash.match(/^#(?:set-|section-)(\d+)(?:-round-(\d+)|-review)?$/);
+  if (practice) {
+   const section = Number(practice[1]) === 7 ? 5 : Number(practice[1]);
+   const round = Number(practice[2] || 0);
+   return round === 3 ? { section, round: 0, mode: 'ai' } : { section, round };
+  }
+  try {
+   const place = JSON.parse(localStorage.getItem(viewKey));
+   return place?.round === 3 ? { section: place.section, round: 0, mode: 'ai' } : place;
+  } catch { return null; }
+ }
+ const savedPlace = readPlace();
+ function validPlace(place) {
+  return place && data.sections.some(set => set.number === place.section)
+   && Number.isSafeInteger(place.round) && place.round >= 0 && place.round <= ROUND_COUNT
+   && (!place.mode || place.mode === 'ai' && place.round === 0);
+ }
+ function placeHash(place) {
+  if (place.mode === 'ai') return 'ai-test-' + place.section;
+  return place.round ? `set-${place.section}-round-${place.round}` : `set-${place.section}-review`;
+ }
+
  function latestRound(section){return Math.max(1,...Array.from({length:ROUND_COUNT},(_,i)=>i+1).filter(round=>current.rounds?.[section+':'+round]||sync.roundView(section,round).finished));}
  function resumePlace(){
-  if(validPlace(savedPlace)&&(!savedPlace.round||savedPlace.round===3||sync.roundView(savedPlace.section,savedPlace.round)?.available))return savedPlace;
+  if(validPlace(savedPlace)&&(!savedPlace.round||sync.roundView(savedPlace.section,savedPlace.round)?.available))return savedPlace;
   const section=data.sections.find(s=>!sync.roundView(s.number,ROUND_COUNT).finished)?.number||data.sections[0].number;
   return {section,round:0};
  }
  function remember(){try{localStorage.setItem(viewKey,JSON.stringify(selected));}catch{}}
- function select(section,round,{navigate=true}={}){
-  const target={section,round};if(!validPlace(target))return;
-  if(round&&round!==3){const result=sync.openRound(section,round);if(!result.ok){byId('action-note').textContent=result.reason;return;}}
+ function select(section,round,{navigate=true,mode}={}){
+  const target={section,round,mode};if(!validPlace(target))return;
+  if(round){const result=sync.openRound(section,round);if(!result.ok){byId('action-note').textContent=result.reason;return;}}
   selected=target;touched=true;remember();
-  if(navigate)location.hash=round?`set-${section}-round-${round}`:`set-${section}-review`;
+  if(navigate)location.hash=placeHash(target);
   update(sync.view());void loadPronunciations();
  }
  byId('sections').innerHTML=data.sections.map(s=>`<button type="button" data-set="${s.number}">Set ${s.number}<small>${s.count} words</small></button>`).join('');
@@ -35,7 +57,7 @@
   return esc(w.context);
  }
  function renderNavigation(s){
-  byId('rounds').innerHTML=`<button type="button" data-round="0" ${selected.round===0?'aria-current="step"':''}>Review</button>`+Array.from({length:ROUND_COUNT},(_,i)=>{const n=i+1,r=sync.roundView(s.number,n);return `<button type="button" data-round="${n}" ${n===3||r.available?'':'disabled'} ${n===selected.round?'aria-current="step"':''}>Round ${n}${n===3?' · AI test':r.finished?' <span aria-label="saved copy">✓</span>':''}</button>`;}).join('');
+  byId('rounds').innerHTML=`<button type="button" data-round="0" ${selected.round===0&&!isAITest()?'aria-current="step"':''}>Review</button>`+Array.from({length:ROUND_COUNT},(_,i)=>{const n=i+1,r=sync.roundView(s.number,n);return `<button type="button" data-round="${n}" ${r.available?'':'disabled'} ${n===selected.round?'aria-current="step"':''}>Round ${n}${r.finished?' <span aria-label="saved copy">✓</span>':''}</button>`;}).join('');
  }
  function renderReview(v){
   aiClient?.destroy();aiClient=null;
@@ -51,11 +73,11 @@
   rendered=selected.section+':'+round+':'+v.order.join(',');historyRendered='';
  }
  function earlierCopiesMarkup(section){const copies=sync.archivedCopies(section);return copies.length?`<details class="previous-round-three"><summary>Saved rounds from earlier word lists</summary>${copies.map(copy=>`<p class="small">Earlier Set ${copy.section} · Round ${copy.round} · ${esc(new Date(copy.at).toLocaleString())}</p><dl>${copy.responses.map(response=>`<div><dt>${esc(words.get(response.id)?.word||response.id)}</dt><dd>${esc(response.unknown?'I don’t know':response.meaning)}</dd></div>`).join('')}</dl>`).join('')}</details>`:'';}
- function renderAITest(v){
+ function renderAITest(){
   aiClient?.destroy();
-  const s=data.sections.find(s=>s.number===selected.section);renderNavigation(s);
-  byId('word-list').innerHTML=`<section class="word-section ai-test-section" aria-labelledby="set-heading"><div class="section-heading"><div><p class="eyebrow">SET ${s.number} OF ${data.sections.length} · SCORED TEST</p><h2 id="set-heading" tabindex="-1">Round 3 · AI meaning test</h2><p class="round-instruction">Test your meanings here. Every close meaning earns 1 point.</p></div></div><div id="ai-test-host"></div>${v.copies.length?`<details class="previous-round-three"><summary>Earlier Round 3 practice copies · ungraded</summary>${v.copies.map(copy=>`<p class="small">${esc(new Date(copy.at).toLocaleString())}</p><dl>${copy.responses.map(response=>`<div><dt>${esc(words.get(response.id)?.word||response.id)}</dt><dd>${esc(response.unknown?'I don’t know':response.meaning)}</dd></div>`).join('')}</dl>`).join('')}</details>`:''}${earlierCopiesMarkup(s.number)}</section>`;
-  rendered=selected.section+':3:ai';historyRendered='';
+  const s=data.sections.find(s=>s.number===selected.section),earlierRound=sync.roundView(s.number,3);renderNavigation(s);
+  byId('word-list').innerHTML=`<section class="word-section ai-test-section" aria-labelledby="set-heading"><div class="section-heading"><div><p class="eyebrow">SET ${s.number} OF ${data.sections.length} · SCORED TEST</p><h2 id="set-heading" tabindex="-1">AI meaning test · Set ${s.number}</h2><p class="round-instruction">Test your meanings here. Every close meaning earns 1 point.</p></div></div><div id="ai-test-host"></div>${earlierRound.copies.length?`<details class="previous-round-three"><summary>Earlier practice copies · ungraded</summary>${earlierRound.copies.map(copy=>`<p class="small">${esc(new Date(copy.at).toLocaleString())}</p><dl>${copy.responses.map(response=>`<div><dt>${esc(words.get(response.id)?.word||response.id)}</dt><dd>${esc(response.unknown?'I don’t know':response.meaning)}</dd></div>`).join('')}</dl>`).join('')}</details>`:''}${earlierCopiesMarkup(s.number)}</section>`;
+  rendered=selected.section+':ai';historyRendered='';
   aiClient=window.HarryMeaningAI.mount(byId('ai-test-host'),{
    section:s.number,
    count:s.count,
@@ -67,11 +89,15 @@
  function update(value){
   current=value;if(!sync)return;
   if(!touched){selected=resumePlace();initialPlace={...selected};}
-  let v=sync.roundView(selected.section,selected.round||1);if(selected.round!==3&&!v?.available){selected={section:selected.section,round:1};v=sync.roundView(selected.section,1);}
-  const s=data.sections.find(s=>s.number===selected.section),key=selected.section+':'+selected.round+':'+(isAITest()?'ai':v.order.join(','));
+  let v=sync.roundView(selected.section,selected.round||1);if(!isAITest()&&!v?.available){selected={section:selected.section,round:1};v=sync.roundView(selected.section,1);}
+  const s=data.sections.find(s=>s.number===selected.section),key=selected.section+':'+(isAITest()?'ai':selected.round+':'+v.order.join(','));
+  if(isAITest()&&/^#(?:set-|section-)\d+-round-3$/.test(location.hash)){
+   history.replaceState(null,'',location.pathname+location.search+'#'+placeHash(selected));
+   remember();
+  }
   dashboard?.select(s.number);
-  if(rendered!==key){if(selected.round===0)renderReview(v);else if(isAITest())renderAITest(v);else renderRound(v);}
-  doc.querySelectorAll('[data-set]').forEach(el=>{const n=Number(el.dataset.set),r=latestRound(n),rv=sync.roundView(n,r);if(n===s.number)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current');el.classList.toggle('is-complete',sync.roundView(n,ROUND_COUNT).finished);el.querySelector('small').textContent=n===selected.section&&selected.round===3?'Round 3 · AI test':`R${r}: ${rv.recorded}/${data.sections.find(x=>x.number===n).count}`;});
+  if(rendered!==key){if(isAITest())renderAITest();else if(selected.round===0)renderReview(v);else renderRound(v);}
+  doc.querySelectorAll('[data-set]').forEach(el=>{const n=Number(el.dataset.set),r=latestRound(n),rv=sync.roundView(n,r);if(n===s.number)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current');el.classList.toggle('is-complete',sync.roundView(n,ROUND_COUNT).finished);el.querySelector('small').textContent=`R${r}: ${rv.recorded}/${data.sections.find(x=>x.number===n).count}`;});
   if(isAITest()){renderNavigation(s);return;}
   if(selected.round===0){renderNavigation(s);return;}
   // Update controls in place so typing, selection and input focus survive every save.
@@ -79,9 +105,13 @@
   byId('round-progress').textContent=`${v.written} explanations written · ${v.recorded-v.written} “I don’t know” · ${s.count-v.recorded} left`;
   const finish=byId('finish-round');finish.disabled=v.recorded<s.count||v.submitted;finish.textContent=v.submitted?'Round saved ✓':`Finish Round ${selected.round}`;
   byId('submission-note').textContent=v.copies.length?`${v.copies.length} saved ${v.copies.length===1?'copy':'copies'} of this round. ${v.submitted?'Your current responses are saved.':'Your edits are a separate draft; finish again to save a revised copy.'}`:'Your draft saves as you type. Finish the round after answering every word.';
-  byId('round-result').textContent=v.submitted?(v.written===s.count?'You wrote an explanation for every word. Review the meanings together; this is not a correctness score.':'Round finished. It is fine to need help. Try every word again in the next round.'):'Responses are not automatically graded. Close meanings are welcome.';
+  let resultText='Close meanings are welcome.';
+  if(v.submitted){
+   resultText=v.written===s.count?'Round saved. Review your explanations together.':selected.round<ROUND_COUNT?'Round saved. Try every word again in Round 2.':'Round saved. Review the words you need help with.';
+  }
+  byId('round-result').textContent=resultText;
   const next=byId('next-round');next.hidden=!v.submitted||selected.round>=ROUND_COUNT;next.textContent=`Start Round ${selected.round+1}`;
-  doc.querySelectorAll('[data-round]').forEach(el=>{if(el.dataset.round==='0')return;const r=sync.roundView(s.number,Number(el.dataset.round));el.disabled=Number(el.dataset.round)!==3&&!r.available;el.innerHTML=`Round ${el.dataset.round}${Number(el.dataset.round)===3?' · AI test':r.finished?' <span aria-label="saved copy">✓</span>':''}`;});
+  doc.querySelectorAll('[data-round]').forEach(el=>{if(el.dataset.round==='0')return;const r=sync.roundView(s.number,Number(el.dataset.round));el.disabled=!r.available;el.innerHTML=`Round ${el.dataset.round}${r.finished?' <span aria-label="saved copy">✓</span>':''}`;});
   const savedRounds=Array.from({length:latestRound(s.number)},(_,i)=>sync.roundView(s.number,i+1)).filter(r=>r.copies.length),historyKey=JSON.stringify([savedRounds.map(r=>({round:r.round,copies:r.copies})),sync.archivedCopies(s.number)]);
   if(historyKey!==historyRendered){byId('round-history').innerHTML=savedRounds.map(r=>`<details><summary>Round ${r.round} · ${r.copies.length} saved ${r.copies.length===1?'copy':'copies'}</summary>${r.copies.map(copy=>`<p class="small">${esc(new Date(copy.at).toLocaleString())}</p><dl>${copy.responses.map(response=>`<div><dt>${esc(words.get(response.id).word)}</dt><dd>${esc(response.unknown?'I don’t know':response.meaning)}</dd></div>`).join('')}</dl>`).join('')}</details>`).join('')||'<p>No finished rounds yet. Your draft is still saved.</p>';byId('round-history').insertAdjacentHTML('beforeend',earlierCopiesMarkup(s.number));historyRendered=historyKey;}
  }
@@ -94,14 +124,14 @@
   })),
   demo,
   onSelectSet:number=>{
-   select(number,3);
+   select(number,0,{mode:'ai'});
    byId('ai-active-test')?.scrollIntoView({block:'start'});
   }
  });
  update(sync.view());void sync.start().then(()=>update(sync.view()));
  byId('sections').addEventListener('click',e=>{const button=e.target.closest('[data-set]');if(button){const section=Number(button.dataset.set);select(section,0);}});
  byId('rounds').addEventListener('click',e=>{const button=e.target.closest('[data-round]');if(button&&!button.disabled)select(selected.section,Number(button.dataset.round));});
- window.addEventListener('hashchange',()=>{const p=location.hash?readPlace():initialPlace;if(validPlace(p))select(p.section,p.round,{navigate:false});});
+ window.addEventListener('hashchange',()=>{const p=location.hash?readPlace():initialPlace;if(validPlace(p))select(p.section,p.round,{navigate:false,mode:p.mode});});
  byId('word-list').addEventListener('input',e=>{if(e.target.matches('[data-field=meaning]')){touched=true;remember();sync.editRound(selected.section,selected.round,e.target.closest('[data-word]').dataset.word,'meaning',e.target.value);}});
  byId('word-list').addEventListener('click',async e=>{
   const speaker=e.target.closest('[data-speak]');if(speaker){if(!('speechSynthesis'in window)){byId('action-note').textContent='Audio pronunciation is not supported by this browser.';return;}speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(speaker.dataset.speak);utterance.lang='en-US';utterance.rate=.85;speechSynthesis.speak(utterance);return;}
