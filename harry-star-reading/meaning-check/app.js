@@ -56,7 +56,22 @@
   const s=data.sections.find(s=>s.number===selected.section);renderNavigation(s);
   byId('word-list').innerHTML=`<section class="word-section ai-test-section" aria-labelledby="set-heading"><div class="section-heading"><div><p class="eyebrow">SET ${s.number} OF ${data.sections.length} · SCORED TEST</p><h2 id="set-heading" tabindex="-1">Round 3 · AI meaning test</h2><p class="round-instruction">Test your meanings here. Every close meaning earns 1 point.</p></div></div><div id="ai-test-host"></div>${v.copies.length?`<details class="previous-round-three"><summary>Earlier Round 3 practice copies · ungraded</summary>${v.copies.map(copy=>`<p class="small">${esc(new Date(copy.at).toLocaleString())}</p><dl>${copy.responses.map(response=>`<div><dt>${esc(words.get(response.id)?.word||response.id)}</dt><dd>${esc(response.unknown?'I don’t know':response.meaning)}</dd></div>`).join('')}</dl>`).join('')}</details>`:''}${earlierCopiesMarkup(s.number)}</section>`;
   rendered=selected.section+':3:ai';historyRendered='';
-  aiClient=window.HarryMeaningAI.mount(byId('ai-test-host'),{section:s.number,count:s.count,wordIds:data.words.filter(w=>w.section===s.number).map(w=>'harry-'+w.id),demo,formatSentence:word=>sentenceMarkup({...word,id:word.id.replace(/^harry-/, '')})});
+  aiClient=window.HarryMeaningAI.mount(byId('ai-test-host'),{
+   section:s.number,
+   count:s.count,
+   wordIds:data.words.filter(w=>w.section===s.number).map(w=>'harry-'+w.id),
+   allSets:data.sections.map(set=>({
+    number:set.number,
+    count:set.count,
+    wordIds:data.words.filter(word=>word.section===set.number).map(word=>'harry-'+word.id)
+   })),
+   demo,
+   formatSentence:word=>sentenceMarkup({...word,id:word.id.replace(/^harry-/, '')}),
+   onSelectSet:number=>{
+    select(number,3);
+    byId('ai-active-test')?.scrollIntoView({block:'start'});
+   }
+  });
  }
  function update(value){
   current=value;if(!sync)return;
