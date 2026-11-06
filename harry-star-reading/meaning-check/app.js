@@ -3,7 +3,7 @@
  const data=window.HARRY_MEANING_CHECK,doc=document,byId=id=>doc.getElementById(id),demo=new URLSearchParams(location.search).has('demo');
  const esc=x=>String(x).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
  const shortMeanings=window.HARRY_SHORT_MEANINGS||{},posLabel=w=>({noun:'noun',verb:'verb',adjective:'adj.',adverb:'adv.'}[w.partOfSpeech]||w.partOfSpeech);
- const ROUND_COUNT=2;
+ const ROUND_COUNT=3;
  const isAITest=()=>selected.mode==='ai';
  const words=new Map([...(data.previousWords||[]),...(data.previousSet7Words||[]),...data.words].map(w=>[w.id,w])),phonetics=new Map(),viewKey=data.appId+(demo?':demo':'')+':fifteen-place';
  let current={},selected={section:1,round:0},initialPlace=selected,rendered='',historyRendered='',touched=false,sync,aiClient=null,dashboard=null;
@@ -14,11 +14,10 @@
   if (practice) {
    const section = Number(practice[1]) === 7 ? 5 : Number(practice[1]);
    const round = Number(practice[2] || 0);
-   return round === 3 ? { section, round: 0, mode: 'ai' } : { section, round };
+   return { section, round };
   }
   try {
-   const place = JSON.parse(localStorage.getItem(viewKey));
-   return place?.round === 3 ? { section: place.section, round: 0, mode: 'ai' } : place;
+   return JSON.parse(localStorage.getItem(viewKey));
   } catch { return null; }
  }
  const savedPlace = readPlace();
@@ -91,10 +90,6 @@
   if(!touched){selected=resumePlace();initialPlace={...selected};}
   let v=sync.roundView(selected.section,selected.round||1);if(!isAITest()&&!v?.available){selected={section:selected.section,round:1};v=sync.roundView(selected.section,1);}
   const s=data.sections.find(s=>s.number===selected.section),key=selected.section+':'+(isAITest()?'ai':selected.round+':'+v.order.join(','));
-  if(isAITest()&&/^#(?:set-|section-)\d+-round-3$/.test(location.hash)){
-   history.replaceState(null,'',location.pathname+location.search+'#'+placeHash(selected));
-   remember();
-  }
   dashboard?.select(s.number);
   if(rendered!==key){if(isAITest())renderAITest();else if(selected.round===0)renderReview(v);else renderRound(v);}
   doc.querySelectorAll('[data-set]').forEach(el=>{const n=Number(el.dataset.set),r=latestRound(n),rv=sync.roundView(n,r);if(n===s.number)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current');el.classList.toggle('is-complete',sync.roundView(n,ROUND_COUNT).finished);el.querySelector('small').textContent=`R${r}: ${rv.recorded}/${data.sections.find(x=>x.number===n).count}`;});
@@ -107,7 +102,7 @@
   byId('submission-note').textContent=v.copies.length?`${v.copies.length} saved ${v.copies.length===1?'copy':'copies'} of this round. ${v.submitted?'Your current responses are saved.':'Your edits are a separate draft; finish again to save a revised copy.'}`:'Your draft saves as you type. Finish the round after answering every word.';
   let resultText='Close meanings are welcome.';
   if(v.submitted){
-   resultText=v.written===s.count?'Round saved. Review your explanations together.':selected.round<ROUND_COUNT?'Round saved. Try every word again in Round 2.':'Round saved. Review the words you need help with.';
+   resultText=v.written===s.count?'Round saved. Review your explanations together.':selected.round<ROUND_COUNT?`Round saved. Try every word again in Round ${selected.round+1}.`:'Round saved. Review the words you need help with.';
   }
   byId('round-result').textContent=resultText;
   const next=byId('next-round');next.hidden=!v.submitted||selected.round>=ROUND_COUNT;next.textContent=`Start Round ${selected.round+1}`;

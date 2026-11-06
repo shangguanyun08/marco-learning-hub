@@ -11,7 +11,8 @@
  const remove=(key,store=localStorage)=>{try{store.removeItem(key);}catch{}};
  if(location.hash.includes('&ai_session=')){
   const [place,...parts]=location.hash.split('&'),query=new URLSearchParams(parts.join('&')),token=query.get('ai_session'),state=query.get('ai_state');
-  history.replaceState(null,'',location.pathname+location.search+place);
+  const returnPlace = place.replace(/^#(?:set-|section-)(\d+)-round-3$/, '#ai-test-$1');
+  history.replaceState(null,'',location.pathname+location.search+returnPlace);
   if(token&&state&&state===read(PAIRING,sessionStorage)){write(SESSION,token);remove(PAIRING,sessionStorage);}
   else connectionError='The connection could not be confirmed. Please connect again.';
  }
