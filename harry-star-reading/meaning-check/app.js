@@ -6,7 +6,7 @@
  const ROUND_COUNT=3;
  const isAITest=()=>selected.round===3;
  const words=new Map([...(data.previousWords||[]),...(data.previousSet7Words||[]),...data.words].map(w=>[w.id,w])),phonetics=new Map(),viewKey=data.appId+(demo?':demo':'')+':fifteen-place';
- let current={},selected={section:1,round:0},initialPlace=selected,rendered='',historyRendered='',touched=false,sync,aiClient=null;
+ let current={},selected={section:1,round:0},initialPlace=selected,rendered='',historyRendered='',touched=false,sync,aiClient=null,dashboard=null;
  function readPlace(){const match=location.hash.match(/^#(?:set-|section-)(\d+)(?:-round-(\d+)|-review)?$/);if(match)return Number(match[1])===7?{section:5,round:0}:{section:Number(match[1]),round:Number(match[2]||0)};try{return JSON.parse(localStorage.getItem(viewKey));}catch{return null;}}
  const savedPlace=readPlace();
  function validPlace(p){return p&&data.sections.some(s=>s.number===p.section)&&Number.isSafeInteger(p.round)&&p.round>=0&&p.round<=ROUND_COUNT;}
@@ -60,17 +60,8 @@
    section:s.number,
    count:s.count,
    wordIds:data.words.filter(w=>w.section===s.number).map(w=>'harry-'+w.id),
-   allSets:data.sections.map(set=>({
-    number:set.number,
-    count:set.count,
-    wordIds:data.words.filter(word=>word.section===set.number).map(word=>'harry-'+word.id)
-   })),
    demo,
-   formatSentence:word=>sentenceMarkup({...word,id:word.id.replace(/^harry-/, '')}),
-   onSelectSet:number=>{
-    select(number,3);
-    byId('ai-active-test')?.scrollIntoView({block:'start'});
-   }
+   formatSentence:word=>sentenceMarkup({...word,id:word.id.replace(/^harry-/, '')})
   });
  }
  function update(value){
@@ -78,6 +69,7 @@
   if(!touched){selected=resumePlace();initialPlace={...selected};}
   let v=sync.roundView(selected.section,selected.round||1);if(selected.round!==3&&!v?.available){selected={section:selected.section,round:1};v=sync.roundView(selected.section,1);}
   const s=data.sections.find(s=>s.number===selected.section),key=selected.section+':'+selected.round+':'+(isAITest()?'ai':v.order.join(','));
+  dashboard?.select(s.number);
   if(rendered!==key){if(selected.round===0)renderReview(v);else if(isAITest())renderAITest(v);else renderRound(v);}
   doc.querySelectorAll('[data-set]').forEach(el=>{const n=Number(el.dataset.set),r=latestRound(n),rv=sync.roundView(n,r);if(n===s.number)el.setAttribute('aria-current','true');else el.removeAttribute('aria-current');el.classList.toggle('is-complete',sync.roundView(n,ROUND_COUNT).finished);el.querySelector('small').textContent=n===selected.section&&selected.round===3?'Round 3 · AI test':`R${r}: ${rv.recorded}/${data.sections.find(x=>x.number===n).count}`;});
   if(isAITest()){renderNavigation(s);return;}
@@ -94,6 +86,18 @@
   if(historyKey!==historyRendered){byId('round-history').innerHTML=savedRounds.map(r=>`<details><summary>Round ${r.round} · ${r.copies.length} saved ${r.copies.length===1?'copy':'copies'}</summary>${r.copies.map(copy=>`<p class="small">${esc(new Date(copy.at).toLocaleString())}</p><dl>${copy.responses.map(response=>`<div><dt>${esc(words.get(response.id).word)}</dt><dd>${esc(response.unknown?'I don’t know':response.meaning)}</dd></div>`).join('')}</dl>`).join('')}</details>`).join('')||'<p>No finished rounds yet. Your draft is still saved.</p>';byId('round-history').insertAdjacentHTML('beforeend',earlierCopiesMarkup(s.number));historyRendered=historyKey;}
  }
  sync=window.MeaningCheckSync.create({data,disabled:demo,onState:update});
+ dashboard=window.HarryMeaningAI.createDashboard(byId('ai-dashboard-top'),{
+  sets:data.sections.map(set=>({
+   number:set.number,
+   count:set.count,
+   wordIds:data.words.filter(word=>word.section===set.number).map(word=>'harry-'+word.id)
+  })),
+  demo,
+  onSelectSet:number=>{
+   select(number,3);
+   byId('ai-active-test')?.scrollIntoView({block:'start'});
+  }
+ });
  update(sync.view());void sync.start().then(()=>update(sync.view()));
  byId('sections').addEventListener('click',e=>{const button=e.target.closest('[data-set]');if(button){const section=Number(button.dataset.set);select(section,0);}});
  byId('rounds').addEventListener('click',e=>{const button=e.target.closest('[data-round]');if(button&&!button.disabled)select(selected.section,Number(button.dataset.round));});
