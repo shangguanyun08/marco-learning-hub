@@ -17,55 +17,150 @@
  }
  function shuffle(values,seedText){const order=values.slice();let seed=2166136261;for(const c of seedText)seed=Math.imul(seed^c.charCodeAt(0),16777619);for(let i=order.length-1;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[order[i],order[j]]=[order[j],order[i]];}return order;}
  function comparison(attempts,ids){const bank=JSON.stringify(ids.slice().sort()),rows=attempts.slice().sort((a,b)=>a.startedAt.localeCompare(b.startedAt)||a.id.localeCompare(b.id));let previous=null;const annotated=rows.map((a,i)=>{const same=JSON.stringify((a.wordIds||[]).slice().sort())===bank,complete=a.total>0&&a.answered===a.total,change=same&&complete&&previous?a.score-previous.score:null;if(same&&complete)previous=a;return {...a,number:i+1,same,complete,change};}),finished=annotated.filter(a=>a.same&&a.complete);return {rows:annotated.reverse(),first:finished[0],latest:finished.at(-1),best:finished.slice().sort((a,b)=>b.score-a.score)[0]};}
- function mount(host,{section,count,wordIds,allSets,formatSentence,demo,onProgress,onSelectSet}){
+ const dashboardViews = new Set();
+
+ function refreshDashboardViews() {
+  for (const render of dashboardViews) render();
+ }
+
+ function cacheHistory(section, attempts) {
+  const saved = new Map((setHistories.get(section) || []).map(attempt => [attempt.id, attempt]));
+  for (const attempt of attempts) {
+   const previous = saved.get(attempt.id);
+   if (!previous || attempt.answered >= previous.answered) saved.set(attempt.id, attempt);
+  }
+  setHistories.set(section, Array.from(saved.values()).sort((a, b) => b.startedAt.localeCompare(a.startedAt) || b.id.localeCompare(a.id)));
+ }
+
+ function rememberHistory(section, attempts) {
+  cacheHistory(section, attempts);
+  refreshDashboardViews();
+ }
+
+ function connect(section) {
+  const state = crypto.randomUUID();
+  write(PAIRING, state, sessionStorage);
+  location.assign(CONNECT + '?set=' + section + '&state=' + state);
+ }
+
+ async function serviceRequest(action, { method = 'GET', query = '', body, signal, demo = false } = {}) {
+  if (demo) throw Error('AI checking is disabled in this preview.');
+  const headers = { authorization: 'Bearer ' + (read(SESSION) || '') };
+  if (typeof body === 'string') headers['content-type'] = 'application/json';
+  const signals = [AbortSignal.timeout(55000)];
+  if (signal) signals.push(signal);
+  let response;
+  try {
+   response = await fetch(API + '?action=' + action + query, {
+    method, headers, body, signal: AbortSignal.any(signals)
+   });
+  } catch (failure) {
+   throw Error(failure?.name === 'AbortError' || failure?.name === 'TimeoutError'
+    ? 'The check took too long. Your answer is kept; please try again.'
+    : 'Could not connect. Your answer is kept; please try again.');
+  }
+  const result = await response.json();
+  if (response.status === 401) {
+   remove(SESSION);
+   refreshDashboardViews();
+   throw Error('Please connect AI checking again. Your saved tests are safe.');
+  }
+  if (!response.ok) {
+   const failure = Error(result.error || 'The answer could not be checked.');
+   failure.transcript = result.transcript;
+   throw failure;
+  }
+  return result;
+ }
+
+ function dashboardMarkup(sets, section, connected, loading) {
+  const cards = sets.map(set => {
+   const saved = connected ? setHistories.get(set.number) : undefined;
+   const scores = comparison(saved || [], set.wordIds);
+   const current = scores.rows[0];
+   const latest = scores.latest;
+   let detail = connected ? 'No completed score' : 'Connect to view';
+   if (connected && !saved) detail = loading ? 'Loading scores…' : 'Scores not loaded';
+   if (latest) detail = `${Math.round(latest.score / latest.total * 100)}% · Best ${scores.best.score}/${scores.best.total}`;
+   const progress = current && !current.complete
+    ? `<p class="ai-dashboard-current">${current.answered}/${current.total} checked</p>` : '';
+   const history = scores.rows.length
+    ? `<ol>${scores.rows.map(attempt => `<li><span>Attempt ${attempt.number}</span><strong>${attempt.complete ? `${attempt.score} / ${attempt.total}` : `${attempt.answered}/${attempt.total} checked`}</strong><small>${esc(new Date(attempt.startedAt).toLocaleString())}</small></li>`).join('')}</ol>`
+    : `<p>${saved ? 'No saved attempts yet.' : 'Saved attempts have not loaded.'}</p>`;
+   return `<article class="ai-dashboard-card" ${set.number === section ? 'aria-current="true"' : ''}>
+    <h4>Set ${set.number}</h4><span class="ai-dashboard-count">${set.count} words</span>
+    <strong class="ai-dashboard-score">${latest ? `${latest.score} / ${latest.total}` : `— / ${set.count}`}</strong>
+    <p class="ai-dashboard-detail">${detail}</p>${progress}
+    <button type="button" data-ai-set="${set.number}">${current && !current.complete ? 'Continue test' : 'Open test'}</button>
+    ${connected ? `<details class="ai-dashboard-history"><summary>History (${scores.rows.length})</summary>${history}</details>` : ''}
+   </article>`;
+  }).join('');
+  return `<section class="ai-dashboard" aria-labelledby="ai-dashboard-heading">
+   <div class="ai-dashboard-heading"><h3 id="ai-dashboard-heading">AI meaning tests</h3></div>
+   <div class="ai-dashboard-grid">${cards}</div>
+  </section>`;
+ }
+
+ function createDashboard(host, { sets, demo, onSelectSet }) {
+  let section = sets[0].number;
+  let loading = false;
+  let destroyed = false;
+  const controller = new AbortController();
+
+  function render() {
+   if (!destroyed) host.innerHTML = dashboardMarkup(sets, section, !demo && Boolean(read(SESSION)), loading);
+  }
+
+  async function load() {
+   if (demo || !read(SESSION)) return;
+   loading = true;
+   render();
+   try {
+    const results = await Promise.allSettled(sets.map(set => serviceRequest('attempts', {
+     query: '&set=' + set.number, signal: controller.signal
+    })));
+    if (destroyed) return;
+    results.forEach((result, index) => {
+     if (result.status === 'fulfilled') cacheHistory(sets[index].number, result.value.attempts);
+    });
+   } finally {
+    loading = false;
+    refreshDashboardViews();
+   }
+  }
+
+  function click(event) {
+   const setButton = event.target.closest('[data-ai-set]');
+   if (setButton) onSelectSet(Number(setButton.dataset.aiSet));
+  }
+
+  dashboardViews.add(render);
+  host.addEventListener('click', click);
+  render();
+  void load();
+  return {
+   select(number) {
+    if (section !== number) { section = number; render(); }
+   },
+   destroy() {
+    destroyed = true;
+    controller.abort();
+    dashboardViews.delete(render);
+    host.removeEventListener('click', click);
+   }
+  };
+ }
+
+ function mount(host,{section,count,wordIds,formatSentence,demo,onProgress}){
   let test=null,attempts=[],drafts={},busy=false,loading=false,error=connectionError,rowError={},mic=null,capture=null,startingId=null,destroyed=false;
   const lifetimeController = new AbortController();
   const token=()=>demo?'':read(SESSION)||'';
   const draftKey=id=>'harry-meaning-ai:draft:'+id;
   const draftLoad=id=>{try{return JSON.parse(read(draftKey(id))||'{}');}catch{return {};}};
-  function accept(record){test=record;known.set(record.id,record);drafts=draftLoad(record.id);attempts=[{id:record.id,section:record.section,startedAt:record.startedAt,answered:record.answered,score:record.score,total:record.total,wordIds:record.words.map(w=>w.id)},...attempts.filter(a=>a.id!==record.id)];setHistories.set(section,attempts);}
-  async function request(action,{method='GET',query='',body}={}){
-   if(demo)throw Error('AI checking is disabled in this preview.');
-   const headers={authorization:'Bearer '+token()};if(typeof body==='string')headers['content-type']='application/json';
-   const signal=AbortSignal.any([lifetimeController.signal,AbortSignal.timeout(55000)]);
-   let response;
-   try{response=await fetch(API+'?action='+action+query,{method,headers,body,signal});}catch(e){throw Error(e?.name==='AbortError'||e?.name==='TimeoutError'?'The check took too long. Your answer is kept; please try again.':'Could not connect. Your answer is kept; please try again.');}
-   const result=await response.json();
-   if(response.status===401){remove(SESSION);throw Error('Please connect AI checking again. Your saved tests are safe.');}
-   if(!response.ok){const failure=Error(result.error||'The answer could not be checked.');failure.transcript=result.transcript;throw failure;}
-   return result;
+  function accept(record){test=record;known.set(record.id,record);drafts=draftLoad(record.id);attempts=[{id:record.id,section:record.section,startedAt:record.startedAt,answered:record.answered,score:record.score,total:record.total,wordIds:record.words.map(w=>w.id)},...attempts.filter(a=>a.id!==record.id)];rememberHistory(section,attempts);}
+  function request(action, options = {}) {
+   return serviceRequest(action, { ...options, demo, signal: lifetimeController.signal });
   }
-  function renderDashboard(connected, locked) {
-   const cards = allSets.map(set => {
-    const saved = connected ? setHistories.get(set.number) : undefined;
-    const scores = comparison(saved || [], set.wordIds);
-    const current = scores.rows[0];
-    const latest = scores.latest;
-    let detail = connected ? 'No completed score yet' : 'Connect to view saved scores';
-    if (connected && !saved) detail = loading ? 'Loading saved scores…' : 'Scores have not loaded';
-    if (latest) detail = `${Math.round(latest.score / latest.total * 100)}% · Best ${scores.best.score}/${scores.best.total}`;
-    const progress = current && !current.complete
-     ? `<p class="ai-dashboard-current">Current attempt · ${current.answered}/${current.total} checked</p>`
-     : '';
-    const history = scores.rows.length
-     ? `<ol>${scores.rows.map(attempt => `<li><span>Attempt ${attempt.number}</span><strong>${attempt.complete ? `${attempt.score} / ${attempt.total}` : `In progress · ${attempt.answered}/${attempt.total}`}</strong><small>${esc(new Date(attempt.startedAt).toLocaleString())}</small></li>`).join('')}</ol>`
-     : `<p>${saved ? 'No saved attempts yet.' : 'Saved attempts have not loaded.'}</p>`;
-    return `<article class="ai-dashboard-card" ${set.number === section ? 'aria-current="true"' : ''}>
-     <h4>Set ${set.number}</h4>
-     <span class="ai-dashboard-count">${set.count} words</span>
-     <strong class="ai-dashboard-score">${latest ? `${latest.score} / ${latest.total}` : `— / ${set.count}`}</strong>
-     <p class="ai-dashboard-detail">${detail}</p>
-     ${progress}
-     <button type="button" data-ai-set="${set.number}" ${locked ? 'disabled' : ''}>${current && !current.complete ? 'Continue test' : 'Open test'}</button>
-     ${connected ? `<details class="ai-dashboard-history"><summary>Score history (${scores.rows.length})</summary>${history}</details>` : ''}
-    </article>`;
-   }).join('');
-   return `<section class="ai-dashboard" aria-labelledby="ai-dashboard-heading">
-    <h3 id="ai-dashboard-heading">AI meaning tests</h3>
-    <div class="ai-dashboard-grid">${cards}</div>
-   </section>`;
-  }
-
   function renderHistory(scores, locked) {
    if (!attempts.length) return '';
    const comparisonBoxes = scores.first ? `<div class="ai-score-comparison">
@@ -136,8 +231,7 @@
    const scores = comparison(attempts, wordIds);
    const total = test?.total || count;
    const connectionStatus = loading ? 'Loading saved tests…' : busy ? 'Checking and saving…' : test ? 'Answers and score saved online' : 'Ready to start';
-   let html = renderDashboard(connected, locked);
-   html += `<div class="ai-active-test" id="ai-active-test">
+   let html = `<div class="ai-active-test" id="ai-active-test">
     <header class="ai-test-intro"><p class="eyebrow">SET ${section} · ${count} WORDS</p><h3 tabindex="-1">Say it in your own words.</h3>
     <p>Tap <strong>Check</strong> to start listening, then <strong>Stop &amp; check</strong>. Short English or Chinese meanings are welcome. Each close meaning earns <strong>1 point</strong>.</p></header>`;
    if (error) html += `<p class="ai-error" role="alert">${esc(error)}</p>`;
@@ -170,17 +264,10 @@
    error = '';
    render();
    try {
-    const needed = allSets.filter(set => set.number === section || !setHistories.has(set.number));
-    const results = await Promise.allSettled(needed.map(set => request('attempts', { query: '&set=' + set.number })));
+    const body = await request('attempts', { query: '&set=' + section });
     if (destroyed) return;
-    let selectedError;
-    results.forEach((result, index) => {
-     const number = needed[index].number;
-     if (result.status === 'fulfilled') setHistories.set(number, result.value.attempts);
-     else if (number === section) selectedError = result.reason;
-    });
-    if (selectedError) throw selectedError;
-    attempts = setHistories.get(section) || [];
+    attempts = body.attempts;
+    rememberHistory(section, attempts);
     if (attempts.length) {
      const saved = await request('attempts', { query: '&id=' + encodeURIComponent(attempts[0].id) });
      if (destroyed) return;
@@ -206,11 +293,9 @@
    }
   }
   async function click(event){
-   const setButton=event.target.closest('[data-ai-set]');
-   if(setButton&&!busy&&!loading&&!mic){onSelectSet(Number(setButton.dataset.aiSet));return;}
-   if(event.target.closest('[data-ai-connect]')){const state=crypto.randomUUID();write(PAIRING,state,sessionStorage);location.assign(CONNECT+'?set='+section+'&state='+state);return;}
+   if(event.target.closest('[data-ai-connect]')){connect(section);return;}
    if(event.target.closest('[data-ai-start]')){void start();return;}
-   if(event.target.closest('[data-ai-reload]')){setHistories.clear();void load();return;}
+   if(event.target.closest('[data-ai-reload]')){void load();return;}
    const open=event.target.closest('[data-ai-open]');if(open&&!busy&&!mic){loading=true;render();try{const result=await request('attempts',{query:'&id='+encodeURIComponent(open.dataset.aiOpen)});if(!destroyed){accept(result.test);rowError={};error='';}}catch(e){error=e.message;}finally{loading=false;render();}return;}
    const speak=event.target.closest('[data-ai-speak]');if(speak){if('speechSynthesis'in window){speechSynthesis.cancel();const voice=new SpeechSynthesisUtterance(speak.dataset.aiSpeak);voice.lang='en-US';voice.rate=.85;speechSynthesis.speak(voice);}return;}
    const row=event.target.closest('[data-ai-word]'),word=test?.words.find(w=>w.id===row?.dataset.aiWord);if(!word)return;
@@ -229,5 +314,5 @@
   render();if(token())void load();
   return {destroy(){destroyed=true;lifetimeController.abort();capture?.cancel();host.removeEventListener('input',input);host.removeEventListener('click',click);document.removeEventListener('visibilitychange',interrupted);}};
  }
- window.HarryMeaningAI={mount,exportKnown:()=>Array.from(known.values()),comparison,shuffle};
+ window.HarryMeaningAI={mount,createDashboard,exportKnown:()=>Array.from(known.values()),comparison,shuffle};
 })();
