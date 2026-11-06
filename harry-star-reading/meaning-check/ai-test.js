@@ -16,7 +16,24 @@
   else connectionError='The connection could not be confirmed. Please connect again.';
  }
  function shuffle(values,seedText){const order=values.slice();let seed=2166136261;for(const c of seedText)seed=Math.imul(seed^c.charCodeAt(0),16777619);for(let i=order.length-1;i>0;i--){seed=(Math.imul(seed,1664525)+1013904223)>>>0;const j=seed%(i+1);[order[i],order[j]]=[order[j],order[i]];}return order;}
- function comparison(attempts,ids){const bank=JSON.stringify(ids.slice().sort()),rows=attempts.slice().sort((a,b)=>a.startedAt.localeCompare(b.startedAt)||a.id.localeCompare(b.id));let previous=null;const annotated=rows.map((a,i)=>{const same=JSON.stringify((a.wordIds||[]).slice().sort())===bank,complete=a.total>0&&a.answered===a.total,change=same&&complete&&previous?a.score-previous.score:null;if(same&&complete)previous=a;return {...a,number:i+1,same,complete,change};}),finished=annotated.filter(a=>a.same&&a.complete);return {rows:annotated.reverse(),first:finished[0],latest:finished.at(-1),best:finished.slice().sort((a,b)=>b.score-a.score)[0]};}
+ function comparison(attempts, ids) {
+  const bank = JSON.stringify(ids.slice().sort());
+  const rows = attempts.slice().sort((a, b) => a.startedAt.localeCompare(b.startedAt) || a.id.localeCompare(b.id));
+  const runs = new Map(rows.filter(row => (row.round || 1) === 1).map((row, index) => [row.id, index + 1]));
+  let previous = null;
+  const annotated = rows.map(attempt => {
+   const round = attempt.round || 1;
+   const same = round === 1 && JSON.stringify((attempt.wordIds || []).slice().sort()) === bank;
+   const complete = attempt.total > 0 && attempt.answered === attempt.total;
+   const change = same && complete && previous ? attempt.score - previous.score : null;
+   if (same && complete) previous = attempt;
+   return { ...attempt, round, number: runs.get(attempt.runId || attempt.id), same, complete, change };
+  });
+  const finished = annotated.filter(attempt => attempt.same && attempt.complete);
+  const newestRun = annotated.filter(attempt => attempt.round === 1).at(-1);
+  const current = newestRun ? annotated.filter(attempt => (attempt.runId || attempt.id) === newestRun.id).sort((a, b) => b.round - a.round)[0] : annotated.at(-1);
+  return { rows: annotated.reverse(), current, first: finished[0], latest: finished.at(-1), best: finished.slice().sort((a, b) => b.score - a.score)[0] };
+ }
  const dashboardViews = new Set();
 
  function refreshDashboardViews() {
@@ -77,15 +94,15 @@
   const cards = sets.map(set => {
    const saved = connected ? setHistories.get(set.number) : undefined;
    const scores = comparison(saved || [], set.wordIds);
-   const current = scores.rows[0];
+   const current = scores.current;
    const latest = scores.latest;
    let detail = connected ? 'No completed score' : 'Connect to view';
    if (connected && !saved) detail = loading ? 'Loading scores…' : 'Scores not loaded';
-   if (latest) detail = `${Math.round(latest.score / latest.total * 100)}% · Best ${scores.best.score}/${scores.best.total}`;
+   if (latest) detail = `Round 1 · ${Math.round(latest.score / latest.total * 100)}% · Best ${scores.best.score}/${scores.best.total}`;
    const progress = current && !current.complete
-    ? `<p class="ai-dashboard-current">${current.answered}/${current.total} checked</p>` : '';
+    ? `<p class="ai-dashboard-current">Round ${current.round} · ${current.answered}/${current.total} checked</p>` : current ? `<p class="ai-dashboard-current">Round ${current.round} · ${current.score}/${current.total}</p>` : '';
    const history = scores.rows.length
-    ? `<ol>${scores.rows.map(attempt => `<li><span>Attempt ${attempt.number}</span><strong>${attempt.complete ? `${attempt.score} / ${attempt.total}` : `${attempt.answered}/${attempt.total} checked`}</strong><small>${esc(new Date(attempt.startedAt).toLocaleString())}</small></li>`).join('')}</ol>`
+    ? `<ol>${scores.rows.map(attempt => `<li><span>Test ${attempt.number} · Round ${attempt.round}</span><strong>${attempt.complete ? `${attempt.score} / ${attempt.total}` : `${attempt.answered}/${attempt.total} checked`}</strong><small>${esc(new Date(attempt.startedAt).toLocaleString())}</small></li>`).join('')}</ol>`
     : `<p>${saved ? 'No saved attempts yet.' : 'Saved attempts have not loaded.'}</p>`;
    return `<article class="ai-dashboard-card" ${set.number === section ? 'aria-current="true"' : ''}>
     <h4>Set ${set.number}</h4><span class="ai-dashboard-count">${set.count} words</span>
@@ -152,37 +169,63 @@
  }
 
  function mount(host,{section,count,wordIds,formatSentence,demo,onProgress}){
-  let test=null,attempts=[],drafts={},busy=false,loading=false,error=connectionError,rowError={},mic=null,capture=null,startingId=null,destroyed=false;
+  let test=null,attempts=[],drafts={},busy=false,loading=false,error=connectionError,rowError={},mic=null,capture=null,startingId=null,startingParent=null,destroyed=false,reviewing=false;
   const lifetimeController = new AbortController();
   const token=()=>demo?'':read(SESSION)||'';
   const draftKey=id=>'harry-meaning-ai:draft:'+id;
   const draftLoad=id=>{try{return JSON.parse(read(draftKey(id))||'{}');}catch{return {};}};
-  function accept(record){test=record;known.set(record.id,record);drafts=draftLoad(record.id);attempts=[{id:record.id,section:record.section,startedAt:record.startedAt,answered:record.answered,score:record.score,total:record.total,wordIds:record.words.map(w=>w.id)},...attempts.filter(a=>a.id!==record.id)];rememberHistory(section,attempts);}
+  function accept(record) {
+   if (test?.id !== record.id) reviewing = false;
+   test = { ...record, round: record.round || 1, runId: record.runId || record.id };
+   known.set(record.id, test);
+   drafts = draftLoad(record.id);
+   const summary = {
+    id: test.id, section: test.section, startedAt: test.startedAt, answered: test.answered,
+    score: test.score, total: test.total, wordIds: test.words.map(word => word.id),
+    round: test.round, runId: test.runId, parentId: test.parentId, reviewedAt: test.reviewedAt
+   };
+   attempts = [summary, ...attempts.filter(attempt => attempt.id !== record.id)];
+   rememberHistory(section, attempts);
+  }
   function request(action, options = {}) {
    return serviceRequest(action, { ...options, demo, signal: lifetimeController.signal });
   }
   function renderHistory(scores, locked) {
    if (!attempts.length) return '';
    const comparisonBoxes = scores.first ? `<div class="ai-score-comparison">
-    <div><span>First completed</span><strong>${scores.first.score} / ${scores.first.total}</strong></div>
-    <div><span>Latest completed</span><strong>${scores.latest.score} / ${scores.latest.total}</strong></div>
-    <div><span>Best completed</span><strong>${scores.best.score} / ${scores.best.total}</strong></div>
+    <div><span>First Round 1</span><strong>${scores.first.score} / ${scores.first.total}</strong></div>
+    <div><span>Latest Round 1</span><strong>${scores.latest.score} / ${scores.latest.total}</strong></div>
+    <div><span>Best Round 1</span><strong>${scores.best.score} / ${scores.best.total}</strong></div>
    </div>` : '<p>Finish a full test to start comparing scores.</p>';
    return `<section class="ai-score-history" aria-labelledby="ai-retest-heading">
-    <h3 id="ai-retest-heading">Retest progress</h3>
+    <h3 id="ai-retest-heading">Saved tests and rounds</h3>
     ${comparisonBoxes}
     <details class="ai-attempts">
      <summary>View all attempts (${scores.rows.length})</summary>
      <div class="ai-score-table-scroll"><table>
       <thead><tr><th scope="col">Attempt</th><th scope="col">Score</th><th scope="col">Change</th><th scope="col">Open</th></tr></thead>
       <tbody>${scores.rows.map(attempt => `<tr>
-       <th scope="row">Attempt ${attempt.number}<small>${esc(new Date(attempt.startedAt).toLocaleString())}</small></th>
-       <td>${attempt.complete ? `${attempt.score} / ${attempt.total}` : 'In progress'}<small>${attempt.complete ? `${Math.round(attempt.score / attempt.total * 100)}%` : `${attempt.answered} of ${attempt.total} checked`}${attempt.same ? '' : ' · Earlier word list'}</small></td>
+       <th scope="row">Test ${attempt.number} · Round ${attempt.round}<small>${esc(new Date(attempt.startedAt).toLocaleString())}</small></th>
+       <td>${attempt.complete ? `${attempt.score} / ${attempt.total}` : 'In progress'}<small>${attempt.complete ? `${Math.round(attempt.score / attempt.total * 100)}%` : `${attempt.answered} of ${attempt.total} checked`}${attempt.round > 1 ? ' · Missed words' : attempt.same ? '' : ' · Earlier word list'}</small></td>
        <td>${attempt.change === null ? '—' : `${attempt.change > 0 ? '+' : ''}${attempt.change} points`}</td>
        <td><button type="button" class="secondary" data-ai-open="${esc(attempt.id)}" ${locked || test?.id === attempt.id ? 'disabled' : ''}>${test?.id === attempt.id ? 'Viewing' : 'View'}</button></td>
       </tr>`).join('')}</tbody>
      </table></div>
     </details>
+   </section>`;
+  }
+
+  function renderReview(missed, locked) {
+   return `<section class="ai-round-review" aria-labelledby="ai-review-heading">
+    <h3 id="ai-review-heading" tabindex="-1">Review before Round ${test.round + 1}</h3>
+    <p>Read the short meaning and try it in the sentence. Start the next round when you are ready.</p>
+    <div class="ai-review-list">${missed.map(word => `<article>
+     <strong>${esc(word.word)}</strong><span class="part-of-speech">${esc(word.partOfSpeech || '')}</span>
+     <p class="usage">${formatSentence ? formatSentence(word) : esc(word.context || '')}</p>
+     <p><span>Your answer</span> ${esc(test.answers[word.id].unknown ? 'I don’t know' : test.answers[word.id].answer)}</p>
+     <p class="ai-review-meaning">${esc(test.answers[word.id].meaning || '')}</p>
+    </article>`).join('')}</div>
+    <button type="button" data-ai-next ${locked ? 'disabled' : ''}>Start Round ${test.round + 1} · ${missed.length} ${missed.length === 1 ? 'word' : 'words'}</button>
    </section>`;
   }
 
@@ -229,10 +272,14 @@
    const connected = Boolean(token());
    const locked = busy || loading || Boolean(mic);
    const scores = comparison(attempts, wordIds);
+   const round = test?.round || 1;
+   const missed = complete ? test.words.filter(word => !test.answers[word.id].close) : [];
+   const next = test && (test.nextId || attempts.find(attempt => attempt.parentId === test.id)?.id);
+   const finished = complete && (round === 3 || missed.length === 0);
    const total = test?.total || count;
    const connectionStatus = loading ? 'Loading saved tests…' : busy ? 'Checking and saving…' : test ? 'Answers and score saved online' : 'Ready to start';
    let html = `<div class="ai-active-test" id="ai-active-test">
-    <header class="ai-test-intro"><p class="eyebrow">SET ${section} · ${count} WORDS</p><h3 tabindex="-1">Say it in your own words.</h3>
+    <header class="ai-test-intro"><p class="eyebrow">SET ${section} · AI ROUND ${round} OF 3 · ${total} WORDS</p><h3 tabindex="-1">Say it in your own words.</h3>
     <p>Tap <strong>Check</strong> to start listening, then <strong>Stop &amp; check</strong>. Short English or Chinese meanings are welcome. Each close meaning earns <strong>1 point</strong>.</p></header>`;
    if (error) html += `<p class="ai-error" role="alert">${esc(error)}</p>`;
    if (!connected) {
@@ -241,18 +288,23 @@
     return;
    }
    html += `<section class="ai-score" aria-label="Test score">
-    <div><strong>${test?.score || 0} / ${total}</strong><span>Set ${section} score${complete ? ` · ${Math.round(test.score / total * 100)}%` : ''}</span></div>
+    <div><strong>${test?.score || 0} / ${total}</strong><span>Round ${round} score${complete ? ` · ${Math.round(test.score / total * 100)}%` : ''}</span></div>
     <div><strong>${test?.answered || 0} / ${total}</strong><span>checked</span></div>
     <p role="status">${connectionStatus}</p>
    </section>`;
    html += `<div class="ai-test-actions">
-    <button type="button" class="${test ? 'ai-retest' : ''}" data-ai-start ${locked ? 'disabled' : ''}>${test ? 'Retest' : `Start Set ${section}`}</button>
+    ${!test || finished ? `<button type="button" class="${test ? 'ai-retest' : ''}" data-ai-start ${locked ? 'disabled' : ''}>${test ? 'Retake full test · Round 1' : `Start Set ${section} · Round 1`}</button>` : ''}
     <button type="button" class="secondary" data-ai-reload ${locked ? 'disabled' : ''}>Reload saved tests</button>
    </div>`;
-   if (test) onProgress?.(`Set ${section} · AI test · ${test.score}/${test.total} · ${test.answered}/${test.total} checked`);
-   if (test?.previousLayout) html += '<p class="small">This saved attempt uses an earlier word list. Start a new retake for the current set.</p>';
-   html += '<p class="ai-test-rules">Your first checked answer counts. Retest saves a separate score. Meanings appear after every word has been checked.</p>';
-   if (complete) html += `<section class="ai-finished"><h3>Test complete · ${test.score} / ${test.total} · ${Math.round(test.score / test.total * 100)}%</h3><p>${test.total - test.score} words to review. Compare your answers with the short meanings below.</p></section>`;
+   if (test) onProgress?.(`Set ${section} · AI Round ${round}/3 · ${test.score}/${test.total} · ${test.answered}/${test.total} checked`);
+   if (test?.previousLayout && round === 1) html += '<p class="small">This saved attempt uses an earlier word list. A full retake uses the current set.</p>';
+   html += '<p class="ai-test-rules">Round 1 tests all words. Rounds 2 and 3 test the previous round’s missed words after a review. Each round keeps your first checked answers and score. Full retakes keep the earlier records.</p>';
+   if (complete) {
+    html += `<section class="ai-finished"><h3>Round ${round} complete · ${test.score} / ${test.total} · ${Math.round(test.score / test.total * 100)}%</h3><p>${missed.length} ${missed.length === 1 ? 'word' : 'words'} to review.${missed.length === 0 ? ' All meanings were close enough. This test is finished.' : round === 3 ? ' Three rounds are finished. Review the short meanings below or start a full retake.' : ''}</p>
+     ${next ? `<button type="button" data-ai-open="${esc(next)}" ${locked ? 'disabled' : ''}>Continue Round ${round + 1}</button>` : !finished && !reviewing ? `<button type="button" data-ai-review ${locked ? 'disabled' : ''}>Review missed words before Round ${round + 1}</button>` : ''}
+    </section>`;
+    if (reviewing && !next && !finished) html += renderReview(missed, locked);
+   }
    html += renderHistory(scores, locked);
    if (test) html += `<div class="ai-words">${shuffle(test.words, test.id).map((word, index) => renderWord(word, index, locked, complete)).join('')}</div>`;
    html += '<p class="ai-test-footer">You can use keyboard dictation or type your meaning. Recordings stop after 20 seconds and are sent for transcription and meaning checking.</p></div>';
@@ -269,7 +321,8 @@
     attempts = body.attempts;
     rememberHistory(section, attempts);
     if (attempts.length) {
-     const saved = await request('attempts', { query: '&id=' + encodeURIComponent(attempts[0].id) });
+     const current = comparison(attempts, wordIds).current;
+     const saved = await request('attempts', { query: '&id=' + encodeURIComponent(current.id) });
      if (destroyed) return;
      accept(saved.test);
     }
@@ -281,7 +334,30 @@
    }
   }
 
-  async function start(){if(busy||loading||mic)return;busy=true;error='';startingId||=crypto.randomUUID();render();try{const body=await request('attempts',{method:'POST',body:JSON.stringify({id:startingId,section,wordListVersion:'six-sets-v2'})});if(destroyed)return;accept(body.test);startingId=null;rowError={};}catch(e){if(!destroyed)error=e.message;}finally{busy=false;render();}}
+  async function start(nextRound = false) {
+   if (busy || loading || mic) return;
+   if (nextRound && (!reviewing || !test?.completedAt || test.round >= 3)) return;
+   busy = true;
+   error = '';
+   const parentId = nextRound ? test.id : null;
+   if (!startingId || startingParent !== parentId) startingId = crypto.randomUUID();
+   startingParent = parentId;
+   render();
+   try {
+    const input = { id: startingId, section, wordListVersion: 'six-sets-v2' };
+    if (nextRound) Object.assign(input, { parentId: test.id, reviewed: true });
+    const body = await request('attempts', { method: 'POST', body: JSON.stringify(input) });
+    if (destroyed) return;
+    accept(body.test);
+    startingId = null;
+    rowError = {};
+   } catch (failure) {
+    if (!destroyed) error = failure.message;
+   } finally {
+    busy = false;
+    render();
+   }
+  }
   async function check(word,unknown=false,audio){if(!test||test.answers[word.id]||busy)return;const answer=(drafts[word.id]||'').trim();if(!answer&&!unknown&&!audio){rowError[word.id]='Say or type a short meaning first.';render();return;}busy=true;rowError[word.id]='';if(audio)mic={id:word.id,phase:'checking'};render();try{let body;if(audio){body=new FormData();body.append('attemptId',test.id);body.append('wordId',word.id);body.append('audio',audio,'meaning');}else body=JSON.stringify({attemptId:test.id,wordId:word.id,answer,unknown});const result=await request(audio?'voice-check':'check',{method:'POST',body});if(destroyed)return;accept(result.test);}catch(e){if(!destroyed){rowError[word.id]=e.message;if(e.transcript){drafts[word.id]=e.transcript;write(draftKey(test.id),JSON.stringify(drafts));}if(!token())error=e.message;}}finally{busy=false;mic=null;render();}}
   function input(event){
    const field=event.target.closest('[data-ai-answer]');
@@ -295,6 +371,8 @@
   async function click(event){
    if(event.target.closest('[data-ai-connect]')){connect(section);return;}
    if(event.target.closest('[data-ai-start]')){void start();return;}
+   if(event.target.closest('[data-ai-review]')&&!busy&&!loading){reviewing=true;render();host.querySelector('#ai-review-heading')?.focus();return;}
+   if(event.target.closest('[data-ai-next]')){void start(true);return;}
    if(event.target.closest('[data-ai-reload]')){void load();return;}
    const open=event.target.closest('[data-ai-open]');if(open&&!busy&&!mic){loading=true;render();try{const result=await request('attempts',{query:'&id='+encodeURIComponent(open.dataset.aiOpen)});if(!destroyed){accept(result.test);rowError={};error='';}}catch(e){error=e.message;}finally{loading=false;render();}return;}
    const speak=event.target.closest('[data-ai-speak]');if(speak){if('speechSynthesis'in window){speechSynthesis.cancel();const voice=new SpeechSynthesisUtterance(speak.dataset.aiSpeak);voice.lang='en-US';voice.rate=.85;speechSynthesis.speak(voice);}return;}
