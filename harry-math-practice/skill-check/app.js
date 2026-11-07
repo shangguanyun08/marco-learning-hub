@@ -11,7 +11,13 @@
  function saveRetry(q,a,choice){const attempts=retries(q,a);if(a.correct||attempts.length>=1||!Number.isInteger(choice)||choice<0||choice>=q.choices.length)return false;retryRecords[q.id]={answerId:a.id,attempts:[...attempts,{choice,at:new Date().toISOString()}]};try{localStorage.setItem(RETRY_KEY,JSON.stringify(retryRecords));}catch{document.querySelector('#save-note').textContent='Your first answers are saved. This browser could not save retry practice; keep this page open.';}return true;}
  function retryStats(s,r){const missed=s.questions.filter(q=>r?.answers[q.id]?.correct===false),attempted=missed.filter(q=>retries(q,r.answers[q.id]).length),corrected=attempted.filter(q=>retries(q,r.answers[q.id]).at(-1).choice===q.correct).length;return{attempted:attempted.length,corrected,stillWrong:attempted.length-corrected,remaining:missed.length-attempted.length};}
  function focusFeedback(qid){const card=document.getElementById(qid);card?.querySelector('.answer-feedback')?.focus({preventScroll:true});card?.scrollIntoView({block:'center'});}
- const selected=()=>new URLSearchParams(location.search).get('session');
+ function selected() {
+  const requested = new URLSearchParams(location.search).get('session');
+  if (requested) return requested;
+  const finished = D.sessions.filter(session => E.complete(state.sessions[session.id]));
+  finished.sort((a, b) => state.sessions[b.id].completedAt.localeCompare(state.sessions[a.id].completedAt) || b.number - a.number);
+  return finished[0]?.id || D.sessions[0].id;
+ }
  const answeredCount=(s,r)=>s.questions.filter(q=>r?.answers[q.id]||drafts.has(q.id)).length;
  function saveDrafts(){try{localStorage.setItem(DRAFT_KEY,JSON.stringify(Object.fromEntries(drafts)));}catch{storageOK=false;document.querySelector('#save-note').textContent='This browser could not save your selections. Keep this page open and download the practice record before closing.';}}
  function updateProgress(s,r){
