@@ -86,7 +86,7 @@
   if(!E.complete(state.sessions[sid])||!q||!first||!saveRetry(q,first,retryDrafts.get(qid)))return;
   retryDrafts.delete(qid);render();focusFeedback(qid);
  });
- document.querySelector('#download').onclick=()=>{const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),course:D,state,pendingSelections:Object.fromEntries(drafts),retryPractice:retryRecords,report:E.report(state)},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='harry-eight-skill-math-record.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+ document.querySelector('#download').onclick=()=>{const blob=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),course:D,state,pendingSelections:Object.fromEntries(drafts),retryPractice:retryRecords,fractionExercise:root.HarryFractionPractice?.record(),report:E.report(state)},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='harry-eight-skill-math-record.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
  render();
  if(local||demo){document.querySelector('#save-note').textContent='Preview · Progress saves only in this browser.';}else{
   sync=root.HarrySkillSync.create({getState:()=>state,onRemote(next){state=next;try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}render();},onStatus(kind,message){const el=document.querySelector('#save-note');el.dataset.status=kind;el.textContent=storageOK?message:'Browser saving is unavailable. Download the practice record before closing.';}});void sync.start();

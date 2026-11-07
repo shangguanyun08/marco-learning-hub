@@ -1,7 +1,74 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173f54"><title>Harry’s Daily Math · Eight Skill Checks</title><meta name="description" content="Eight mixed math sessions for Harry, with 24 questions in Sessions 1–2 and 16 in Sessions 3–8 across eight skills. Submit a full set for results, one second try per mistake, first-answer scoring, and saved progress."><link rel="stylesheet" href="style.css?v=20261106-compact-eight-1"><script defer src="data.js?v=20261106-compact-eight-1"></script><script defer src="engine.js?v=20261105-restore-fractions-1"></script><script defer src="sync.js?v=20261101-reset1"></script><script defer src="app.js?v=20261106-compact-eight-1"></script></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#173f54"><title>Harry’s Daily Math · Eight Skill Checks</title><meta name="description" content="Eight mixed math sessions for Harry, with 24 questions in Sessions 1–2 and 16 in Sessions 3–8 across eight skills. Submit a full set for results, one second try per mistake, first-answer scoring, and saved progress."><link rel="stylesheet" href="style.css?v=20261107-fraction-fill-in-1"><script defer src="data.js?v=20261106-compact-eight-1"></script><script defer src="engine.js?v=20261105-restore-fractions-1"></script><script defer src="sync.js?v=20261101-reset1"></script><script defer src="app.js?v=20261107-fraction-fill-in-1"></script><script defer src="fraction-practice.js?v=20261107-fraction-fill-in-1"></script></head>
 <body><main class="shell"><nav class="topnav"><a href="../../#harry-heading">← Learning Hub</a><a href="../star-sept20/">Earlier daily practice</a><a href="../../harry-star-math/tests/2026-10-30/?filter=wrong">October 30 STAR mistakes</a></nav>
 <header class="hero"><h1>Harry’s Daily Math</h1></header>
+
+<details id="fraction-practice" class="panel fraction-practice">
+  <summary>Extra practice · Fractions and decimals</summary>
+  <form id="fraction-practice-form">
+    <h2>One fill-in exercise</h2>
+    <p>Complete all the blanks, then check your answers. Each mistake gets one second try.</p>
+    <fieldset>
+      <legend>Convert each fraction to a decimal</legend>
+      <p class="muted">Use a decimal point. For a repeating decimal, use ... or brackets around the repeating digit.</p>
+      <div class="fraction-practice-grid">
+        <div class="fraction-practice-row">
+          <label for="fraction-half"><span class="fraction" aria-label="1 over 2"><span>1</span><span>2</span></span> =</label>
+          <input id="fraction-half" data-fraction-answer="half" type="text" inputmode="decimal" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Decimal for one half" aria-describedby="fraction-half-feedback">
+          <span id="fraction-half-feedback" class="fraction-practice-feedback"></span>
+        </div>
+        <div class="fraction-practice-row">
+          <label for="fraction-third"><span class="fraction" aria-label="1 over 3"><span>1</span><span>3</span></span> =</label>
+          <input id="fraction-third" data-fraction-answer="third" type="text" inputmode="text" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Decimal for one third" aria-describedby="fraction-third-feedback">
+          <span id="fraction-third-feedback" class="fraction-practice-feedback"></span>
+        </div>
+        <div class="fraction-practice-row">
+          <label for="fraction-quarter"><span class="fraction" aria-label="1 over 4"><span>1</span><span>4</span></span> =</label>
+          <input id="fraction-quarter" data-fraction-answer="quarter" type="text" inputmode="decimal" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Decimal for one quarter" aria-describedby="fraction-quarter-feedback">
+          <span id="fraction-quarter-feedback" class="fraction-practice-feedback"></span>
+        </div>
+        <div class="fraction-practice-row">
+          <label for="fraction-threeQuarters"><span class="fraction" aria-label="3 over 4"><span>3</span><span>4</span></span> =</label>
+          <input id="fraction-threeQuarters" data-fraction-answer="threeQuarters" type="text" inputmode="decimal" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Decimal for three quarters" aria-describedby="fraction-threeQuarters-feedback">
+          <span id="fraction-threeQuarters-feedback" class="fraction-practice-feedback"></span>
+        </div>
+        <div class="fraction-practice-row">
+          <label for="fraction-oneAndHalf">1 <span class="fraction" aria-label="1 over 2"><span>1</span><span>2</span></span> =</label>
+          <input id="fraction-oneAndHalf" data-fraction-answer="oneAndHalf" type="text" inputmode="decimal" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Decimal for one and one half" aria-describedby="fraction-oneAndHalf-feedback">
+          <span id="fraction-oneAndHalf-feedback" class="fraction-practice-feedback"></span>
+        </div>
+        <div class="fraction-practice-row">
+          <label for="fraction-threeAndThreeQuarters">3 <span class="fraction" aria-label="3 over 4"><span>3</span><span>4</span></span> =</label>
+          <input id="fraction-threeAndThreeQuarters" data-fraction-answer="threeAndThreeQuarters" type="text" inputmode="decimal" maxlength="32" autocomplete="off" spellcheck="false" aria-label="Decimal for three and three quarters" aria-describedby="fraction-threeAndThreeQuarters-feedback">
+          <span id="fraction-threeAndThreeQuarters-feedback" class="fraction-practice-feedback"></span>
+        </div>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Compare the fractions</legend>
+      <p class="muted">Fill in &lt;, &gt;, or =.</p>
+      <div class="fraction-practice-grid">
+        <div class="fraction-practice-row fraction-comparison-row">
+          <label for="fraction-halfVsThird" class="sr-only">one half compared with one third</label>
+          <span><span class="fraction" aria-label="1 over 2"><span>1</span><span>2</span></span></span>
+          <input id="fraction-halfVsThird" data-fraction-answer="halfVsThird" type="text" maxlength="1" autocomplete="off" spellcheck="false" aria-label="one half compared with one third" aria-describedby="fraction-halfVsThird-feedback">
+          <span><span class="fraction" aria-label="1 over 3"><span>1</span><span>3</span></span></span>
+          <span id="fraction-halfVsThird-feedback" class="fraction-practice-feedback"></span>
+        </div>
+        <div class="fraction-practice-row fraction-comparison-row">
+          <label for="fraction-halfVsTwoThirds" class="sr-only">one half compared with two thirds</label>
+          <span><span class="fraction" aria-label="1 over 2"><span>1</span><span>2</span></span></span>
+          <input id="fraction-halfVsTwoThirds" data-fraction-answer="halfVsTwoThirds" type="text" maxlength="1" autocomplete="off" spellcheck="false" aria-label="one half compared with two thirds" aria-describedby="fraction-halfVsTwoThirds-feedback">
+          <span><span class="fraction" aria-label="2 over 3"><span>2</span><span>3</span></span></span>
+          <span id="fraction-halfVsTwoThirds-feedback" class="fraction-practice-feedback"></span>
+        </div>
+      </div>
+    </fieldset>
+    <p id="fraction-practice-result" class="fraction-practice-result" role="status" tabindex="-1"></p>
+    <button type="submit" class="primary" disabled>Check all answers</button>
+    <p id="fraction-practice-saving" class="muted">Answers for this exercise save on this device.</p>
+  </form>
+</details>
 <p id="save-note" class="sr-only" role="status" aria-live="polite">Connecting to saved progress…</p>
 <nav id="sessions" class="session-grid" aria-label="Choose a mixed session"></nav>
 <div id="content"></div>

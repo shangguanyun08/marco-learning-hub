@@ -26,3 +26,27 @@
 .session-card .primary, .session-card .secondary { min-height: 34px; margin-top: 5px; padding: 6px 10px; font-size: 12px; }
 @media (max-width: 850px) { .session-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 650px) { .session-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .session-card { padding: 10px; } }
+
+.fraction-practice { margin: 12px 0 22px; }
+.fraction-practice > summary { cursor: pointer; font-weight: 700; }
+.fraction-practice form { margin-top: 24px; }
+.fraction-practice fieldset { border: 0; padding: 0; margin: 22px 0; min-width: 0; }
+.fraction-practice legend { font-size: 19px; font-weight: 700; }
+.fraction-practice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fraction-practice-row { display: grid; grid-template-columns: auto minmax(90px, 1fr); align-items: center; gap: 10px; padding: 16px; border: 1px solid var(--line); border-radius: 9px; }
+.fraction-practice-row label { font-size: 22px; white-space: nowrap; }
+.fraction-practice-row input { width: 100%; min-width: 0; min-height: 44px; border: 1px solid #8ca8b1; border-radius: 6px; padding: 8px 10px; background: #fff; color: var(--ink); font: inherit; }
+.fraction-practice-row input:focus-visible { outline: 3px solid #80a89e; outline-offset: 2px; }
+.fraction-practice-row input:disabled { opacity: 1; }
+.fraction-practice-feedback { grid-column: 1 / -1; font-size: 14px; overflow-wrap: anywhere; }
+.fraction-practice-feedback:empty, .fraction-practice-result:empty { display: none; }
+.fraction-comparison-row { grid-template-columns: auto 80px auto; justify-content: center; font-size: 22px; }
+.fraction-comparison-row input { text-align: center; }
+.fraction-practice-row.right { background: #e3f2e6; }
+.fraction-practice-row.first-wrong { background: #fbdcde; }
+.fraction-practice-row.corrected { background: #ffdfab; }
+.fraction-practice-row.retry-wrong { background: #941e34; color: #fff; }
+.fraction-practice-result { font-weight: 700; }
+@media (max-width: 650px) {
+  .fraction-practice-grid { grid-template-columns: 1fr; }
+}
