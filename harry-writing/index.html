@@ -6,9 +6,9 @@
   <meta name="referrer" content="no-referrer" />
   <meta name="description" content="Harry’s writing practice in short sections. Find sentence endings, then make each sentence’s idea and language clear." />
   <title>Harry’s Daily Writing · Elephant</title>
-  <link rel="stylesheet" href="style.css?v=20261107-hint" />
+  <link rel="stylesheet" href="style.css?v=20261107-model" />
   <script src="story.js?v=20261107-simple" defer></script>
-  <script src="app.js?v=20261107-hint" defer></script>
+  <script src="app.js?v=20261107-model" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -23,9 +23,10 @@
         <div class="editor-heading"><p class="eyebrow" id="part-number">SECTION 1 OF 6</p><a href="#full-story">Read the whole story ↓</a></div>
         <section class="original"><h2>Your original section</h2><p id="original"></p><button id="guide" class="quiet">AI feedback and suggestion</button><p id="hint" class="hint" role="status" hidden></p></section>
         <section class="rewrite"><label for="revision">Re-write your clearer version</label><textarea id="revision" rows="7" maxlength="1200" placeholder="Clear story and language" spellcheck="true"></textarea><button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button></section>
-        <div class="actions"><button id="check" class="primary">AI checking</button><button id="next" class="quiet">Next section →</button></div>
+        <div class="actions"><button id="check" class="primary">AI checking</button><button id="show-model" class="primary" hidden>Show model version</button><button id="next" class="quiet">Next section →</button></div>
         <p id="error" class="error" role="alert" hidden></p>
         <section id="feedback" class="feedback" aria-live="polite" hidden></section>
+        <section id="model-panel" class="model-panel" aria-live="polite" hidden><h3>Model version</h3><p id="model-text"></p></section>
         <details id="history"><summary>Earlier tries <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
       </div>
     </section>
