@@ -140,6 +140,7 @@
   $('revision').addEventListener('input', () => {
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
+    $('use-original').hidden = Boolean(row.text);
     cache(); showSaveStatus(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   $('use-original').addEventListener('click', () => {
