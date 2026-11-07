@@ -6,13 +6,13 @@
   const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:elephant-sections-v1';
   const $ = id => document.getElementById(id), parts = window.ELEPHANT_PARTS;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const ready = row => row.feedback.complete && row.feedback.clear && row.feedback.correct;
   function read(key, storage = localStorage) { try { return storage.getItem(key); } catch { return null; } }
   function write(key, value, storage = localStorage) { try { storage.setItem(key, value); return true; } catch { return false; } }
   function remove(key, storage = localStorage) { try { storage.removeItem(key); } catch {} }
   let state;
   try { state = JSON.parse(read(CACHE)); } catch {}
   if (!state || typeof state !== 'object' || !state.drafts || !Array.isArray(state.revisions)) state = { drafts: {}, revisions: [], selected: 1 };
+  if (!Array.isArray(state.models)) state.models = [];
   let earlier = state.earlier || { drafts: [], revisions: [] };
   try {
     const old = JSON.parse(read('harry-writing:elephant-v1'));
@@ -27,6 +27,7 @@
   function revisions(id) { return state.revisions.filter(row => row.sentence_id === id).sort((a, b) => a.checked_at.localeCompare(b.checked_at) || a.id.localeCompare(b.id)); }
   function latest(id) { return revisions(id).filter(row => row.kind === 'revision').at(-1); }
   function addRevision(row) { if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row); cache(); }
+  function rememberModel(row) { state.models = state.models.filter(item => item.sentence_id !== row.sentence_id).concat(row); cache(); }
   function error(message = '') { $('error').hidden = !message; $('error').textContent = message; }
   function updateConnectionButton() {
     $('connect').textContent = connected ? 'Connected' : 'Connect AI checking';
@@ -52,7 +53,7 @@
     return result;
   }
   function updateDraftControls() {
-    $('resolve-conflict').hidden = !conflicts.has(selected);
+    $('resolve-conflict').hidden = Boolean(latest(selected)) || !conflicts.has(selected);
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function renderFeedback() {
@@ -62,8 +63,8 @@
     const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = $('feedback');
     host.hidden = !row;
     if (row) {
-      const current = row.text === draft(selected).text.trim(), feedback = row.feedback;
-      host.innerHTML = `<h3>Feedback on your rewrite</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">${current ? (ready(row) ? 'Clear on this try. Read it with the nearby sentences.' : 'Make one change, then check again.') : 'This feedback is for your last checked version. Check again when your changes are ready.'}</p>`;
+      const feedback = row.feedback;
+      host.innerHTML = `<h3>Feedback on your rewrite</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the model version.</p>`;
     }
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
@@ -80,12 +81,19 @@
     $('revised-story').innerHTML = revised.map(text => '<p>' + escape(text) + '</p>').join('');
   }
   function render() {
+    const checked = latest(selected), model = state.models.find(row => row.sentence_id === selected);
     $('part-number').textContent = `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
-    $('revision').value = draft(selected).text;
+    $('revision').value = checked?.text || draft(selected).text;
+    $('revision').readOnly = Boolean(checked);
     $('next').disabled = busy || selected === parts.length;
     $('revision').disabled = busy;
     $('check').disabled = busy;
+    $('check').hidden = Boolean(checked);
+    $('show-model').hidden = !checked;
+    $('show-model').disabled = busy;
+    $('model-panel').hidden = !checked || !model;
+    $('model-text').textContent = checked && model ? model.text : '';
     $('guide').disabled = busy;
     $('check').textContent = busy ? 'Checking…' : 'AI checking';
     renderOverview(); renderFeedback(); updateDraftControls();
@@ -107,6 +115,7 @@
       else if (local.version !== remote.version) conflicts.add(remote.sentence_id);
     }
     for (const row of work.revisions) addRevision(row);
+    for (const row of work.models || []) rememberModel(row);
     importEarlier();
     connected = true; loaded = true; cache();
     updateConnectionButton();
@@ -119,7 +128,7 @@
     try {
       for (const [key, row] of Object.entries(state.drafts)) {
         const id = Number(key);
-        if (!row.dirty || conflicts.has(id)) continue;
+        if (!row.dirty || conflicts.has(id) || latest(id)) continue;
         const text = row.text;
         try {
           const result = await request('draft', { sentenceId: id, text, expectedVersion: row.version });
@@ -135,6 +144,7 @@
     if (!failed && connected && Object.entries(state.drafts).some(([id, row]) => row.dirty && !conflicts.has(Number(id)))) saveTimer = setTimeout(saveDrafts, 1800);
   }
   $('revision').addEventListener('input', () => {
+    if (latest(selected)) { $('revision').value = latest(selected).text; return; }
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
     cache(); updateDraftControls(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
@@ -158,6 +168,7 @@
     } catch (failure) { error(failure.message); }
   });
   async function check(kind) {
+    if (kind === 'revision' && latest(selected)) return;
     error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : row.text.trim();
     if (!text) return error('Write your version first.');
     if (!connected) return error('Connect AI checking first. Your draft is kept on this device.');
@@ -173,6 +184,18 @@
   }
   $('check').addEventListener('click', () => check('revision'));
   $('guide').addEventListener('click', () => check('guide'));
+  $('show-model').addEventListener('click', async () => {
+    if (busy || !latest(selected)) return;
+    error();
+    if (state.models.some(row => row.sentence_id === selected)) { $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    if (!connected) return error('Connect AI checking to open your model version.');
+    busy = true; render();
+    try {
+      const result = await request('model', { sentenceId: selected });
+      rememberModel(result.model);
+    } catch (failure) { error(failure.message); }
+    finally { busy = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+  });
   function importEarlier() {
     if (!earlier.drafts.length && !earlier.revisions.length) return;
     const existing = id => earlier.drafts.find(row => row.sentence_id === id && row.text.trim())?.text || earlier.revisions.filter(row => row.sentence_id === id && row.kind === 'revision').at(-1)?.text;
