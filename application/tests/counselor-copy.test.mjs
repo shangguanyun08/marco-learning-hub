@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {JSDOM} from 'jsdom';
-import {comparisonQuestion} from '../revision-v2.mjs';
+import {comparisonQuestion} from '../revision-v3.mjs';
 
 const base=new URL('../',import.meta.url);
 const html=await readFile(new URL('counselor.html',base),'utf8');
@@ -10,11 +10,14 @@ const script=await readFile(new URL('counselor.js',base),'utf8');
 const data=JSON.parse(await readFile(new URL('data.json',base),'utf8'));
 const settle=async()=>{for(let i=0;i<4;i++)await new Promise(r=>setImmediate(r));};
 
-test('counselor copy contains the exact five Version 2 answers and 5 main changes',()=>{
+test('counselor copy contains the exact five Version 3 answers and 5 main changes',()=>{
  const dom=new JSDOM(html);try{
   const d=dom.window.document;
   assert.equal(d.querySelectorAll('.answer').length,5);
   assert.equal(d.querySelectorAll('#main-changes li').length,5);
+  assert.ok(d.querySelector('#main-changes').compareDocumentPosition(d.querySelector('#complete-essays')) & dom.window.Node.DOCUMENT_POSITION_FOLLOWING);
+  assert.match(d.title,/Version 3/);
+  assert.match(d.querySelector('[data-essay-paragraph="q3-p3"]').textContent,/Marco and I participated/);
   for(const q of data.questions)for(const p of comparisonQuestion(q).paragraphs){
    assert.equal([...d.querySelectorAll(`[data-essay-paragraph="${p.id}"]`)].map(el=>el.textContent).join('\n\n'),p.suggested);
   }
