@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="referrer" content="no-referrer" />
-  <meta name="description" content="Harry’s sentence-by-sentence writing practice. Make your sentences clear and your story easy to follow." />
+  <meta name="description" content="Harry’s writing practice in short sections. Find sentence endings, then make each sentence’s idea and language clear." />
   <title>Harry’s Daily Writing · Elephant</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="story.js" defer></script>
-  <script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261107-sections" />
+  <script src="story.js?v=20261107-sections" defer></script>
+  <script src="app.js?v=20261107-sections" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -18,24 +18,24 @@
       <div class="goals"><p><span>01</span><strong>Clear sentences and language</strong><small>Complete thoughts. Clear words. Capitals and full stops.</small></p><p><span>02</span><strong>Clear ideas and story</strong><small>Who did what? Does the next event make sense?</small></p></div>
     </header>
     <section class="session-bar" aria-label="Practice session">
-      <div><strong>Elephant</strong><span>Harry’s original story · 17 parts</span></div>
+      <div><strong>Elephant</strong><span>Harry’s original story · 6 short sections</span></div>
       <div class="timer"><span id="timer" aria-label="Practice time remaining">30:00</span><button id="timer-toggle" class="quiet">Start 30 minutes</button></div>
     </section>
     <div class="connection"><p id="connection-status" role="status">Drafts stay on this device until you connect. Connect to load saved revisions.</p><button id="connect" class="quiet">Connect AI checking</button></div>
     <section class="workspace">
-      <aside class="parts"><h2>Your story parts</h2><p id="progress">0 of 17 revised</p><div id="part-list" class="part-list" aria-label="Choose a story part"></div><p class="small">Try 4–6 parts today. You can split a long part into several sentences.</p><p class="small">Read aloud → find the sentence endings → rewrite → read the paragraph together.</p></aside>
+      <aside class="parts"><h2>Your short sections</h2><p id="progress">0 of 6 revised</p><div id="part-list" class="part-list" aria-label="Choose a short section"></div><p class="small">Work on 1–2 short sections today. After 4–6 sentences, read the paragraph together.</p><p class="small">Read aloud → find the sentence endings → rewrite → read together.</p></aside>
       <div class="editor">
-        <div class="editor-heading"><p class="eyebrow" id="part-number">PART 1 OF 17</p><a href="#full-story">Read the whole story ↓</a></div>
+        <div class="editor-heading"><p class="eyebrow" id="part-number">SECTION 1 OF 6</p><a href="#full-story">Read the whole story ↓</a></div>
         <div id="nearby" class="nearby"></div>
-        <section class="original"><h2>Your original</h2><p id="original"></p><button id="guide" class="quiet">Help me improve this part</button></section>
-        <section class="rewrite"><label for="revision">Your clearer version</label><p>First, find where each sentence ends. Then make the words and idea clear.</p><textarea id="revision" rows="5" maxlength="1200" placeholder="Write your version here…" spellcheck="true"></textarea><p id="save-status" class="small" role="status">Your original will stay unchanged.</p><button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button></section>
-        <div class="actions"><button id="check" class="primary">Check my writing</button><button id="next" class="quiet">Next part →</button></div>
+        <section class="original"><h2>Your original section</h2><p id="original"></p><button id="guide" class="quiet">Help me improve this section</button></section>
+        <section class="rewrite"><label for="revision">Your clearer version</label><ol class="steps"><li>Find where each complete thought ends. Add a full stop.</li><li>Put each sentence on a new line.</li><li>Make each sentence’s idea and language clear. Who did what?</li></ol><button id="use-original" class="quiet">Use original to mark sentence endings</button><textarea id="revision" rows="7" maxlength="1200" placeholder="One sentence on each line. Then make the ideas and words clear…" spellcheck="true"></textarea><p id="save-status" class="small" role="status">Your original will stay unchanged.</p><button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button></section>
+        <div class="actions"><button id="check" class="primary">Check my writing</button><button id="next" class="quiet">Next section →</button></div>
         <p id="error" class="error" role="alert" hidden></p>
         <section id="feedback" class="feedback" aria-live="polite" hidden></section>
         <details id="history"><summary>Earlier tries <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
       </div>
     </section>
-    <section id="full-story" class="story-panel"><h2>Read your story</h2><p class="small">The latest checked version is shown for each part. Parts you haven’t checked keep your original words.</p><div id="revised-story"></div><details><summary>Your complete original · unchanged</summary><div id="original-story"></div></details></section>
+    <section id="full-story" class="story-panel"><h2>Read your story</h2><p class="small">The latest checked rewrite is shown for each section. Unrevised sections keep your original words.</p><div id="revised-story"></div><details><summary>Your complete original · unchanged</summary><div id="original-story"></div></details><details id="earlier-practice" hidden><summary>Earlier sentence practice · saved</summary><div id="earlier-practice-list"></div></details></section>
     <footer>After 4–6 parts, read the paragraph together. Do the events connect?<br />AI gives a hint, then Harry writes his own version. A parent can help if a suggestion is confusing.</footer>
   </main>
 </body>

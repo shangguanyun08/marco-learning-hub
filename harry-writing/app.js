@@ -3,7 +3,7 @@
   'use strict';
   const API = 'https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/harry-writing';
   const CONNECT = 'https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/harry/writing-connect';
-  const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:elephant-v1';
+  const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:elephant-sections-v1';
   const $ = id => document.getElementById(id), parts = window.ELEPHANT_PARTS;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const ready = row => row.feedback.complete && row.feedback.clear && row.feedback.correct;
@@ -13,6 +13,11 @@
   let state;
   try { state = JSON.parse(read(CACHE)); } catch {}
   if (!state || typeof state !== 'object' || !state.drafts || !Array.isArray(state.revisions)) state = { drafts: {}, revisions: [], selected: 1 };
+  let earlier = state.earlier || { drafts: [], revisions: [] };
+  try {
+    const old = JSON.parse(read('harry-writing:elephant-v1'));
+    if (old?.drafts && Array.isArray(old.revisions)) earlier = { drafts: Object.entries(old.drafts).map(([id, row]) => ({ ...row, sentence_id: Number(id) })), revisions: old.revisions };
+  } catch {}
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null;
@@ -37,7 +42,7 @@
   async function request(action, body) {
     let response;
     try {
-      response = await fetch(API + '?action=' + action, { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
+      response = await fetch(API + '?action=' + action, { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
     } catch { throw Error('Could not finish connecting. Your typing is kept on this device. Try again.'); }
     const result = await response.json();
     if (response.status === 401) {
@@ -65,16 +70,16 @@
   }
   function renderOverview() {
     const checked = parts.filter((_, index) => latest(index + 1));
-    $('progress').textContent = `${checked.length} of ${parts.length} revised`;
+    $('progress').textContent = `${checked.length} of ${parts.length} sections revised`;
     $('part-list').innerHTML = parts.map((_, index) => {
       const id = index + 1, row = latest(id);
-      return `<button type="button" data-part="${id}" class="${id === selected ? 'active ' : ''}${row ? 'revised' : ''}" aria-label="Part ${id}${row ? ', revised' : ', not revised'}" ${id === selected ? 'aria-current="step"' : ''} ${busy ? 'disabled' : ''}>${id}</button>`;
+      return `<button type="button" data-part="${id}" class="${id === selected ? 'active ' : ''}${row ? 'revised' : ''}" aria-label="Section ${id}${row ? ', revised' : ', not revised'}" ${id === selected ? 'aria-current="step"' : ''} ${busy ? 'disabled' : ''}>${id}</button>`;
     }).join('');
     const revised = parts.map((text, index) => latest(index + 1)?.text || text);
-    $('revised-story').innerHTML = [revised.slice(0, 7), revised.slice(7, 16), revised.slice(16)].map(group => '<p>' + escape(group.join(' ')) + '</p>').join('');
+    $('revised-story').innerHTML = revised.map(text => '<p>' + escape(text) + '</p>').join('');
   }
   function render() {
-    $('part-number').textContent = `PART ${selected} OF ${parts.length}`;
+    $('part-number').textContent = `SECTION ${selected} OF ${parts.length} · ${window.SECTION_TITLES[selected - 1]}`;
     $('original').textContent = parts[selected - 1];
     $('revision').value = draft(selected).text;
     const context = id => latest(id)?.text || parts[id - 1];
@@ -83,11 +88,21 @@
     $('revision').disabled = busy;
     $('check').disabled = busy;
     $('guide').disabled = busy;
+    $('use-original').hidden = Boolean(draft(selected).text);
+    $('use-original').disabled = busy;
     $('check').textContent = busy ? 'Checking…' : latest(selected) ? 'Check my next try' : 'Check my writing';
     renderOverview(); renderFeedback(); showSaveStatus();
   }
   async function loadWork() {
     const work = await request('work');
+    if (work.storyId !== window.WRITING_STORY_ID) throw Error('The writing page has changed. Reload to load the short sections.');
+    if (work.earlierSentencePractice) {
+      const rows = new Map(earlier.drafts.map(row => [row.sentence_id, row]));
+      for (const row of work.earlierSentencePractice.drafts) if (!rows.get(row.sentence_id)?.dirty) rows.set(row.sentence_id, row);
+      const history = new Map(earlier.revisions.map(row => [row.id, row]));
+      for (const row of work.earlierSentencePractice.revisions) history.set(row.id, row);
+      earlier = { drafts: Array.from(rows.values()), revisions: Array.from(history.values()) }; state.earlier = earlier;
+    }
     for (const remote of work.drafts) {
       const local = draft(remote.sentence_id);
       if (!local.dirty) state.drafts[remote.sentence_id] = { text: remote.text, version: remote.version, dirty: false };
@@ -95,6 +110,7 @@
       else if (local.version !== remote.version) conflicts.add(remote.sentence_id);
     }
     for (const row of work.revisions) addRevision(row);
+    importEarlier();
     connected = true; loaded = true; cache();
     setConnection('Connected · drafts and every checked try save online. Connection lasts 30 days.');
     render();
@@ -125,6 +141,10 @@
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
     cache(); showSaveStatus(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
+  });
+  $('use-original').addEventListener('click', () => {
+    if (draft(selected).text || busy) return;
+    $('revision').value = parts[selected - 1]; $('revision').dispatchEvent(new Event('input')); $('use-original').hidden = true; $('revision').focus();
   });
   function choose(id) {
     if (busy) return;
@@ -172,7 +192,20 @@
     renderTimer();
   });
   setInterval(renderTimer, 1000);
+  function importEarlier() {
+    if (!earlier.drafts.length && !earlier.revisions.length) return;
+    const existing = id => earlier.drafts.find(row => row.sentence_id === id && row.text.trim())?.text || earlier.revisions.filter(row => row.sentence_id === id && row.kind === 'revision').at(-1)?.text;
+    window.SECTION_RANGES.forEach(([start, end], index) => {
+      const row = draft(index + 1);
+      if (!row.text && !row.version && !row.dirty && !latest(index + 1) && window.ORIGINAL_SENTENCES.slice(start, end).some((_, offset) => existing(start + offset + 1))) {
+        row.text = window.ORIGINAL_SENTENCES.slice(start, end).map((text, offset) => existing(start + offset + 1) || text).join('\n'); row.dirty = true;
+      }
+    });
+    state.earlier = earlier; cache(); $('earlier-practice').hidden = false;
+    $('earlier-practice-list').innerHTML = earlier.drafts.filter(row => row.text.trim()).map(row => `<p><strong>Earlier part ${row.sentence_id} draft</strong><br>${escape(row.text)}</p>`).join('') + earlier.revisions.map(row => `<p><strong>Earlier part ${row.sentence_id} · ${row.kind === 'guide' ? 'Original hint' : 'Checked rewrite'}</strong><br>${escape(row.text)}<br><span class="small">${escape(row.feedback.strength)} ${escape(row.feedback.nextStep)}</span></p>`).join('');
+  }
   $('original-story').textContent = parts.join(' ');
+  importEarlier();
   render();
   if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); setConnection('Saved work could not load. Your typing is kept on this device. Connect again or reload.'); });
   window.addEventListener('online', () => { if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => error(failure.message)); });
