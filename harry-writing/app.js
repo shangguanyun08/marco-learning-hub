@@ -28,8 +28,7 @@
   function latest(id) { return revisions(id).filter(row => row.kind === 'revision').at(-1); }
   function addRevision(row) { if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row); cache(); }
   function error(message = '') { $('error').hidden = !message; $('error').textContent = message; }
-  function setConnection(message) {
-    $('connection-status').textContent = message;
+  function updateConnectionButton() {
     $('connect').textContent = connected ? 'Reconnect AI checking' : 'Connect AI checking';
   }
   if (location.hash.includes('&ai_session=')) {
@@ -47,15 +46,14 @@
     const result = await response.json();
     if (response.status === 401) {
       connected = false; loaded = false; remove(SESSION);
-      setConnection('Please reconnect AI checking. Your typing is kept on this device.');
+      updateConnectionButton();
     }
     if (!response.ok) { const failure = Error(result.error || 'Could not save your work. Please try again.'); failure.status = response.status; throw failure; }
     return result;
   }
-  function showSaveStatus() {
-    const row = draft(selected), conflict = conflicts.has(selected);
-    $('resolve-conflict').hidden = !conflict;
-    $('save-status').textContent = memoryOnly ? 'Browser storage is unavailable. Keep this page open until your work saves online.' : conflict ? 'Another device has a different draft. Your version is kept here.' : row.dirty ? (connected ? 'Kept on this device · waiting to save online…' : 'Kept on this device · connect to save online') : row.version ? 'Draft saved online and on this device.' : 'Your original will stay unchanged.';
+  function updateDraftControls() {
+    $('resolve-conflict').hidden = !conflicts.has(selected);
+    if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function renderFeedback() {
     const row = feedbackSelection || revisions(selected).at(-1), host = $('feedback');
@@ -79,19 +77,15 @@
     $('revised-story').innerHTML = revised.map(text => '<p>' + escape(text) + '</p>').join('');
   }
   function render() {
-    $('part-number').textContent = `SECTION ${selected} OF ${parts.length} · ${window.SECTION_TITLES[selected - 1]}`;
+    $('part-number').textContent = `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
     $('revision').value = draft(selected).text;
-    const context = id => latest(id)?.text || parts[id - 1];
-    $('nearby').innerHTML = (selected > 1 ? '<p><strong>Before</strong> ' + escape(context(selected - 1)) + '</p>' : '') + (selected < parts.length ? '<p><strong>After</strong> ' + escape(context(selected + 1)) + '</p>' : '');
     $('next').disabled = busy || selected === parts.length;
     $('revision').disabled = busy;
     $('check').disabled = busy;
     $('guide').disabled = busy;
-    $('use-original').hidden = Boolean(draft(selected).text);
-    $('use-original').disabled = busy;
-    $('check').textContent = busy ? 'Checking…' : latest(selected) ? 'Check my next try' : 'Check my writing';
-    renderOverview(); renderFeedback(); showSaveStatus();
+    $('check').textContent = busy ? 'Checking…' : 'AI checking';
+    renderOverview(); renderFeedback(); updateDraftControls();
   }
   async function loadWork() {
     const work = await request('work');
@@ -112,7 +106,7 @@
     for (const row of work.revisions) addRevision(row);
     importEarlier();
     connected = true; loaded = true; cache();
-    setConnection('Connected · drafts and every checked try save online. Connection lasts 30 days.');
+    updateConnectionButton();
     render();
   }
   async function saveDrafts() {
@@ -130,22 +124,17 @@
           row.dirty = row.text !== text;
           cache();
         } catch (failure) {
-          if (failure.status === 409) { conflicts.add(id); await loadWork(); }
+          if (failure.status === 409) { conflicts.add(id); error(failure.message); await loadWork(); }
           else { failed = true; error(failure.message); break; }
         }
       }
-    } finally { saving = false; showSaveStatus(); }
+    } finally { saving = false; updateDraftControls(); }
     if (!failed && connected && Object.entries(state.drafts).some(([id, row]) => row.dirty && !conflicts.has(Number(id)))) saveTimer = setTimeout(saveDrafts, 1800);
   }
   $('revision').addEventListener('input', () => {
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
-    $('use-original').hidden = Boolean(row.text);
-    cache(); showSaveStatus(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
-  });
-  $('use-original').addEventListener('click', () => {
-    if (draft(selected).text || busy) return;
-    $('revision').value = parts[selected - 1]; $('revision').dispatchEvent(new Event('input')); $('use-original').hidden = true; $('revision').focus();
+    cache(); updateDraftControls(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   function choose(id) {
     if (busy) return;
@@ -181,18 +170,6 @@
   }
   $('check').addEventListener('click', () => check('revision'));
   $('guide').addEventListener('click', () => check('guide'));
-  let timerEnd = 0, remaining = 30 * 60;
-  function renderTimer() {
-    if (timerEnd) remaining = Math.max(0, Math.ceil((timerEnd - Date.now()) / 1000));
-    $('timer').textContent = Math.floor(remaining / 60).toString().padStart(2, '0') + ':' + (remaining % 60).toString().padStart(2, '0');
-    if (!remaining) { timerEnd = 0; $('timer-toggle').textContent = 'Start another 30 minutes'; }
-  }
-  $('timer-toggle').addEventListener('click', () => {
-    if (timerEnd) { renderTimer(); timerEnd = 0; $('timer-toggle').textContent = 'Continue timer'; }
-    else { if (!remaining) remaining = 30 * 60; timerEnd = Date.now() + remaining * 1000; $('timer-toggle').textContent = 'Pause timer'; }
-    renderTimer();
-  });
-  setInterval(renderTimer, 1000);
   function importEarlier() {
     if (!earlier.drafts.length && !earlier.revisions.length) return;
     const existing = id => earlier.drafts.find(row => row.sentence_id === id && row.text.trim())?.text || earlier.revisions.filter(row => row.sentence_id === id && row.kind === 'revision').at(-1)?.text;
@@ -208,6 +185,6 @@
   $('original-story').textContent = parts.join(' ');
   importEarlier();
   render();
-  if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); setConnection('Saved work could not load. Your typing is kept on this device. Connect again or reload.'); });
+  if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); updateConnectionButton(); });
   window.addEventListener('online', () => { if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => error(failure.message)); });
 })();
