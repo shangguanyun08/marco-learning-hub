@@ -29,7 +29,7 @@
   function addRevision(row) { if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row); cache(); }
   function error(message = '') { $('error').hidden = !message; $('error').textContent = message; }
   function updateConnectionButton() {
-    $('connect').textContent = connected ? 'Reconnect AI checking' : 'Connect AI checking';
+    $('connect').textContent = connected ? 'Connected' : 'Connect AI checking';
   }
   if (location.hash.includes('&ai_session=')) {
     const query = new URLSearchParams(location.hash.split('&').slice(1).join('&'));
@@ -56,11 +56,14 @@
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function renderFeedback() {
-    const row = feedbackSelection || revisions(selected).at(-1), host = $('feedback');
+    const hint = revisions(selected).find(row => row.kind === 'guide');
+    $('hint').hidden = !hint;
+    $('hint').textContent = hint?.feedback.nextStep || '';
+    const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = $('feedback');
     host.hidden = !row;
     if (row) {
       const current = row.text === draft(selected).text.trim(), feedback = row.feedback;
-      host.innerHTML = `<h3>${row.kind === 'guide' ? 'A hint for your original' : 'Feedback on your rewrite'}</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">${row.kind === 'guide' ? 'Now write your own version. You choose the words.' : current ? (ready(row) ? 'Clear on this try. Read it with the nearby sentences.' : 'Make one change, then check again.') : 'This feedback is for your last checked version. Check again when your changes are ready.'}</p>`;
+      host.innerHTML = `<h3>Feedback on your rewrite</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">${current ? (ready(row) ? 'Clear on this try. Read it with the nearby sentences.' : 'Make one change, then check again.') : 'This feedback is for your last checked version. Check again when your changes are ready.'}</p>`;
     }
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
@@ -159,14 +162,14 @@
     if (!text) return error('Write your version first.');
     if (!connected) return error('Connect AI checking first. Your draft is kept on this device.');
     const savedHint = kind === 'guide' && revisions(selected).find(item => item.kind === 'guide');
-    if (savedHint) { feedbackSelection = savedHint; renderFeedback(); $('feedback').scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (savedHint) { renderFeedback(); $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
     if (!row.pending || row.pending.text !== text || row.pending.kind !== kind) row.pending = { requestId: crypto.randomUUID(), text, kind };
     cache(); busy = true; render();
     try {
       const result = await request('check', { sentenceId: selected, ...row.pending });
       addRevision(result.revision); feedbackSelection = result.revision; delete row.pending; cache();
     } catch (failure) { error(failure.message); }
-    finally { busy = false; render(); if (kind === 'guide') $('feedback').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+    finally { busy = false; render(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   }
   $('check').addEventListener('click', () => check('revision'));
   $('guide').addEventListener('click', () => check('guide'));

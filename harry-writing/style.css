@@ -80,6 +80,7 @@ button:hover{filter:brightness(.96)}[hidden]{display:none!important}
 }
 
 .original .quiet{margin-top:16px;font-size:12px}
+.original .hint{margin:12px 0 0;padding:12px 14px;border-radius:8px;background:#edf3e9;font:500 15px/1.5 'DM Sans',system-ui,sans-serif}
 .checks{display:flex;gap:8px 20px;flex-wrap:wrap;font-size:13px;font-weight:600}
 .part-list button.revised{background:#e5efeb;border-color:#9fbbb1}
 .feedback strong{font-size:12px;color:var(--teal)}
