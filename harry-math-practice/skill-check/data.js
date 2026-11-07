@@ -3104,6 +3104,1115 @@
           }
         }
       ]
+    },
+    {
+      "id": "mixed-6",
+      "number": 6,
+      "title": "Session 6",
+      "questions": [
+        {
+          "id": "s6-fractions-1",
+          "skill": "fractions",
+          "facet": "unlike-subtraction",
+          "prompt": "Harry has 7/8 meter of ribbon and uses 1/4 meter. How much ribbon is left?",
+          "choices": [
+            "3/4",
+            "3/8",
+            "5/8",
+            "1/2"
+          ],
+          "correct": 2,
+          "explanation": "Change 1/4 into 2/8. Then subtract 7/8 − 2/8 = 5/8 meter of ribbon.",
+          "check": {
+            "kind": "subtractFractions",
+            "args": [
+              7,
+              8,
+              1,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s6-area-1",
+          "skill": "area",
+          "facet": "missing-side",
+          "prompt": "A rectangular mat covers 63 square centimeters. Its length is 9 centimeters. What is its width?",
+          "choices": [
+            "7 centimeters",
+            "54 centimeters",
+            "8 centimeters",
+            "72 centimeters"
+          ],
+          "correct": 0,
+          "explanation": "Divide the area by the known side. The width is 63 ÷ 9 = 7 centimeters. Check that 9 × 7 = 63.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              63,
+              9
+            ]
+          }
+        },
+        {
+          "id": "s6-calculation-1",
+          "skill": "calculation",
+          "facet": "multiplication",
+          "prompt": "Seven trays each hold 9 muffins. How many muffins are there altogether?",
+          "choices": [
+            "56",
+            "72",
+            "16",
+            "63"
+          ],
+          "correct": 3,
+          "explanation": "There are seven equal groups of 9. Calculate 7 × 9 = 63 muffins.",
+          "check": {
+            "kind": "multiply",
+            "args": [
+              7,
+              9
+            ]
+          }
+        },
+        {
+          "id": "s6-median-1",
+          "skill": "median",
+          "facet": "odd",
+          "prompt": "Five children score 12, 5, 9, 15 and 7 points. What is the median score?",
+          "choices": [
+            "7",
+            "9",
+            "12",
+            "9.6"
+          ],
+          "correct": 1,
+          "explanation": "Order the scores as 5, 7, 9, 12, 15. The third score is in the middle, so the median is 9.",
+          "check": {
+            "kind": "median",
+            "args": [
+              12,
+              5,
+              9,
+              15,
+              7
+            ]
+          }
+        },
+        {
+          "id": "s6-coordinates-1",
+          "skill": "coordinates",
+          "facet": "read-point",
+          "prompt": "Which ordered pair gives the location of point A?",
+          "choices": [
+            "(8, 4)",
+            "(4, 8)",
+            "(4, 7)",
+            "(5, 8)"
+          ],
+          "correct": 1,
+          "explanation": "Read the horizontal position first. Point A is 4 units right and 8 units up, so its coordinates are (4, 8).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              4,
+              8
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 4,
+            "y": 8,
+            "label": "A"
+          }
+        },
+        {
+          "id": "s6-units-1",
+          "skill": "units",
+          "facet": "weight",
+          "prompt": "A bag weighs 1 pound 9 ounces. What is its weight in ounces?",
+          "choices": [
+            "10 ounces",
+            "16 ounces",
+            "24 ounces",
+            "25 ounces"
+          ],
+          "correct": 3,
+          "explanation": "One pound is 16 ounces. Add the extra 9 ounces. The total is 16 + 9 = 25 ounces.",
+          "check": {
+            "kind": "multiplyAdd",
+            "args": [
+              1,
+              16,
+              9
+            ]
+          }
+        },
+        {
+          "id": "s6-scaling-1",
+          "skill": "scaling",
+          "facet": "enlarge",
+          "prompt": "A drawing is 3 cm wide and 5 cm long. A larger copy is 20 cm long and keeps the same shape. How wide is the copy?",
+          "choices": [
+            "12 cm",
+            "18 cm",
+            "8 cm",
+            "15 cm"
+          ],
+          "correct": 0,
+          "explanation": "The length grows by a factor of 4 because 5 × 4 = 20. Apply the same factor to the width. Calculate 3 × 4 = 12 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              3,
+              5,
+              20
+            ]
+          }
+        },
+        {
+          "id": "s6-rounding-1",
+          "skill": "rounding",
+          "facet": "place",
+          "prompt": "Round 38.764 to the nearest hundredth.",
+          "choices": [
+            "38.77",
+            "38.8",
+            "38.76",
+            "39.00"
+          ],
+          "correct": 2,
+          "explanation": "The hundredths digit is 6. The next digit is 4, so keep the 6. The rounded number is 38.76.",
+          "check": {
+            "kind": "round",
+            "args": [
+              38764,
+              1000,
+              100
+            ]
+          }
+        },
+        {
+          "id": "s6-calculation-2",
+          "skill": "calculation",
+          "facet": "regrouping",
+          "prompt": "What is 1,004 − 578?",
+          "choices": [
+            "526",
+            "436",
+            "574",
+            "426"
+          ],
+          "correct": 3,
+          "explanation": "Subtract 500 to get 504, then subtract 78 to get 426. Adding 426 and 578 gives 1,004, so the subtraction checks.",
+          "check": {
+            "kind": "subtract",
+            "args": [
+              1004,
+              578
+            ]
+          }
+        },
+        {
+          "id": "s6-fractions-2",
+          "skill": "fractions",
+          "facet": "mixed-multiplication",
+          "prompt": "Each bottle holds 1 2/3 liters. How many liters do 3 full bottles hold?",
+          "choices": [
+            "3 2/3",
+            "4",
+            "5",
+            "6"
+          ],
+          "correct": 2,
+          "explanation": "Three lots of 1 whole make 3. Three lots of 2/3 make 2 wholes. Add 3 + 2 = 5 liters.",
+          "check": {
+            "kind": "mixedMultiply",
+            "args": [
+              1,
+              2,
+              3,
+              3
+            ]
+          }
+        },
+        {
+          "id": "s6-rounding-2",
+          "skill": "rounding",
+          "facet": "round-first",
+          "prompt": "Round each number to the nearest hundredth first. Then estimate 0.086 − 0.042.",
+          "choices": [
+            "0.044",
+            "0.05",
+            "0.04",
+            "0.13"
+          ],
+          "correct": 1,
+          "explanation": "Round 0.086 to 0.09 and 0.042 to 0.04. Subtract the rounded values to get 0.09 − 0.04 = 0.05.",
+          "check": {
+            "kind": "roundDifference",
+            "args": [
+              86,
+              42,
+              1000
+            ]
+          }
+        },
+        {
+          "id": "s6-scaling-2",
+          "skill": "scaling",
+          "facet": "reduce",
+          "prompt": "A poster measures 24 cm by 16 cm. In a smaller copy, the 24 cm side becomes 6 cm. What does the 16 cm side become?",
+          "choices": [
+            "4 cm",
+            "10 cm",
+            "8 cm",
+            "64 cm"
+          ],
+          "correct": 0,
+          "explanation": "The first side is divided by 4 because 24 ÷ 4 = 6. Divide the other side by 4 too. Calculate 16 ÷ 4 = 4 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              16,
+              24,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s6-units-2",
+          "skill": "units",
+          "facet": "liquid",
+          "prompt": "There are 4 cups in 1 quart. How many cups are in 3 quarts?",
+          "choices": [
+            "12 cups",
+            "7 cups",
+            "8 cups",
+            "16 cups"
+          ],
+          "correct": 0,
+          "explanation": "Each quart contains 4 cups. Three equal groups of 4 cups give 3 × 4 = 12 cups.",
+          "check": {
+            "kind": "multiply",
+            "args": [
+              3,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s6-coordinates-2",
+          "skill": "coordinates",
+          "facet": "axis",
+          "prompt": "Point B lies on the horizontal axis. Which ordered pair names its location?",
+          "choices": [
+            "(0, 7)",
+            "(7, 0)",
+            "(7, 1)",
+            "(8, 0)"
+          ],
+          "correct": 1,
+          "explanation": "Point B is 7 units to the right. It is on the horizontal axis, so its vertical position is 0. Write (7, 0).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              7,
+              0
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 7,
+            "y": 0,
+            "label": "B"
+          }
+        },
+        {
+          "id": "s6-area-2",
+          "skill": "area",
+          "facet": "area-perimeter",
+          "prompt": "A rectangle is 8 meters long and 3 meters wide. How many meters of fencing go around it?",
+          "choices": [
+            "24 meters",
+            "11 meters",
+            "22 meters",
+            "16 meters"
+          ],
+          "correct": 2,
+          "explanation": "Fencing goes around the edge, so find the perimeter. Add 8 + 3 + 8 + 3 = 22 meters.",
+          "check": {
+            "kind": "perimeter",
+            "args": [
+              8,
+              3
+            ]
+          }
+        },
+        {
+          "id": "s6-median-2",
+          "skill": "median",
+          "facet": "even",
+          "prompt": "Find the median of 18, 11, 14 and 9.",
+          "choices": [
+            "11",
+            "14",
+            "13",
+            "12.5"
+          ],
+          "correct": 3,
+          "explanation": "Order the values as 9, 11, 14, 18. Average the two middle values. The median is (11 + 14) ÷ 2 = 12.5.",
+          "check": {
+            "kind": "median",
+            "args": [
+              18,
+              11,
+              14,
+              9
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "mixed-7",
+      "number": 7,
+      "title": "Session 7",
+      "questions": [
+        {
+          "id": "s7-scaling-1",
+          "skill": "scaling",
+          "facet": "same-factor",
+          "prompt": "A 2 cm by 6 cm card is enlarged by a scale factor of 4. What are its new dimensions?",
+          "choices": [
+            "6 cm by 10 cm",
+            "8 cm by 6 cm",
+            "2 cm by 24 cm",
+            "8 cm by 24 cm"
+          ],
+          "correct": 3,
+          "explanation": "Multiply both sides by 4. The new sides are 2 × 4 = 8 cm and 6 × 4 = 24 cm.",
+          "check": {
+            "kind": "scaledPair",
+            "args": [
+              2,
+              6,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s7-median-1",
+          "skill": "median",
+          "facet": "odd",
+          "prompt": "A player scores 21, 13, 9, 25 and 16 points in five games. What is the median?",
+          "choices": [
+            "16",
+            "13",
+            "21",
+            "16.8"
+          ],
+          "correct": 0,
+          "explanation": "Put the five scores in order as 9, 13, 16, 21, 25. The third score, 16, is the middle value.",
+          "check": {
+            "kind": "median",
+            "args": [
+              21,
+              13,
+              9,
+              25,
+              16
+            ]
+          }
+        },
+        {
+          "id": "s7-rounding-1",
+          "skill": "rounding",
+          "facet": "mixed-estimate",
+          "prompt": "Estimate 16 4/5 − 9 1/4 by rounding each mixed number to the nearest whole number first.",
+          "choices": [
+            "7",
+            "6",
+            "8",
+            "26"
+          ],
+          "correct": 2,
+          "explanation": "The first number rounds to 17 and the second rounds to 9. Subtract the rounded numbers. Calculate 17 − 9 = 8.",
+          "check": {
+            "kind": "mixedEstimate",
+            "args": [
+              16,
+              4,
+              5,
+              9,
+              1,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s7-calculation-1",
+          "skill": "calculation",
+          "facet": "remainder",
+          "prompt": "Divide 38 by 5. Write the quotient as a mixed number.",
+          "choices": [
+            "7 1/5",
+            "8 3/5",
+            "7 3/10",
+            "7 3/5"
+          ],
+          "correct": 3,
+          "explanation": "Five groups of 7 use 35, leaving 3. Write the remainder over the divisor. The quotient is 7 3/5.",
+          "check": {
+            "kind": "mixedDivide",
+            "args": [
+              38,
+              5
+            ]
+          }
+        },
+        {
+          "id": "s7-units-1",
+          "skill": "units",
+          "facet": "length",
+          "prompt": "A rope is 3 yards 2 feet long. How long is it in feet?",
+          "choices": [
+            "5 feet",
+            "9 feet",
+            "11 feet",
+            "15 feet"
+          ],
+          "correct": 2,
+          "explanation": "One yard is 3 feet. Three yards is 3 × 3 = 9 feet. Add the extra 2 feet to get 11 feet.",
+          "check": {
+            "kind": "multiplyAdd",
+            "args": [
+              3,
+              3,
+              2
+            ]
+          }
+        },
+        {
+          "id": "s7-fractions-1",
+          "skill": "fractions",
+          "facet": "fraction-division",
+          "prompt": "There is 5/6 cup of juice. Each tiny cup holds 1/12 cup. How many tiny cups can be filled?",
+          "choices": [
+            "5",
+            "10",
+            "6",
+            "12"
+          ],
+          "correct": 1,
+          "explanation": "Change 5/6 to 10/12. Ten portions of 1/12 fit into 10/12, so 10 tiny cups can be filled.",
+          "check": {
+            "kind": "divideFractions",
+            "args": [
+              5,
+              6,
+              1,
+              12
+            ]
+          }
+        },
+        {
+          "id": "s7-area-1",
+          "skill": "area",
+          "facet": "find-area",
+          "prompt": "A rectangular board is 7 cm long and 8 cm wide. What is the area of its surface?",
+          "choices": [
+            "56 square centimeters",
+            "30 square centimeters",
+            "15 square centimeters",
+            "49 square centimeters"
+          ],
+          "correct": 0,
+          "explanation": "Area counts how much surface is covered. Multiply the two side lengths. Calculate 7 × 8 = 56 square centimeters.",
+          "check": {
+            "kind": "area",
+            "args": [
+              7,
+              8
+            ]
+          }
+        },
+        {
+          "id": "s7-coordinates-1",
+          "skill": "coordinates",
+          "facet": "read-point",
+          "prompt": "Use the grid to find the ordered pair for point C.",
+          "choices": [
+            "(2, 6)",
+            "(6, 2)",
+            "(2, 5)",
+            "(3, 6)"
+          ],
+          "correct": 0,
+          "explanation": "Point C has horizontal position 2 and vertical position 6. Put the horizontal position first to write (2, 6).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              2,
+              6
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 2,
+            "y": 6,
+            "label": "C"
+          }
+        },
+        {
+          "id": "s7-median-2",
+          "skill": "median",
+          "facet": "even",
+          "prompt": "Six children collect 8, 17, 6, 11, 14 and 10 shells. What is the median number of shells?",
+          "choices": [
+            "10",
+            "10.5",
+            "11",
+            "11.5"
+          ],
+          "correct": 1,
+          "explanation": "Order the values as 6, 8, 10, 11, 14, 17. Average the middle two. Calculate (10 + 11) ÷ 2 = 10.5.",
+          "check": {
+            "kind": "median",
+            "args": [
+              8,
+              17,
+              6,
+              11,
+              14,
+              10
+            ]
+          }
+        },
+        {
+          "id": "s7-units-2",
+          "skill": "units",
+          "facet": "weight",
+          "prompt": "One pound is 16 ounces. A parcel weighs 24 ounces. How many pounds is that?",
+          "choices": [
+            "1 pound",
+            "2",
+            "1 1/2",
+            "1 1/4"
+          ],
+          "correct": 2,
+          "explanation": "Sixteen ounces make 1 pound, leaving 8 ounces. Eight ounces are half of 16 ounces, so the parcel weighs 1 1/2 pounds.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              24,
+              16
+            ]
+          }
+        },
+        {
+          "id": "s7-calculation-2",
+          "skill": "calculation",
+          "facet": "multiplication",
+          "prompt": "What is 9 × 8?",
+          "choices": [
+            "63",
+            "64",
+            "81",
+            "72"
+          ],
+          "correct": 3,
+          "explanation": "Nine equal groups of 8 make 72. You can use 10 × 8 = 80 and take away one group of 8 to get 72.",
+          "check": {
+            "kind": "multiply",
+            "args": [
+              9,
+              8
+            ]
+          }
+        },
+        {
+          "id": "s7-rounding-2",
+          "skill": "rounding",
+          "facet": "place",
+          "prompt": "Round 27.996 to the nearest hundredth.",
+          "choices": [
+            "27.99",
+            "27.90",
+            "28.00",
+            "28.10"
+          ],
+          "correct": 2,
+          "explanation": "The thousandths digit is 6, so round up. Carry through the hundredths and tenths. The rounded number is 28.00.",
+          "check": {
+            "kind": "round",
+            "args": [
+              27996,
+              1000,
+              100
+            ]
+          }
+        },
+        {
+          "id": "s7-coordinates-2",
+          "skill": "coordinates",
+          "facet": "axis",
+          "prompt": "Point D is on the vertical axis. Which ordered pair gives its position?",
+          "choices": [
+            "(0, 4)",
+            "(4, 0)",
+            "(1, 4)",
+            "(0, 5)"
+          ],
+          "correct": 0,
+          "explanation": "A point on the vertical axis has a horizontal position of 0. Point D is 4 units up, so write (0, 4).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              0,
+              4
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 0,
+            "y": 4,
+            "label": "D"
+          }
+        },
+        {
+          "id": "s7-area-2",
+          "skill": "area",
+          "facet": "missing-side",
+          "prompt": "A rectangular rug has an area of 45 square meters and a width of 5 meters. What is its length?",
+          "choices": [
+            "40 meters",
+            "8 meters",
+            "50 meters",
+            "9 meters"
+          ],
+          "correct": 3,
+          "explanation": "Divide the area by the width. Calculate 45 ÷ 5 = 9 meters. The check is 5 × 9 = 45 square meters.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              45,
+              5
+            ]
+          }
+        },
+        {
+          "id": "s7-fractions-2",
+          "skill": "fractions",
+          "facet": "mixed-multiplication",
+          "prompt": "Each bag holds 2 1/4 kilograms of apples. How many kilograms are in 4 bags?",
+          "choices": [
+            "8 1/4",
+            "9",
+            "8",
+            "10"
+          ],
+          "correct": 1,
+          "explanation": "Four lots of 2 kilograms make 8 kilograms. Four lots of 1/4 kilogram make 1 kilogram. Add 8 + 1 = 9 kilograms.",
+          "check": {
+            "kind": "mixedMultiply",
+            "args": [
+              2,
+              1,
+              4,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s7-scaling-2",
+          "skill": "scaling",
+          "facet": "relationship",
+          "prompt": "A model is 6 cm tall. A statue is n times as tall as the model. Which equation gives the statue’s height h in centimeters?",
+          "choices": [
+            "h = 6 + n",
+            "h = 6n",
+            "h = n − 6",
+            "h = 6 ÷ n"
+          ],
+          "correct": 1,
+          "explanation": "The phrase n times means to multiply by n. Multiply the model height of 6 by n, giving h = 6n.",
+          "check": {
+            "kind": "expression",
+            "answer": "h = 6n"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mixed-8",
+      "number": 8,
+      "title": "Session 8",
+      "questions": [
+        {
+          "id": "s8-coordinates-1",
+          "skill": "coordinates",
+          "facet": "read-point",
+          "prompt": "Which coordinates match the point marked E?",
+          "choices": [
+            "(3, 9)",
+            "(9, 3)",
+            "(8, 3)",
+            "(9, 4)"
+          ],
+          "correct": 1,
+          "explanation": "Read across first and then up. Point E is 9 units right and 3 units up, so its coordinates are (9, 3).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              9,
+              3
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 9,
+            "y": 3,
+            "label": "E"
+          }
+        },
+        {
+          "id": "s8-fractions-1",
+          "skill": "fractions",
+          "facet": "unlike-subtraction",
+          "prompt": "A container holds 4/5 liter of water. Harry pours out 1/6 liter. How much water remains?",
+          "choices": [
+            "19/30",
+            "3/5",
+            "7/10",
+            "1/2"
+          ],
+          "correct": 0,
+          "explanation": "Use thirtieths. Change 4/5 to 24/30 and 1/6 to 5/30. Subtract 24/30 − 5/30 = 19/30 liter.",
+          "check": {
+            "kind": "subtractFractions",
+            "args": [
+              4,
+              5,
+              1,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s8-units-1",
+          "skill": "units",
+          "facet": "liquid",
+          "prompt": "One pint is 2 cups. How many cups are in 6 pints?",
+          "choices": [
+            "12 cups",
+            "3 cups",
+            "8 cups",
+            "16 cups"
+          ],
+          "correct": 0,
+          "explanation": "There are 2 cups in each pint. Six equal groups give 6 × 2 = 12 cups.",
+          "check": {
+            "kind": "multiply",
+            "args": [
+              6,
+              2
+            ]
+          }
+        },
+        {
+          "id": "s8-area-1",
+          "skill": "area",
+          "facet": "area-perimeter",
+          "prompt": "A rectangle is 9 meters long and 4 meters wide. Which pair gives its area and perimeter?",
+          "choices": [
+            "Area 26 m²; perimeter 36 m",
+            "Area 36 m²; perimeter 26 m",
+            "Area 36 m²; perimeter 13 m",
+            "Area 13 m²; perimeter 36 m"
+          ],
+          "correct": 1,
+          "explanation": "Area is 9 × 4 = 36 square meters. Perimeter adds all four sides. Calculate 9 + 4 + 9 + 4 = 26 meters.",
+          "check": {
+            "kind": "areaPerimeter",
+            "args": [
+              9,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s8-rounding-1",
+          "skill": "rounding",
+          "facet": "mixed-estimate",
+          "prompt": "Round each mixed number to the nearest whole number, then estimate 11 2/3 + 6 1/5.",
+          "choices": [
+            "17",
+            "19",
+            "18",
+            "6"
+          ],
+          "correct": 2,
+          "explanation": "The first number rounds to 12 and the second rounds to 6. Add the rounded values. Calculate 12 + 6 = 18.",
+          "check": {
+            "kind": "mixedSumEstimate",
+            "args": [
+              11,
+              2,
+              3,
+              6,
+              1,
+              5
+            ]
+          }
+        },
+        {
+          "id": "s8-scaling-1",
+          "skill": "scaling",
+          "facet": "enlarge",
+          "prompt": "A picture is 2 cm wide and 7 cm high. It is enlarged to a height of 35 cm, keeping the same shape. What is its new width?",
+          "choices": [
+            "30 cm",
+            "7 cm",
+            "14 cm",
+            "10 cm"
+          ],
+          "correct": 3,
+          "explanation": "The height is multiplied by 5 because 7 × 5 = 35. Use the same factor for the width. Calculate 2 × 5 = 10 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              2,
+              7,
+              35
+            ]
+          }
+        },
+        {
+          "id": "s8-median-1",
+          "skill": "median",
+          "facet": "odd",
+          "prompt": "Find the median of these five heights in centimeters. 18, 10, 14, 22, 12",
+          "choices": [
+            "12",
+            "18",
+            "14",
+            "15.2"
+          ],
+          "correct": 2,
+          "explanation": "Order the heights as 10, 12, 14, 18, 22. The third value is the middle value, so the median is 14 centimeters.",
+          "check": {
+            "kind": "median",
+            "args": [
+              18,
+              10,
+              14,
+              22,
+              12
+            ]
+          }
+        },
+        {
+          "id": "s8-calculation-1",
+          "skill": "calculation",
+          "facet": "regrouping",
+          "prompt": "A school has 1,602 sheets of paper and uses 785. How many sheets are left?",
+          "choices": [
+            "817",
+            "917",
+            "827",
+            "1,183"
+          ],
+          "correct": 0,
+          "explanation": "Subtract 700 to get 902, then subtract 85 to get 817. Check by adding 817 + 785 = 1,602.",
+          "check": {
+            "kind": "subtract",
+            "args": [
+              1602,
+              785
+            ]
+          }
+        },
+        {
+          "id": "s8-units-2",
+          "skill": "units",
+          "facet": "length",
+          "prompt": "One yard is 3 feet. How many yards long is a 9-foot rope?",
+          "choices": [
+            "6 yards",
+            "12 yards",
+            "27 yards",
+            "3 yards"
+          ],
+          "correct": 3,
+          "explanation": "Divide the number of feet by 3. Calculate 9 ÷ 3 = 3 yards. Check that 3 × 3 = 9 feet.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              9,
+              3
+            ]
+          }
+        },
+        {
+          "id": "s8-rounding-2",
+          "skill": "rounding",
+          "facet": "round-first",
+          "prompt": "Round both numbers to the nearest hundredth first, then subtract 0.079 − 0.026.",
+          "choices": [
+            "0.053",
+            "0.05",
+            "0.04",
+            "0.11"
+          ],
+          "correct": 1,
+          "explanation": "Round 0.079 to 0.08 and 0.026 to 0.03. Subtract these rounded numbers to get 0.08 − 0.03 = 0.05.",
+          "check": {
+            "kind": "roundDifference",
+            "args": [
+              79,
+              26,
+              1000
+            ]
+          }
+        },
+        {
+          "id": "s8-fractions-2",
+          "skill": "fractions",
+          "facet": "fraction-multiplication",
+          "prompt": "Four children each need 3/8 meter of ribbon. How many meters are needed altogether?",
+          "choices": [
+            "3/8",
+            "1 1/2",
+            "7/8",
+            "1 1/4"
+          ],
+          "correct": 1,
+          "explanation": "Four groups of 3/8 make 12/8. Simplify 12/8 to 3/2, which is 1 1/2 meters.",
+          "check": {
+            "kind": "fractionMultiply",
+            "args": [
+              3,
+              8,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s8-coordinates-2",
+          "skill": "coordinates",
+          "facet": "axis",
+          "prompt": "Which ordered pair names point F on the vertical axis?",
+          "choices": [
+            "(2, 0)",
+            "(1, 2)",
+            "(0, 3)",
+            "(0, 2)"
+          ],
+          "correct": 3,
+          "explanation": "Point F is on the vertical axis, so its horizontal position is 0. Its vertical position is 2. Write (0, 2).",
+          "check": {
+            "kind": "coordinate",
+            "args": [
+              0,
+              2
+            ]
+          },
+          "visual": {
+            "type": "coordinate-grid",
+            "x": 0,
+            "y": 2,
+            "label": "F"
+          }
+        },
+        {
+          "id": "s8-calculation-2",
+          "skill": "calculation",
+          "facet": "decimal-division",
+          "prompt": "A 31-meter ribbon is shared equally into 4 pieces. How long is each piece?",
+          "choices": [
+            "7.75 meters",
+            "7.25 meters",
+            "7.5 meters",
+            "8.25 meters"
+          ],
+          "correct": 0,
+          "explanation": "Four groups of 7 use 28 meters, leaving 3. Divide the remaining 3 meters into four equal parts. Each piece is 7 3/4 = 7.75 meters.",
+          "check": {
+            "kind": "divide",
+            "args": [
+              31,
+              4
+            ]
+          }
+        },
+        {
+          "id": "s8-median-2",
+          "skill": "median",
+          "facet": "even",
+          "prompt": "Four children spend 26, 18, 21 and 15 minutes reading. What is the median time?",
+          "choices": [
+            "18 minutes",
+            "21 minutes",
+            "19.5 minutes",
+            "20 minutes"
+          ],
+          "correct": 2,
+          "explanation": "Order the times as 15, 18, 21, 26. Average the two middle times. Calculate (18 + 21) ÷ 2 = 19.5 minutes.",
+          "check": {
+            "kind": "median",
+            "args": [
+              26,
+              18,
+              21,
+              15
+            ]
+          }
+        },
+        {
+          "id": "s8-scaling-2",
+          "skill": "scaling",
+          "facet": "reduce",
+          "prompt": "A 30 cm by 20 cm poster is reduced. The 30 cm side becomes 6 cm. What length should the 20 cm side become?",
+          "choices": [
+            "14 cm",
+            "5 cm",
+            "10 cm",
+            "4 cm"
+          ],
+          "correct": 3,
+          "explanation": "The first side is divided by 5 because 30 ÷ 5 = 6. Divide the other side by 5 too. Calculate 20 ÷ 5 = 4 cm.",
+          "check": {
+            "kind": "scale",
+            "args": [
+              20,
+              30,
+              6
+            ]
+          }
+        },
+        {
+          "id": "s8-area-2",
+          "skill": "area",
+          "facet": "find-area",
+          "prompt": "A floor has 6 rows of square tiles, with 7 tiles in each row. Each tile covers 1 square meter. What is the floor’s area?",
+          "choices": [
+            "13 square meters",
+            "26 square meters",
+            "42 square meters",
+            "36 square meters"
+          ],
+          "correct": 2,
+          "explanation": "Count the tiles by multiplying rows by tiles in each row. Calculate 6 × 7 = 42 tiles, covering 42 square meters.",
+          "check": {
+            "kind": "area",
+            "args": [
+              6,
+              7
+            ]
+          }
+        }
+      ]
     }
   ],
   "checkpoint": {

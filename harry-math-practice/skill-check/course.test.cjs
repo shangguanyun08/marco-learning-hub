@@ -3,10 +3,10 @@ function setup(){const c={};c.globalThis=c;for(const f of ['data.js','engine.js'
 const plain=x=>JSON.parse(JSON.stringify(x));
 const numeric=s=>Number(String(s).replace(/[$,]/g,'').match(/^\d+(?:\.\d+)?/)?.[0]);
 function value(s){const m=String(s).match(/^(?:(\d+) )?(\d+)\/(\d+)$/);return m?Number(m[1]||0)+Number(m[2])/Number(m[3]):numeric(s);}
-test('five balanced mixed sessions have the requested 24/24/16/16/16 question counts',()=>{
- const {D}=setup(),all=D.sessions.flatMap(s=>s.questions);assert.equal(D.sessions.length,5);assert.equal(all.length,96);assert.equal(new Set(all.map(q=>q.id)).size,96);assert.equal(new Set(all.map(q=>q.prompt+JSON.stringify(q.visual||null))).size,96);
+test('eight balanced mixed sessions have 24 questions in the first two and 16 in the rest',()=>{
+ const {D}=setup(),all=D.sessions.flatMap(s=>s.questions);assert.equal(D.sessions.length,8);assert.equal(all.length,144);assert.equal(new Set(all.map(q=>q.id)).size,144);assert.equal(new Set(all.map(q=>q.prompt+JSON.stringify(q.visual||null))).size,144);
  for(const s of D.sessions){assert.equal(s.questions.length,s.number<=2?24:16);for(const k of D.skills)assert.equal(s.questions.filter(q=>q.skill===k.id).length,s.number<=2?3:2);for(const [i,q]of s.questions.entries()){assert.equal(q.choices.length,4);assert.equal(new Set(q.choices).size,4);assert.ok(q.explanation.length>35);if(i)assert.notEqual(q.skill,s.questions[i-1].skill);}}
- assert.equal(all.filter(q=>q.visual).length,12);assert.equal(D.sessions.flatMap(s=>s.retiredQuestions||[]).length,38);
+ assert.equal(all.filter(q=>q.visual).length,18);assert.equal(D.sessions.flatMap(s=>s.retiredQuestions||[]).length,38);
 });
 test('all active and archived answer keys agree with independent arithmetic and diagram checks',()=>{
  const {D}=setup();for(const q of D.sessions.flatMap(s=>[...s.questions,...(s.retiredQuestions||[])])){
@@ -90,7 +90,7 @@ test('each set saves all first answers together, fixes the score, and unlocks th
   assert.equal(E.submitSet(state,s.id,Object.fromEntries(s.questions.map(q=>[q.id,q.correct])),at,()=>`set-event-${++event}`),false);
   assert.deepEqual(plain(state.sessions[s.id]),scored);
  }
- assert.equal(E.report(state).completed,5);
+ assert.equal(E.report(state).completed,8);
 });
 test('sessions four and five provide fresh evidence while keeping earlier scores and mistakes',()=>{
  const {D,E}=setup(),state=E.empty();
