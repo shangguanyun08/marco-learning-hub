@@ -3,7 +3,8 @@
   'use strict';
   const API = 'https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/harry-writing';
   const CONNECT = 'https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/harry/writing-connect';
-  const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:elephant-sections-v1';
+  const config = window.WRITING_CONFIG || {}, isPicture = Boolean(config.picture);
+  const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:' + window.WRITING_STORY_ID;
   const $ = id => document.getElementById(id), parts = window.ELEPHANT_PARTS;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   function read(key, storage = localStorage) { try { return storage.getItem(key); } catch { return null; } }
@@ -13,9 +14,9 @@
   try { state = JSON.parse(read(CACHE)); } catch {}
   if (!state || typeof state !== 'object' || !state.drafts || !Array.isArray(state.revisions)) state = { drafts: {}, revisions: [], selected: 1 };
   if (!Array.isArray(state.models)) state.models = [];
-  let earlier = state.earlier || { drafts: [], revisions: [] };
+  let earlier = (!isPicture && state.earlier) || { drafts: [], revisions: [] };
   try {
-    const old = JSON.parse(read('harry-writing:elephant-v1'));
+    const old = !isPicture && JSON.parse(read('harry-writing:elephant-v1'));
     if (old?.drafts && Array.isArray(old.revisions)) earlier = { drafts: Object.entries(old.drafts).map(([id, row]) => ({ ...row, sentence_id: Number(id) })), revisions: old.revisions };
   } catch {}
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
@@ -36,14 +37,14 @@
   if (location.hash.includes('&ai_session=')) {
     const query = new URLSearchParams(location.hash.split('&').slice(1).join('&'));
     const token = query.get('ai_session'), pairing = query.get('ai_state');
-    history.replaceState(null, '', location.pathname + '#part-' + selected);
+    history.replaceState(null, '', location.pathname + location.search + '#part-' + selected);
     if (token && pairing && pairing === read(PAIRING, sessionStorage)) { write(SESSION, token); remove(PAIRING, sessionStorage); }
     else error('The connection could not be confirmed. Please connect again.');
   }
   async function request(action, body) {
     let response;
     try {
-      response = await fetch(API + '?action=' + action, { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
+      response = await fetch(API + '?action=' + action + (isPicture && action === 'work' ? '&storyId=' + encodeURIComponent(window.WRITING_STORY_ID) : ''), { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID, ...(config.custom ? { topicTitle: draft(0).text } : {}) }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
     } catch { throw Error('Could not finish connecting. Your typing is kept on this device. Try again.'); }
     const result = await response.json();
     if (response.status === 401) {
@@ -54,7 +55,7 @@
     return result;
   }
   function updateDraftControls() {
-    $('resolve-conflict').hidden = !conflicts.has(selected);
+    $('resolve-conflict').hidden = !conflicts.has(selected) && !conflicts.has(0);
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function renderFeedback() {
@@ -73,13 +74,13 @@
   }
   function renderOverview() {
     const checked = parts.filter((_, index) => latest(index + 1));
-    $('progress').textContent = `${checked.length} of ${parts.length} sections revised`;
+    $('progress').textContent = `${checked.length} of ${parts.length} ${isPicture ? 'paragraphs checked' : 'sections revised'}`;
     $('part-list').innerHTML = parts.map((_, index) => {
       const id = index + 1, row = latest(id);
-      return `<button type="button" data-part="${id}" class="${id === selected ? 'active ' : ''}${row ? 'revised' : ''}" aria-label="Section ${id}${row ? ', revised' : ', not revised'}" ${id === selected ? 'aria-current="step"' : ''} ${busy ? 'disabled' : ''}>${id}</button>`;
+      return `<button type="button" data-part="${id}" class="${id === selected ? 'active ' : ''}${row ? 'revised' : ''}" aria-label="${isPicture ? config.partNames[index] : 'Section ' + id}${row ? ', revised' : ', not revised'}" ${id === selected ? 'aria-current="step"' : ''} ${busy ? 'disabled' : ''}>${isPicture ? config.partNames[index] : id}</button>`;
     }).join('');
-    const revised = parts.map((text, index) => latest(index + 1)?.text || text);
-    $('revised-story').innerHTML = revised.map(text => '<p>' + escape(text) + '</p>').join('');
+    const revised = parts.map((text, index) => isPicture ? editorText(index + 1) : latest(index + 1)?.text || text);
+    $('revised-story').innerHTML = revised.map((text, index) => text ? '<p>' + escape(text) + '</p>' : '<p class="small">' + escape(config.partNames[index]) + ' paragraph — not written yet.</p>').join('');
   }
   function currentModel() {
     const checked = latest(selected);
@@ -96,9 +97,10 @@
   }
   function render() {
     const checked = latest(selected);
-    $('part-number').textContent = `SECTION ${selected} OF ${parts.length}`;
+    $('part-number').textContent = isPicture ? `${config.partNames[selected - 1].toUpperCase()} · PARAGRAPH ${selected} OF ${parts.length}` : `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
     $('revision').value = editorText(selected);
+    if (config.custom) { $('topic-title').value = draft(0).text; $('topic-title').disabled = busy; }
     $('revision').readOnly = false;
     $('next').disabled = busy || selected === parts.length;
     $('revision').disabled = busy;
@@ -158,7 +160,7 @@
   $('revision').addEventListener('input', () => {
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
-    cache(); updateDraftControls(); renderFeedback(); renderModel(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
+    cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) renderOverview(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   function choose(id) {
     if (busy) return;
@@ -169,10 +171,10 @@
   $('connect').addEventListener('click', () => {
     cache(); const pairing = crypto.randomUUID();
     if (!write(PAIRING, pairing, sessionStorage)) return error('Please allow browser storage to connect AI checking.');
-    location.assign(CONNECT + '?state=' + pairing);
+    location.assign(CONNECT + '?state=' + pairing + (config.topicKey ? '&topic=' + encodeURIComponent(config.topicKey) : ''));
   });
   $('resolve-conflict').addEventListener('click', async () => {
-    const id = selected;
+    const id = config.custom && conflicts.has(0) ? 0 : selected;
     try {
       const work = await request('work'), remote = work.drafts.find(row => row.sentence_id === id);
       draft(id).version = remote?.version || 0; conflicts.delete(id); cache(); await saveDrafts();
@@ -181,6 +183,7 @@
   async function check(kind) {
     if (busy) return;
     error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : editorText(selected).trim();
+    if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
     if (!text) return error('Write your version first.');
     if (kind === 'revision' && latest(selected)?.text === text) { feedbackSelection = latest(selected); renderFeedback(); return; }
     if (!connected) return error('Connect AI checking first. Your draft is kept on this device.');
@@ -212,6 +215,7 @@
     finally { busy = false; makingModel = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   });
   function importEarlier() {
+    if (isPicture) return;
     if (!earlier.drafts.length && !earlier.revisions.length) return;
     const existing = id => earlier.drafts.find(row => row.sentence_id === id && row.text.trim())?.text || earlier.revisions.filter(row => row.sentence_id === id && row.kind === 'revision').at(-1)?.text;
     window.SECTION_RANGES.forEach(([start, end], index) => {
@@ -223,7 +227,11 @@
     state.earlier = earlier; cache(); $('earlier-practice').hidden = false;
     $('earlier-practice-list').innerHTML = earlier.drafts.filter(row => row.text.trim()).map(row => `<p><strong>Earlier part ${row.sentence_id} draft</strong><br>${escape(row.text)}</p>`).join('') + earlier.revisions.map(row => `<p><strong>Earlier part ${row.sentence_id} · ${row.kind === 'guide' ? 'Original hint' : 'Checked rewrite'}</strong><br>${escape(row.text)}<br><span class="small">${escape(row.feedback.strength)} ${escape(row.feedback.nextStep)}</span></p>`).join('');
   }
-  $('original-story').textContent = parts.join(' ');
+  if ($('original-story')) $('original-story').textContent = parts.join(' ');
+  if (config.custom) $('topic-title').addEventListener('input', () => {
+    const row = draft(0); row.text = $('topic-title').value; row.dirty = true; cache();
+    clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
+  });
   importEarlier();
   render();
   if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); updateConnectionButton(); });
