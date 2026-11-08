@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
+  <title>Harry’s Daily Writing · Picture stories</title>
+  <meta name="description" content="Choose one of two pictures or your own topic. Write a beginning, middle and ending, with saved AI feedback.">
+  <link rel="stylesheet" href="../style.css?v=20261108-pictures"><link rel="stylesheet" href="picture.css?v=20261108-pictures">
+  <script src="picture.js?v=20261108-pictures" defer></script>
+</head>
+<body><main class="shell">
+  <nav class="topbar"><a href="../../">← Learning hub</a><a href="../">Elephant story</a><span>HARRY’S DAILY WRITING</span></nav>
+  <header class="hero"><h1>Write a story in three paragraphs</h1><p class="intro">One beginning. One middle. One ending.</p></header>
+  <section id="topic-chooser" aria-labelledby="choose-heading">
+    <h2 id="choose-heading">Pick a picture, or choose your own topic</h2>
+    <div class="topic-grid">
+      <a class="topic-card" href="?topic=puppy"><img src="images/puppy.png" width="1536" height="1024" alt="A boy in a yellow raincoat offers a towel to a muddy puppy under a park bench."><div><h3>The puppy in the park</h3><span>Choose this picture →</span></div></a>
+      <a class="topic-card" href="?topic=kite"><img src="images/kite.png" width="1536" height="1024" alt="A boy and a girl look at a red kite tangled in a low tree branch."><div><h3>A windy afternoon</h3><span>Choose this picture →</span></div></a>
+      <a class="topic-card own-card" href="?topic=own"><div class="own-icon" aria-hidden="true">✎</div><div><h3>My own topic</h3><p>Choose your characters, place, and what happens.</p><span>Write my own story →</span></div></a>
+    </div>
+  </section>
+  <div id="writing-session" hidden>
+    <section class="session-bar"><div><h2 id="prompt-title"></h2><a class="change-topic" href="./">Choose another topic</a></div><button id="connect" class="quiet">Connect AI checking</button></section>
+    <figure id="prompt-picture" class="prompt-picture" hidden><img id="prompt-image" width="1536" height="1024" alt=""><figcaption>Use the picture to start your own story. You choose what happens next.</figcaption></figure>
+    <div id="own-topic" class="own-topic" hidden><label for="topic-title">My topic</label><input id="topic-title" type="text" maxlength="100" placeholder="What is your story about?" autocomplete="off"></div>
+    <section class="workspace">
+      <aside class="parts"><h2>Your three paragraphs</h2><p id="progress">0 of 3 paragraphs checked</p><div id="part-list" class="part-list" aria-label="Choose a paragraph"></div></aside>
+      <div class="editor">
+        <div class="editor-heading"><p class="eyebrow" id="part-number">BEGINNING · PARAGRAPH 1 OF 3</p><a href="#full-story">Read your story ↓</a></div>
+        <section class="original"><h2>Think about this paragraph</h2><p id="original"></p><button id="guide" class="quiet">AI feedback and suggestion</button><p id="hint" class="hint" role="status" hidden></p></section>
+        <section class="rewrite"><label for="revision">Write your paragraph</label><textarea id="revision" rows="7" maxlength="1200" placeholder="Write a few clear sentences for this paragraph." spellcheck="true"></textarea><button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button></section>
+        <div class="actions"><button id="check" class="primary">AI checking</button><button id="show-model" class="primary" hidden>Show re-write example</button><button id="next" class="quiet">Next paragraph →</button></div>
+        <p id="error" class="error" role="alert" hidden></p>
+        <section id="feedback" class="feedback" aria-live="polite" hidden></section>
+        <section id="model-panel" class="model-panel" aria-live="polite" hidden><h3>Your paragraph · re-write example</h3><p id="model-text"></p></section>
+        <details id="history"><summary>Earlier tries <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
+      </div>
+    </section>
+    <section id="full-story" class="story-panel"><h2>Read your three-paragraph story</h2><p class="small">Your latest writing: beginning, middle, and ending.</p><div id="revised-story"></div><details id="earlier-practice" hidden><summary>Earlier practice</summary><div id="earlier-practice-list"></div></details></section>
+  </div>
+</main></body></html>

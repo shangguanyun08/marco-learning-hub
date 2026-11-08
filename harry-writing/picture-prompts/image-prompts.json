@@ -1,0 +1,14 @@
+{
+  "method": "built-in image_gen",
+  "assets": [
+    {
+      "path": "images/puppy.png",
+      "generation": "Create a landscape 3:2 storybook illustration to serve as an open-ended picture writing prompt for an eight-year-old third grader. A young child in a yellow raincoat kneels beside a small muddy puppy with a plain blue collar under a park bench after light rain. The child holds a small folded towel; wet leaves, puddles, a path and a distant park gate give simple setting clues. The puppy looks friendly and uncertain. Warm, readable watercolor and colored-pencil children's book art, expressive gentle faces, clear shapes, natural anatomy, no text, no letters, no logos, no captions, no panels, no frame. One single scene, show the problem beginning, do not reveal an owner or a solved ending. This is the image itself, not a webpage mockup.",
+      "edit": "Edit this illustration only by changing the child into an eight-year-old BOY with short tousled brown hair, no ponytail or hair tie. Keep his yellow raincoat, jeans, rain boots, towel, gentle expression, kneeling pose and age. Preserve the puppy, blue collar, wet park bench, gate, puddles, scenery, watercolor/pencil style, landscape 3:2 framing and all other details. No text."
+    },
+    {
+      "path": "images/kite.png",
+      "generation": "Create a landscape 3:2 storybook illustration to serve as an open-ended picture writing prompt for an eight-year-old third grader. On a windy sunny afternoon in a grassy park, two children look up at a bright red diamond kite tangled on a low tree branch. One child holds the loose kite string and the other holds a small spool; a blue cap on the grass and leaning wildflowers show the breeze. The branch is low and the setting safe; no climbing, no ladder and no dangerous heights. Warm, readable watercolor and colored-pencil children's book art, expressive gentle faces, clear shapes, natural anatomy, no text, no letters, no logos, no captions, no panels, no frame. One single scene, leave how they solve the problem open. This is the image itself, not a webpage mockup."
+    }
+  ]
+}
