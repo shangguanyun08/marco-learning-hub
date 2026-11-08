@@ -92,11 +92,9 @@ a { color: inherit; }
 .today-student > span::before { width: 8px; height: 8px; content: ""; border-radius: 50%; background: var(--blue); }
 .today-student.harry > span::before { background: #e09547; }
 .today-student p { margin: 0; color: var(--muted); white-space: nowrap; }
-.today-student strong { color: var(--ink); font: 800 26px/1 Manrope, sans-serif; }
+.today-student strong { color: var(--ink); font: 800 32px/1 Manrope, sans-serif; }
 .today-student small { font-size: 11px; }
 .today-student b { color: var(--ink); font-weight: 800; }
-.today-session-counts { grid-column: 1 / -1; display: grid; gap: 5px; padding-top: 8px; border-top: 1px solid rgba(39,57,101,.1); }
-.today-session-counts > span { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; color: #40506d; font-size: 14px; line-height: 1.3; }
 .today-log-note { margin: 9px 2px 0; overflow: hidden; color: #7b869b; font-size: 11px; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap; }
 .activity-history-heading { display: grid; grid-template-columns: minmax(100px, 1fr) 105px 105px; gap: 8px; margin: 13px 4px 5px; color: #7b869b; font: 700 10px/1 Manrope, sans-serif; letter-spacing: .08em; text-transform: uppercase; }
 .activity-history-heading span:not(:first-child) { text-align: right; }
@@ -105,8 +103,7 @@ a { color: inherit; }
 .activity-history-row:last-child { border-bottom: 0; }
 .activity-history-row.is-today { color: var(--ink); background: rgba(82,104,232,.045); }
 .activity-history-date { font-weight: 700; }
-.activity-history-stats { display: flex; align-items: flex-end; flex-direction: column; gap: 2px; text-align: right; white-space: nowrap; }
-.activity-history-stats > span { color: #596780; font-size: 12px; }
+.activity-history-stats { display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; text-align: right; white-space: nowrap; }
 .activity-history-stats strong { color: var(--ink); font: 800 15px/1 Manrope, sans-serif; }
 .activity-history-empty { margin: 0; padding: 15px 4px; color: #7b869b; font-size: 12px; }
 
@@ -180,7 +177,7 @@ footer a:hover { color: var(--cyan); }
   .today-log { position: relative; right: auto; top: auto; width: 100%; margin-top: 22px; padding: 15px; }
   .today-students { gap: 7px; }
   .today-student { align-items: flex-start; grid-template-columns: 1fr; gap: 5px; }
-  .today-student strong { font-size: 25px; }
+  .today-student strong { font-size: 30px; }
   .today-log-note { white-space: normal; }
   .activity-history-heading, .activity-history-row { grid-template-columns: minmax(70px, 1fr) minmax(0, 1fr) minmax(0, 1fr); }
   .activity-history-stats { white-space: normal; }
