@@ -24,6 +24,7 @@
   const conflicts = new Set();
   function cache() { state.selected = selected; memoryOnly = !write(CACHE, JSON.stringify(state)); }
   function draft(id) { return state.drafts[id] ||= { text: '', version: 0, dirty: false }; }
+  function editorText(id) { const row = draft(id), checked = latest(id); return row.dirty || !checked || row.updated_at > checked.checked_at ? row.text : checked.text; }
   function revisions(id) { return state.revisions.filter(row => row.sentence_id === id).sort((a, b) => a.checked_at.localeCompare(b.checked_at) || a.id.localeCompare(b.id)); }
   function latest(id) { return revisions(id).filter(row => row.kind === 'revision').at(-1); }
   function addRevision(row) { if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row); cache(); }
@@ -53,7 +54,7 @@
     return result;
   }
   function updateDraftControls() {
-    $('resolve-conflict').hidden = Boolean(latest(selected)) || !conflicts.has(selected);
+    $('resolve-conflict').hidden = !conflicts.has(selected);
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function renderFeedback() {
@@ -64,11 +65,11 @@
     host.hidden = !row;
     if (row) {
       const feedback = row.feedback;
-      host.innerHTML = `<h3>Feedback on your rewrite</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the model version.</p>`;
+      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p class="next-steps"><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the example version.</p>`;
     }
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
-    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p><p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p><p class="small"><strong>Try next</strong> ${escape(row.feedback.nextStep)}</p></article>`).join('');
+    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p><p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p><p class="small next-steps"><strong>Try next</strong> ${escape(row.feedback.nextStep)}</p></article>`).join('');
   }
   function renderOverview() {
     const checked = parts.filter((_, index) => latest(index + 1));
@@ -84,12 +85,12 @@
     const checked = latest(selected), model = state.models.find(row => row.sentence_id === selected);
     $('part-number').textContent = `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
-    $('revision').value = checked?.text || draft(selected).text;
-    $('revision').readOnly = Boolean(checked);
+    $('revision').value = editorText(selected);
+    $('revision').readOnly = false;
     $('next').disabled = busy || selected === parts.length;
     $('revision').disabled = busy;
     $('check').disabled = busy;
-    $('check').hidden = Boolean(checked);
+    $('check').hidden = false;
     $('show-model').hidden = !checked;
     $('show-model').disabled = busy;
     $('model-panel').hidden = !checked || !model;
@@ -110,8 +111,8 @@
     }
     for (const remote of work.drafts) {
       const local = draft(remote.sentence_id);
-      if (!local.dirty) state.drafts[remote.sentence_id] = { text: remote.text, version: remote.version, dirty: false };
-      else if (local.text === remote.text) { local.version = remote.version; local.dirty = false; conflicts.delete(remote.sentence_id); }
+      if (!local.dirty) state.drafts[remote.sentence_id] = { text: remote.text, version: remote.version, updated_at: remote.updated_at, dirty: false };
+      else if (local.text === remote.text) { local.version = remote.version; local.updated_at = remote.updated_at; local.dirty = false; conflicts.delete(remote.sentence_id); }
       else if (local.version !== remote.version) conflicts.add(remote.sentence_id);
     }
     for (const row of work.revisions) addRevision(row);
@@ -128,11 +129,12 @@
     try {
       for (const [key, row] of Object.entries(state.drafts)) {
         const id = Number(key);
-        if (!row.dirty || conflicts.has(id) || latest(id)) continue;
+        if (!row.dirty || conflicts.has(id)) continue;
         const text = row.text;
         try {
           const result = await request('draft', { sentenceId: id, text, expectedVersion: row.version });
           row.version = result.draft.version;
+          row.updated_at = result.draft.updated_at;
           row.dirty = row.text !== text;
           cache();
         } catch (failure) {
@@ -144,7 +146,6 @@
     if (!failed && connected && Object.entries(state.drafts).some(([id, row]) => row.dirty && !conflicts.has(Number(id)))) saveTimer = setTimeout(saveDrafts, 1800);
   }
   $('revision').addEventListener('input', () => {
-    if (latest(selected)) { $('revision').value = latest(selected).text; return; }
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
     cache(); updateDraftControls(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
@@ -168,9 +169,10 @@
     } catch (failure) { error(failure.message); }
   });
   async function check(kind) {
-    if (kind === 'revision' && latest(selected)) return;
-    error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : row.text.trim();
+    if (busy) return;
+    error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : editorText(selected).trim();
     if (!text) return error('Write your version first.');
+    if (kind === 'revision' && latest(selected)?.text === text) { feedbackSelection = latest(selected); renderFeedback(); return; }
     if (!connected) return error('Connect AI checking first. Your draft is kept on this device.');
     const savedHint = kind === 'guide' && revisions(selected).find(item => item.kind === 'guide');
     if (savedHint) { renderFeedback(); $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
@@ -178,9 +180,11 @@
     cache(); busy = true; render();
     try {
       const result = await request('check', { sentenceId: selected, ...row.pending });
-      addRevision(result.revision); feedbackSelection = result.revision; delete row.pending; cache();
+      addRevision(result.revision); feedbackSelection = result.revision;
+      if (kind === 'revision') { row.text = result.revision.text; row.dirty = true; }
+      delete row.pending; cache();
     } catch (failure) { error(failure.message); }
-    finally { busy = false; render(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    finally { busy = false; render(); saveDrafts(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   }
   $('check').addEventListener('click', () => check('revision'));
   $('guide').addEventListener('click', () => check('guide'));
@@ -188,7 +192,7 @@
     if (busy || !latest(selected)) return;
     error();
     if (state.models.some(row => row.sentence_id === selected)) { $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
-    if (!connected) return error('Connect AI checking to open your model version.');
+    if (!connected) return error('Connect AI checking to open your example version.');
     busy = true; render();
     try {
       const result = await request('model', { sentenceId: selected });
