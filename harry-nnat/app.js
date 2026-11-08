@@ -33,22 +33,60 @@
     if(!rows.length)return '<p>No practice checks yet.</p>';
     return rows.map(({id,r})=>{const s=core.scores(course,r);return `<article class="history-row"><div><h3>${esc(title(id))}</h3><p>Started ${esc(date(r.startedAt))} · First try ${s.first}/${s.total}</p>${time(r)}</div><button class="secondary" data-history="${esc(r.id)}" data-mode="${id}">Review</button></article>`;}).join('');
   }
+  function questionCard(q,index,total){
+    const aa=core.attempts(q,run),locked=review||core.resolved(q,run),draft=run.drafts?.[q.id]?.choice??null,last=aa.at(-1),selected=locked?last?.choice:draft;
+    return `<article class="question-card" id="question-${esc(q.id)}" data-question="${esc(q.id)}">
+      <div class="question-head"><div><p class="eyebrow">${q.level==='challenge'?'Challenge':q.level==='easy'?'Easy warm-up':'Medium warm-up'}</p><h2>Question ${index+1} <span>of ${total}</span></h2><p class="source-ref">${esc(group(q).name)} · ZOZECK drill #${q.sourceNumber}</p></div></div>
+      <div class="practice-layout">
+        <section class="diagram-panel" aria-label="Question ${index+1} diagram"><div class="panel-bar"><h3>Find the missing picture</h3><button class="quiet enlarge" type="button">Enlarge ↗</button></div><img class="main-diagram" loading="${index?'lazy':'eager'}" decoding="async" src="${q.figures[0]}" alt="${esc(group(q).name)} question ${q.sourceNumber}: choose the picture that completes the diagram.">${q.numberedOptions?'<p class="small">The five choices in the picture are numbered 1–5.</p>':''}</section>
+        <section class="answer-panel" aria-labelledby="answer-heading-${esc(q.id)}"><p class="eyebrow">${review?'Saved answer':locked?'Checked':aa.length?'Second try':'First try'}</p><h3 id="answer-heading-${esc(q.id)}">Choose your answer</h3>
+          <form class="answer-form"><fieldset ${locked?'disabled':''}><legend class="sr-only">Five answer choices for question ${index+1}</legend><div class="choices ${q.figures.length>1?'picture-choices':'number-choices'}">${Array.from({length:5},(_,i)=>{const checked=aa.some(a=>a.choice===i),mark=checked?(i===q.answer?'correct':'incorrect'):'';return `<label class="choice ${mark}"><input type="radio" name="answer-${esc(q.id)}" value="${i}" ${selected===i?'checked':''}><strong>${'ABCDE'[i]}</strong>${q.figures.length>1?`<img loading="lazy" decoding="async" src="${q.figures[i+1]}" alt="Choice ${'ABCDE'[i]}">`:`<span>Picture ${i+1}</span>`}${mark?`<span class="sr-only">Checked answer: ${mark}</span>`:''}</label>`;}).join('')}</div></fieldset>${!locked?`<button class="primary check-answer" ${Number.isInteger(selected)?'':'disabled'}>Check ${aa.length?'second':'first'} try</button>`:''}</form>
+          ${last?`<div class="feedback ${last.choice===q.answer?'correct':'incorrect'}" role="status"><strong>${last.choice===q.answer?'Correct.':core.resolved(q,run)?'Not quite. Let’s review the rule.':'Not quite. Look again and try once more.'}</strong><p>${last.choice===q.answer?'Your answer is saved.':core.resolved(q,run)?`The correct answer is ${'ABCDE'[q.answer]}${q.numberedOptions?` · Picture ${q.answer+1}`:''}.`:'Check every part of the pattern before choosing again.'}</p></div>`:''}
+          ${core.resolved(q,run)?`<details class="explanation"><summary>Show explanation</summary><h3>${esc(q.title)}</h3><p>${esc(q.explanation)}</p></details>`:''}
+        </section>
+      </div>
+    </article>`;
+  }
+  function updateProgress(){
+    const s=stat();app.querySelector('[data-progress]').textContent=`${s.resolved}/${s.total}`;
+    const button=app.querySelector('#session-results');button.disabled=!review&&s.resolved!==s.total;button.textContent=review?'Back to results':'See results';
+  }
+  function bindQuestion(node,q,index,total){
+    node.querySelectorAll('input[type="radio"]').forEach(input=>input.onchange=()=>{
+      if(review||core.resolved(q,run))return;
+      (run.drafts??={})[q.id]={choice:Number(input.value),updatedAt:now()};run.position=index;run.updatedAt=now();save();node.querySelector('.check-answer').disabled=false;
+    });
+    node.querySelector('.answer-form').onsubmit=e=>{
+      e.preventDefault();if(review||core.resolved(q,run))return;
+      const choice=Number(node.querySelector('input:checked')?.value??NaN);
+      if(core.check(course,run,q,choice,now())){
+        run.position=index;save();const scrollY=window.scrollY;
+        node.outerHTML=questionCard(q,index,total);const replacement=app.querySelector(`[data-question="${q.id}"]`);bindQuestion(replacement,q,index,total);updateProgress();window.scrollTo(0,scrollY);
+      }
+    };
+    node.querySelector('.enlarge').onclick=()=>{
+      document.querySelector('#large-diagram').innerHTML=`<img src="${q.figures[0]}" alt="Enlarged question ${index+1} diagram">`;document.querySelector('#diagram-dialog').showModal();
+    };
+  }
+  function scrollToQuestion(index){
+    const q=core.questions(course,run)[index];if(q)app.querySelector(`[data-question="${q.id}"]`)?.scrollIntoView({block:'start'});
+  }
   function workspace(){
-    screen='workspace';
-    const qs=core.questions(course,run),q=qs[run.position||0];if(!q){home();return;}
-    document.body.classList.add('practising');const aa=core.attempts(q,run),locked=review||core.resolved(q,run),draft=run.drafts?.[q.id]?.choice??null,last=aa.at(-1),selected=locked?last?.choice:draft;
-    app.innerHTML=`<div class="question-head"><div><p class="eyebrow">${esc(title(mode))} · ${q.level==='challenge'?'Challenge':q.level==='easy'?'Easy warm-up':'Medium warm-up'}</p><h1>Question ${(run.position||0)+1} <span>of ${qs.length}</span></h1><p class="source-ref">${esc(group(q).name)} · ZOZECK drill #${q.sourceNumber}</p></div><div class="question-progress"><strong>${stat().resolved}/${qs.length}</strong><span>checked</span></div></div><div class="practice-layout"><section class="diagram-panel" aria-label="Question diagram"><div class="panel-bar"><h2>Find the missing picture</h2><button class="quiet" id="enlarge">Enlarge ↗</button></div><img class="main-diagram" src="${q.figures[0]}" alt="${esc(group(q).name)} question ${q.sourceNumber}: choose the picture that completes the diagram.">${q.numberedOptions?'<p class="small">The five choices in the picture are numbered 1–5.</p>':''}</section><section class="answer-panel" aria-labelledby="answer-heading"><p class="eyebrow">${review?'Saved answer':locked?'Checked':aa.length?'Second try':'First try'}</p><h2 id="answer-heading">Choose your answer</h2><form id="answer-form"><fieldset ${locked?'disabled':''}><legend class="sr-only">Five answer choices</legend><div class="choices ${q.figures.length>1?'picture-choices':'number-choices'}">${Array.from({length:5},(_,i)=>{const checked=aa.some(a=>a.choice===i),mark=checked?(i===q.answer?'correct':'incorrect'):'';return `<label class="choice ${mark}"><input type="radio" name="answer" value="${i}" ${selected===i?'checked':''}><strong>${'ABCDE'[i]}</strong>${q.figures.length>1?`<img src="${q.figures[i+1]}" alt="Choice ${'ABCDE'[i]}">`:`<span>Picture ${i+1}</span>`}${mark?`<span class="sr-only">Checked answer: ${mark}</span>`:''}</label>`;}).join('')}</div></fieldset>${!locked?`<button class="primary" id="check" ${Number.isInteger(selected)?'':'disabled'}>Check ${aa.length?'second':'first'} try</button>`:''}</form>${last?`<div class="feedback ${last.choice===q.answer?'correct':'incorrect'}" role="status"><strong>${last.choice===q.answer?'Correct.':core.resolved(q,run)?'Not quite. Let’s review the rule.':'Not quite. Look again and try once more.'}</strong><p>${last.choice===q.answer?'Your answer is saved.':core.resolved(q,run)?`The correct answer is ${'ABCDE'[q.answer]}${q.numberedOptions?` · Picture ${q.answer+1}`:''}.`:'Check every part of the pattern before choosing again.'}</p></div>`:''}${core.resolved(q,run)?`<details class="explanation"><summary>Show explanation</summary><h3>${esc(q.title)}</h3><p>${esc(q.explanation)}</p></details>`:''}<div class="question-actions">${review?`<button class="secondary" id="previous" ${(run.position||0)===0?'disabled':''}>← Previous</button><button class="primary" id="next">${(run.position||0)===qs.length-1?'Back to results':'Next →'}</button>`:locked?`<button class="primary" id="next">${(run.position||0)===qs.length-1?'See results':'Next question →'}</button>`:''}</div></section></div>`;
-    app.querySelectorAll('input[name="answer"]').forEach(input=>input.onchange=()=>{(run.drafts??={})[q.id]={choice:Number(input.value),updatedAt:now()};run.updatedAt=now();save();app.querySelector('#check').disabled=false;});
-    app.querySelector('#answer-form').onsubmit=e=>{e.preventDefault();if(locked)return;const choice=Number(app.querySelector('input[name="answer"]:checked')?.value??NaN);if(core.check(course,run,q,choice,now())){save();workspace();}};
-    app.querySelector('#enlarge').onclick=()=>{document.querySelector('#large-diagram').innerHTML=`<img src="${q.figures[0]}" alt="Enlarged question diagram">`;document.querySelector('#diagram-dialog').showModal();};
-    if(app.querySelector('#next'))app.querySelector('#next').onclick=()=>{if((run.position||0)===qs.length-1)summary();else{run.position=(run.position||0)+1;if(!review)save();workspace();}window.scrollTo(0,0);};
-    if(app.querySelector('#previous'))app.querySelector('#previous').onclick=()=>{run.position--;workspace();};
+    screen='workspace';const qs=core.questions(course,run);if(!qs.length){home();return;}
+    const open=new Set(Array.from(app.querySelectorAll('.question-card .explanation[open]')).map(el=>el.closest('[data-question]').dataset.question));
+    const active=document.activeElement,focus=active?.matches('input[type="radio"]')?{id:active.closest('[data-question]')?.dataset.question,value:active.value}:null;
+    document.body.classList.add('practising');
+    app.innerHTML=`<div class="session-head"><div><p class="eyebrow">All ${qs.length} questions</p><h1>${esc(title(mode))}</h1></div><div class="question-progress"><strong data-progress>${stat().resolved}/${qs.length}</strong><span>checked</span></div></div><section class="question-list" aria-label="${esc(title(mode))} questions">${qs.map((q,index)=>questionCard(q,index,qs.length)).join('')}</section><div class="session-actions"><button class="primary" id="session-results">See results</button></div>`;
+    qs.forEach((q,index)=>bindQuestion(app.querySelector(`[data-question="${q.id}"]`),q,index,qs.length));updateProgress();
+    for(const id of open){const details=app.querySelector(`[data-question="${id}"] .explanation`);if(details)details.open=true;}
+    if(focus)app.querySelector(`[data-question="${focus.id}"] input[value="${focus.value}"]`)?.focus({preventScroll:true});
+    app.querySelector('#session-results').onclick=()=>{summary();window.scrollTo(0,0);};
   }
   function summary(){review=true;screen='summary';document.body.classList.remove('practising');const s=stat(),qs=core.questions(course,run),done=s.resolved===s.total;
     app.innerHTML=`<section class="results"><p class="eyebrow">${esc(title(mode))}</p><h1>${done?'Practice finished':'Saved practice'}</h1>${time(run)}<div class="score"><strong>${s.first}<span>/${s.total}</span></strong><p>correct on the first try</p></div><p>${s.resolved} of ${s.total} questions checked. Retries do not raise the first-try score.</p><div class="result-actions"><button class="primary" id="resume">${done?'Review questions':'Continue practice'} →</button>${done?'<button class="secondary" id="fresh">Start a fresh practice</button>':''}</div><h2>Your questions</h2><div class="result-list">${qs.map((q,i)=>{const aa=core.attempts(q,run),first=aa[0];return `<button class="result-row" data-review="${i}"><span>${i+1}. ${esc(group(q).name)} #${q.sourceNumber}<small>${q.level==='challenge'?'Challenge':'Warm-up'}</small></span><strong class="${first?first.choice===q.answer?'correct':'incorrect':''}">${first?first.choice===q.answer?'✓ First try':'First try missed':'Not checked'}</strong></button>`;}).join('')}</div></section>`;
-    app.querySelector('#resume').onclick=()=>{review=done;run.position=done?0:Math.max(0,qs.findIndex(q=>!core.resolved(q,run)));workspace();window.scrollTo(0,0);};
+    app.querySelector('#resume').onclick=()=>{review=done;run.position=done?0:Math.max(0,qs.findIndex(q=>!core.resolved(q,run)));workspace();scrollToQuestion(run.position);};
     if(done)app.querySelector('#fresh').onclick=()=>start(mode,true);
-    app.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{review=true;run.position=Number(b.dataset.review);workspace();window.scrollTo(0,0);});
+    app.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{review=true;run.position=Number(b.dataset.review);workspace();scrollToQuestion(run.position);});
   }
   function exportProgress(){const blob=new Blob([JSON.stringify({...state,exportedAt:now()},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='harry-nnat-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   document.querySelector('#all-sets').onclick=()=>{home();window.scrollTo(0,0);};document.querySelector('#close-diagram').onclick=()=>document.querySelector('#diagram-dialog').close();
