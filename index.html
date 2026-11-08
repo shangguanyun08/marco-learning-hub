@@ -95,7 +95,7 @@
             <span class="section-number">02</span>
             <h2 id="harry-heading">Harry’s learning</h2>
           </div>
-          <p>Clear writing, visual reasoning, and word meanings</p>
+          <p>Clear writing and visual reasoning</p>
         </div>
         <div class="card-grid harry-grid">
           <article class="site-card warm" id="harry-writing">
@@ -114,13 +114,6 @@
             <a href="./harry-nnat/">Open NNAT practice <span>→</span></a>
           </article>
 
-          <article class="site-card warm" id="harry-word-meaning">
-            <div class="card-topline"><span>VOCABULARY · MEANING CHECK</span><small>92 words · 6 sets</small></div>
-            <div class="icon">Aa</div><h3>Harry’s Word Meaning Check</h3>
-            <p>Review priority words from all three STAR Reading tests and saved vocabulary practice, then write short meanings over three rounds. Each set has 15–16 words, with an AI meaning test in Round 3 on this GitHub page.</p>
-            <ul><li>Review + three rounds</li><li>Simple English or Chinese explanations</li><li>Responses and submitted copies saved online</li></ul>
-            <a href="./harry-star-reading/meaning-check/">Open word meaning check <span>→</span></a>
-          </article>
 
         </div>
       </section>
@@ -365,9 +358,17 @@
                   <span class="archive-owner">Harry</span>
                   <h3 id="harry-archive-heading">Harry’s archived sites</h3>
                 </div>
-                <span>12 sites</span>
+                <span>13 sites</span>
               </div>
               <div class="card-grid harry-grid archive-grid">
+                <article class="site-card archived warm" id="harry-word-meaning">
+                  <div class="card-topline"><span>ARCHIVED · VOCABULARY · MEANING CHECK</span><small>92 words · 6 sets</small></div>
+                  <div class="icon">Aa</div><h3>Harry’s Word Meaning Check</h3>
+                  <p>Review priority words from all three STAR Reading tests and saved vocabulary practice, then write short meanings over three rounds. Each set has 15–16 words, with an AI meaning test in Round 3 on this GitHub page.</p>
+                  <ul><li>Review + three rounds</li><li>Simple English or Chinese explanations</li><li>Responses and submitted copies saved online</li></ul>
+                  <a href="./harry-star-reading/meaning-check/">Open archived word meaning check <span>→</span></a>
+                </article>
+
                 <article class="site-card archived warm" id="harry-daily-math">
                   <div class="card-topline"><span>ARCHIVED · DAILY · MIXED MATH CHECKS</span><small>8 sessions · 8 skills</small></div>
                   <div class="icon">×÷</div>
@@ -487,7 +488,7 @@
     <script src="./shared-activity-dashboard.js?v=20261107-minutes" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#harry-archive-heading','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-vr-practice','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
+        if(['#archives','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-vr-practice','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
