@@ -32,6 +32,7 @@ test('shading symmetry is verified by reflection, not the plain outline',()=>{
  const white=D.questions.s3.diagram.white;assert.equal(Array.from({length:6},(_,axis)=>Array.from({length:6},(_,i)=>white.includes(i)===white.includes((axis-i+6)%6)).every(Boolean)).filter(Boolean).length,1);
 });
 test('review and practice initialize with hidden answers, four jump groups and no forced writing',()=>{
+ assert.equal(new JSDOM(load('index.html')).window.document.querySelectorAll('.date-switch').length,0);
  const dom=page(),d=dom.window.document;try{assert.equal(d.querySelectorAll('#questions .question').length,7);assert.equal(d.querySelectorAll('#questions .solution[hidden]').length,7);assert.equal(d.querySelectorAll('#practice .question').length,28);assert.equal(d.querySelectorAll('.practice-jump .jump-group').length,4);assert.equal(d.querySelectorAll('.jump-divider').length,3);assert.equal(d.querySelectorAll('.question-group-divider').length,3);assert.equal(d.querySelectorAll('#practice .source').length,0);assert.equal(d.querySelectorAll('textarea').length,0);assert.equal(d.querySelector('#practice').hidden,false);assert.equal(d.querySelectorAll('#skill-results').length,0);assert.match(d.querySelector('#save-note').textContent,/Preview only/);}finally{dom.window.close();}
 });
 test('instant miss, second chance, first-try scoring, seven-skill report, completion and reload',()=>{
