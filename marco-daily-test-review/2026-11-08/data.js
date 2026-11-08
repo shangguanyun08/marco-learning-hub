@@ -105,6 +105,15 @@ window.MarcoMA5Review = {
       ],
       links: [],
       next: 'Use the same outline with different shading. Check candidate fold lines one at a time; include shapes with zero, one, two, and more surviving symmetry axes.'
+    },
+    {
+      number: 20, section: 'QR', title: 'Slope direction · November 6', difficulty: 'Hard', subtype: 'November 6 · QR', seconds: 17,
+      prompt: 'For which function does the y-value increase at the greatest rate as the x-value decreases?',
+      choices: ['Graph A', 'Graph B', 'Graph C', 'Graph D'], chosen: 0, correct: 1,
+      graphs: [{m:2,b:0},{m:-2,b:0},{m:-0.5,b:1},{m:0.5,b:-1}],
+      trick: 'First follow x <mark>LEFT</mark>. Keep the lines that rise in that direction, then choose the steeper one.',
+      explanation: 'Graphs B and C rise when x decreases. B has slope −2, so y rises 2 units for each 1-unit move left. C has slope −1/2, so it rises only 1/2 unit. Graph B is correct. Graph A rises when moving right, but falls when moving left.',
+      inference: 'Choosing A is consistent with overlooking the direction of x, but his selected answer alone cannot prove his reasoning.'
     }
   ]
 };
