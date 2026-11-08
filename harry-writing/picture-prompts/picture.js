@@ -20,5 +20,5 @@
   document.title = 'Harry’s Daily Writing · ' + topic.title;
   if (topic.image) { $('prompt-image').src = topic.image; $('prompt-image').alt = topic.alt; $('prompt-picture').hidden = false; }
   else $('own-topic').hidden = false;
-  const script = document.createElement('script'); script.src = '../app.js?v=20261108-pictures'; document.head.append(script);
+  const script = document.createElement('script'); script.src = '../app.js?v=20261108-wording'; document.head.append(script);
 })();
