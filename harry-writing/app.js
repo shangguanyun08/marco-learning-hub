@@ -7,6 +7,10 @@
   const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:' + window.WRITING_STORY_ID;
   const $ = id => document.getElementById(id), parts = window.ELEPHANT_PARTS;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function suggestionList(text) {
+    const lines = String(text || '').split(/\r?\n/).map(line => line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, '').trim()).filter(Boolean);
+    return '<ul class="next-steps">' + lines.map(line => '<li>' + escape(line) + '</li>').join('') + '</ul>';
+  }
   function read(key, storage = localStorage) { try { return storage.getItem(key); } catch { return null; } }
   function write(key, value, storage = localStorage) { try { storage.setItem(key, value); return true; } catch { return false; } }
   function remove(key, storage = localStorage) { try { storage.removeItem(key); } catch {} }
@@ -61,16 +65,16 @@
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
     $('hint').hidden = !hint;
-    $('hint').textContent = hint?.feedback.nextStep || '';
+    $('hint').innerHTML = hint ? suggestionList(hint.feedback.nextStep) : '';
     const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = $('feedback');
     host.hidden = !row;
     if (row) {
       const feedback = row.feedback;
-      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p class="next-steps"><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
+      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
     }
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
-    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p><p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p><p class="small next-steps"><strong>Try next</strong> ${escape(row.feedback.nextStep)}</p></article>`).join('');
+    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p><p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p><div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div></article>`).join('');
   }
   function renderOverview() {
     const checked = parts.filter((_, index) => latest(index + 1));

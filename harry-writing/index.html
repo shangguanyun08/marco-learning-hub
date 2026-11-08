@@ -6,9 +6,9 @@
   <meta name="referrer" content="no-referrer" />
   <meta name="description" content="Harry’s writing practice in short sections. Find sentence endings, then make each sentence’s idea and language clear." />
   <title>Harry’s Daily Writing · Elephant</title>
-  <link rel="stylesheet" href="style.css?v=20261107-checks" />
+  <link rel="stylesheet" href="style.css?v=20261108-bullets" />
   <script src="story.js?v=20261107-simple" defer></script>
-  <script src="app.js?v=20261108-wording" defer></script>
+  <script src="app.js?v=20261108-bullets" defer></script>
   <script src="examples.js?v=20261107-restored-models" defer></script>
 </head>
 <body>
@@ -22,7 +22,7 @@
       <aside class="parts"><h2>Your short sections</h2><p id="progress">0 of 6 revised</p><div id="part-list" class="part-list" aria-label="Choose a short section"></div></aside>
       <div class="editor">
         <div class="editor-heading"><p class="eyebrow" id="part-number">SECTION 1 OF 6</p><a href="#full-story">Read the whole story ↓</a></div>
-        <section class="original"><h2>Your original section</h2><p id="original"></p><button id="guide" class="quiet">AI feedback and suggestion</button><p id="hint" class="hint" role="status" hidden></p></section>
+        <section class="original"><h2>Your original section</h2><p id="original"></p><button id="guide" class="quiet">AI feedback and suggestion</button><div id="hint" class="hint" role="status" hidden></div></section>
         <section class="rewrite"><label for="revision">Re-write your clearer version</label><textarea id="revision" rows="7" maxlength="1200" placeholder="Clear story and language" spellcheck="true"></textarea><button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button></section>
         <div class="actions"><button id="check" class="primary">AI checking</button><button id="show-model" class="primary" aria-controls="model-panel" aria-expanded="false" hidden>Show re-write example</button><button id="next" class="quiet">Next section →</button></div>
         <section id="model-panel" class="model-panel" aria-live="polite" hidden><h3>Re-write example</h3><p class="small">A clearer version of your checked rewrite.</p><p id="model-text"></p></section>
