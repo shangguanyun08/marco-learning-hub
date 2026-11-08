@@ -185,7 +185,6 @@
     error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : editorText(selected).trim();
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
     if (!text) return error('Write your version first.');
-    if (kind === 'revision' && latest(selected)?.text === text) { feedbackSelection = latest(selected); renderFeedback(); return; }
     if (!connected) return error('Connect AI checking first. Your draft is kept on this device.');
     const savedHint = kind === 'guide' && revisions(selected).find(item => item.kind === 'guide');
     if (savedHint) { renderFeedback(); $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
