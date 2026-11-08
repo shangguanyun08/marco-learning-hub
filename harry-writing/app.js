@@ -83,7 +83,7 @@
   }
   function currentModel() {
     const checked = latest(selected);
-    return state.models.find(row => row.kind === 'rewrite' && row.sentence_id === selected && row.revision_id === checked?.id && row.source_text === editorText(selected).trim());
+    return state.models.find(row => row.kind === 'rewrite' && row.generation_version === 2 && row.sentence_id === selected && row.revision_id === checked?.id && row.source_text === editorText(selected).trim());
   }
   function renderModel() {
     const checked = latest(selected), model = currentModel();

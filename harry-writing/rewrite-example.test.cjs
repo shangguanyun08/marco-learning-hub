@@ -3,7 +3,7 @@ let JSDOM;try{({JSDOM}=require('jsdom'));}catch{({JSDOM}=require('../harry-math-
 const CACHE='harry-writing:elephant-sections-v1',SESSION='harry-meaning-ai:connection-v1';
 const revision={id:'checked-rewrite',sentence_id:3,text:'The man walked slowly to the elephant. He wanted to help.',kind:'revision',checked_at:'2026-11-07T12:00:00Z',feedback:{complete:true,clear:true,correct:true,strength:'The man wants to help.',nextStep:'Read both sentences aloud.'}};
 const old={sentence_id:3,revision_id:revision.id,text:'Original-section example with different events.',viewed_at:'2026-11-07T12:01:00Z'};
-const model={...old,kind:'rewrite',source_text:revision.text,text:'The man walked slowly towards the elephant.\nHe wanted to help it.'};
+const model={...old,kind:'rewrite',generation_version:2,source_text:revision.text,text:'The man walked slowly towards the elephant.\nHe wanted to help it.'};
 const seed={drafts:{},revisions:[revision],models:[old],selected:3};
 function boot(saved=seed){
   const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),{url:'https://shangguanyun08.github.io/marco-learning-hub/harry-writing/#part-3',runScripts:'outside-only'}),w=dom.window,calls=[];
