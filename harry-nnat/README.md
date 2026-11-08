@@ -1,5 +1,11 @@
 # Harry’s selected NNAT practice
 
+## Mistake rounds
+
+Every original saved run is Round 1, including legacy records with no `round` field. Each session offers **Round 2 from its Round 1 first-try mistakes**, then **Round 3 from that Round 2’s first-try mistakes**. A correct same-round second try does not remove a question from the next round. A round unlocks after every question in its parent has a checked first answer. Zero-miss parents show that nothing needs redoing; Round 3 never creates a Round 4.
+
+New rounds append independent runs in the same session namespace, with their own empty drafts, answers, first-try scores, completion times, and frozen question list. `sourceRoot` and `sourceFirstPass` identify the exact parent even when sync renames a conflicting saved history; later optional retries do not change the relationship. Opening or syncing a page only derives availability and does not auto-create a practice round. Starting a fresh Round 1 creates a new chain while all earlier rounds remain in history. The main type cards always describe the newest Round 1, rather than accidentally treating a later review round as a new full practice. The existing all-questions-on-one-page layout remains in every round.
+
 The hub links this course immediately after Harry’s Daily Writing. Source: the purchased ZOZECK NNAT G3–G4 course, **NNAT Drills**, not the mocks or extra-practice chapters. All 120 diagrams and visible answer keys were inspected through the already signed-in Chrome session on November 7, 2026. No answers or tests were submitted on Harry’s behalf.
 
 The parent requested roughly the hardest 10–20%, with easier warm-ups, after a previous 35/40 mock result. The selection has **24 challenges (20% of 120), plus 4 easy and 4 medium warm-ups**. It is a balanced expert selection based on interacting rules, precision, occlusion, rotation/reflection, colour changes, and similar distractors. It is not a publisher percentile ranking; item difficulty statistics were unavailable. Later question numbers were not treated as automatically harder.
