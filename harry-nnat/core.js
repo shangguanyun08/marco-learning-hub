@@ -1,8 +1,9 @@
 (function(root){
   'use strict';
+  const variants=typeof module!=='undefined'?require('./variants.js'):root.NNATVariants;
   function attempts(q,r){return (r?.answers?.[q.id]||[]).filter(a=>Number.isInteger(a.choice)&&a.choice>=0&&a.choice<5&&Number.isFinite(Date.parse(a.checkedAt)));}
   function resolved(q,r){const aa=attempts(q,r);return aa.some(a=>a.choice===q.answer)||aa.length>=2;}
-  function questions(course,r){return (r?.questionIds||[]).map(id=>course.questions.find(q=>q.id===id)).filter(Boolean);}
+  function questions(course,r){return (r?.questionIds||[]).map(id=>course.questions.find(q=>q.id===id)||variants.get(course,id)).filter(Boolean);}
   function scores(course,r){const qs=questions(course,r);return {total:qs.length,answered:qs.filter(q=>attempts(q,r).length).length,first:qs.filter(q=>attempts(q,r)[0]?.choice===q.answer).length,resolved:qs.filter(q=>resolved(q,r)).length};}
   function round(r){return r?.round===2||r?.round===3?r.round:1;}
   function firstWrongIds(course,r){return questions(course,r).filter(q=>{const first=attempts(q,r)[0];return first&&first.choice!==q.answer;}).map(q=>q.id);}
@@ -13,7 +14,8 @@
   function childOf(course,child,parent){return !!parent&&round(child)===round(parent)+1&&child.sourceRoot===(parent.syncRoot||parent.id)&&child.sourceFirstPass===firstPassKey(course,parent);}
   function reviewRun(course,parent,id,at){
     if(!canAdvance(course,parent)||!firstWrongIds(course,parent).length||!id||!Number.isFinite(Date.parse(at)))return null;
-    return {id,round:round(parent)+1,sourceRunId:parent.id,sourceRoot:parent.syncRoot||parent.id,sourceFirstPass:firstPassKey(course,parent),questionIds:firstWrongIds(course,parent),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};
+    const next=round(parent)+1,missed=new Set(firstWrongIds(course,parent));
+    return {id,round:next,questionSet:variants.VERSION,sourceRunId:parent.id,sourceRoot:parent.syncRoot||parent.id,sourceFirstPass:firstPassKey(course,parent),questionIds:questions(course,parent).filter(q=>missed.has(q.id)).map(q=>variants.idFor(q,next)),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};
   }
   function check(course,r,q,choice,at){
     if(!r.questionIds.includes(q.id)||resolved(q,r)||!Number.isInteger(choice)||choice<0||choice>=5||!Number.isFinite(Date.parse(at)))return null;

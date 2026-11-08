@@ -20,7 +20,7 @@
   } catch {}
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
-  let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null;
+  let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false;
   const conflicts = new Set();
   function cache() { state.selected = selected; memoryOnly = !write(CACHE, JSON.stringify(state)); }
   function draft(id) { return state.drafts[id] ||= { text: '', version: 0, dirty: false }; }
@@ -28,7 +28,7 @@
   function revisions(id) { return state.revisions.filter(row => row.sentence_id === id).sort((a, b) => a.checked_at.localeCompare(b.checked_at) || a.id.localeCompare(b.id)); }
   function latest(id) { return revisions(id).filter(row => row.kind === 'revision').at(-1); }
   function addRevision(row) { if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row); cache(); }
-  function rememberModel(row) { state.models = state.models.filter(item => item.sentence_id !== row.sentence_id).concat(row); cache(); }
+  function rememberModel(row) { state.models = state.models.filter(item => item.revision_id !== row.revision_id || item.kind !== row.kind).concat(row); cache(); }
   function error(message = '') { $('error').hidden = !message; $('error').textContent = message; }
   function updateConnectionButton() {
     $('connect').textContent = connected ? 'Connected' : 'Connect AI checking';
@@ -65,7 +65,7 @@
     host.hidden = !row;
     if (row) {
       const feedback = row.feedback;
-      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p class="next-steps"><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the example version.</p>`;
+      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p class="next-steps"><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
     }
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
@@ -81,8 +81,21 @@
     const revised = parts.map((text, index) => latest(index + 1)?.text || text);
     $('revised-story').innerHTML = revised.map(text => '<p>' + escape(text) + '</p>').join('');
   }
+  function currentModel() {
+    const checked = latest(selected);
+    return state.models.find(row => row.kind === 'rewrite' && row.sentence_id === selected && row.revision_id === checked?.id && row.source_text === editorText(selected).trim());
+  }
+  function renderModel() {
+    const checked = latest(selected), model = currentModel();
+    $('show-model').hidden = !checked;
+    $('show-model').disabled = busy;
+    $('show-model').textContent = makingModel ? 'Making example…' : 'Show re-write example';
+    $('show-model').setAttribute('aria-expanded', String(Boolean(model)));
+    $('model-panel').hidden = !model;
+    $('model-text').textContent = model?.text || '';
+  }
   function render() {
-    const checked = latest(selected), model = state.models.find(row => row.sentence_id === selected);
+    const checked = latest(selected);
     $('part-number').textContent = `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
     $('revision').value = editorText(selected);
@@ -91,10 +104,7 @@
     $('revision').disabled = busy;
     $('check').disabled = busy;
     $('check').hidden = false;
-    $('show-model').hidden = !checked;
-    $('show-model').disabled = busy;
-    $('model-panel').hidden = !checked || !model;
-    $('model-text').textContent = checked && model ? model.text : '';
+    renderModel();
     $('guide').disabled = busy;
     $('check').textContent = busy ? 'Checking…' : 'AI checking';
     renderOverview(); renderFeedback(); updateDraftControls();
@@ -148,7 +158,7 @@
   $('revision').addEventListener('input', () => {
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
-    cache(); updateDraftControls(); renderFeedback(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
+    cache(); updateDraftControls(); renderFeedback(); renderModel(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   function choose(id) {
     if (busy) return;
@@ -191,14 +201,15 @@
   $('show-model').addEventListener('click', async () => {
     if (busy || !latest(selected)) return;
     error();
-    if (state.models.some(row => row.sentence_id === selected)) { $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
-    if (!connected) return error('Connect AI checking to open your example version.');
-    busy = true; render();
+    if (editorText(selected).trim() !== latest(selected).text) return error('Use AI checking on this rewrite first, then open its example.');
+    if (currentModel()) { $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    if (!connected) return error('Connect AI checking to open your re-write example.');
+    busy = true; makingModel = true; render();
     try {
-      const result = await request('model', { sentenceId: selected });
+      const result = await request('model', { sentenceId: selected, revisionId: latest(selected).id });
       rememberModel(result.model);
     } catch (failure) { error(failure.message); }
-    finally { busy = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    finally { busy = false; makingModel = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   });
   function importEarlier() {
     if (!earlier.drafts.length && !earlier.revisions.length) return;
