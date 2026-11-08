@@ -6,9 +6,10 @@
   <meta name="referrer" content="no-referrer" />
   <meta name="description" content="Harry’s writing practice in short sections. Find sentence endings, then make each sentence’s idea and language clear." />
   <title>Harry’s Daily Writing · Elephant</title>
-  <link rel="stylesheet" href="style.css?v=20261107-six-only" />
+  <link rel="stylesheet" href="style.css?v=20261107-restored-models" />
   <script src="story.js?v=20261107-simple" defer></script>
   <script src="app.js?v=20261107-model" defer></script>
+  <script src="examples.js?v=20261107-restored-models" defer></script>
 </head>
 <body>
   <main class="shell">
@@ -32,19 +33,32 @@
     </section>
     <section id="full-story" class="story-panel"><h2>Read your story</h2><p class="small">The latest checked rewrite is shown for each section. Unrevised sections keep your original words.</p><div id="revised-story"></div><details id="earlier-practice" hidden><summary>Earlier sentence practice · saved</summary><div id="earlier-practice-list"></div></details></section>
     <section id="story-comparison" class="story-comparison" aria-labelledby="comparison-heading">
-      <h2 id="comparison-heading">Elephant · original and model</h2>
+      <h2 id="comparison-heading">Elephant · original and short models</h2>
       <div class="comparison-grid">
         <article aria-labelledby="original-heading">
           <h3 id="original-heading">Harry’s original</h3>
           <div id="original-story"></div>
         </article>
         <article aria-labelledby="full-model-heading">
-          <h3 id="full-model-heading">Model aiming for 6/8</h3>
-          <div id="model-6-story">
+          <h3 id="full-model-heading">Model aiming for 6/8 · Start here</h3>
+          <div class="example-tabs" role="tablist" aria-label="Model score target">
+            <button id="example-tab-6" class="quiet" type="button" role="tab" aria-selected="true" aria-controls="model-6-story" data-example="6">6/8</button>
+            <button id="example-tab-8" class="quiet" type="button" role="tab" aria-selected="false" aria-controls="full-model-story" tabindex="-1" data-example="8">8/8</button>
+          </div>
+          <div id="model-6-story" role="tabpanel" aria-labelledby="example-tab-6">
             <p>A little elephant played by the river. Some men found a golden flower nearby. They thought it was gold and attacked the elephants.</p>
             <p>The little elephant ran away and lost his family. Bober stayed to help. They followed footprints and found the family.</p>
             <p>The men returned. The little elephant sprayed them with water. Bober showed them that the flower was not gold, so they left.</p>
             <p>Bober shared a rescue video. MrBeast, IShowSpeed, and Ronald came to hold a soccer game to help the elephants. Bober was the referee. The game ended 2–0, and the elephant was safe with his family.</p>
+          </div>
+          <div id="full-model-story" role="tabpanel" aria-labelledby="example-tab-8" hidden>
+            <p>Eli kicked a ball by the river. Nearby, some men found a golden dandelion. Thinking it was treasure, they threw a bomb to frighten the elephants away.</p>
+            <p>When the smoke cleared, Eli was alone.</p>
+            <p>“I’ll help you,” Bober whispered, holding out an empty hand. Eli stepped back, then gently touched his fingers.</p>
+            <p>They followed footprints until Eli heard his mother’s trumpet. He ran to her, and she wrapped her trunk around him.</p>
+            <p>The men returned with ropes. Eli trembled, but he stood before his family and sprayed them with water. Bober crushed a petal. “Flowers, not gold!” The men lowered their ropes.</p>
+            <p>Bober’s rescue video brought MrBeast, IShowSpeed, and Ronald to hold a soccer game to protect the elephants’ home. Eli scored. Bober blew his whistle. Two–zero!</p>
+            <p>This time, everyone was cheering. Nobody had to run.</p>
           </div>
         </article>
       </div>
