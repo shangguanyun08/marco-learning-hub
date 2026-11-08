@@ -65,7 +65,7 @@
     host.hidden = !row;
     if (row) {
       const feedback = row.feedback;
-      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${['complete', 'clear', 'correct'].map(key => `<span class="${feedback[key] ? 'good' : 'ok'}">${feedback[key] ? '✓' : '○'} ${key[0].toUpperCase() + key.slice(1)}</span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p class="next-steps"><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the example version.</p>`;
+      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><p class="next-steps"><strong>Try next</strong><br>${escape(feedback.nextStep)}</p><p class="small">Read your rewrite, then compare it with the example version.</p>`;
     }
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
