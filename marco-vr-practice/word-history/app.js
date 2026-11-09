@@ -3,6 +3,8 @@
   const api = 'https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/marco-word-archive';
   const connectUrl = 'https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/marco/archive-connect';
   const storageKey = 'marco-word-archive-v1';
+  const metrics = window.MARCO_ARCHIVE_METRICS.create(window.MARCO_FOCUSED_ROUND2?.words || [], window.MARCO_WORD_REVIEW?.words || []);
+  const correctRate = window.MARCO_ARCHIVE_METRICS.correctRate;
   const $ = id => document.getElementById(id);
   const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -63,28 +65,34 @@
     location.href = connectUrl + '?state=' + state.id;
   }
   function selectedWords() {
-    const query = $('search').value.trim().toLowerCase(), filter = $('filter').value;
-    const selected = words.filter(word => (view === 'all' || (view === 'known' ? word.confidentlyKnown : !word.confidentlyKnown)) && word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))));
+    const query = $('search').value.trim().toLowerCase(), filter = $('filter').value, scope = $('coverage-scope').value;
+    const selected = words.filter(word => (view === 'all' || metrics.groupFor(word, scope) === view) && word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))));
     if ($('sort').value === 'recent') selected.sort((a, b) => (b.lastMiss || '').localeCompare(a.lastMiss || '') || a.word.localeCompare(b.word));
     return selected;
   }
   function updateOverview() {
-    const known = words.filter(word => word.confidentlyKnown).length, review = words.length - known;
-    $('overview').innerHTML = `<div class="stat"><strong>${review.toLocaleString()}</strong><span>words to review</span></div><div class="stat"><strong>${known.toLocaleString()}</strong><span>confidently known</span></div><div class="stat"><strong>${words.length.toLocaleString()}</strong><span>words in the archive</span></div>`;
+    const scope = $('coverage-scope').value, counts = { review: 0, covered: 0, known: 0, all: words.length };
+    for (const word of words) counts[metrics.groupFor(word, scope)]++;
+    $('overview').innerHTML = `<div class="stat"><strong>${counts.review.toLocaleString()}</strong><span>extra words to review</span></div><div class="stat"><strong>${counts.covered.toLocaleString()}</strong><span>already covered</span></div><div class="stat"><strong>${counts.known.toLocaleString()}</strong><span>confidently known</span></div><div class="stat"><strong>${words.length.toLocaleString()}</strong><span>archive total</span></div>`;
+    $('coverage-summary').textContent = scope === 'both'
+      ? `The ${metrics.dailyCount}-word daily list and earlier ${metrics.earlierCount}-word list share ${metrics.sharedCount} words, giving ${metrics.uniqueCount.toLocaleString()} unique practice words. Known words stay in Known.`
+      : `The current ${metrics.dailyCount}-word daily list already includes the 299-word core. Words found only in the earlier ${metrics.earlierCount}-word list are included in extra review here.`;
     for (const button of document.querySelectorAll('[data-view]')) {
       const choice = button.dataset.view;
-      button.textContent = `${choice === 'review' ? 'Review' : choice === 'known' ? 'Known' : 'All history'} · ${(choice === 'review' ? review : choice === 'known' ? known : words.length).toLocaleString()}`;
+      const label = { review: 'Extra review', covered: 'Covered', known: 'Known', all: 'All history' }[choice];
+      button.textContent = `${label} · ${counts[choice].toLocaleString()}`;
       button.setAttribute('aria-pressed', String(choice === view));
     }
   }
   function badge(word) {
-    const count = word.correctAfterLastMiss;
-    return `<span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${word.confidentlyKnown ? 'Confidently known' : count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
-      <p class="status-line">${word.correctTotal} correct record${word.correctTotal === 1 ? '' : 's'} overall</p>${word.correctionBasis === 'archive-created' ? '<p class="status-line">Later-check count starts in this archive</p>' : ''}${word.undatedMisses ? `<p class="status-line">${word.undatedMisses} miss${word.undatedMisses === 1 ? '' : 'es'} with no saved date</p>` : ''}`;
+    const count = word.correctAfterLastMiss, rate = correctRate(word);
+    return `<p class="correct-rate"><strong>${rate.percent === null ? '—' : rate.percent + '%'} correct</strong><span>${rate.correct}/${rate.total} checks overall</span></p><span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${word.confidentlyKnown ? 'Confidently known' : count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
+      ${word.correctionBasis === 'archive-created' ? '<p class="status-line">Later-check count starts in this archive</p>' : ''}${word.undatedMisses ? `<p class="status-line">${word.undatedMisses} miss${word.undatedMisses === 1 ? '' : 'es'} with no saved date</p>` : ''}`;
   }
   function preferenceButton(word) {
     if (word.restoredForReview) return '<p class="status-line">Restored for review</p><button class="quiet restore" type="button" data-review-required="false">Use automatic status</button>';
     if (word.confidentlyKnown) return `<p class="status-line">Correct on ${word.knownEvidence.correctDays} later days · ${word.knownEvidence.meaningChecks} meaning check${word.knownEvidence.meaningChecks === 1 ? '' : 's'}</p><button class="quiet restore" type="button" data-review-required="true">Restore to review</button>`;
+    if (metrics.covered(word, $('coverage-scope').value)) return '<button class="quiet restore" type="button" data-review-required="true">Include in extra review</button>';
     return '';
   }
   function render() {
@@ -96,7 +104,7 @@
     $('previous').disabled = page === 0; $('next').disabled = page >= pages - 1;
     $('words').innerHTML = selected.length ? selected.slice(start, start + pageSize).map((word, index) => `
       <article class="word-card" data-word="${escape(word.id)}" aria-labelledby="name-${escape(word.id)}">
-        <div><span class="word-index">${start + index + 1}</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2><p class="word-meta">${word.misses} recorded miss${word.misses === 1 ? '' : 'es'}</p><p class="word-meta latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(word.lastMiss)}</p></div>
+        <div><span class="word-index">${start + index + 1}</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2><p class="word-meta">${word.misses} recorded miss${word.misses === 1 ? '' : 'es'}</p><p class="word-meta latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(word.lastMiss)}</p>${metrics.sourceLabels(word).map(label => `<span class="practice-tag">${escape(label)}</span>`).join('')}</div>
         <div class="corrections">${badge(word)}${preferenceButton(word)}</div>
         <form class="check-form"><label for="answer-${escape(word.id)}">Your short meaning</label><input id="answer-${escape(word.id)}" name="answer" maxlength="240" autocomplete="off" placeholder="A few words is enough" value="${escape(drafts[word.id] || '')}"><button type="submit">Check</button><button type="button" class="unknown">I don’t know</button><div class="check-result" role="status" hidden></div></form>
         <details class="word-history"><summary>Dates and correction history</summary><div class="history-content"></div></details>
@@ -170,6 +178,7 @@
   async function loadWords() {
     $('refresh').disabled = true; $('load-error').hidden = true;
     try {
+      if (!metrics.dailyCount || !metrics.earlierCount) throw new Error('The practice word lists could not load. Reload this page to compare coverage.');
       const data = await request('history');
       if (!Array.isArray(data.words) || !data.words.length) throw new Error('The saved word list could not load. Please refresh.');
       words = data.words; historyCache.clear(); updateOverview(); render();
@@ -195,6 +204,7 @@
     view = button.dataset.view; page = 0; updateOverview(); render();
   });
   for (const id of ['search', 'filter', 'sort']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
+  $('coverage-scope').addEventListener('change', () => { page = 0; updateOverview(); render(); });
   function movePage(delta) { page += delta; render(); $('list-count').scrollIntoView({ block: 'start' }); }
   $('previous').onclick = () => movePage(-1); $('next').onclick = () => movePage(1);
   $('refresh').onclick = loadWords; $('connect').onclick = connect;

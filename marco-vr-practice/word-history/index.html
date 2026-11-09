@@ -5,8 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Marco’s VR word archive</title>
   <meta name="description" content="Marco’s recorded missed words, correction history and short-meaning AI checks.">
-  <link rel="stylesheet" href="./style.css?v=20261109-known">
-  <script defer src="./app.js?v=20261109-known"></script>
+  <link rel="stylesheet" href="./style.css?v=20261109-covered-rate">
+  <script defer src="../meaning-check/round-2/data.js?v=20261109-archive-coverage"></script>
+  <script defer src="../combined-word-review/data.js?v=20261109-archive-coverage"></script>
+  <script defer src="./metrics.js?v=20261109-covered-rate"></script>
+  <script defer src="./app.js?v=20261109-covered-rate"></script>
 </head>
 <body>
 <main class="shell">
@@ -14,26 +17,33 @@
   <header>
     <p class="eyebrow">MARCO · VR WORD ARCHIVE</p>
     <h1>Words to try again.</h1>
-    <p class="intro">Give a short meaning for a word Marco has missed. Words confidently known move into the Known list.</p>
+    <p class="intro">Extra missed words for a short-meaning check. Words already in Marco’s practice lists are grouped under Covered.</p>
     <div class="overview" id="overview" aria-live="polite">Loading saved word history…</div>
   </header>
   <section class="connection" aria-label="AI connection">
     <div><strong id="connection-title">Short-meaning checks</strong><p id="connection-text">View the list and history freely. Connect AI checking to save a new check.</p></div>
     <button id="connect" type="button">Connect AI checking</button>
   </section>
-  <nav class="collections" aria-label="Archive lists"><button type="button" data-view="review" aria-pressed="true">Review</button><button type="button" data-view="known" aria-pressed="false">Known</button><button type="button" data-view="all" aria-pressed="false">All history</button></nav>
+  <section class="practice-coverage" aria-label="Practice coverage">
+    <label for="coverage-scope">Exclude practice words from extra review</label>
+    <select id="coverage-scope"><option value="both">Current daily list + earlier 820-word list</option><option value="daily">Current daily list only</option></select>
+    <p id="coverage-summary"></p>
+  </section>
+  <nav class="collections" aria-label="Archive lists"><button type="button" data-view="review" aria-pressed="true">Extra review</button><button type="button" data-view="covered" aria-pressed="false">Covered</button><button type="button" data-view="known" aria-pressed="false">Known</button><button type="button" data-view="all" aria-pressed="false">All history</button></nav>
   <section class="tools" aria-label="Find words">
     <label class="search">Find a word<input id="search" type="search" placeholder="Search the archive…" autocomplete="off"></label>
     <label>Later correct checks<select id="filter"><option value="all">All words</option><option value="0">None yet</option><option value="1">Once</option><option value="2">Twice or more</option></select></label>
     <label>Order<select id="sort"><option value="az">A–Z</option><option value="recent">Latest miss first</option></select></label>
   </section>
-  <p class="list-note">Later correct checks are counted after the latest dated miss. For words with only undated misses, the count starts with this archive. History labels the kind of check.</p>
+  <p class="list-note">Correct rate uses all saved checks, including wrong answers and “I don’t know.” Later correct checks are counted after the latest dated miss. Known words have their own list.</p>
   <div class="list-heading"><strong id="list-count">Loading…</strong><button type="button" id="refresh" class="quiet">Refresh history</button></div>
   <p id="action-status" role="status"></p>
   <p id="load-error" class="error" role="alert" hidden></p>
   <section id="words" aria-label="Archived words" aria-busy="true"></section>
   <nav class="pagination" aria-label="Word pages"><button id="previous" class="quiet" type="button">← Previous</button><span id="page-count"></span><button id="next" class="quiet" type="button">Next →</button></nav>
   <details class="coverage"><summary>About these records</summary>
+    <p>Extra review excludes words in the selected practice lists and words confidently known. Covered contains other review words already in those lists. The earlier 299-word core is included in the current daily list. Overlapping words are counted once. Section 16 repeats words from the current daily list.</p>
+    <p>Each correct rate is the number of correct saved checks divided by all saved checks, rounded to a whole percent. Wrong and unknown answers count in the total. The records include question choices, reviewed meanings and AI checks. History labels each kind. Accented spelling variants count as the same word.</p>
     <p>A word moves into Known after correct checks on at least two different Pacific dates following its latest miss, including at least one AI-checked or reviewed short meaning. Same-day repetitions and self-reported “I know” choices do not meet this threshold. Uncertain ordering around undated misses is kept in Review. You can restore any Known word to Review.</p>
     <p>The historical collection was compiled on November 9, 2026 from recovered VR questions, spring and summer vocabulary, mock reviews, unknown choices and checked short meanings. It includes words later answered correctly.</p>
     <p>New archive checks and the existing Marco AI-test results load from online records. Other practice records reflect the collection date. “I don’t know” counts as a miss. A blank or ungraded meaning alone does not establish a wrong answer.</p>
