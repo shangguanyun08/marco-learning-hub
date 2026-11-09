@@ -61,15 +61,28 @@ test('picture feedback skips the checklist, highlights text, expands automatical
   } finally { t.close(); }
 });
 
-test('a second unsuccessful check automatically provides a corrected example', async () => {
-  const t = boot([row, { ...row, id: 'try-2', checked_at: '2026-11-08T13:00:00Z' }]);
+test('a second unsuccessful version puts a corrected sentence inside its highlighted feedback', async () => {
+  const t = boot([{ ...row, text: 'A boy go home.' }, { ...row, id: 'try-2', checked_at: '2026-11-08T13:00:00Z' }]);
   try {
     await settle();
     assert.equal(t.calls.filter(call => call.action === 'model').length, 1);
-    assert.equal(t.d.querySelector('#model-panel').hidden, false);
-    assert.equal(t.d.querySelector('#model-text').textContent, 'A boy went home.');
+    assert.equal(t.d.querySelector('#model-panel'), null);
+    assert.match(t.d.querySelector('#feedback .correction-example').textContent, /A boy went home\./);
+    assert.equal(t.d.querySelector('.rewrite').nextElementSibling.id, 'feedback');
+    assert.ok(t.d.querySelector('#feedback').compareDocumentPosition(t.d.querySelector('.actions')) & t.w.Node.DOCUMENT_POSITION_FOLLOWING);
     const box = t.d.querySelector('#revision');
     box.value = 'Another draft.'; box.dispatchEvent(new t.w.Event('input'));
-    assert.equal(t.d.querySelector('#model-panel').hidden, true);
+    assert.equal(t.d.querySelector('#feedback .correction-example'), null);
+  } finally { t.close(); }
+});
+
+
+test('rechecking an unchanged paragraph does not count as another modification', async () => {
+  const t = boot([row, { ...row, id: 'try-2', checked_at: '2026-11-08T13:00:00Z' }]);
+  try {
+    await settle();
+    assert.equal(t.calls.filter(call => call.action === 'model').length, 0);
+    assert.equal(t.d.querySelector('#model-panel'), null);
+    assert.equal(t.d.querySelector('.rewrite').nextElementSibling.id, 'feedback');
   } finally { t.close(); }
 });

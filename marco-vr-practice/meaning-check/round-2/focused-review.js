@@ -1,0 +1,68 @@
+/* Section 16 reuses the audited words and their saved AI sessions. */
+window.MARCO_FOCUSED_REVIEW = {
+  "number": 16,
+  "wordIds": [
+    "jargon",
+    "cultivate",
+    "earnest",
+    "idle",
+    "pander",
+    "haughty",
+    "reciprocal",
+    "fluctuate",
+    "eminent",
+    "hiatus",
+    "condone",
+    "miscellaneous",
+    "collateral",
+    "berate",
+    "shoulder",
+    "judicious",
+    "ascendancy",
+    "ingenuous",
+    "impenetrable",
+    "strait",
+    "unconventional",
+    "abut",
+    "bludgeon",
+    "concave",
+    "cull",
+    "culminate",
+    "epoch",
+    "guerrilla",
+    "humdrum",
+    "limber",
+    "penal",
+    "revelation",
+    "skirmish",
+    "snub",
+    "unpalatable",
+    "unseemly",
+    "cajole",
+    "condescending",
+    "galvanize",
+    "guile",
+    "impunity",
+    "lackadaisical",
+    "mercurial",
+    "obdurate",
+    "pique",
+    "polyglot",
+    "repercussion",
+    "requisite",
+    "subterfuge",
+    "usurp"
+  ],
+  "tests": [
+    {
+      "part": 1,
+      "wordCount": 25,
+      "href": "https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/marco/focused?test=1"
+    },
+    {
+      "part": 2,
+      "wordCount": 25,
+      "href": "https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/marco/focused?test=2"
+    }
+  ]
+};

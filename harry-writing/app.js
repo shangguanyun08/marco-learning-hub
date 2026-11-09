@@ -71,7 +71,8 @@
     box.style.height = Math.max(240, box.scrollHeight + 2) + 'px';
   }
   function writingNotes(row) {
-    return window.WritingInlineFeedback(row.text, row.feedback);
+    const model = repeatedDifficulty() && row.id === latest(selected)?.id ? currentModel() : null;
+    return window.WritingInlineFeedback(row.text, row.feedback, model?.text, model ? window.WritingRewriteDiff(row.text, model.text) : []);
   }
   function renderWritingHighlights(row) {
     if (!isPicture) return;
@@ -91,7 +92,8 @@
     host.append(text.slice(cursor) + '\n');
   }
   function repeatedDifficulty() {
-    const tries = revisions(selected).filter(row => row.kind === 'revision').slice(-2);
+    const checked = revisions(selected).filter(row => row.kind === 'revision');
+    const tries = checked.filter((row, index) => index === 0 || row.text !== checked[index - 1].text).slice(-2);
     return tries.length === 2 && tries.every(row => !row.feedback.complete || !row.feedback.clear || !row.feedback.correct);
   }
   function expansionQuestion() {
@@ -117,7 +119,7 @@
       if (isPicture) {
         const plan = writingNotes(row);
         const needsWork = !feedback.complete || !feedback.clear || !feedback.correct;
-        host.innerHTML = `<h3>${needsWork ? 'Re-work the highlighted words' : 'Your paragraph is clear'}</h3>${editorText(selected).trim() !== row.text ? '<p class="small">These suggestions are from your last check. Check your changes when ready.</p>' : ''}<ol class="inline-suggestions">${plan.notes.map(note => `<li>${note.start >= 0 ? `<button type="button" class="quote-link" data-note="${note.index}"><mark>${escape(note.quote)}</mark></button> ` : ''}${escape(note.suggestion)}</li>`).join('')}</ol>`;
+        host.innerHTML = `<h3>${needsWork ? 'Re-work the highlighted words' : 'Your paragraph is clear'}</h3>${editorText(selected).trim() !== row.text ? '<p class="small">These suggestions are from your last check. Check your changes when ready.</p>' : ''}<ol class="inline-suggestions">${plan.notes.map(note => `<li>${note.start >= 0 ? `<button type="button" class="quote-link" data-note="${note.index}"><mark>${escape(note.quote)}</mark></button> ` : ''}${escape(note.suggestion)}${note.correction ? `<p class="correction-example"><strong>Correct example</strong> ${escape(note.correction)}</p>` : ''}</li>`).join('')}</ol>`;
       } else {
       host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
       }
@@ -146,6 +148,7 @@
     return state.models.find(row => row.kind === 'rewrite' && row.generation_version === 2 && row.sentence_id === selected && row.revision_id === checked?.id && row.source_text === editorText(selected).trim());
   }
   function renderModel() {
+    if (isPicture) return;
     const checked = latest(selected), model = isPicture && !repeatedDifficulty() ? null : currentModel();
     if ($('show-model')) {
     $('show-model').hidden = !checked;
@@ -294,14 +297,14 @@
     if (busy || !latest(selected)) return;
     error();
     if (editorText(selected).trim() !== latest(selected).text) return error('Use AI checking on this rewrite first, then open its example.');
-    if (currentModel()) { $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
+    if (currentModel()) { $(isPicture ? 'feedback' : 'model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
     if (!connected) return error('Connect AI checking to open your re-write example.');
     busy = true; makingModel = true; render();
     try {
       const result = await request('model', { sentenceId: selected, revisionId: latest(selected).id });
       rememberModel(result.model);
     } catch (failure) { error(failure.message); }
-    finally { busy = false; makingModel = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }  }
+    finally { busy = false; makingModel = false; render(); if (isPicture) $('feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); else if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }  }
   $('show-model')?.addEventListener('click', showModel);
   function maybeAutoExample() {
     if (isPicture && connected && !busy && repeatedDifficulty() && !currentModel() && editorText(selected).trim() === latest(selected)?.text) void showModel();

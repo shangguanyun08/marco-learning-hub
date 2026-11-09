@@ -35,3 +35,5 @@
 .quote-link mark{background:#ffdf8c;color:var(--ink);padding:1px 4px;border-radius:3px}
 #expansion-text{white-space:pre-wrap;font-size:16px;line-height:1.7}
 @media(max-width:740px){.part-list{gap:8px}.part-list button{font-size:14px}.editor{padding:24px 18px}.inline-suggestions{font-size:15px}}
+
+.correction-example{margin:8px 0 0;padding:10px 12px;border-left:3px solid #4a8d69;background:#e5f1e5;border-radius:4px;font-size:16px}.correction-example strong{display:block;margin-bottom:3px}

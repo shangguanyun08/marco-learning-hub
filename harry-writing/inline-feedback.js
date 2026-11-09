@@ -1,6 +1,6 @@
 (function (root) {
   'use strict';
-  function analyze(text, feedback) {
+  function analyze(text, feedback, corrected = '', changes = []) {
     const notes = [];
     if (Array.isArray(feedback?.annotations) && feedback.annotations.length) {
       for (const item of feedback.annotations) {
@@ -23,6 +23,23 @@
       if (note.start >= 0 && note.quote && !ranges.some(range => note.start < range.end && note.end > range.start)) ranges.push(note);
     });
     ranges.sort((a, b) => a.start - b.start);
+    if (corrected) {
+      for (const note of notes) {
+        if (note.start < 0) continue;
+        let before = 0, after = 0, position = corrected.length;
+        for (const change of changes) {
+          const sourceLength = change.kind === 'add' ? 0 : change.text.length;
+          if (sourceLength && note.start < before + sourceLength) {
+            position = after + (change.kind === 'equal' ? note.start - before : 0);
+            break;
+          }
+          before += sourceLength;
+          if (change.kind !== 'remove') after += change.text.length;
+        }
+        const sentence = Array.from(corrected.matchAll(/[^.!?\n]+[.!?]?/g)).find(match => position >= match.index && position < match.index + match[0].length);
+        if (sentence) note.correction = sentence[0].trim();
+      }
+    }
     return { notes, ranges };
   }
   if (typeof module === 'object' && module.exports) module.exports = analyze;

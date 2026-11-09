@@ -9,7 +9,8 @@
   allSections.value = '';
   allSections.textContent = 'All sections';
   picker.append(allSections);
-  for (const section of data.sections) {
+  const sections = [...data.sections, { number: 16, count: 50 }];
+  for (const section of sections) {
     const option = document.createElement('option');
     option.value = String(section.number);
     option.textContent = 'Section ' + section.number + ' · ' + section.count + ' words';
@@ -23,12 +24,13 @@
   }
   function filterCards() {
     for (const test of data.aiTests) document.getElementById('ai-test-' + test.number).hidden = Boolean(picker.value) && test.section !== Number(picker.value);
+    document.querySelectorAll('[data-focus-part]').forEach(card => { card.hidden = Boolean(picker.value) && picker.value !== '16'; });
   }
-  picker.value = String(sectionFromHash() || 7);
+  picker.value = String(sectionFromHash() || '');
   picker.addEventListener('change', filterCards);
   window.addEventListener('hashchange', () => {
     const section = sectionFromHash();
-    if (section && data.sections.some(item => item.number === section)) { picker.value = String(section); filterCards(); }
+    if (section && sections.some(item => item.number === section)) { picker.value = String(section); filterCards(); }
   });
   filterCards();
   let loading = false;
