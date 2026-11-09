@@ -99,7 +99,26 @@
     $('show-model').textContent = makingModel ? 'Making example…' : 'Show re-write example';
     $('show-model').setAttribute('aria-expanded', String(Boolean(model)));
     $('model-panel').hidden = !model;
-    $('model-text').textContent = model?.text || '';
+    const modelText = $('model-text'), removedText = $('model-removed-text');
+    modelText.replaceChildren();
+    removedText.replaceChildren();
+    const changes = model ? window.WritingRewriteDiff(model.source_text, model.text) : [];
+    for (const change of changes) {
+      if (change.kind === 'remove') {
+        if (!change.text.trim()) continue;
+        if (removedText.hasChildNodes()) removedText.append(' · ');
+        const removed = document.createElement('del');
+        removed.textContent = change.text.trim();
+        removedText.append(removed);
+      } else if (change.kind === 'add' && change.text.trim()) {
+        const added = document.createElement('mark');
+        added.textContent = change.text;
+        modelText.append(added);
+      } else {
+        modelText.append(change.text);
+      }
+    }
+    $('model-removed').hidden = !removedText.hasChildNodes();
   }
   function render() {
     const checked = latest(selected);
@@ -164,6 +183,14 @@
     } finally { saving = false; updateDraftControls(); }
     if (!failed && connected && Object.entries(state.drafts).some(([id, row]) => row.dirty && !conflicts.has(Number(id)))) saveTimer = setTimeout(saveDrafts, 1800);
   }
+  $('resize-revision').addEventListener('click', () => {
+    const revision = $('revision'), button = $('resize-revision');
+    const expanded = button.getAttribute('aria-expanded') !== 'true';
+    revision.rows = expanded ? 8 : 4;
+    revision.style.height = '';
+    button.textContent = expanded ? 'Less space' : 'More space';
+    button.setAttribute('aria-expanded', String(expanded));
+  });
   $('revision').addEventListener('input', () => {
     const row = draft(selected); row.text = $('revision').value; row.dirty = true;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
