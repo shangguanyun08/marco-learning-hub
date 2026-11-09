@@ -8,7 +8,7 @@
         notes.push({ quote: item.quote, suggestion: item.suggestion, start: text.indexOf(item.quote) });
       }
     } else {
-      for (const line of String(feedback?.nextStep || '').split(/\r?\n/).filter(line => line.trim())) {
+      for (const line of String(feedback?.nextStep || '').replace(/([.!?])\s+(?=[A-Z])/g, '$1\n').split(/\r?\n/).filter(line => line.trim())) {
         const suggestion = line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, '').trim();
         const quotes = Array.from(suggestion.matchAll(/[“"]([^”"]+)[”"]/g), match => match[1]);
         const anchors = [...new Set(quotes.filter(value => text.includes(value)))];

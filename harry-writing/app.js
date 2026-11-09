@@ -188,7 +188,7 @@
     $('check').hidden = false;
     renderModel();
     if ($('guide')) $('guide').disabled = busy;
-    $('check').textContent = busy ? 'Checking…' : 'AI checking';
+    $('check').textContent = makingModel ? 'Making example…' : busy ? 'Checking…' : 'AI checking';
     renderOverview(); renderFeedback(); renderExpansion(); resizeRevision(); updateDraftControls();
   }
   async function loadWork() {
