@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Marco’s VR word archive</title>
+  <meta name="description" content="Marco’s recorded missed words, correction history and short-meaning AI checks.">
+  <link rel="stylesheet" href="./style.css?v=20261109">
+  <script defer src="./app.js?v=20261109"></script>
+</head>
+<body>
+<main class="shell">
+  <a class="back" href="../../#archives">← Marco’s archive</a>
+  <header>
+    <p class="eyebrow">MARCO · VR WORD ARCHIVE</p>
+    <h1>Words to try again.</h1>
+    <p class="intro">Every recorded missed word stays here. Give a short meaning and check how it is going.</p>
+    <div class="overview" id="overview" aria-live="polite">Loading saved word history…</div>
+  </header>
+  <section class="connection" aria-label="AI connection">
+    <div><strong id="connection-title">Short-meaning checks</strong><p id="connection-text">View the list and history freely. Connect AI checking to save a new check.</p></div>
+    <button id="connect" type="button">Connect AI checking</button>
+  </section>
+  <section class="tools" aria-label="Find words">
+    <label class="search">Find a word<input id="search" type="search" placeholder="Search the archive…" autocomplete="off"></label>
+    <label>Later correct checks<select id="filter"><option value="all">All words</option><option value="0">None yet</option><option value="1">Once</option><option value="2">Twice or more</option></select></label>
+    <label>Order<select id="sort"><option value="az">A–Z</option><option value="recent">Latest miss first</option></select></label>
+  </section>
+  <p class="list-note">Later correct checks are counted after the latest dated miss. For words with only undated misses, the count starts with this archive. History labels the kind of check.</p>
+  <div class="list-heading"><strong id="list-count">Loading…</strong><button type="button" id="refresh" class="quiet">Refresh history</button></div>
+  <p id="load-error" class="error" role="alert" hidden></p>
+  <section id="words" aria-label="Archived words" aria-busy="true"></section>
+  <nav class="pagination" aria-label="Word pages"><button id="previous" class="quiet" type="button">← Previous</button><span id="page-count"></span><button id="next" class="quiet" type="button">Next →</button></nav>
+  <details class="coverage"><summary>About these records</summary>
+    <p>The historical collection was compiled on November 9, 2026 from recovered VR questions, spring and summer vocabulary, mock reviews, unknown choices and checked short meanings. It includes words later answered correctly.</p>
+    <p>New archive checks and the existing Marco AI-test results load from online records. Other practice records reflect the collection date. “I don’t know” counts as a miss. A blank or ungraded meaning alone does not establish a wrong answer.</p>
+    <p>Copied answer records are counted once. Missing dates stay “Date not recorded.” For date-only records, same-day checks are kept in history without assuming which came first. Undated correct records appear in the total, with their order left unassigned.</p>
+    <p>Two malformed source items were excluded. Earlier correct question choices and reviewed short meanings are labelled separately from AI checks. Dates and times use Pacific Time. Typed answers are stored privately, while result history is public.</p>
+  </details>
+</main>
+</body>
+</html>

@@ -173,9 +173,16 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>20 sites</span>
+                <span>21 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+          <article class="site-card archived" id="marco-vr-word-archive">
+            <div class="card-topline"><span>ARCHIVED · MISSED WORD HISTORY</span><small>1,397 words</small></div>
+            <div class="icon">Aa</div>
+            <h3>VR word archive</h3>
+            <p>Every recovered missed word, with missed dates, later correct checks and a short-meaning AI check.</p>
+            <a href="./marco-vr-practice/word-history/">Open archived word history <span>→</span></a>
+          </article>
           <article class="site-card archived" id="marco-vr-practice">
             <div class="card-topline"><span>ARCHIVED · VR MOCK TEST REVIEWS</span><small>Practice Tests 1–4</small></div>
             <div class="icon">VR</div>
@@ -490,7 +497,7 @@
     <script src="./shared-activity-dashboard.js?v=20261107-minutes" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-vr-practice','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
+        if(['#archives','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-vr-practice','#marco-vr-word-archive','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
