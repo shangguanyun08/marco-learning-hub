@@ -27,8 +27,9 @@ test('the simplified page places Section 16 after Section 15 and includes all 50
   assert.equal(d.querySelector('.added-word-note'), null);
   assert.equal(d.querySelector('.focused-ai-review'), null);
   assert.equal(d.querySelector('header .intro'), null);
-  assert.equal(d.querySelector('.ai-test-launch'), null);
-  assert.equal(d.querySelector('.all-session-tests').getAttribute('href'), 'ai-tests/');
+  assert.equal(d.querySelectorAll('.ai-test-launch').length, 1);
+  assert.equal(d.querySelectorAll('.ai-test-card').length, 38);
+  assert.equal(d.querySelector('.session-tests-link'), null);
   d.querySelector('[data-start-review]').click();
   assert.equal(d.querySelectorAll('.focus-test-actions a').length, 2);
   assert.equal(d.querySelectorAll('.meaning').length, 0);
@@ -66,21 +67,23 @@ test('adding the review section preserves completed answers and rounds from all 
   assert.equal(w.MARCO_FOCUSED_ROUND2.sections.length, 15);
 });
 
-test('all session tests open on a separate page with public scores and both Section 16 AI parts', async t => {
-  const dom = new JSDOM(read('ai-tests/index.html'), { url: 'https://example.test/round-2/ai-tests/', runScripts: 'outside-only' });
+for (const file of ['index.html', 'ai-tests/index.html']) test(file + ' shows every test card and the seven extra tests with public scores', async t => {
+  const dom = new JSDOM(read(file), { url: 'https://example.test/round-2/#section-16-round-0', runScripts: 'outside-only' });
   t.after(() => dom.window.close());
   const w = dom.window;
   w.AbortSignal = AbortSignal;
-  w.fetch = async () => ({ ok: true, json: async () => ({ tests: [] }) });
-  for (const file of ['data.js', 'focused-review.js', 'scores.js']) w.eval(read(file));
+  w.fetch = async () => ({ ok: true, json: async () => ({ tests: [{ number: 36, total: 14, attempts: [{ id: 'extra-attempt', startedAt: '2026-11-09T10:00:00Z', completedAt: '2026-11-09T10:10:00Z', score: 12, total: 14, answered: 14 }] }] }) });
+  w.eval(read('scores.js'));
   await new Promise(resolve => setImmediate(resolve));
-  assert.equal(w.document.querySelectorAll('[data-ai-test]').length, 29);
+  assert.equal(w.document.querySelectorAll('[data-ai-test]').length, 36);
   assert.equal(w.document.querySelectorAll('[data-focus-part]').length, 2);
   assert.equal(w.document.querySelectorAll('.ai-test-card[hidden]').length, 0);
-  const picker = w.document.querySelector('#ai-section-filter');
-  assert.equal(picker.value, '');
-  picker.value = '16'; picker.dispatchEvent(new w.Event('change'));
-  assert.equal(w.document.querySelectorAll('[data-ai-test]:not([hidden])').length, 0);
-  assert.equal(w.document.querySelectorAll('[data-focus-part]:not([hidden])').length, 2);
+  assert.equal(w.document.querySelector('#ai-section-filter'), null);
+  assert.equal(w.document.querySelectorAll('[data-extra-test]').length, 7);
+  const last = w.document.querySelector('#ai-test-36');
+  assert.equal(last.querySelector('[data-ai-score]').textContent, '12 / 14');
+  assert.match(last.querySelector('[data-ai-open]').href, /test=36&retest=1$/);
+  w.location.hash = '#section-7-round-0'; w.dispatchEvent(new w.HashChangeEvent('hashchange'));
+  assert.equal(w.document.querySelectorAll('.ai-test-card:not([hidden])').length, 38);
   assert.match(w.document.querySelector('#ai-score-status').textContent, /without signing in/);
 });
