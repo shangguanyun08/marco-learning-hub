@@ -1,500 +1,8 @@
 window.MARCO_PRIORITY_WORDS = [
   {
-    "id": "archive-absurd",
-    "word": "absurd",
-    "meaning": "silly",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-adapt",
-    "word": "adapt",
-    "meaning": "adjust",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-affect",
-    "word": "affect",
-    "meaning": "influence",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-aimless",
-    "word": "aimless",
-    "meaning": "without purpose",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-ajar",
-    "word": "ajar",
-    "meaning": "partly open",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-align",
-    "word": "align",
-    "meaning": "line up",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-alter",
-    "word": "alter",
-    "meaning": "change",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-alternate",
-    "word": "alternate",
-    "meaning": "take turns",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-ambition",
-    "word": "ambition",
-    "meaning": "strong desire",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-amend",
-    "word": "amend",
-    "meaning": "improve",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-animated",
-    "word": "animated",
-    "meaning": "lively",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-appeal",
-    "word": "appeal",
-    "meaning": "request",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-arise",
-    "word": "arise",
-    "meaning": "appear",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-assemble",
-    "word": "assemble",
-    "meaning": "gather",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-astonish",
-    "word": "astonish",
-    "meaning": "amaze",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-boast",
-    "word": "boast",
-    "meaning": "brag",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-courtesy",
-    "word": "courtesy",
-    "meaning": "politeness",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-decent",
-    "word": "decent",
-    "meaning": "respectable",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-decode",
-    "word": "decode",
-    "meaning": "figure out",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-decrease",
-    "word": "decrease",
-    "meaning": "lessen",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-deduct",
-    "word": "deduct",
-    "meaning": "subtract",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-detach",
-    "word": "detach",
-    "meaning": "separate",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-disgraceful",
-    "word": "disgraceful",
-    "meaning": "shameful",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-dodge",
-    "word": "dodge",
-    "meaning": "avoid",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-dominate",
-    "word": "dominate",
-    "meaning": "control",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-downright",
-    "word": "downright",
-    "meaning": "completely",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-enchant",
-    "word": "enchant",
-    "meaning": "delight",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-endure",
-    "word": "endure",
-    "meaning": "put up with",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-episode",
-    "word": "episode",
-    "meaning": "one event",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-ethical",
-    "word": "ethical",
-    "meaning": "morally right",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-extinct",
-    "word": "extinct",
-    "meaning": "died out",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-feeble",
-    "word": "feeble",
-    "meaning": "weak",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-flattery",
-    "word": "flattery",
-    "meaning": "excessive praise",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-flaw",
-    "word": "flaw",
-    "meaning": "fault",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-fluid",
-    "word": "fluid",
-    "meaning": "flowing",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-foresee",
-    "word": "foresee",
-    "meaning": "predict",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-glitch",
-    "word": "glitch",
-    "meaning": "small problem",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-immune",
-    "word": "immune",
-    "meaning": "unaffected",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-inhabit",
-    "word": "inhabit",
-    "meaning": "live in",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-jumble",
-    "word": "jumble",
-    "meaning": "mess",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-legible",
-    "word": "legible",
-    "meaning": "readable",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-level",
-    "word": "level",
-    "meaning": "flat",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-lure",
-    "word": "lure",
-    "meaning": "attract",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-meditate",
-    "word": "meditate",
-    "meaning": "think deeply",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-mock",
-    "word": "mock",
-    "meaning": "make fun of",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-momentary",
-    "word": "momentary",
-    "meaning": "brief",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-motive",
-    "word": "motive",
-    "meaning": "reason",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-omit",
-    "word": "omit",
-    "meaning": "leave out",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-persist",
-    "word": "persist",
-    "meaning": "keep going",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-plentiful",
-    "word": "plentiful",
-    "meaning": "abundant",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-ponder",
-    "word": "ponder",
-    "meaning": "think about",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-prior",
-    "word": "prior",
-    "meaning": "earlier",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-recreation",
-    "word": "recreation",
-    "meaning": "fun activities",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-reluctant",
-    "word": "reluctant",
-    "meaning": "unwilling",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-remote",
-    "word": "remote",
-    "meaning": "far away",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-rural",
-    "word": "rural",
-    "meaning": "countryside",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-shipshape",
-    "word": "shipshape",
-    "meaning": "tidy",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-solitary",
-    "word": "solitary",
-    "meaning": "alone",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-species",
-    "word": "species",
-    "meaning": "type of organism",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-strive",
-    "word": "strive",
-    "meaning": "try hard",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-substantial",
-    "word": "substantial",
-    "meaning": "large",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-surpass",
-    "word": "surpass",
-    "meaning": "exceed",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-sympathy",
-    "word": "sympathy",
-    "meaning": "feeling for others",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-traits",
-    "word": "traits",
-    "meaning": "qualities",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-transparent",
-    "word": "transparent",
-    "meaning": "see-through",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-unique",
-    "word": "unique",
-    "meaning": "one of a kind",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-universal",
-    "word": "universal",
-    "meaning": "everywhere",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-vacant",
-    "word": "vacant",
-    "meaning": "empty",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-vivid",
-    "word": "vivid",
-    "meaning": "lifelike",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-vocal",
-    "word": "vocal",
-    "meaning": "outspoken",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-void",
-    "word": "void",
-    "meaning": "empty",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-vulgar",
-    "word": "vulgar",
-    "meaning": "rude",
-    "difficulty": 1
-  },
-  {
-    "id": "archive-abduct",
-    "word": "abduct",
-    "meaning": "kidnap",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-abyss",
-    "word": "abyss",
-    "meaning": "deep pit",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-accommodate",
-    "word": "accommodate",
-    "meaning": "meet needs",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-acknowledge",
-    "word": "acknowledge",
-    "meaning": "admit",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-adequate",
-    "word": "adequate",
-    "meaning": "enough",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-adhesive",
-    "word": "adhesive",
-    "meaning": "sticky",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-advisable",
-    "word": "advisable",
-    "meaning": "wise",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-agile",
-    "word": "agile",
-    "meaning": "quick-moving",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-alliance",
-    "word": "alliance",
-    "meaning": "partnership",
-    "difficulty": 2
-  },
-  {
     "id": "archive-allot",
     "word": "allot",
     "meaning": "give a share",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-allotted",
-    "word": "allotted",
-    "meaning": "given a share",
     "difficulty": 2
   },
   {
@@ -504,39 +12,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-anonymous",
-    "word": "anonymous",
-    "meaning": "unnamed",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-apparatus",
-    "word": "apparatus",
-    "meaning": "equipment",
-    "difficulty": 2
-  },
-  {
     "id": "archive-apprehensive",
     "word": "apprehensive",
     "meaning": "worried",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-approximate",
-    "word": "approximate",
-    "meaning": "estimate",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-arid",
-    "word": "arid",
-    "meaning": "dry",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-assault",
-    "word": "assault",
-    "meaning": "attack",
     "difficulty": 2
   },
   {
@@ -552,12 +30,6 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-audible",
-    "word": "audible",
-    "meaning": "can be heard",
-    "difficulty": 2
-  },
-  {
     "id": "archive-auditory",
     "word": "auditory",
     "meaning": "about hearing",
@@ -570,33 +42,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-bizarre",
-    "word": "bizarre",
-    "meaning": "strange",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-bliss",
-    "word": "bliss",
-    "meaning": "happiness",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-capacity",
-    "word": "capacity",
-    "meaning": "holding limit",
-    "difficulty": 2
-  },
-  {
     "id": "archive-clinch",
     "word": "clinch",
     "meaning": "secure",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-coma",
-    "word": "coma",
-    "meaning": "deep unconsciousness",
     "difficulty": 2
   },
   {
@@ -612,21 +60,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-crafty",
-    "word": "crafty",
-    "meaning": "sneaky",
-    "difficulty": 2
-  },
-  {
     "id": "archive-cumulative",
     "word": "cumulative",
     "meaning": "adding up",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-dehydrate",
-    "word": "dehydrate",
-    "meaning": "lose water",
     "difficulty": 2
   },
   {
@@ -642,21 +78,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-depiction",
-    "word": "depiction",
-    "meaning": "picture",
-    "difficulty": 2
-  },
-  {
     "id": "archive-derive",
     "word": "derive",
     "meaning": "get from",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-dilute",
-    "word": "dilute",
-    "meaning": "water down",
     "difficulty": 2
   },
   {
@@ -666,57 +90,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-durable",
-    "word": "durable",
-    "meaning": "long-lasting",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-dynamic",
-    "word": "dynamic",
-    "meaning": "energetic",
-    "difficulty": 2
-  },
-  {
     "id": "archive-elation",
     "word": "elation",
     "meaning": "joy",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-epic",
-    "word": "epic",
-    "meaning": "heroic story",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-equivalent",
-    "word": "equivalent",
-    "meaning": "equal",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-erosion",
-    "word": "erosion",
-    "meaning": "wearing away",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-evacuate",
-    "word": "evacuate",
-    "meaning": "empty",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-evade",
-    "word": "evade",
-    "meaning": "avoid",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-exotic",
-    "word": "exotic",
-    "meaning": "foreign",
     "difficulty": 2
   },
   {
@@ -732,18 +108,6 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-graphic",
-    "word": "graphic",
-    "meaning": "vivid",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-gullible",
-    "word": "gullible",
-    "meaning": "easily tricked",
-    "difficulty": 2
-  },
-  {
     "id": "archive-haphazard",
     "word": "haphazard",
     "meaning": "random",
@@ -756,33 +120,15 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-hostile",
-    "word": "hostile",
-    "meaning": "unfriendly",
-    "difficulty": 2
-  },
-  {
     "id": "archive-hue",
     "word": "hue",
     "meaning": "color",
     "difficulty": 2
   },
   {
-    "id": "archive-hysterical",
-    "word": "hysterical",
-    "meaning": "uncontrollably emotional",
-    "difficulty": 2
-  },
-  {
     "id": "archive-impoverished",
     "word": "impoverished",
     "meaning": "poor",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-incentive",
-    "word": "incentive",
-    "meaning": "motivation",
     "difficulty": 2
   },
   {
@@ -795,18 +141,6 @@ window.MARCO_PRIORITY_WORDS = [
     "id": "archive-inflict",
     "word": "inflict",
     "meaning": "cause harm",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-infuriate",
-    "word": "infuriate",
-    "meaning": "enrage",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-innovation",
-    "word": "innovation",
-    "meaning": "new idea",
     "difficulty": 2
   },
   {
@@ -834,12 +168,6 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-irrigate",
-    "word": "irrigate",
-    "meaning": "supply water",
-    "difficulty": 2
-  },
-  {
     "id": "archive-lapse",
     "word": "lapse",
     "meaning": "mistake",
@@ -849,12 +177,6 @@ window.MARCO_PRIORITY_WORDS = [
     "id": "archive-liberal",
     "word": "liberal",
     "meaning": "open-minded",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-lofty",
-    "word": "lofty",
-    "meaning": "high",
     "difficulty": 2
   },
   {
@@ -888,18 +210,6 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-nimble",
-    "word": "nimble",
-    "meaning": "quick and light",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-novelty",
-    "word": "novelty",
-    "meaning": "newness",
-    "difficulty": 2
-  },
-  {
     "id": "archive-oppress",
     "word": "oppress",
     "meaning": "rule cruelly",
@@ -915,18 +225,6 @@ window.MARCO_PRIORITY_WORDS = [
     "id": "archive-pelt",
     "word": "pelt",
     "meaning": "animal skin",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-pessimist",
-    "word": "pessimist",
-    "meaning": "expects the worst",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-plateau",
-    "word": "plateau",
-    "meaning": "level off",
     "difficulty": 2
   },
   {
@@ -960,21 +258,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-ravenous",
-    "word": "ravenous",
-    "meaning": "very hungry",
-    "difficulty": 2
-  },
-  {
     "id": "archive-redundant",
     "word": "redundant",
     "meaning": "unnecessary",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-remedy",
-    "word": "remedy",
-    "meaning": "cure",
     "difficulty": 2
   },
   {
@@ -990,39 +276,15 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-robust",
-    "word": "robust",
-    "meaning": "strong",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-sacrifice",
-    "word": "sacrifice",
-    "meaning": "give up something valued",
-    "difficulty": 2
-  },
-  {
     "id": "archive-salvage",
     "word": "salvage",
     "meaning": "rescue",
     "difficulty": 2
   },
   {
-    "id": "archive-saturate",
-    "word": "saturate",
-    "meaning": "soak",
-    "difficulty": 2
-  },
-  {
     "id": "archive-scant",
     "word": "scant",
     "meaning": "very little",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-scarce",
-    "word": "scarce",
-    "meaning": "rare",
     "difficulty": 2
   },
   {
@@ -1035,30 +297,6 @@ window.MARCO_PRIORITY_WORDS = [
     "id": "archive-serene",
     "word": "serene",
     "meaning": "peaceful",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-signify",
-    "word": "signify",
-    "meaning": "mean",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-simulate",
-    "word": "simulate",
-    "meaning": "imitate",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-simultaneous",
-    "word": "simultaneous",
-    "meaning": "at the same time",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-snare",
-    "word": "snare",
-    "meaning": "trap",
     "difficulty": 2
   },
   {
@@ -1098,12 +336,6 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-supplement",
-    "word": "supplement",
-    "meaning": "add extra",
-    "difficulty": 2
-  },
-  {
     "id": "archive-tact",
     "word": "tact",
     "meaning": "careful with feelings",
@@ -1134,45 +366,9 @@ window.MARCO_PRIORITY_WORDS = [
     "difficulty": 2
   },
   {
-    "id": "archive-tolerance",
-    "word": "tolerance",
-    "meaning": "acceptance",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-turmoil",
-    "word": "turmoil",
-    "meaning": "chaos",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-undermine",
-    "word": "undermine",
-    "meaning": "weaken",
-    "difficulty": 2
-  },
-  {
     "id": "archive-unfounded",
     "word": "unfounded",
     "meaning": "unsupported",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-unruly",
-    "word": "unruly",
-    "meaning": "hard to control",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-vigor",
-    "word": "vigor",
-    "meaning": "energy",
-    "difficulty": 2
-  },
-  {
-    "id": "archive-wince",
-    "word": "wince",
-    "meaning": "flinch",
     "difficulty": 2
   },
   {
