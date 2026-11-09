@@ -26,6 +26,7 @@
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false;
+  let writingChatUI = null;
   const conflicts = new Set();
   function cache() { state.selected = selected; memoryOnly = !write(CACHE, JSON.stringify(state)); }
   function draft(id) { return state.drafts[id] ||= { text: '', version: 0, dirty: false }; }
@@ -37,6 +38,7 @@
   function error(message = '') { $('error').hidden = !message; $('error').textContent = message; }
   function updateConnectionButton() {
     $('connect').textContent = connected ? 'Connected' : 'Connect AI checking';
+    writingChatUI?.updateConnection();
   }
   if (location.hash.includes('&ai_session=')) {
     const query = new URLSearchParams(location.hash.split('&').slice(1).join('&'));
@@ -48,7 +50,7 @@
   async function request(action, body) {
     let response;
     try {
-      response = await fetch(API + '?action=' + action + (isPicture && action === 'work' ? '&storyId=' + encodeURIComponent(window.WRITING_STORY_ID) : ''), { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID, ...(config.custom ? { topicTitle: draft(0).text } : {}) }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
+      response = await fetch(API + '?action=' + action + (isPicture && action === 'work' ? '&storyId=' + encodeURIComponent(window.WRITING_STORY_ID) : ''), { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID, ...(config.custom && !Object.hasOwn(body, 'topicTitle') ? { topicTitle: draft(0).text } : {}) }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
     } catch { throw Error('Could not finish connecting. Your typing is kept on this device. Try again.'); }
     const result = await response.json();
     if (response.status === 401) {
@@ -133,6 +135,7 @@
     }
     for (const row of work.revisions) addRevision(row);
     for (const row of work.models || []) rememberModel(row);
+    writingChatUI?.merge(work.chats || []);
     importEarlier();
     connected = true; loaded = true; cache();
     updateConnectionButton();
@@ -217,6 +220,131 @@
     } catch (failure) { error(failure.message); }
     finally { busy = false; makingModel = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   });
+  function setupWritingChat() {
+    const panel = $('writing-chat');
+    if (!panel) return null;
+    const messages = $('chat-history');
+    const questionBox = $('chat-question');
+    const sendButton = $('chat-send');
+    const chatError = $('chat-error');
+    const status = $('chat-status');
+    const shortcuts = panel.querySelectorAll('[data-chat-question]');
+    let sending = false;
+
+    state.chats = Array.isArray(state.chats) ? state.chats : [];
+    state.chatDraft = typeof state.chatDraft === 'string' ? state.chatDraft : '';
+    questionBox.value = state.chatDraft;
+
+    function updateConnection() {
+      questionBox.disabled = sending;
+      sendButton.disabled = sending || !questionBox.value.trim();
+      sendButton.textContent = sending ? 'Thinking…' : 'Send';
+      shortcuts.forEach(button => { button.disabled = sending; });
+      status.textContent = sending ? 'Thinking about Harry’s story…' :
+        connected ? 'Chat history saved online for this topic.' : 'Connect AI checking above to load and save your chat.';
+    }
+
+    function renderHistory() {
+      const previousScroll = messages.scrollTop;
+      messages.replaceChildren();
+      if (!state.chats.length) {
+        const empty = document.createElement('p');
+        empty.className = 'chat-empty';
+        empty.textContent = 'Your questions, replies, and writing examples will appear here.';
+        messages.append(empty);
+      }
+      for (const turn of state.chats) {
+        const article = document.createElement('article');
+        article.className = 'chat-turn';
+        article.dataset.chatId = turn.id;
+        const time = document.createElement('p');
+        time.className = 'chat-time';
+        time.textContent = new Date(turn.created_at).toLocaleString();
+        article.append(time);
+        for (const [label, text, className] of [['You', turn.question, 'chat-question'], ['Writing tutor', turn.reply, 'chat-reply']]) {
+          const bubble = document.createElement('div');
+          bubble.className = 'chat-bubble ' + className;
+          const heading = document.createElement('strong');
+          heading.textContent = label;
+          const content = document.createElement('div');
+          content.className = 'chat-text';
+          content.textContent = text;
+          bubble.append(heading, content);
+          article.append(bubble);
+        }
+        messages.append(article);
+      }
+      messages.scrollTop = previousScroll;
+    }
+
+    function merge(turns) {
+      const records = new Map(state.chats.map(turn => [turn.id, turn]));
+      for (const turn of turns) records.set(turn.id, turn);
+      state.chats = Array.from(records.values()).sort((a, b) => a.created_at.localeCompare(b.created_at) || a.id.localeCompare(b.id));
+      if (state.chatPending && records.has(state.chatPending.requestId)) {
+        if (state.chatDraft.trim() === state.chatPending.question) {
+          state.chatDraft = '';
+          questionBox.value = '';
+        }
+        delete state.chatPending;
+      }
+      cache();
+      renderHistory();
+      updateConnection();
+    }
+
+    questionBox.addEventListener('input', () => {
+      state.chatDraft = questionBox.value;
+      if (state.chatPending && state.chatPending.question !== questionBox.value.trim()) delete state.chatPending;
+      cache();
+      updateConnection();
+    });
+    shortcuts.forEach(button => button.addEventListener('click', () => {
+      questionBox.value = button.dataset.chatQuestion;
+      questionBox.dispatchEvent(new Event('input'));
+      questionBox.focus();
+    }));
+    $('chat-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      if (sending || !questionBox.value.trim()) return;
+      chatError.hidden = true;
+      if (!connected) {
+        chatError.textContent = 'Connect AI checking above to send your question.';
+        chatError.hidden = false;
+        return;
+      }
+      const question = questionBox.value.trim();
+      if (!state.chatPending || state.chatPending.question !== question) {
+        state.chatPending = {
+          requestId: crypto.randomUUID(),
+          question,
+          paragraphs: parts.map((_, index) => editorText(index + 1)),
+          ...(config.custom ? { topicTitle: draft(0).text } : {}),
+        };
+      }
+      const pending = state.chatPending;
+      cache();
+      sending = true;
+      updateConnection();
+      try {
+        const result = await request('chat', pending);
+        merge([result.turn]);
+        const lastTurn = messages.querySelector(`[data-chat-id="${result.turn.id}"]`);
+        if (lastTurn) messages.scrollTop = lastTurn.offsetTop;
+      } catch (failure) {
+        chatError.textContent = failure.message;
+        chatError.hidden = false;
+      } finally {
+        sending = false;
+        updateConnection();
+      }
+    });
+
+    renderHistory();
+    updateConnection();
+    return { merge, updateConnection };
+  }
+
   function importEarlier() {
     if (isPicture) return;
     if (!earlier.drafts.length && !earlier.revisions.length) return;
@@ -235,6 +363,7 @@
     const row = draft(0); row.text = $('topic-title').value; row.dirty = true; cache();
     clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
+  writingChatUI = setupWritingChat();
   importEarlier();
   render();
   if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); updateConnectionButton(); });

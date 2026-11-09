@@ -4,8 +4,8 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
   <title>Harry’s Daily Writing · Picture stories</title>
   <meta name="description" content="Choose one of two pictures or your own topic. Write a beginning, middle and ending, with saved AI feedback.">
-  <link rel="stylesheet" href="../style.css?v=20261108-bullets"><link rel="stylesheet" href="picture.css?v=20261108-small-pictures">
-  <script src="picture.js?v=20261108-bullets" defer></script>
+  <link rel="stylesheet" href="../style.css?v=20261108-bullets"><link rel="stylesheet" href="picture.css?v=20261108-chat">
+  <script src="picture.js?v=20261108-chat" defer></script>
 </head>
 <body><main class="shell">
   <nav class="topbar"><a href="../../">← Learning hub</a><a href="../">Elephant story</a><span>HARRY’S DAILY WRITING</span></nav>
@@ -36,5 +36,21 @@
       </div>
     </section>
     <section id="full-story" class="story-panel"><h2>Read your three-paragraph story</h2><p class="small">Your latest writing: beginning, middle, and ending.</p><div id="revised-story"></div><details id="earlier-practice" hidden><summary>Earlier practice</summary><div id="earlier-practice-list"></div></details></section>
+    <section id="writing-chat" class="story-panel chat-panel" aria-labelledby="writing-chat-heading">
+      <h2 id="writing-chat-heading">Ask about Harry’s story</h2>
+      <p class="chat-intro">Ask how to expand an idea, improve the wording, or write a 6/8 or 8/8 practice example.</p>
+      <div id="chat-history" class="chat-history" role="log" aria-live="polite" aria-label="Saved writing chat history"></div>
+      <div class="chat-shortcuts" aria-label="Writing questions">
+        <button type="button" class="quiet" data-chat-question="How can Harry expand the ideas in his story? Give a few specific suggestions based on what he wrote.">Expand the ideas</button>
+        <button type="button" class="quiet" data-chat-question="Write a 6/8 practice example based on Harry’s story, in three paragraphs. Then explain the main improvements.">6/8 example</button>
+        <button type="button" class="quiet" data-chat-question="Write an 8/8 practice example based on Harry’s story, in three paragraphs. Then explain the main improvements.">8/8 example</button>
+      </div>
+      <form id="chat-form">
+        <label for="chat-question">Your question</label>
+        <textarea id="chat-question" rows="4" maxlength="2000" placeholder="Ask a follow-up question about Harry’s writing…"></textarea>
+        <div class="chat-actions"><button id="chat-send" class="primary" type="submit">Send</button><p id="chat-status" class="small" role="status"></p></div>
+        <p id="chat-error" class="error" role="alert" hidden></p>
+      </form>
+    </section>
   </div>
 </main></body></html>
