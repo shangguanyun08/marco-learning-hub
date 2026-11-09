@@ -13,3 +13,9 @@
 .correct-rate strong { display: block; font-size: 1.15rem; }
 .correct-rate span { display: block; font-size: .8rem; color: var(--muted); }
 .practice-tag { display: inline-block; padding: 2px 7px; margin: 5px 5px 0 0; border-radius: 5px; background: #edf0ee; color: var(--muted); font-size: .75rem; }
+.difficulty-tag, .priority-tag { display: inline-block; padding: 2px 7px; margin: 5px 5px 0 0; border-radius: 5px; font-size: .75rem; }
+.difficulty-tag { background: #e7edf3; color: #35576c; }
+.priority-tag { background: #fff0d0; color: #80521a; font-weight: 650; }
+.source-summary { margin: 15px 3px 0; font-size: .85rem; color: var(--teal); }
+.tools label { min-width: 0; }
+@media (min-width: 901px) and (max-width: 1150px) { .tools { flex-wrap: wrap; } .tools .search { flex-basis: 100%; } }

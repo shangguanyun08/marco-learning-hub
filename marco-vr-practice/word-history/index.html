@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Marco’s VR word archive</title>
   <meta name="description" content="Marco’s recorded missed words, correction history and short-meaning AI checks.">
-  <link rel="stylesheet" href="./style.css?v=20261109-covered-rate">
+  <link rel="stylesheet" href="./style.css?v=20261109-priority">
   <script defer src="../meaning-check/round-2/data.js?v=20261109-archive-coverage"></script>
   <script defer src="../combined-word-review/data.js?v=20261109-archive-coverage"></script>
-  <script defer src="./metrics.js?v=20261109-covered-rate"></script>
-  <script defer src="./app.js?v=20261109-covered-rate"></script>
+  <script defer src="./word-metadata.js?v=20261109-priority"></script>
+  <script defer src="./metrics.js?v=20261109-priority"></script>
+  <script defer src="./app.js?v=20261109-priority"></script>
 </head>
 <body>
 <main class="shell">
@@ -33,15 +34,19 @@
   <section class="tools" aria-label="Find words">
     <label class="search">Find a word<input id="search" type="search" placeholder="Search the archive…" autocomplete="off"></label>
     <label>Later correct checks<select id="filter"><option value="all">All words</option><option value="0">None yet</option><option value="1">Once</option><option value="2">Twice or more</option></select></label>
-    <label>Order<select id="sort"><option value="az">A–Z</option><option value="recent">Latest miss first</option></select></label>
+    <label>Source<select id="source-filter"><option value="all">All sources</option><option value="priority">Priority sources</option><option value="edubus">EDUBUS</option><option value="mock">Mock tests</option><option value="testInnovators">Test Innovators</option></select></label>
+    <label>Order<select id="sort"><option value="easy">Easy → hard</option><option value="az">A–Z</option><option value="recent">Latest miss first</option></select></label>
   </section>
-  <p class="list-note">Correct rate uses all saved checks, including wrong answers and “I don’t know.” Later correct checks are counted after the latest dated miss. Known words have their own list.</p>
+  <p id="source-summary" class="source-summary" aria-live="polite"></p>
+  <p class="list-note">Easy → hard uses estimated difficulty, with priority sources first within each band, then higher correct rates. Correct rate includes all saved checks, including wrong and unknown answers.</p>
   <div class="list-heading"><strong id="list-count">Loading…</strong><button type="button" id="refresh" class="quiet">Refresh history</button></div>
   <p id="action-status" role="status"></p>
   <p id="load-error" class="error" role="alert" hidden></p>
   <section id="words" aria-label="Archived words" aria-busy="true"></section>
   <nav class="pagination" aria-label="Word pages"><button id="previous" class="quiet" type="button">← Previous</button><span id="page-count"></span><button id="next" class="quiet" type="button">Next →</button></nav>
   <details class="coverage"><summary>About these records</summary>
+    <p>Difficulty 1–5 is an editorial estimate of word familiarity for this extension. Priority sources lead within each band, followed by higher recorded correct rates. This ordering combines word difficulty with Marco’s saved record.</p>
+    <p>EDUBUS identifies words appearing in the saved 59 spring and 20 summer Quizlet set inventories. Mock tests identifies recorded misses in Paper Mocks 0–3 or Zozeck 2026 mock synonym practice. Test Innovators identifies original misses from the four dated VR test reviews from September 27 through October 22. Source counts describe the chosen list before search and filters. A word can belong to multiple sources, while the priority total counts it once.</p>
     <p>Extra review excludes words in the selected practice lists and words confidently known. Covered contains other review words already in those lists. The earlier 299-word core is included in the current daily list. Overlapping words are counted once. Section 16 repeats words from the current daily list.</p>
     <p>Each correct rate is the number of correct saved checks divided by all saved checks, rounded to a whole percent. Wrong and unknown answers count in the total. The records include question choices, reviewed meanings and AI checks. History labels each kind. Accented spelling variants count as the same word.</p>
     <p>A word moves into Known after correct checks on at least two different Pacific dates following its latest miss, including at least one AI-checked or reviewed short meaning. Same-day repetitions and self-reported “I know” choices do not meet this threshold. Uncertain ordering around undated misses is kept in Review. You can restore any Known word to Review.</p>

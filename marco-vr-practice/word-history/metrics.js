@@ -32,5 +32,25 @@ window.MARCO_ARCHIVE_METRICS = (() => {
     const correct = word.correctTotal, total = correct + word.misses;
     return { correct, total, percent: total ? Math.round(100 * correct / total) : null };
   }
-  return { create, correctRate };
+  function wordMetadata(word, metadata) {
+    const saved = metadata.words[canonical(word.word)] || {};
+    return { difficulty: saved.difficulty || 6, sources: saved.sources || [] };
+  }
+  function compareDifficulty(a, b, metadata) {
+    const left = wordMetadata(a, metadata), right = wordMetadata(b, metadata);
+    return left.difficulty - right.difficulty
+      || Number(right.sources.length > 0) - Number(left.sources.length > 0)
+      || (correctRate(b).percent ?? -1) - (correctRate(a).percent ?? -1)
+      || a.word.localeCompare(b.word);
+  }
+  function sourceCounts(words, metadata) {
+    const counts = { edubus: 0, mock: 0, testInnovators: 0, priority: 0 };
+    for (const word of words) {
+      const sources = wordMetadata(word, metadata).sources;
+      if (sources.length) counts.priority++;
+      for (const source of sources) counts[source]++;
+    }
+    return counts;
+  }
+  return { create, correctRate, wordMetadata, compareDifficulty, sourceCounts };
 })();

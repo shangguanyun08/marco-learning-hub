@@ -5,6 +5,8 @@
   const storageKey = 'marco-word-archive-v1';
   const metrics = window.MARCO_ARCHIVE_METRICS.create(window.MARCO_FOCUSED_ROUND2?.words || [], window.MARCO_WORD_REVIEW?.words || []);
   const correctRate = window.MARCO_ARCHIVE_METRICS.correctRate;
+  const metadata = window.MARCO_ARCHIVE_WORD_META;
+  const wordMetadata = word => window.MARCO_ARCHIVE_METRICS.wordMetadata(word, metadata);
   const $ = id => document.getElementById(id);
   const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -64,10 +66,16 @@
     catch { $('connection-text').textContent = 'Allow browser storage to keep the AI connection, then try again.'; return; }
     location.href = connectUrl + '?state=' + state.id;
   }
+  function collectionWords() {
+    const scope = $('coverage-scope').value;
+    return words.filter(word => view === 'all' || metrics.groupFor(word, scope) === view);
+  }
   function selectedWords() {
-    const query = $('search').value.trim().toLowerCase(), filter = $('filter').value, scope = $('coverage-scope').value;
-    const selected = words.filter(word => (view === 'all' || metrics.groupFor(word, scope) === view) && word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))));
+    const query = $('search').value.trim().toLowerCase(), filter = $('filter').value, source = $('source-filter').value;
+    const selected = collectionWords().filter(word => word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))))
+      .filter(word => source === 'all' || (source === 'priority' ? wordMetadata(word).sources.length > 0 : wordMetadata(word).sources.includes(source)));
     if ($('sort').value === 'recent') selected.sort((a, b) => (b.lastMiss || '').localeCompare(a.lastMiss || '') || a.word.localeCompare(b.word));
+    if ($('sort').value === 'easy') selected.sort((a, b) => window.MARCO_ARCHIVE_METRICS.compareDifficulty(a, b, metadata));
     return selected;
   }
   function updateOverview() {
@@ -83,6 +91,16 @@
       button.textContent = `${label} · ${counts[choice].toLocaleString()}`;
       button.setAttribute('aria-pressed', String(choice === view));
     }
+    const collection = collectionWords(), sources = window.MARCO_ARCHIVE_METRICS.sourceCounts(collection, metadata);
+    $('source-summary').textContent = `From ${collection.length.toLocaleString()} words · EDUBUS ${sources.edubus} · Mock tests ${sources.mock} · Test Innovators ${sources.testInnovators} · ${sources.priority} distinct priority words. Sources can overlap.`;
+  }
+  function wordTags(word) {
+    const info = wordMetadata(word);
+    const difficulty = metadata.difficultyLabels[info.difficulty];
+    const tags = [`<span class="difficulty-tag">${difficulty ? `Level ${info.difficulty} · ${escape(difficulty)}` : 'Difficulty unrated'}</span>`];
+    for (const source of info.sources) tags.push(`<span class="priority-tag">${escape(metadata.sourceLabels[source])}</span>`);
+    for (const label of metrics.sourceLabels(word)) tags.push(`<span class="practice-tag">${escape(label)}</span>`);
+    return tags.join(' ');
   }
   function badge(word) {
     const count = word.correctAfterLastMiss, rate = correctRate(word);
@@ -104,7 +122,7 @@
     $('previous').disabled = page === 0; $('next').disabled = page >= pages - 1;
     $('words').innerHTML = selected.length ? selected.slice(start, start + pageSize).map((word, index) => `
       <article class="word-card" data-word="${escape(word.id)}" aria-labelledby="name-${escape(word.id)}">
-        <div><span class="word-index">${start + index + 1}</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2><p class="word-meta">${word.misses} recorded miss${word.misses === 1 ? '' : 'es'}</p><p class="word-meta latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(word.lastMiss)}</p>${metrics.sourceLabels(word).map(label => `<span class="practice-tag">${escape(label)}</span>`).join('')}</div>
+        <div><span class="word-index">${start + index + 1}</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2><p class="word-meta">${word.misses} recorded miss${word.misses === 1 ? '' : 'es'}</p><p class="word-meta latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(word.lastMiss)}</p>${wordTags(word)}</div>
         <div class="corrections">${badge(word)}${preferenceButton(word)}</div>
         <form class="check-form"><label for="answer-${escape(word.id)}">Your short meaning</label><input id="answer-${escape(word.id)}" name="answer" maxlength="240" autocomplete="off" placeholder="A few words is enough" value="${escape(drafts[word.id] || '')}"><button type="submit">Check</button><button type="button" class="unknown">I don’t know</button><div class="check-result" role="status" hidden></div></form>
         <details class="word-history"><summary>Dates and correction history</summary><div class="history-content"></div></details>
@@ -179,6 +197,7 @@
     $('refresh').disabled = true; $('load-error').hidden = true;
     try {
       if (!metrics.dailyCount || !metrics.earlierCount) throw new Error('The practice word lists could not load. Reload this page to compare coverage.');
+      if (!metadata?.words) throw new Error('The word difficulty and source details could not load. Reload this page.');
       const data = await request('history');
       if (!Array.isArray(data.words) || !data.words.length) throw new Error('The saved word list could not load. Please refresh.');
       words = data.words; historyCache.clear(); updateOverview(); render();
@@ -203,7 +222,7 @@
     const button = event.target.closest('[data-view]'); if (!button) return;
     view = button.dataset.view; page = 0; updateOverview(); render();
   });
-  for (const id of ['search', 'filter', 'sort']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
+  for (const id of ['search', 'filter', 'sort', 'source-filter']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
   $('coverage-scope').addEventListener('change', () => { page = 0; updateOverview(); render(); });
   function movePage(delta) { page += delta; render(); $('list-count').scrollIntoView({ block: 'start' }); }
   $('previous').onclick = () => movePage(-1); $('next').onclick = () => movePage(1);

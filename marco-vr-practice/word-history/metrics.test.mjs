@@ -4,10 +4,10 @@ import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
 const context = { window: {} };
-for (const file of ['./metrics.js', '../meaning-check/round-2/data.js', '../combined-word-review/data.js', '../meaning-check/round-2/focused-review.js']) {
+for (const file of ['./metrics.js', './word-metadata.js', '../meaning-check/round-2/data.js', '../combined-word-review/data.js', '../meaning-check/round-2/focused-review.js']) {
   vm.runInNewContext(await readFile(new URL(file, import.meta.url), 'utf8'), context);
 }
-const { create, correctRate } = context.window.MARCO_ARCHIVE_METRICS;
+const { create, correctRate, wordMetadata, compareDifficulty, sourceCounts } = context.window.MARCO_ARCHIVE_METRICS;
 const dailyWords = context.window.MARCO_FOCUSED_ROUND2.words;
 const earlierWords = context.window.MARCO_WORD_REVIEW.words;
 const metrics = create(dailyWords, earlierWords);
@@ -36,4 +36,35 @@ test('each correct rate includes wrong and unknown records and handles an empty 
   assert.equal(correctRate({ correctTotal: 0, misses: 4 }).percent, 0);
   assert.equal(correctRate({ correctTotal: 2, misses: 1 }).percent, 67);
   assert.equal(correctRate({ correctTotal: 0, misses: 0 }).percent, null);
+});
+test('easy-to-hard ordering keeps difficulty first, then priority and saved success', () => {
+  const metadata = { words: {
+    plain: { difficulty: 1, sources: [] },
+    priority: { difficulty: 1, sources: ['mock'] },
+    successful: { difficulty: 1, sources: ['edubus'] },
+    difficult: { difficulty: 4, sources: ['testInnovators'] },
+  } };
+  const words = [
+    { word: 'difficult', correctTotal: 9, misses: 1 },
+    { word: 'plain', correctTotal: 9, misses: 1 },
+    { word: 'priority', correctTotal: 1, misses: 3 },
+    { word: 'successful', correctTotal: 3, misses: 1 },
+  ];
+  words.sort((a, b) => compareDifficulty(a, b, metadata));
+  assert.deepEqual(words.map(word => word.word), ['successful', 'priority', 'plain', 'difficult']);
+  assert.equal(wordMetadata({ word: 'unlisted' }, metadata).difficulty, 6);
+});
+test('source totals count each priority word once while preserving source overlaps', () => {
+  const metadata = { words: {
+    alpha: { sources: ['edubus', 'mock'] },
+    beta: { sources: ['testInnovators'] },
+    gamma: { sources: [] },
+  } };
+  const counts = sourceCounts([{ word: 'alpha' }, { word: 'beta' }, { word: 'gamma' }], metadata);
+  assert.equal(counts.edubus, 1); assert.equal(counts.mock, 1); assert.equal(counts.testInnovators, 1); assert.equal(counts.priority, 2);
+  const saved = context.window.MARCO_ARCHIVE_WORD_META;
+  assert.ok(saved.words.assault.sources.includes('testInnovators'));
+  assert.ok(saved.words.advertisement.sources.includes('mock'));
+  assert.ok(saved.words.abduct.sources.includes('edubus'));
+  assert.ok(Object.values(saved.words).every(word => !word.difficulty || word.difficulty >= 1 && word.difficulty <= 5));
 });
