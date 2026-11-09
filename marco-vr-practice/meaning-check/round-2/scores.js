@@ -26,7 +26,7 @@
     const action = card.querySelector('[data-ai-open]');
     const unfinished = current && !current.completedAt;
     action.textContent = unfinished ? 'Continue test' : current ? 'Retest' : 'Start test';
-    action.href = testUrl + test.number + (unfinished ? '' : '&retest=1');
+    action.href = testUrl + test.number + (current && !unfinished ? '&retest=1' : '');
     card.querySelector('[data-ai-attempt-count]').textContent = '(' + attempts.length + ')';
     const history = card.querySelector('[data-ai-history]');
     history.replaceChildren();

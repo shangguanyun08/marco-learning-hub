@@ -72,7 +72,11 @@ for (const file of ['index.html', 'ai-tests/index.html']) test(file + ' shows ev
   t.after(() => dom.window.close());
   const w = dom.window;
   w.AbortSignal = AbortSignal;
-  w.fetch = async () => ({ ok: true, json: async () => ({ tests: [{ number: 36, total: 14, attempts: [{ id: 'extra-attempt', startedAt: '2026-11-09T10:00:00Z', completedAt: '2026-11-09T10:10:00Z', score: 12, total: 14, answered: 14 }] }] }) });
+  w.fetch = async () => ({ ok: true, json: async () => ({ tests: [
+    { number: 1, total: 25, attempts: [] },
+    { number: 2, total: 25, attempts: [{ id: 'unfinished', startedAt: '2026-11-09T10:00:00Z', completedAt: null, score: 2, total: 25, answered: 4 }] },
+    { number: 36, total: 14, attempts: [{ id: 'extra-attempt', startedAt: '2026-11-09T10:00:00Z', completedAt: '2026-11-09T10:10:00Z', score: 12, total: 14, answered: 14 }] },
+  ] }) });
   w.eval(read('scores.js'));
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(w.document.querySelectorAll('[data-ai-test]').length, 36);
@@ -83,6 +87,18 @@ for (const file of ['index.html', 'ai-tests/index.html']) test(file + ' shows ev
   const last = w.document.querySelector('#ai-test-36');
   assert.equal(last.querySelector('[data-ai-score]').textContent, '12 / 14');
   assert.match(last.querySelector('[data-ai-open]').href, /test=36&retest=1$/);
+  assert.match(w.document.querySelector('#ai-test-1 [data-ai-open]').href, /test=1$/);
+  assert.match(w.document.querySelector('#ai-test-2 [data-ai-open]').href, /test=2$/);
+  for (const card of w.document.querySelectorAll('[data-ai-test]')) {
+    const url = new URL(card.querySelector('[data-ai-open]').href);
+    assert.equal(url.pathname, '/marco');
+    assert.equal(url.searchParams.get('test'), card.dataset.aiTest);
+  }
+  for (const card of w.document.querySelectorAll('[data-focus-part]')) {
+    const url = new URL(card.querySelector('a').href);
+    assert.equal(url.pathname, '/marco/focused');
+    assert.equal(url.searchParams.get('test'), card.dataset.focusPart);
+  }
   w.location.hash = '#section-7-round-0'; w.dispatchEvent(new w.HashChangeEvent('hashchange'));
   assert.equal(w.document.querySelectorAll('.ai-test-card:not([hidden])').length, 38);
   assert.match(w.document.querySelector('#ai-score-status').textContent, /without signing in/);
