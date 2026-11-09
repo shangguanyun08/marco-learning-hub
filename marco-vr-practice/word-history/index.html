@@ -3,57 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Marco’s VR word archive</title>
-  <meta name="description" content="Marco’s recorded missed words, correction history and short-meaning AI checks.">
-  <link rel="stylesheet" href="./style.css?v=20261109-compact">
-  <script defer src="../meaning-check/round-2/data.js?v=20261109-archive-coverage"></script>
-  <script defer src="../combined-word-review/data.js?v=20261109-archive-coverage"></script>
-  <script defer src="./word-metadata.js?v=20261109-compact"></script>
-  <script defer src="./metrics.js?v=20261109-compact"></script>
-  <script defer src="./app.js?v=20261109-compact"></script>
+  <title>Marco · 298 words</title>
+  <meta name="description" content="298 words. Write a short meaning and check it.">
+  <link rel="stylesheet" href="./style.css?v=20261109-simple">
+  <script defer src="./data.js?v=20261109-simple"></script>
+  <script defer src="./app.js?v=20261109-simple"></script>
 </head>
 <body>
 <main class="shell">
-  <a class="back" href="../../#archives">← Marco’s archive</a>
   <header>
-    <p class="eyebrow">MARCO · VR WORD ARCHIVE</p>
-    <h1>Words to try again.</h1>
-    <p class="intro">Extra missed words for a short-meaning check. Words already in Marco’s practice lists are grouped under Covered.</p>
-    <div class="overview" id="overview" aria-live="polite">Loading saved word history…</div>
+    <h1>298 words</h1>
+    <div class="header-actions">
+      <select id="sort" aria-label="Word order"><option value="easy">Easy → hard</option><option value="hard">Hard → easy</option></select>
+      <button id="connect" class="quiet" type="button">Connect AI</button>
+    </div>
   </header>
-  <section class="connection" aria-label="AI connection">
-    <div><strong id="connection-title">Short-meaning checks</strong><p id="connection-text">View the list and history freely. Connect AI checking to save a new check.</p></div>
-    <button id="connect" type="button">Connect AI checking</button>
-  </section>
-  <section class="practice-coverage" aria-label="Practice coverage">
-    <label for="coverage-scope">Exclude practice words from extra review</label>
-    <select id="coverage-scope"><option value="both">Current daily list + earlier 820-word list</option><option value="daily">Current daily list only</option></select>
-    <p id="coverage-summary"></p>
-  </section>
-  <nav class="collections" aria-label="Archive lists"><button type="button" data-view="review" aria-pressed="true">Extra review</button><button type="button" data-view="covered" aria-pressed="false">Covered</button><button type="button" data-view="known" aria-pressed="false">Known</button><button type="button" data-view="all" aria-pressed="false">All history</button></nav>
-  <section class="tools" aria-label="Find words">
-    <label class="search">Find a word<input id="search" type="search" placeholder="Search the archive…" autocomplete="off"></label>
-    <label>Later correct checks<select id="filter"><option value="all">All words</option><option value="0">None yet</option><option value="1">Once</option><option value="2">Twice or more</option></select></label>
-    <label>Source<select id="source-filter"><option value="priority">Priority · EDUBUS / Mock / Test Innovators</option><option value="all">All sources</option></select></label>
-    <label>Order<select id="sort"><option value="easy">Easy → hard</option><option value="hard">Hard → easy</option><option value="az">A–Z</option><option value="recent">Latest miss first</option></select></label>
-  </section>
-  <p id="source-summary" class="source-summary" aria-live="polite"></p>
-  <p class="list-note">Priority combines EDUBUS, Paper Mocks and Test Innovators. Difficulty is estimated. Correct rate includes all saved checks.</p>
-  <div class="list-heading"><strong id="list-count">Loading…</strong><button type="button" id="refresh" class="quiet">Refresh history</button></div>
-  <p id="action-status" role="status"></p>
-  <p id="load-error" class="error" role="alert" hidden></p>
-  <section id="words" aria-label="Archived words" aria-busy="true"></section>
-  <details class="coverage"><summary>About these records</summary>
-    <p>Difficulty 1–5 is an editorial estimate of word familiarity for this extension. Both difficulty orders keep priority words first within each band. Easy → hard then puts higher correct rates first, while Hard → easy puts lower rates first. Unrated words follow the rated words.</p>
-    <p>The combined Priority group identifies words appearing in the saved EDUBUS inventories, recorded misses in Paper Mocks 0–3, or original misses from the four dated Test Innovators VR reviews from September 27 through October 22. The EDUBUS inventories contain 59 spring and 20 summer Quizlet sets. Each priority word is counted once. Every matching word appears on this page.</p>
-    <p>Extra review excludes words in the selected practice lists and words confidently known. Covered contains other review words already in those lists. The earlier 299-word core is included in the current daily list. Overlapping words are counted once. Section 16 repeats words from the current daily list.</p>
-    <p>Each correct rate is the number of correct saved checks divided by all saved checks, rounded to a whole percent. Wrong and unknown answers count in the total. The records include question choices, reviewed meanings and AI checks. History labels each kind. Accented spelling variants count as the same word.</p>
-    <p>A word moves into Known after correct checks on at least two different Pacific dates following its latest miss, including at least one AI-checked or reviewed short meaning. Same-day repetitions and self-reported “I know” choices do not meet this threshold. Uncertain ordering around undated misses is kept in Review. You can restore any Known word to Review.</p>
-    <p>The historical collection was compiled on November 9, 2026 from recovered VR questions, spring and summer vocabulary, mock reviews, unknown choices and checked short meanings. It includes words later answered correctly.</p>
-    <p>New archive checks and the existing Marco AI-test results load from online records. Other practice records reflect the collection date. “I don’t know” counts as a miss. A blank or ungraded meaning alone does not establish a wrong answer.</p>
-    <p>Copied answer records are counted once. Missing dates stay “Date not recorded.” For date-only records, same-day checks are kept in history without assuming which came first. Undated correct records appear in the total, with their order left unassigned.</p>
-    <p>Two malformed source items were excluded. Earlier correct question choices and reviewed short meanings are labelled separately from AI checks. Dates and times use Pacific Time. Typed answers are stored privately, while result history is public.</p>
-  </details>
+  <p id="connection-text" role="status" hidden></p>
+  <section id="words" aria-label="Words to check"></section>
 </main>
 </body>
 </html>

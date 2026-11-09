@@ -3,23 +3,20 @@
   const api = 'https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/marco-word-archive';
   const connectUrl = 'https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/marco/archive-connect';
   const storageKey = 'marco-word-archive-v1';
-  const metrics = window.MARCO_ARCHIVE_METRICS.create(window.MARCO_FOCUSED_ROUND2?.words || [], window.MARCO_WORD_REVIEW?.words || []);
-  const correctRate = window.MARCO_ARCHIVE_METRICS.correctRate;
-  const metadata = window.MARCO_ARCHIVE_WORD_META;
-  const wordMetadata = word => window.MARCO_ARCHIVE_METRICS.wordMetadata(word, metadata);
+  const words = window.MARCO_PRIORITY_WORDS;
+  const byId = new Map(words.map(word => [word.id, word]));
   const $ = id => document.getElementById(id);
   const escape = value => String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
-  const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* The active page still keeps the draft. */ } };
+  const save = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* Keep the active page usable when storage is unavailable. */ } };
   const drafts = read(storageKey + '-drafts') || {};
   const pending = read(storageKey + '-pending') || {};
-  const historyCache = new Map();
-  let token = read(storageKey + '-session') || '', words = [], ready = false, view = 'review';
-  function displayDate(value, time = false) {
-    if (!value) return 'Date not recorded';
-    const dateOnly = value.length === 10;
-    const date = new Date(dateOnly ? value + 'T12:00:00Z' : value);
-    return date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'short', day: 'numeric', ...(time && !dateOnly ? { hour: 'numeric', minute: '2-digit' } : {}) });
+  const results = read(storageKey + '-results') || {};
+  let token = read(storageKey + '-session') || '', ready = false;
+
+  function connectionMessage(message) {
+    $('connection-text').textContent = message;
+    $('connection-text').hidden = !message;
   }
   function absorbConnection() {
     const params = new URLSearchParams(location.hash.slice(1));
@@ -30,197 +27,100 @@
     if (state && state.id === params.get('ai_state') && Date.now() - state.at < 30 * 60000 && /^[A-Za-z0-9_.-]{20,2048}$/.test(incoming)) {
       token = incoming; save(storageKey + '-session', token);
       sessionStorage.removeItem(storageKey + '-pairing');
-    } else $('connection-text').textContent = 'The connection link expired. Connect AI checking again from this page.';
+    } else connectionMessage('Connect AI again to check meanings.');
     history.replaceState(null, '', location.pathname + location.search);
   }
-  async function request(action, { wordId, body } = {}) {
+  async function request(action, body) {
     const url = new URL(api); url.searchParams.set('action', action);
-    if (wordId) url.searchParams.set('wordId', wordId);
     const headers = {};
-    if (token && action !== 'history') headers.authorization = 'Bearer ' + token;
+    if (token) headers.authorization = 'Bearer ' + token;
     if (body) headers['content-type'] = 'application/json';
     const response = await fetch(url, { method: body ? 'POST' : 'GET', headers, body: body ? JSON.stringify(body) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
     const result = await response.json();
     if (!response.ok) {
       if (result.code === 'connect_required') {
-        ready = false; token = ''; save(storageKey + '-session', ''); showConnection();
+        ready = false; token = ''; save(storageKey + '-session', ''); $('connect').hidden = false;
       }
-      throw new Error(result.error || 'This request could not finish. Please try again.');
+      throw new Error(result.error || 'Please try again.');
     }
     return result;
   }
-  function showConnection() {
-    $('connect').hidden = ready;
-    $('connection-title').textContent = ready ? 'AI checking connected' : 'Short-meaning checks';
-    $('connection-text').textContent = ready ? 'Type a simple meaning, then Check. Close meanings and small spelling slips count. This browser connection lasts up to 30 days.' : 'View the list and history freely. Connect AI checking to save a new check.';
-  }
   async function checkConnection() {
-    if (!token) return showConnection();
-    try { const result = await request('status'); ready = Boolean(result.ready); showConnection(); }
-    catch (error) { showConnection(); $('connection-text').textContent = error.message; }
+    if (!token) return;
+    try { const status = await request('status'); ready = Boolean(status.ready); }
+    catch (error) { connectionMessage(error.message); }
+    $('connect').hidden = ready;
   }
   function connect() {
     const state = { id: crypto.randomUUID(), at: Date.now() };
     try { sessionStorage.setItem(storageKey + '-pairing', JSON.stringify(state)); }
-    catch { $('connection-text').textContent = 'Allow browser storage to keep the AI connection, then try again.'; return; }
+    catch { connectionMessage('Allow browser storage, then connect AI.'); return; }
     location.href = connectUrl + '?state=' + state.id;
   }
-  function collectionWords() {
-    const scope = $('coverage-scope').value;
-    return words.filter(word => view === 'all' || metrics.groupFor(word, scope) === view);
-  }
-  function selectedWords() {
-    const query = $('search').value.trim().toLowerCase(), filter = $('filter').value, source = $('source-filter').value;
-    const selected = collectionWords().filter(word => word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))))
-      .filter(word => source === 'all' || wordMetadata(word).sources.length > 0);
-    if ($('sort').value === 'recent') selected.sort((a, b) => (b.lastMiss || '').localeCompare(a.lastMiss || '') || a.word.localeCompare(b.word));
-    if ($('sort').value === 'easy') selected.sort((a, b) => window.MARCO_ARCHIVE_METRICS.compareDifficulty(a, b, metadata));
-    if ($('sort').value === 'hard') selected.sort((a, b) => window.MARCO_ARCHIVE_METRICS.compareDifficulty(a, b, metadata, -1));
-    if ($('sort').value === 'az') selected.sort((a, b) => a.word.localeCompare(b.word));
-    return selected;
-  }
-  function updateOverview() {
-    const scope = $('coverage-scope').value, counts = { review: 0, covered: 0, known: 0, all: words.length };
-    for (const word of words) counts[metrics.groupFor(word, scope)]++;
-    $('overview').innerHTML = `<div class="stat"><strong>${counts.review.toLocaleString()}</strong><span>extra words to review</span></div><div class="stat"><strong>${counts.covered.toLocaleString()}</strong><span>already covered</span></div><div class="stat"><strong>${counts.known.toLocaleString()}</strong><span>confidently known</span></div><div class="stat"><strong>${words.length.toLocaleString()}</strong><span>archive total</span></div>`;
-    $('coverage-summary').textContent = scope === 'both'
-      ? `The ${metrics.dailyCount}-word daily list and earlier ${metrics.earlierCount}-word list share ${metrics.sharedCount} words, giving ${metrics.uniqueCount.toLocaleString()} unique practice words. Known words stay in Known.`
-      : `The current ${metrics.dailyCount}-word daily list already includes the 299-word core. Words found only in the earlier ${metrics.earlierCount}-word list are included in extra review here.`;
-    for (const button of document.querySelectorAll('[data-view]')) {
-      const choice = button.dataset.view;
-      const label = { review: 'Extra review', covered: 'Covered', known: 'Known', all: 'All history' }[choice];
-      button.textContent = `${label} · ${counts[choice].toLocaleString()}`;
-      button.setAttribute('aria-pressed', String(choice === view));
-    }
-    const collection = collectionWords(), sources = window.MARCO_ARCHIVE_METRICS.sourceCounts(collection, metadata);
-    $('source-summary').textContent = `${sources.priority} priority words in this list · ${collection.length.toLocaleString()} words from all sources`;
-  }
-  function wordTags(word) {
-    const info = wordMetadata(word);
-    const difficulty = metadata.difficultyLabels[info.difficulty];
-    const tags = [`<span class="difficulty-tag">${difficulty ? `Level ${info.difficulty} · ${escape(difficulty)}` : 'Difficulty unrated'}</span>`];
-    if (info.sources.length) tags.push('<span class="priority-tag">Priority</span>');
-    for (const label of metrics.sourceLabels(word)) tags.push(`<span class="practice-tag">${escape(label)}</span>`);
-    return tags.join(' ');
-  }
-  function badge(word) {
-    const count = word.correctAfterLastMiss, rate = correctRate(word);
-    return `<p class="correct-rate"><strong>${rate.percent === null ? '—' : rate.percent + '%'} correct</strong><span> · ${rate.correct}/${rate.total}</span></p><span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${word.confidentlyKnown ? 'Confidently known' : count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
-      ${word.correctionBasis === 'archive-created' ? '<p class="status-line">Later-check count starts in this archive</p>' : ''}${word.undatedMisses ? `<p class="status-line">${word.undatedMisses} miss${word.undatedMisses === 1 ? '' : 'es'} with no saved date</p>` : ''}`;
-  }
-  function preferenceButton(word) {
-    if (word.restoredForReview) return '<p class="status-line">Restored for review</p><button class="quiet restore" type="button" data-review-required="false">Use automatic status</button>';
-    if (word.confidentlyKnown) return `<p class="status-line">Correct on ${word.knownEvidence.correctDays} later days · ${word.knownEvidence.meaningChecks} meaning check${word.knownEvidence.meaningChecks === 1 ? '' : 's'}</p><button class="quiet restore" type="button" data-review-required="true">Restore to review</button>`;
-    if (metrics.covered(word, $('coverage-scope').value)) return '<button class="quiet restore" type="button" data-review-required="true">Include in extra review</button>';
-    return '';
+  function showResult(row, outcome) {
+    const feedback = row.querySelector('.feedback');
+    feedback.hidden = false;
+    feedback.className = 'feedback' + (outcome === 'correct' ? ' correct' : '');
+    feedback.textContent = outcome === 'correct' ? '✓ Close' : (outcome === 'wrong' ? 'Try again · ' : '') + byId.get(row.dataset.word).meaning;
   }
   function render() {
-    const selected = selectedWords();
-    $('list-count').textContent = `${selected.length.toLocaleString()} word${selected.length === 1 ? '' : 's'} · all shown`;
-    $('words').innerHTML = selected.length ? selected.map((word, index) => `
-      <article class="word-card" data-word="${escape(word.id)}" aria-labelledby="name-${escape(word.id)}">
-        <div><div class="word-title"><span class="word-index">${index + 1}.</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2>${wordTags(word)}</div><p class="word-meta"><span class="miss-count">${word.misses} miss${word.misses === 1 ? '' : 'es'}</span> · <span class="latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'} ${displayDate(word.lastMiss)}</span></p></div>
-        <div class="corrections">${badge(word)}${preferenceButton(word)}</div>
-        <form class="check-form"><label for="answer-${escape(word.id)}">Your short meaning</label><input id="answer-${escape(word.id)}" name="answer" maxlength="240" autocomplete="off" placeholder="A few words is enough" value="${escape(drafts[word.id] || '')}"><button type="submit">Check</button><button type="button" class="unknown">I don’t know</button><div class="check-result" role="status" hidden></div></form>
-        <details class="word-history"><summary>Dates and correction history</summary><div class="history-content"></div></details>
-      </article>`).join('') : '<p class="empty">No words match these filters.</p>';
-    $('words').setAttribute('aria-busy', 'false');
-    $('words').querySelectorAll('.word-card').forEach((card, index) => {
-      const details = card.querySelector('details');
-      details.addEventListener('toggle', () => { if (details.open) loadHistory(card); });
-      const word = selected[index];
-      if (word.lastArchiveCheck) {
-        const result = card.querySelector('.check-result');
-        result.hidden = false; result.classList.toggle('wrong', word.lastArchiveCheck.result !== 'correct');
-        result.innerHTML = `<strong>Last archive check · ${word.lastArchiveCheck.result === 'correct' ? 'Close enough' : 'Try again'}</strong><span class="date">${displayDate(word.lastArchiveCheck.at, true)}</span>`;
-      }
-    });
-  }
-  function eventKind(kind) {
-    return ({ quiz: 'VR question choice', vocabulary: 'Vocabulary choice', ai: 'AI short meaning', self: 'Self-marked unknown', 'reviewed-meaning': 'Reviewed short meaning', archive: 'Archive AI check' })[kind] || 'Saved practice result';
-  }
-  function renderHistory(card, events) {
-    const content = card.querySelector('.history-content');
-    content.innerHTML = `<ol class="history-list">${events.map(event => `<li class="history-item"><span>${displayDate(event.at, true)}${event.documentedLater && !event.at ? '<small> · later attempt</small>' : ''}</span><span class="outcome ${escape(event.result)}">${({ wrong: 'Incorrect', unknown: 'Didn’t know', correct: 'Correct' })[event.result]}</span><span class="history-source">${escape(event.source)}<small>${escape(event.ref)} · ${eventKind(event.kind)}</small></span></li>`).join('')}</ol>`;
-  }
-  async function loadHistory(card) {
-    const id = card.dataset.word, content = card.querySelector('.history-content');
-    if (historyCache.has(id)) return renderHistory(card, historyCache.get(id));
-    content.textContent = 'Loading history…';
-    try { const result = await request('history', { wordId: id }); historyCache.set(id, result.events); renderHistory(card, result.events); }
-    catch (error) { content.replaceChildren(document.createTextNode(error.message + ' ')); const retry = document.createElement('button'); retry.className = 'quiet'; retry.textContent = 'Retry'; retry.onclick = () => loadHistory(card); content.append(retry); }
-  }
-  async function check(card, unknown) {
-    const id = card.dataset.word, form = card.querySelector('form'), input = form.elements.answer, result = form.querySelector('.check-result');
-    if (form.dataset.checking) return;
-    if (!ready) { $('connection-text').textContent = 'Connect AI checking above, then check this meaning. Your typed meaning is kept.'; $('connect').focus(); return; }
-    const answer = unknown ? '' : input.value.trim();
-    if (!answer && !unknown) { input.focus(); input.setCustomValidity('Write a short meaning first.'); input.reportValidity(); return; }
-    input.setCustomValidity('');
-    const existing = pending[id];
-    const body = existing && existing.answer === answer && existing.unknown === unknown ? existing : { requestId: crypto.randomUUID(), wordId: id, answer, unknown };
-    pending[id] = body; save(storageKey + '-pending', pending);
-    form.dataset.checking = 'true'; form.querySelectorAll('button').forEach(button => { button.disabled = true; }); input.disabled = true;
-    result.hidden = false; result.className = 'check-result'; result.textContent = 'Checking your meaning…';
-    try {
-      const checked = await request('check', { body });
-      const index = words.findIndex(word => word.id === id); words[index] = checked.summary;
-      historyCache.set(id, checked.events); card.querySelector('.corrections').innerHTML = badge(checked.summary) + preferenceButton(checked.summary);
-      card.querySelector('.miss-count').textContent = `${checked.summary.misses} miss${checked.summary.misses === 1 ? '' : 'es'}`;
-      card.querySelector('.latest').textContent = `${checked.summary.undatedMisses ? 'Latest dated miss' : 'Last missed'} ${displayDate(checked.summary.lastMiss)}`;
-      result.classList.toggle('wrong', !checked.close);
-      result.innerHTML = `<strong>${checked.close ? 'Close enough ✓' : unknown ? 'Review this meaning' : 'Try again'}</strong>${escape(checked.meaning)}<br><span class="date">Saved ${displayDate(checked.answeredAt, true)}</span>`;
-      delete pending[id]; delete drafts[id]; save(storageKey + '-pending', pending); save(storageKey + '-drafts', drafts); input.value = '';
-      if (card.querySelector('details').open) renderHistory(card, checked.events);
-      updateOverview();
-    } catch (error) {
-      result.className = 'check-result error'; result.textContent = error.name === 'TimeoutError' ? 'The check took too long. Press Check again to recover this result.' : error.message;
-    } finally {
-      delete form.dataset.checking; form.querySelectorAll('button').forEach(button => { button.disabled = false; }); input.disabled = false;
+    const direction = $('sort').value === 'hard' ? -1 : 1;
+    const ordered = [...words].sort((a, b) => direction * (a.difficulty - b.difficulty) || a.word.localeCompare(b.word));
+    $('words').innerHTML = ordered.map(word => `
+      <article class="word-row" data-word="${escape(word.id)}">
+        <h2>${escape(word.word)}</h2>
+        <form class="check-form"><label for="answer-${escape(word.id)}">Meaning of ${escape(word.word)}</label><input id="answer-${escape(word.id)}" name="answer" maxlength="240" autocomplete="off" placeholder="Short meaning" value="${escape(drafts[word.id] || '')}"><button type="submit">Check</button><button type="button" class="unknown">I don’t know</button><p class="feedback" role="status" hidden></p></form>
+      </article>`).join('');
+    for (const row of $('words').querySelectorAll('.word-row')) {
+      if (results[row.dataset.word]) showResult(row, results[row.dataset.word]);
     }
   }
-  async function restore(card, button) {
-    if (!ready) { $('connection-text').textContent = 'Connect AI checking above to save this word’s review status.'; $('connect').focus(); return; }
-    const id = card.dataset.word, reviewRequired = button.dataset.reviewRequired === 'true';
-    button.disabled = true;
+  async function check(row, unknown) {
+    const id = row.dataset.word, form = row.querySelector('form'), input = form.elements.answer, feedback = form.querySelector('.feedback');
+    if (form.dataset.checking) return;
+    const answer = unknown ? '' : input.value.trim();
+    if (!answer && !unknown) { input.setCustomValidity('Write a short meaning.'); input.reportValidity(); return; }
+    input.setCustomValidity('');
+    if (unknown) { results[id] = 'unknown'; save(storageKey + '-results', results); showResult(row, 'unknown'); }
+    form.dataset.checking = 'true';
+    form.querySelectorAll('button').forEach(button => { button.disabled = true; }); input.disabled = true;
+    $('sort').disabled = true;
     try {
-      const result = await request('preference', { body: { wordId: id, reviewRequired } });
-      words[words.findIndex(word => word.id === id)] = result.summary;
-      updateOverview(); render();
-      $('action-status').textContent = `${result.summary.word} ${reviewRequired ? 'restored to Review' : 'returned to automatic status'}. Saved online.`;
-    } catch (error) { $('action-status').textContent = error.message; button.disabled = false; }
-  }
-  async function loadWords() {
-    $('refresh').disabled = true; $('load-error').hidden = true;
-    try {
-      if (!metrics.dailyCount || !metrics.earlierCount) throw new Error('The practice word lists could not load. Reload this page to compare coverage.');
-      if (!metadata?.words) throw new Error('The word difficulty and source details could not load. Reload this page.');
-      const data = await request('history');
-      if (!Array.isArray(data.words) || !data.words.length) throw new Error('The saved word list could not load. Please refresh.');
-      words = data.words; historyCache.clear(); updateOverview(); render();
+      await connectionCheck;
+      if (!ready) {
+        if (!unknown) { connectionMessage('Connect AI to check your meaning. Your answer is kept.'); $('connect').focus(); }
+        return;
+      }
+      connectionMessage('');
+      if (!unknown) { feedback.hidden = false; feedback.className = 'feedback'; feedback.textContent = 'Checking…'; }
+      const existing = pending[id];
+      const body = existing && existing.answer === answer && existing.unknown === unknown ? existing : { requestId: crypto.randomUUID(), wordId: id, answer, unknown };
+      pending[id] = body; save(storageKey + '-pending', pending);
+      const checked = await request('check', body);
+      results[id] = checked.close ? 'correct' : unknown ? 'unknown' : 'wrong';
+      save(storageKey + '-results', results); showResult(row, results[id]);
+      delete pending[id]; save(storageKey + '-pending', pending);
     } catch (error) {
-      $('load-error').textContent = error.message; $('load-error').hidden = false;
-      if (!words.length) { $('overview').textContent = 'Saved history is temporarily unavailable.'; $('list-count').textContent = 'Use Refresh history to try again'; }
-      $('words').setAttribute('aria-busy', 'false');
-    } finally { $('refresh').disabled = false; }
+      feedback.hidden = false; feedback.className = 'feedback error';
+      const message = error.name === 'TimeoutError' ? 'Press Check again to recover this result.' : error.message;
+      feedback.textContent = unknown ? byId.get(id).meaning + ' · Could not save. ' + message : message;
+    } finally {
+      delete form.dataset.checking;
+      form.querySelectorAll('button').forEach(button => { button.disabled = false; }); input.disabled = false;
+      $('sort').disabled = Boolean($('words').querySelector('[data-checking]'));
+    }
   }
   $('words').addEventListener('input', event => {
     if (event.target.name !== 'answer') return;
-    event.target.setCustomValidity(''); const id = event.target.closest('.word-card').dataset.word;
-    drafts[id] = event.target.value; save(storageKey + '-drafts', drafts);
+    const row = event.target.closest('.word-row'), id = row.dataset.word;
+    event.target.setCustomValidity(''); drafts[id] = event.target.value;
+    delete results[id]; save(storageKey + '-drafts', drafts); save(storageKey + '-results', results);
+    row.querySelector('.feedback').hidden = true;
   });
-  $('words').addEventListener('submit', event => { event.preventDefault(); check(event.target.closest('.word-card'), false); });
-  $('words').addEventListener('click', event => {
-    if (event.target.closest('.unknown')) check(event.target.closest('.word-card'), true);
-    const button = event.target.closest('.restore');
-    if (button) restore(button.closest('.word-card'), button);
-  });
-  document.querySelector('.collections').addEventListener('click', event => {
-    const button = event.target.closest('[data-view]'); if (!button) return;
-    view = button.dataset.view; updateOverview(); render();
-  });
-  for (const id of ['search', 'filter', 'sort', 'source-filter']) $(id).addEventListener(id === 'search' ? 'input' : 'change', render);
-  $('coverage-scope').addEventListener('change', () => { updateOverview(); render(); });
-  $('refresh').onclick = loadWords; $('connect').onclick = connect;
-  absorbConnection(); loadWords(); checkConnection();
+  $('words').addEventListener('submit', event => { event.preventDefault(); check(event.target.closest('.word-row'), false); });
+  $('words').addEventListener('click', event => { if (event.target.closest('.unknown')) check(event.target.closest('.word-row'), true); });
+  $('sort').onchange = render;
+  $('connect').onclick = connect;
+  absorbConnection(); render();
+  const connectionCheck = checkConnection();
 })();
