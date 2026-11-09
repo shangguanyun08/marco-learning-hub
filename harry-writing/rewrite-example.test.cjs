@@ -11,19 +11,22 @@ function boot(saved=seed){
   w.localStorage.setItem(CACHE,JSON.stringify(saved));w.localStorage.setItem(SESSION,'fixture-session-not-a-real-credential');
   w.AbortSignal=AbortSignal;
   w.fetch=async(url,options)=>{const action=new URL(url).searchParams.get('action'),body=options.body?JSON.parse(options.body):null;calls.push({action,body});return {ok:true,status:200,json:async()=>action==='work'?{storyId:w.WRITING_STORY_ID,drafts:[],revisions:[revision],models:saved.models}:action==='model'?{model}:action==='draft'?{draft:{version:1,updated_at:'2026-11-07T13:00:00Z'}}:{}};};
-  for(const f of ['story.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));
+  for(const f of ['story.js','rewrite-diff.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));
   return {w,d:w.document,calls,close:()=>w.close()};
 }
 const settle=async()=>{for(let i=0;i<12;i++)await new Promise(resolve=>setImmediate(resolve));};
-test('the rewrite example sits below the rewrite controls and uses the checked version, not a cached original',async()=>{
+test('the highlighted rewrite sits between the writing box and buttons and uses the checked version',async()=>{
   const t=boot();try{
     await settle();const d=t.d,button=d.querySelector('#show-model');
     assert.equal(button.textContent,'Show re-write example');assert.equal(d.querySelector('#model-panel').hidden,true);
     assert.ok(d.querySelector('#revision').compareDocumentPosition(d.querySelector('#model-panel'))&t.w.Node.DOCUMENT_POSITION_FOLLOWING);
+    assert.ok(d.querySelector('#model-panel').compareDocumentPosition(d.querySelector('.actions'))&t.w.Node.DOCUMENT_POSITION_FOLLOWING);
     assert.ok(d.querySelector('#model-panel').compareDocumentPosition(d.querySelector('#feedback'))&t.w.Node.DOCUMENT_POSITION_FOLLOWING);
     button.click();await settle();
     assert.equal(t.calls.find(c=>c.action==='model').body.revisionId,revision.id);
     assert.equal(d.querySelector('#model-text').textContent,model.text);assert.equal(d.querySelector('#model-panel').hidden,false);
+    assert.deepEqual(Array.from(d.querySelectorAll('#model-text mark'),node=>node.textContent),['towards',' it']);
+    assert.equal(d.querySelector('#model-removed-text del').textContent,'to');
     assert.equal(d.querySelector('#revision').value,revision.text);
     button.click();await settle();assert.equal(t.calls.filter(c=>c.action==='model').length,1);
     const input=d.querySelector('#revision');input.value='A changed rewrite.';input.dispatchEvent(new t.w.Event('input',{bubbles:true}));
@@ -34,4 +37,34 @@ test('the rewrite example sits below the rewrite controls and uses the checked v
 });
 test('a saved matching rewrite example returns after reload while earlier original examples remain saved',async()=>{
   const t=boot({...seed,models:[old,model]});try{await settle();assert.equal(t.d.querySelector('#model-text').textContent,model.text);assert.equal(t.d.querySelector('#model-panel').hidden,false);assert.equal(t.calls.filter(c=>c.action==='model').length,0);assert.equal(JSON.parse(t.w.localStorage.getItem(CACHE)).models.length,2);}finally{t.close();}
+});
+
+test('the four-row writing box expands and contracts without changing the paragraph',async()=>{
+  const t=boot();
+  try {
+    await settle();
+    const input=t.d.querySelector('#revision'),button=t.d.querySelector('#resize-revision');
+    assert.equal(input.rows,4);
+    button.click();
+    assert.equal(input.rows,8);
+    assert.equal(button.getAttribute('aria-expanded'),'true');
+    assert.equal(button.textContent,'Less space');
+    button.click();
+    assert.equal(input.rows,4);
+    assert.equal(button.getAttribute('aria-expanded'),'false');
+    assert.equal(input.value,revision.text);
+    assert.equal(t.calls.filter(call=>call.action==='draft'||call.action==='check').length,0);
+  } finally {t.close();}
+});
+
+test('rewrite text is rendered literally and removed words remain outside the example paragraph',async()=>{
+  const literalModel={...model,text:'<img src=x onerror=alert(1)> The man helped.'};
+  const t=boot({...seed,models:[literalModel]});
+  try {
+    await settle();
+    assert.equal(t.d.querySelector('#model-text').textContent,literalModel.text);
+    assert.equal(t.d.querySelector('#model-text img'),null);
+    assert.equal(t.d.querySelector('#model-text del'),null);
+    assert.ok(t.d.querySelector('#model-removed-text del'));
+  } finally {t.close();}
 });
