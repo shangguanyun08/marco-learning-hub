@@ -79,6 +79,10 @@
     $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p><p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p><div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div></article>`).join('');
   }
   function renderOverview() {
+    if (isPicture) {
+      const hasWriting = Object.entries(state.drafts).some(([id, row]) => Number(id) > 0 && row.text.trim()) || state.revisions.some(row => row.kind === 'revision');
+      window.WritingActivity.render($('last-writing-attempt'), window.WritingActivity.latest(state), hasWriting ? 'Writing date not recorded' : 'Not started yet');
+    }
     const checked = parts.filter((_, index) => latest(index + 1));
     $('progress').textContent = `${checked.length} of ${parts.length} ${isPicture ? 'paragraphs checked' : 'sections revised'}`;
     $('part-list').innerHTML = parts.map((_, index) => {
@@ -192,7 +196,7 @@
     button.setAttribute('aria-expanded', String(expanded));
   });
   $('revision').addEventListener('input', () => {
-    const row = draft(selected); row.text = $('revision').value; row.dirty = true;
+    const row = draft(selected); row.text = $('revision').value; row.dirty = true; row.edited_at = new Date().toISOString();
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
     cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) renderOverview(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });

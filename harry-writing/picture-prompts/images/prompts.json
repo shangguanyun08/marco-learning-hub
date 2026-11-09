@@ -1,0 +1,13 @@
+{
+  "generator": "Built-in image_gen tool",
+  "images": [
+    {
+      "file": "garden.png",
+      "prompt": "Create one landscape 3:2 picture prompt for an eight-year-old third grader to write an original story with beginning, middle and ending. Warm polished children's storybook illustration, soft painted texture and clean readable shapes. Two boys around eight years old are in a school garden beside a wooden raised vegetable bed. One boy kneels holding a small trowel and has just uncovered a small closed, muddy metal box among the roots. The second boy leans closer with a surprised, curious face. Include a watering can, a few carrots and green leaves, with a simple sunny school garden background. This is a single moment before the mystery is solved. Show the box closed. Child-friendly, realistic proportions, varied natural poses, no text, no captions, no watermark. The scene must remain clear when displayed at half width on a writing practice website."
+    },
+    {
+      "file": "boat.png",
+      "prompt": "Create one landscape 3:2 picture prompt for an eight-year-old third grader to write an original story with beginning, middle and ending. Warm polished children's storybook illustration, soft painted texture and clean readable shapes. A boy and a girl around eight years old stand safely on the grassy bank of a small shallow park pond. Their small handmade wooden sailboat with a bright red triangular sail has become caught in reeds a short distance from the bank. The boy points toward the boat with a worried expression. The girl holds a long fallen branch horizontally while thinking of an idea. Include a few pond plants and a duck in the distance, simple park trees in the background. This is a single moment before they solve the problem, nobody is in the water. Child-friendly, realistic proportions, varied natural poses, no text, no captions, no watermark. The scene must remain clear when displayed at half width on a writing practice website."
+    }
+  ]
+}
