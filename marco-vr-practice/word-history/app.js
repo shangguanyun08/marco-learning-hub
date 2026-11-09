@@ -14,8 +14,7 @@
   const drafts = read(storageKey + '-drafts') || {};
   const pending = read(storageKey + '-pending') || {};
   const historyCache = new Map();
-  let token = read(storageKey + '-session') || '', words = [], page = 0, ready = false, view = 'review';
-  const pageSize = 50;
+  let token = read(storageKey + '-session') || '', words = [], ready = false, view = 'review';
   function displayDate(value, time = false) {
     if (!value) return 'Date not recorded';
     const dateOnly = value.length === 10;
@@ -73,9 +72,11 @@
   function selectedWords() {
     const query = $('search').value.trim().toLowerCase(), filter = $('filter').value, source = $('source-filter').value;
     const selected = collectionWords().filter(word => word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))))
-      .filter(word => source === 'all' || (source === 'priority' ? wordMetadata(word).sources.length > 0 : wordMetadata(word).sources.includes(source)));
+      .filter(word => source === 'all' || wordMetadata(word).sources.length > 0);
     if ($('sort').value === 'recent') selected.sort((a, b) => (b.lastMiss || '').localeCompare(a.lastMiss || '') || a.word.localeCompare(b.word));
     if ($('sort').value === 'easy') selected.sort((a, b) => window.MARCO_ARCHIVE_METRICS.compareDifficulty(a, b, metadata));
+    if ($('sort').value === 'hard') selected.sort((a, b) => window.MARCO_ARCHIVE_METRICS.compareDifficulty(a, b, metadata, -1));
+    if ($('sort').value === 'az') selected.sort((a, b) => a.word.localeCompare(b.word));
     return selected;
   }
   function updateOverview() {
@@ -92,19 +93,19 @@
       button.setAttribute('aria-pressed', String(choice === view));
     }
     const collection = collectionWords(), sources = window.MARCO_ARCHIVE_METRICS.sourceCounts(collection, metadata);
-    $('source-summary').textContent = `From ${collection.length.toLocaleString()} words · EDUBUS ${sources.edubus} · Mock tests ${sources.mock} · Test Innovators ${sources.testInnovators} · ${sources.priority} distinct priority words. Sources can overlap.`;
+    $('source-summary').textContent = `${sources.priority} priority words in this list · ${collection.length.toLocaleString()} words from all sources`;
   }
   function wordTags(word) {
     const info = wordMetadata(word);
     const difficulty = metadata.difficultyLabels[info.difficulty];
     const tags = [`<span class="difficulty-tag">${difficulty ? `Level ${info.difficulty} · ${escape(difficulty)}` : 'Difficulty unrated'}</span>`];
-    for (const source of info.sources) tags.push(`<span class="priority-tag">${escape(metadata.sourceLabels[source])}</span>`);
+    if (info.sources.length) tags.push('<span class="priority-tag">Priority</span>');
     for (const label of metrics.sourceLabels(word)) tags.push(`<span class="practice-tag">${escape(label)}</span>`);
     return tags.join(' ');
   }
   function badge(word) {
     const count = word.correctAfterLastMiss, rate = correctRate(word);
-    return `<p class="correct-rate"><strong>${rate.percent === null ? '—' : rate.percent + '%'} correct</strong><span>${rate.correct}/${rate.total} checks overall</span></p><span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${word.confidentlyKnown ? 'Confidently known' : count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
+    return `<p class="correct-rate"><strong>${rate.percent === null ? '—' : rate.percent + '%'} correct</strong><span> · ${rate.correct}/${rate.total}</span></p><span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${word.confidentlyKnown ? 'Confidently known' : count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
       ${word.correctionBasis === 'archive-created' ? '<p class="status-line">Later-check count starts in this archive</p>' : ''}${word.undatedMisses ? `<p class="status-line">${word.undatedMisses} miss${word.undatedMisses === 1 ? '' : 'es'} with no saved date</p>` : ''}`;
   }
   function preferenceButton(word) {
@@ -114,30 +115,26 @@
     return '';
   }
   function render() {
-    const selected = selectedWords(), pages = Math.max(1, Math.ceil(selected.length / pageSize));
-    page = Math.min(page, pages - 1);
-    const start = page * pageSize;
-    $('list-count').textContent = `${selected.length.toLocaleString()} word${selected.length === 1 ? '' : 's'} · ${selected.length ? start + 1 : 0}–${Math.min(start + pageSize, selected.length)} shown`;
-    $('page-count').textContent = `Page ${page + 1} of ${pages}`;
-    $('previous').disabled = page === 0; $('next').disabled = page >= pages - 1;
-    $('words').innerHTML = selected.length ? selected.slice(start, start + pageSize).map((word, index) => `
+    const selected = selectedWords();
+    $('list-count').textContent = `${selected.length.toLocaleString()} word${selected.length === 1 ? '' : 's'} · all shown`;
+    $('words').innerHTML = selected.length ? selected.map((word, index) => `
       <article class="word-card" data-word="${escape(word.id)}" aria-labelledby="name-${escape(word.id)}">
-        <div><span class="word-index">${start + index + 1}</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2><p class="word-meta">${word.misses} recorded miss${word.misses === 1 ? '' : 'es'}</p><p class="word-meta latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(word.lastMiss)}</p>${wordTags(word)}</div>
+        <div><div class="word-title"><span class="word-index">${index + 1}.</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2>${wordTags(word)}</div><p class="word-meta"><span class="miss-count">${word.misses} miss${word.misses === 1 ? '' : 'es'}</span> · <span class="latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'} ${displayDate(word.lastMiss)}</span></p></div>
         <div class="corrections">${badge(word)}${preferenceButton(word)}</div>
         <form class="check-form"><label for="answer-${escape(word.id)}">Your short meaning</label><input id="answer-${escape(word.id)}" name="answer" maxlength="240" autocomplete="off" placeholder="A few words is enough" value="${escape(drafts[word.id] || '')}"><button type="submit">Check</button><button type="button" class="unknown">I don’t know</button><div class="check-result" role="status" hidden></div></form>
         <details class="word-history"><summary>Dates and correction history</summary><div class="history-content"></div></details>
       </article>`).join('') : '<p class="empty">No words match these filters.</p>';
     $('words').setAttribute('aria-busy', 'false');
-    for (const card of $('words').querySelectorAll('.word-card')) {
+    $('words').querySelectorAll('.word-card').forEach((card, index) => {
       const details = card.querySelector('details');
       details.addEventListener('toggle', () => { if (details.open) loadHistory(card); });
-      const word = words.find(word => word.id === card.dataset.word);
+      const word = selected[index];
       if (word.lastArchiveCheck) {
         const result = card.querySelector('.check-result');
         result.hidden = false; result.classList.toggle('wrong', word.lastArchiveCheck.result !== 'correct');
         result.innerHTML = `<strong>Last archive check · ${word.lastArchiveCheck.result === 'correct' ? 'Close enough' : 'Try again'}</strong><span class="date">${displayDate(word.lastArchiveCheck.at, true)}</span>`;
       }
-    }
+    });
   }
   function eventKind(kind) {
     return ({ quiz: 'VR question choice', vocabulary: 'Vocabulary choice', ai: 'AI short meaning', self: 'Self-marked unknown', 'reviewed-meaning': 'Reviewed short meaning', archive: 'Archive AI check' })[kind] || 'Saved practice result';
@@ -169,8 +166,8 @@
       const checked = await request('check', { body });
       const index = words.findIndex(word => word.id === id); words[index] = checked.summary;
       historyCache.set(id, checked.events); card.querySelector('.corrections').innerHTML = badge(checked.summary) + preferenceButton(checked.summary);
-      card.querySelector('.word-meta').textContent = `${checked.summary.misses} recorded miss${checked.summary.misses === 1 ? '' : 'es'}`;
-      card.querySelector('.latest').innerHTML = `${checked.summary.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(checked.summary.lastMiss)}`;
+      card.querySelector('.miss-count').textContent = `${checked.summary.misses} miss${checked.summary.misses === 1 ? '' : 'es'}`;
+      card.querySelector('.latest').textContent = `${checked.summary.undatedMisses ? 'Latest dated miss' : 'Last missed'} ${displayDate(checked.summary.lastMiss)}`;
       result.classList.toggle('wrong', !checked.close);
       result.innerHTML = `<strong>${checked.close ? 'Close enough ✓' : unknown ? 'Review this meaning' : 'Try again'}</strong>${escape(checked.meaning)}<br><span class="date">Saved ${displayDate(checked.answeredAt, true)}</span>`;
       delete pending[id]; delete drafts[id]; save(storageKey + '-pending', pending); save(storageKey + '-drafts', drafts); input.value = '';
@@ -220,12 +217,10 @@
   });
   document.querySelector('.collections').addEventListener('click', event => {
     const button = event.target.closest('[data-view]'); if (!button) return;
-    view = button.dataset.view; page = 0; updateOverview(); render();
+    view = button.dataset.view; updateOverview(); render();
   });
-  for (const id of ['search', 'filter', 'sort', 'source-filter']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
-  $('coverage-scope').addEventListener('change', () => { page = 0; updateOverview(); render(); });
-  function movePage(delta) { page += delta; render(); $('list-count').scrollIntoView({ block: 'start' }); }
-  $('previous').onclick = () => movePage(-1); $('next').onclick = () => movePage(1);
+  for (const id of ['search', 'filter', 'sort', 'source-filter']) $(id).addEventListener(id === 'search' ? 'input' : 'change', render);
+  $('coverage-scope').addEventListener('change', () => { updateOverview(); render(); });
   $('refresh').onclick = loadWords; $('connect').onclick = connect;
   absorbConnection(); loadWords(); checkConnection();
 })();

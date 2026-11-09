@@ -14,7 +14,7 @@ window.MARCO_ARCHIVE_WORD_META = {
   },
   "sourceNotes": {
     "edubus": "Appears in the saved EDUBUS ISEE Verbal and Summer Camp Quizlet inventories, 59 spring and 20 summer sets with one shared set.",
-    "mock": "A recorded miss in Paper Mocks 0–3 or the Zozeck 2026 mock synonym practice.",
+    "mock": "A recorded miss in Paper Mocks 0–3.",
     "testInnovators": "An original recorded miss from the four dated Test Innovators VR test reviews, September 27 through October 22."
   },
   "words": {
@@ -239,9 +239,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "advertisement": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "advisable": {
@@ -709,9 +707,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "assign": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "assurance": {
@@ -784,9 +780,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "auto": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "autonomous": {
@@ -885,9 +879,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "bay": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "bedlam": {
@@ -962,9 +954,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "besides": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "bestow": {
@@ -1000,9 +990,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 5
     },
     "blanket": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "blase": {
@@ -1051,9 +1039,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "board": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "boast": {
@@ -1074,9 +1060,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "bossy": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "bountiful": {
@@ -1098,9 +1082,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "branch": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "brandish": {
@@ -1155,18 +1137,14 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "bureau": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "burgeon": {
       "sources": []
     },
     "business": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "bygone": {
@@ -1268,9 +1246,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 5
     },
     "castle": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "cathartic": {
@@ -1331,9 +1307,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "citizen": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "clad": {
@@ -1381,9 +1355,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "clothing": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "coalesce": {
@@ -1471,18 +1443,14 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "commander": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "commend": {
       "sources": []
     },
     "commerce": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "commiseration": {
@@ -1495,9 +1463,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "communication": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "compatible": {
@@ -1659,9 +1625,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "congress": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "conjecture": {
@@ -1705,9 +1669,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "consequently": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "conservative": {
@@ -1856,9 +1818,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "cradle": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "crafty": {
@@ -2204,9 +2164,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "dialog": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "dictum": {
@@ -2401,9 +2359,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "district": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "divergent": {
@@ -2895,9 +2851,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "evident": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "evoke": {
@@ -2951,8 +2905,7 @@ window.MARCO_ARCHIVE_WORD_META = {
     },
     "exile": {
       "sources": [
-        "edubus",
-        "mock"
+        "edubus"
       ],
       "difficulty": 2
     },
@@ -3137,9 +3090,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "file": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "firebrand": {
@@ -3303,9 +3254,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "fossil": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "foster": {
@@ -3342,9 +3291,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "gallon": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "galvanize": {
@@ -3364,9 +3311,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "garage": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "garrison": {
@@ -3441,9 +3386,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "government": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "gracious": {
@@ -3895,9 +3838,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "sources": []
     },
     "incidentally": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 3
     },
     "incision": {
@@ -3927,9 +3868,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "increasingly": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "incur": {
@@ -4046,9 +3985,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "inform": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "infringe": {
@@ -4148,9 +4085,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "internal": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "interrogate": {
@@ -4510,9 +4445,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "match": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "maul": {
@@ -4616,9 +4549,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "migrate": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "mince": {
@@ -4834,9 +4765,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "nurse": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "nurture": {
@@ -4846,9 +4775,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "oar": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "obdurate": {
@@ -5246,8 +5173,7 @@ window.MARCO_ARCHIVE_WORD_META = {
     },
     "plateau": {
       "sources": [
-        "edubus",
-        "mock"
+        "edubus"
       ],
       "difficulty": 2
     },
@@ -5294,9 +5220,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "politician": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "polyglot": {
@@ -5420,9 +5344,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "presentation": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "prestigious": {
@@ -5644,9 +5566,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "pupil": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "purveyor": {
@@ -5713,9 +5633,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "radium": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 3
     },
     "rancid": {
@@ -5725,9 +5643,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "range": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "rankle": {
@@ -5783,9 +5699,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "recently": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "reception": {
@@ -5799,9 +5713,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "recipe": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "recipient": {
@@ -5851,9 +5763,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "refreshment": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "refute": {
@@ -5863,9 +5773,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "relay": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "relinquish": {
@@ -5966,9 +5874,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "republic": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "repudiate": {
@@ -5991,9 +5897,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       ]
     },
     "residence": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "residual": {
@@ -6071,9 +5975,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "ripple": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "rite": {
@@ -6220,9 +6122,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "senate": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "sensible": {
@@ -6313,9 +6213,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 4
     },
     "slightly": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "snare": {
@@ -6422,9 +6320,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "stab": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "staid": {
@@ -6434,9 +6330,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "stall": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "stamina": {
@@ -6452,9 +6346,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "state": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "stature": {
@@ -6552,9 +6444,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "subject": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "sublime": {
@@ -6613,9 +6503,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 5
     },
     "suckler": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 5
     },
     "summon": {
@@ -6774,9 +6662,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "thereby": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 2
     },
     "thrift": {
@@ -6847,9 +6733,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 2
     },
     "treasure": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "trepidation": {
@@ -6989,9 +6873,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 1
     },
     "valley": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "vehement": {
@@ -7180,9 +7062,7 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "wander": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "wane": {
@@ -7222,24 +7102,18 @@ window.MARCO_ARCHIVE_WORD_META = {
       "difficulty": 3
     },
     "weather": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "weave": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "wheedle": {
       "sources": []
     },
     "whisky": {
-      "sources": [
-        "mock"
-      ],
+      "sources": [],
       "difficulty": 1
     },
     "wince": {

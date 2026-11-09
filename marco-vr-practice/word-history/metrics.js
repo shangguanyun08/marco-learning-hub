@@ -36,11 +36,12 @@ window.MARCO_ARCHIVE_METRICS = (() => {
     const saved = metadata.words[canonical(word.word)] || {};
     return { difficulty: saved.difficulty || 6, sources: saved.sources || [] };
   }
-  function compareDifficulty(a, b, metadata) {
+  function compareDifficulty(a, b, metadata, direction = 1) {
     const left = wordMetadata(a, metadata), right = wordMetadata(b, metadata);
-    return left.difficulty - right.difficulty
+    return Number(left.difficulty === 6) - Number(right.difficulty === 6)
+      || direction * (left.difficulty - right.difficulty)
       || Number(right.sources.length > 0) - Number(left.sources.length > 0)
-      || (correctRate(b).percent ?? -1) - (correctRate(a).percent ?? -1)
+      || direction * ((correctRate(b).percent ?? -1) - (correctRate(a).percent ?? -1))
       || a.word.localeCompare(b.word);
   }
   function sourceCounts(words, metadata) {

@@ -64,7 +64,31 @@ test('source totals count each priority word once while preserving source overla
   assert.equal(counts.edubus, 1); assert.equal(counts.mock, 1); assert.equal(counts.testInnovators, 1); assert.equal(counts.priority, 2);
   const saved = context.window.MARCO_ARCHIVE_WORD_META;
   assert.ok(saved.words.assault.sources.includes('testInnovators'));
-  assert.ok(saved.words.advertisement.sources.includes('mock'));
+  assert.ok(saved.words.amend.sources.includes('mock'));
   assert.ok(saved.words.abduct.sources.includes('edubus'));
   assert.ok(Object.values(saved.words).every(word => !word.difficulty || word.difficulty >= 1 && word.difficulty <= 5));
+});
+
+test('hard-to-easy ordering keeps unrated words last and priority first within each band', () => {
+  const metadata = { words: {
+    easy: { difficulty: 1, sources: [] },
+    hard: { difficulty: 5, sources: [] },
+    priority: { difficulty: 5, sources: ['mock'] },
+    struggle: { difficulty: 5, sources: ['edubus'] },
+  } };
+  const words = [
+    { word: 'easy', correctTotal: 0, misses: 1 },
+    { word: 'unrated', correctTotal: 0, misses: 1 },
+    { word: 'hard', correctTotal: 0, misses: 1 },
+    { word: 'priority', correctTotal: 3, misses: 1 },
+    { word: 'struggle', correctTotal: 0, misses: 1 },
+  ];
+  words.sort((a, b) => compareDifficulty(a, b, metadata, -1));
+  assert.deepEqual(words.map(word => word.word), ['struggle', 'priority', 'hard', 'easy', 'unrated']);
+});
+
+test('a Zozeck-only mock word has no priority source', () => {
+  const saved = context.window.MARCO_ARCHIVE_WORD_META;
+  assert.equal(saved.words.advertisement.sources.length, 0);
+  assert.ok(Object.values(saved.words).every(word => word.sources.every(source => ['edubus', 'mock', 'testInnovators'].includes(source))));
 });
