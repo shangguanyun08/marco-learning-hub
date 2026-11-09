@@ -74,3 +74,5 @@
 
 .added-word-note{padding:14px 18px;border:1px solid #b5cddc;border-radius:10px;background:#edf5f8;font-size:14px;line-height:1.6}.section-ai-tests{font-size:14px;line-height:1.8}.section-ai-tests a{white-space:nowrap;font-weight:700}
 .ai-section-picker{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:700;color:#173957}.ai-section-picker select{font:inherit;padding:8px 12px;border:1px solid #b5cddc;border-radius:8px;background:#fff;max-width:100%}.ai-test-card[hidden]{display:none!important}
+
+.focused-ai-review{border:2px solid #317568}.focused-ai-review .actions{flex-wrap:wrap;gap:12px}.focused-word-list{columns:2;column-gap:36px;padding-left:24px}.focused-word-list li{break-inside:avoid;padding:5px 0;font-size:16px}@media(max-width:650px){.focused-word-list{columns:1}}

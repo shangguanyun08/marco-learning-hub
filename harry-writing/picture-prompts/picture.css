@@ -20,3 +20,18 @@
 @media(max-width:740px){.chat-panel{padding:24px 18px}.chat-history{padding:12px;max-height:70vh;min-height:240px}.chat-question{margin-left:12px}.chat-reply{margin-right:0}.chat-text{font-size:15px}.chat-bubble{padding:12px}}
 
 .last-attempt{font-size:12px;line-height:1.6;color:var(--muted);margin:8px 0 12px}.session-bar .last-attempt{margin:6px 0}
+.workspace{grid-template-columns:minmax(0,1fr);gap:18px}
+.parts h2,.parts>p{display:inline-block;margin:0 14px 12px 0}
+.part-list{grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.part-list button{text-align:center;height:44px}
+.story-panel{margin-left:0}
+.writing-editor-wrap{position:relative;margin-top:12px;background:#fff;border-radius:9px}
+.writing-editor-wrap #revision,.revision-highlights{font:400 20px/1.65 'DM Sans',system-ui,sans-serif;letter-spacing:normal;word-spacing:normal;tab-size:8;padding:16px;border:1px solid transparent;white-space:pre-wrap;overflow-wrap:break-word;word-break:normal}
+.writing-editor-wrap #revision{position:relative;z-index:1;margin:0;background:transparent;border-color:#9bb8b0;resize:none;overflow:hidden;min-height:240px}
+.revision-highlights{position:absolute;inset:0;pointer-events:none;color:transparent;overflow:hidden;border-radius:9px}
+.revision-highlights mark{background:#ffdf8c;color:transparent;border-radius:3px;box-shadow:0 2px #e4b84f}
+.inline-suggestions{padding-left:24px;margin:0;display:grid;gap:14px;font-size:16px;line-height:1.65}
+.quote-link{display:inline;border:0;padding:0;background:transparent;font:inherit;text-align:left;color:inherit}
+.quote-link mark{background:#ffdf8c;color:var(--ink);padding:1px 4px;border-radius:3px}
+#expansion-text{white-space:pre-wrap;font-size:16px;line-height:1.7}
+@media(max-width:740px){.part-list{gap:8px}.part-list button{font-size:14px}.editor{padding:24px 18px}.inline-suggestions{font-size:15px}}

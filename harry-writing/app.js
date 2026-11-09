@@ -25,7 +25,7 @@
   } catch {}
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
-  let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false;
+  let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false, expandingIdeas = false;
   let writingChatUI = null;
   const conflicts = new Set();
   function cache() { state.selected = selected; memoryOnly = !write(CACHE, JSON.stringify(state)); }
@@ -64,19 +64,68 @@
     $('resolve-conflict').hidden = !conflicts.has(selected) && !conflicts.has(0);
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
+  function resizeRevision() {
+    if (!isPicture) return;
+    const box = $('revision');
+    box.style.height = 'auto';
+    box.style.height = Math.max(240, box.scrollHeight + 2) + 'px';
+  }
+  function writingNotes(row) {
+    return window.WritingInlineFeedback(row.text, row.feedback);
+  }
+  function renderWritingHighlights(row) {
+    if (!isPicture) return;
+    const host = $('revision-highlights'), text = $('revision').value;
+    host.replaceChildren();
+    const plan = row && text.trim() === row.text ? writingNotes(row) : { ranges: [] };
+    const offset = text.indexOf(text.trim());
+    let cursor = 0;
+    for (const range of plan.ranges) {
+      const start = range.start + offset, end = range.end + offset;
+      host.append(text.slice(cursor, start));
+      const mark = document.createElement('mark');
+      mark.textContent = text.slice(start, end);
+      host.append(mark);
+      cursor = end;
+    }
+    host.append(text.slice(cursor) + '\n');
+  }
+  function repeatedDifficulty() {
+    const tries = revisions(selected).filter(row => row.kind === 'revision').slice(-2);
+    return tries.length === 2 && tries.every(row => !row.feedback.complete || !row.feedback.clear || !row.feedback.correct);
+  }
+  function expansionQuestion() {
+    return 'Suggest three short, concrete ideas or details Harry could add to only the ' + config.partNames[selected - 1] + ' paragraph below. Use his actual characters and events. Offer choices as questions or optional details, using simple words for Harry. Do not rewrite the paragraph or give grammar feedback. Paragraph: ' + editorText(selected).trim();
+  }
+  function renderExpansion() {
+    if (!isPicture) return;
+    const turn = (state.chats || []).filter(row => row.question === expansionQuestion()).at(-1);
+    $('expansion-panel').hidden = !turn;
+    $('expansion-text').textContent = turn?.reply || '';
+    $('expand-ideas').disabled = busy || expandingIdeas;
+    $('expand-ideas').textContent = expandingIdeas ? 'Finding ideas…' : 'Idea/detail expansion';
+    $('expand-ideas').setAttribute('aria-expanded', String(Boolean(turn)));
+  }
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
-    $('hint').hidden = !hint;
+    $('hint').hidden = isPicture || !hint;
     $('hint').innerHTML = hint ? suggestionList(hint.feedback.nextStep) : '';
     const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = $('feedback');
     host.hidden = !row;
     if (row) {
       const feedback = row.feedback;
+      if (isPicture) {
+        const plan = writingNotes(row);
+        const needsWork = !feedback.complete || !feedback.clear || !feedback.correct;
+        host.innerHTML = `<h3>${needsWork ? 'Re-work the highlighted words' : 'Your paragraph is clear'}</h3>${editorText(selected).trim() !== row.text ? '<p class="small">These suggestions are from your last check. Check your changes when ready.</p>' : ''}<ol class="inline-suggestions">${plan.notes.map(note => `<li>${note.start >= 0 ? `<button type="button" class="quote-link" data-note="${note.index}"><mark>${escape(note.quote)}</mark></button> ` : ''}${escape(note.suggestion)}</li>`).join('')}</ol>`;
+      } else {
       host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
+      }
     }
+    renderWritingHighlights(row);
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
-    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p><p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p><div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div></article>`).join('');
+    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p>${isPicture ? '' : `<p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p>`}<div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div></article>`).join('');
   }
   function renderOverview() {
     if (isPicture) {
@@ -97,11 +146,13 @@
     return state.models.find(row => row.kind === 'rewrite' && row.generation_version === 2 && row.sentence_id === selected && row.revision_id === checked?.id && row.source_text === editorText(selected).trim());
   }
   function renderModel() {
-    const checked = latest(selected), model = currentModel();
+    const checked = latest(selected), model = isPicture && !repeatedDifficulty() ? null : currentModel();
+    if ($('show-model')) {
     $('show-model').hidden = !checked;
     $('show-model').disabled = busy;
     $('show-model').textContent = makingModel ? 'Making example…' : 'Show re-write example';
     $('show-model').setAttribute('aria-expanded', String(Boolean(model)));
+    }
     $('model-panel').hidden = !model;
     const modelText = $('model-text'), removedText = $('model-removed-text');
     modelText.replaceChildren();
@@ -136,9 +187,9 @@
     $('check').disabled = busy;
     $('check').hidden = false;
     renderModel();
-    $('guide').disabled = busy;
+    if ($('guide')) $('guide').disabled = busy;
     $('check').textContent = busy ? 'Checking…' : 'AI checking';
-    renderOverview(); renderFeedback(); updateDraftControls();
+    renderOverview(); renderFeedback(); renderExpansion(); resizeRevision(); updateDraftControls();
   }
   async function loadWork() {
     const work = await request('work');
@@ -163,6 +214,7 @@
     connected = true; loaded = true; cache();
     updateConnectionButton();
     render();
+    maybeAutoExample();
   }
   async function saveDrafts() {
     if (saving || !connected || !loaded) return;
@@ -187,7 +239,7 @@
     } finally { saving = false; updateDraftControls(); }
     if (!failed && connected && Object.entries(state.drafts).some(([id, row]) => row.dirty && !conflicts.has(Number(id)))) saveTimer = setTimeout(saveDrafts, 1800);
   }
-  $('resize-revision').addEventListener('click', () => {
+  $('resize-revision')?.addEventListener('click', () => {
     const revision = $('revision'), button = $('resize-revision');
     const expanded = button.getAttribute('aria-expanded') !== 'true';
     revision.rows = expanded ? 8 : 4;
@@ -198,11 +250,11 @@
   $('revision').addEventListener('input', () => {
     const row = draft(selected); row.text = $('revision').value; row.dirty = true; row.edited_at = new Date().toISOString();
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
-    cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) renderOverview(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
+    cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) { renderOverview(); renderExpansion(); resizeRevision(); } clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   function choose(id) {
     if (busy) return;
-    selected = id; feedbackSelection = null; cache(); error(); history.replaceState(null, '', '#part-' + id); $('history').open = false; render();
+    selected = id; feedbackSelection = null; cache(); error(); history.replaceState(null, '', '#part-' + id); $('history').open = false; render(); maybeAutoExample();
   }
   $('part-list').addEventListener('click', event => { const button = event.target.closest('[data-part]'); if (button) choose(Number(button.dataset.part)); });
   $('next').addEventListener('click', () => { if (selected < parts.length) choose(selected + 1); });
@@ -234,11 +286,11 @@
       if (kind === 'revision') { row.text = result.revision.text; row.dirty = true; }
       delete row.pending; cache();
     } catch (failure) { error(failure.message); }
-    finally { busy = false; render(); saveDrafts(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    finally { busy = false; render(); saveDrafts(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); if (isPicture && kind === 'revision') { $('revision').scrollIntoView({ behavior: 'smooth', block: 'center' }); maybeAutoExample(); } }
   }
   $('check').addEventListener('click', () => check('revision'));
-  $('guide').addEventListener('click', () => check('guide'));
-  $('show-model').addEventListener('click', async () => {
+  $('guide')?.addEventListener('click', () => check('guide'));
+  async function showModel() {
     if (busy || !latest(selected)) return;
     error();
     if (editorText(selected).trim() !== latest(selected).text) return error('Use AI checking on this rewrite first, then open its example.');
@@ -249,8 +301,47 @@
       const result = await request('model', { sentenceId: selected, revisionId: latest(selected).id });
       rememberModel(result.model);
     } catch (failure) { error(failure.message); }
-    finally { busy = false; makingModel = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    finally { busy = false; makingModel = false; render(); if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }  }
+  $('show-model')?.addEventListener('click', showModel);
+  function maybeAutoExample() {
+    if (isPicture && connected && !busy && repeatedDifficulty() && !currentModel() && editorText(selected).trim() === latest(selected)?.text) void showModel();
+  }
+  $('feedback').addEventListener('click', event => {
+    if (!isPicture) return;
+    const button = event.target.closest('[data-note]'), row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected);
+    if (!button || !row || $('revision').value.trim() !== row.text) return;
+    const note = writingNotes(row).notes[Number(button.dataset.note)];
+    const offset = $('revision').value.indexOf(row.text);
+    $('revision').focus();
+    $('revision').setSelectionRange(note.start + offset, note.end + offset);
   });
+  $('expand-ideas')?.addEventListener('click', async () => {
+    if (busy || expandingIdeas) return;
+    error();
+    if (!editorText(selected).trim()) return error('Write a few words first so the ideas can grow from your paragraph.');
+    if (!connected) return error('Connect AI checking to get ideas for your paragraph.');
+    if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
+    const question = expansionQuestion();
+    if ((state.chats || []).some(row => row.question === question)) {
+      renderExpansion(); $('expansion-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
+    }
+    if (state.expansionPending?.question !== question) state.expansionPending = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
+    cache(); expandingIdeas = true; renderExpansion();
+    try {
+      const result = await request('chat', state.expansionPending);
+      writingChatUI.merge([result.turn]);
+      delete state.expansionPending; cache();
+    } catch (failure) { error(failure.message); }
+    finally {
+      expandingIdeas = false; renderExpansion();
+      if (!$('expansion-panel').hidden) $('expansion-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  });
+  if (isPicture) {
+    window.addEventListener('resize', resizeRevision);
+    document.fonts?.ready.then(resizeRevision);
+  }
+
   function setupWritingChat() {
     const panel = $('writing-chat');
     if (!panel) return null;
