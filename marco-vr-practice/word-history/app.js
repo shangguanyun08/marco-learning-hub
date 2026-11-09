@@ -10,7 +10,7 @@
   const drafts = read(storageKey + '-drafts') || {};
   const pending = read(storageKey + '-pending') || {};
   const historyCache = new Map();
-  let token = read(storageKey + '-session') || '', words = [], page = 0, ready = false;
+  let token = read(storageKey + '-session') || '', words = [], page = 0, ready = false, view = 'review';
   const pageSize = 50;
   function displayDate(value, time = false) {
     if (!value) return 'Date not recorded';
@@ -64,19 +64,28 @@
   }
   function selectedWords() {
     const query = $('search').value.trim().toLowerCase(), filter = $('filter').value;
-    const selected = words.filter(word => word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))));
+    const selected = words.filter(word => (view === 'all' || (view === 'known' ? word.confidentlyKnown : !word.confidentlyKnown)) && word.word.includes(query) && (filter === 'all' || (filter === '2' ? word.correctAfterLastMiss >= 2 : word.correctAfterLastMiss === Number(filter))));
     if ($('sort').value === 'recent') selected.sort((a, b) => (b.lastMiss || '').localeCompare(a.lastMiss || '') || a.word.localeCompare(b.word));
     return selected;
   }
   function updateOverview() {
-    const none = words.filter(word => !word.correctAfterLastMiss).length;
-    const twice = words.filter(word => word.correctAfterLastMiss >= 2).length;
-    $('overview').innerHTML = `<div class="stat"><strong>${words.length.toLocaleString()}</strong><span>archived words</span></div><div class="stat"><strong>${none.toLocaleString()}</strong><span>awaiting a later correct check</span></div><div class="stat"><strong>${twice.toLocaleString()}</strong><span>correct later at least twice</span></div>`;
+    const known = words.filter(word => word.confidentlyKnown).length, review = words.length - known;
+    $('overview').innerHTML = `<div class="stat"><strong>${review.toLocaleString()}</strong><span>words to review</span></div><div class="stat"><strong>${known.toLocaleString()}</strong><span>confidently known</span></div><div class="stat"><strong>${words.length.toLocaleString()}</strong><span>words in the archive</span></div>`;
+    for (const button of document.querySelectorAll('[data-view]')) {
+      const choice = button.dataset.view;
+      button.textContent = `${choice === 'review' ? 'Review' : choice === 'known' ? 'Known' : 'All history'} · ${(choice === 'review' ? review : choice === 'known' ? known : words.length).toLocaleString()}`;
+      button.setAttribute('aria-pressed', String(choice === view));
+    }
   }
   function badge(word) {
     const count = word.correctAfterLastMiss;
-    return `<span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
+    return `<span class="badge ${count >= 2 ? 'twice' : count === 1 ? 'once' : ''}">${word.confidentlyKnown ? 'Confidently known' : count ? count === 1 ? 'Correct later · once' : `Correct later · ${count} times` : 'Awaiting a correct check'}</span>
       <p class="status-line">${word.correctTotal} correct record${word.correctTotal === 1 ? '' : 's'} overall</p>${word.correctionBasis === 'archive-created' ? '<p class="status-line">Later-check count starts in this archive</p>' : ''}${word.undatedMisses ? `<p class="status-line">${word.undatedMisses} miss${word.undatedMisses === 1 ? '' : 'es'} with no saved date</p>` : ''}`;
+  }
+  function preferenceButton(word) {
+    if (word.restoredForReview) return '<p class="status-line">Restored for review</p><button class="quiet restore" type="button" data-review-required="false">Use automatic status</button>';
+    if (word.confidentlyKnown) return `<p class="status-line">Correct on ${word.knownEvidence.correctDays} later days · ${word.knownEvidence.meaningChecks} meaning check${word.knownEvidence.meaningChecks === 1 ? '' : 's'}</p><button class="quiet restore" type="button" data-review-required="true">Restore to review</button>`;
+    return '';
   }
   function render() {
     const selected = selectedWords(), pages = Math.max(1, Math.ceil(selected.length / pageSize));
@@ -88,7 +97,7 @@
     $('words').innerHTML = selected.length ? selected.slice(start, start + pageSize).map((word, index) => `
       <article class="word-card" data-word="${escape(word.id)}" aria-labelledby="name-${escape(word.id)}">
         <div><span class="word-index">${start + index + 1}</span><h2 class="word-name" id="name-${escape(word.id)}">${escape(word.word)}</h2><p class="word-meta">${word.misses} recorded miss${word.misses === 1 ? '' : 'es'}</p><p class="word-meta latest">${word.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(word.lastMiss)}</p></div>
-        <div class="corrections">${badge(word)}</div>
+        <div class="corrections">${badge(word)}${preferenceButton(word)}</div>
         <form class="check-form"><label for="answer-${escape(word.id)}">Your short meaning</label><input id="answer-${escape(word.id)}" name="answer" maxlength="240" autocomplete="off" placeholder="A few words is enough" value="${escape(drafts[word.id] || '')}"><button type="submit">Check</button><button type="button" class="unknown">I don’t know</button><div class="check-result" role="status" hidden></div></form>
         <details class="word-history"><summary>Dates and correction history</summary><div class="history-content"></div></details>
       </article>`).join('') : '<p class="empty">No words match these filters.</p>';
@@ -133,7 +142,7 @@
     try {
       const checked = await request('check', { body });
       const index = words.findIndex(word => word.id === id); words[index] = checked.summary;
-      historyCache.set(id, checked.events); card.querySelector('.corrections').innerHTML = badge(checked.summary);
+      historyCache.set(id, checked.events); card.querySelector('.corrections').innerHTML = badge(checked.summary) + preferenceButton(checked.summary);
       card.querySelector('.word-meta').textContent = `${checked.summary.misses} recorded miss${checked.summary.misses === 1 ? '' : 'es'}`;
       card.querySelector('.latest').innerHTML = `${checked.summary.undatedMisses ? 'Latest dated miss' : 'Last missed'}<br>${displayDate(checked.summary.lastMiss)}`;
       result.classList.toggle('wrong', !checked.close);
@@ -146,6 +155,17 @@
     } finally {
       delete form.dataset.checking; form.querySelectorAll('button').forEach(button => { button.disabled = false; }); input.disabled = false;
     }
+  }
+  async function restore(card, button) {
+    if (!ready) { $('connection-text').textContent = 'Connect AI checking above to save this word’s review status.'; $('connect').focus(); return; }
+    const id = card.dataset.word, reviewRequired = button.dataset.reviewRequired === 'true';
+    button.disabled = true;
+    try {
+      const result = await request('preference', { body: { wordId: id, reviewRequired } });
+      words[words.findIndex(word => word.id === id)] = result.summary;
+      updateOverview(); render();
+      $('action-status').textContent = `${result.summary.word} ${reviewRequired ? 'restored to Review' : 'returned to automatic status'}. Saved online.`;
+    } catch (error) { $('action-status').textContent = error.message; button.disabled = false; }
   }
   async function loadWords() {
     $('refresh').disabled = true; $('load-error').hidden = true;
@@ -165,7 +185,15 @@
     drafts[id] = event.target.value; save(storageKey + '-drafts', drafts);
   });
   $('words').addEventListener('submit', event => { event.preventDefault(); check(event.target.closest('.word-card'), false); });
-  $('words').addEventListener('click', event => { if (event.target.closest('.unknown')) check(event.target.closest('.word-card'), true); });
+  $('words').addEventListener('click', event => {
+    if (event.target.closest('.unknown')) check(event.target.closest('.word-card'), true);
+    const button = event.target.closest('.restore');
+    if (button) restore(button.closest('.word-card'), button);
+  });
+  document.querySelector('.collections').addEventListener('click', event => {
+    const button = event.target.closest('[data-view]'); if (!button) return;
+    view = button.dataset.view; page = 0; updateOverview(); render();
+  });
   for (const id of ['search', 'filter', 'sort']) $(id).addEventListener(id === 'search' ? 'input' : 'change', () => { page = 0; render(); });
   function movePage(delta) { page += delta; render(); $('list-count').scrollIntoView({ block: 'start' }); }
   $('previous').onclick = () => movePage(-1); $('next').onclick = () => movePage(1);
