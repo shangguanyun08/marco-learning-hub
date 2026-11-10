@@ -75,7 +75,10 @@ for (const file of ['index.html', 'ai-tests/index.html']) test(file + ' shows ev
   w.fetch = async () => ({ ok: true, json: async () => ({ tests: [
     { number: 1, total: 25, attempts: [] },
     { number: 2, total: 25, attempts: [{ id: 'unfinished', startedAt: '2026-11-09T10:00:00Z', completedAt: null, score: 2, total: 25, answered: 4 }] },
-    { number: 36, total: 14, attempts: [{ id: 'extra-attempt', startedAt: '2026-11-09T10:00:00Z', completedAt: '2026-11-09T10:10:00Z', score: 12, total: 14, answered: 14 }] },
+    { number: 36, total: 14, attempts: [
+      { id: 'older/attempt +1', startedAt: '2026-11-08T10:00:00Z', completedAt: '2026-11-08T10:10:00Z', score: 8, total: 14, answered: 14 },
+      { id: 'extra-attempt', startedAt: '2026-11-09T10:00:00Z', completedAt: '2026-11-09T10:10:00Z', score: 12, total: 14, answered: 14 },
+    ] },
   ] }) });
   w.eval(read('scores.js'));
   await new Promise(resolve => setImmediate(resolve));
@@ -89,6 +92,17 @@ for (const file of ['index.html', 'ai-tests/index.html']) test(file + ' shows ev
   assert.match(last.querySelector('[data-ai-open]').href, /test=36&retest=1$/);
   assert.match(w.document.querySelector('#ai-test-1 [data-ai-open]').href, /test=1$/);
   assert.match(w.document.querySelector('#ai-test-2 [data-ai-open]').href, /test=2$/);
+  const historyLinks = [...last.querySelectorAll('.ai-attempt-link')];
+  assert.deepEqual(historyLinks.map(link => link.textContent), ['Attempt 2', 'Attempt 1']);
+  assert.deepEqual(historyLinks.map(link => new URL(link.href).searchParams.get('attempt')), ['extra-attempt', 'older/attempt +1']);
+  for (const link of historyLinks) {
+    const url = new URL(link.href);
+    assert.equal(url.pathname, '/marco');
+    assert.equal(url.searchParams.get('test'), '36');
+    assert.equal(url.searchParams.has('retest'), false);
+    assert.match(link.getAttribute('aria-label'), /Review Test 36, Attempt [12]/);
+  }
+  assert.equal(new URL(w.document.querySelector('#ai-test-2 .ai-attempt-link').href).searchParams.get('attempt'), 'unfinished');
   for (const card of w.document.querySelectorAll('[data-ai-test]')) {
     const url = new URL(card.querySelector('[data-ai-open]').href);
     assert.equal(url.pathname, '/marco');

@@ -68,6 +68,7 @@
 .ai-score-attempts li { display: grid; gap: 4px; padding: 9px 0; border-top: 1px solid #d9e3eb; }
 .ai-score-attempts strong { color: #175b79; font-size: 14px; }
 .ai-score-attempts small { color: #526c7e; }
+.ai-score-attempts .ai-attempt-link { display: inline-block; justify-self: start; min-height: 0; margin: 0; padding: 3px 0; border: 0; border-radius: 0; background: transparent; color: #175b79; text-align: left; text-decoration: underline; font-weight: 600; }
 @media (max-width: 600px) { .ai-test-launch { padding: 16px; } .ai-test-links { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .ai-test-links { grid-template-columns: repeat(2, minmax(0, 1fr)); } .ai-test-card { padding: 10px; } .ai-test-links a { min-height: 44px; display: grid; place-items: center; } }
 @media print { .ai-test-launch { display: none; } }

@@ -38,8 +38,11 @@
     list.className = 'ai-score-attempts';
     attempts.forEach((attempt, index) => {
       const row = document.createElement('li');
-      const title = document.createElement('span');
+      const title = document.createElement('a');
       title.textContent = 'Attempt ' + (attempts.length - index);
+      title.className = 'ai-attempt-link';
+      title.href = testUrl + test.number + '&attempt=' + encodeURIComponent(attempt.id);
+      title.setAttribute('aria-label', 'Review Test ' + test.number + ', ' + title.textContent);
       const score = document.createElement('strong');
       score.textContent = attempt.completedAt ? attempt.score + ' / ' + attempt.total : 'In progress · ' + attempt.answered + '/' + attempt.total;
       const time = document.createElement('small');
