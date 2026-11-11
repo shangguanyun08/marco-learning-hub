@@ -80,3 +80,7 @@
 .session-tests-link{margin:20px 0}.all-session-tests{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 22px;background:#173957;color:#fff;border:1px solid #173957;border-radius:10px;font:700 16px/1.4 system-ui,sans-serif;text-decoration:none}.all-session-tests:focus-visible{outline:3px solid #307dcb;outline-offset:3px}.focus-test-actions{display:flex;flex-wrap:wrap;gap:14px;margin:22px 0}.sync-status{font-size:14px;color:#8b5528}.ai-test-card[data-focus-part]{border-color:#317568}
 
 #all-session-tests{scroll-margin-top:20px}.extra-test-heading{margin:24px 0 8px;color:#173957}.ai-test-card[data-extra-test]{border-color:#317568}
+
+.all-words-link { margin: -6px 0 24px; }
+.all-words-link a { display: inline-block; padding: 13px 18px; border: 1px solid #175b79; border-radius: 10px; color: #fff; background: #175b79; font-weight: 700; text-decoration: none; }
+.all-words-link a:hover { background: #10455e; }
