@@ -46,3 +46,12 @@
   .skill-analysis h2 { font-size: 22px; }
   .skill-table { min-width: 620px; }
 }
+.practice-filters { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 18px 0; }
+.practice-filters button { border: 1px solid #9db4c6; border-radius: 9px; background: white; color: #173957; padding: 10px 16px; font: inherit; font-weight: 700; cursor: pointer; }
+.practice-filters button[aria-pressed="true"] { background: #173957; border-color: #173957; color: white; }
+.practice-filters span { color: #587080; font-size: 14px; }
+.wrong-skill-jump { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; width: 100%; }
+.wrong-skill-jump strong { flex: 0 1 300px; font-size: 14px; }
+.wrong-skill-group > h3 { font-size: 21px; padding: 14px 0; margin-top: 28px; border-bottom: 2px solid #bed0dd; }
+.wrong-skill-group > h3 span { font-size: 14px; font-weight: 400; }
+.no-wrong-questions { padding: 22px; background: #e7f1e9; border-radius: 12px; }

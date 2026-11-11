@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const {JSDOM}=require(process.env.MARCO_QA_JSDOM||'jsdom');
 const load=file=>fs.readFileSync(path.join(__dirname,file),'utf8');
-function page(saved){
- const dom=new JSDOM(load('index.html'),{url:'http://127.0.0.1:8879/marco-daily-test-review/2026-11-08/?session=1',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
+function page(saved,wrong=false){
+ const dom=new JSDOM(load('index.html'),{url:'http://127.0.0.1:8879/marco-daily-test-review/2026-11-08/?session=1'+(wrong?'&wrong=1':''),runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
  w.scrollTo=()=>{};w.Element.prototype.scrollIntoView=function(){w.lastScrolledId=this.id;};w.requestAnimationFrame=fn=>{fn();return 1;};Object.defineProperty(w,'crypto',{value:crypto.webcrypto});w.fetch=()=>{throw Error('Preview must not contact live storage');};
  if(saved)w.localStorage.setItem('marco-ma-nov08-test5-v1:preview',saved);
  for(const script of w.document.querySelectorAll('script[src]')){const file=script.getAttribute('src').split('?')[0];if(file.includes('shared-activity-tracker'))continue;w.eval(load(file));}
@@ -46,6 +46,34 @@ test('instant miss, second chance, first-try scoring, seven-skill report, comple
 });
 test('engine merges two devices without deleting first answers or counting retries as points',()=>{
  const dom=page(),E=dom.window.MarcoQR4Engine;try{const a=E.empty(),b=E.empty();E.submit(a,'sd1',0,'2026-11-08T21:00:00Z','first-a');E.submit(a,'sd1',2,'2026-11-08T21:01:00Z','retry-a');E.submit(b,'f1',0,'2026-11-08T21:02:00Z','first-b');const out=E.merge(a,b);assert.equal(E.stats(out).answered,2);assert.equal(E.stats(out).first,1);assert.equal(E.stats(out).corrected,1);assert.equal(E.attempts(out,'sd1')[0].choice,0);assert.equal(E.valid(out),true);assert.equal(E.submit(out,'sd1',1),false);}finally{dom.window.close();}
+});
+
+test('wrong-only groups first misses by skill, including second-try corrections, without changing records',()=>{
+ const dom=page(),w=dom.window,d=w.document;
+ try {
+  answer(w,'sd1',0);answer(w,'sd1',D.questions.sd1.correct);
+  answer(w,'p1',(D.questions.p1.correct+1)%4);
+  answer(w,'s1',D.questions.s1.correct);
+  const saved=w.localStorage.getItem(D.appId+':preview');
+  d.querySelector('[data-practice-filter="wrong"]').click();
+  assert.equal(d.querySelector('[data-practice-filter="wrong"]').getAttribute('aria-pressed'),'true');
+  assert.deepEqual(Array.from(d.querySelectorAll('#practice .question'),q=>q.id),['q-sd1','q-p1']);
+  assert.deepEqual(Array.from(d.querySelectorAll('.wrong-skill-group > h3'),q=>q.textContent.split(' ·')[0]),[D.skills[D.questions.sd1.skill],D.skills[D.questions.p1.skill]]);
+  assert.match(d.querySelector('#q-sd1 .feedback').textContent,/Corrected on second try/);
+  assert.equal(d.querySelectorAll('#practice .question-group-divider').length,0);
+  assert.equal(w.localStorage.getItem(D.appId+':preview'),saved);
+  assert.equal(new URL(w.location.href).searchParams.get('wrong'),'1');
+  d.querySelector('[data-practice-filter="all"]').click();
+  assert.equal(d.querySelectorAll('#practice .question').length,28);
+  assert.equal(w.localStorage.getItem(D.appId+':preview'),saved);
+  const restored=page(saved,true);
+  try{assert.equal(restored.window.document.querySelectorAll('#practice .question').length,2);}finally{restored.window.close();}
+ }finally{w.close();}
+});
+
+test('wrong-only has a clear empty state and lets the learner return to all questions',()=>{
+ const dom=page(undefined,true),d=dom.window.document;
+ try{assert.equal(d.querySelectorAll('#practice .question').length,0);assert.match(d.querySelector('.no-wrong-questions').textContent,/No first-try mistakes/);d.querySelector('[data-practice-filter="all"]').click();assert.equal(d.querySelectorAll('#practice .question').length,28);}finally{dom.window.close();}
 });
 
 test('the finished-for-now report preserves two unanswered questions and updates when they are answered later',()=>{
