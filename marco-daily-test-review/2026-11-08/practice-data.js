@@ -32,6 +32,7 @@
  add('g3','direction','A straight line has slope −3/2. If x INCREASES by 4, what happens to y?',['It increases by 6.','It decreases by 3/2.','It decreases by 6.','It increases by 8.'],2,'Use change in y = slope × change in x. Track the sign of the actual x-movement.','The change in y is (−3/2) × 4 = −6. Thus y decreases by 6. A negative slope falls when x increases.',{focus:'Calculate a signed change from slope'});
  add('g4','direction','For which function does y DECREASE at the GREATEST rate as x DECREASES?',['Graph A','Graph B','Graph C','Graph D'],3,'Move LEFT first. Positive-slope lines fall in that direction; choose the steeper one.','Graphs B and D fall as x decreases. Their slopes are 1/2 and 3, so D falls 3 units per unit left while B falls only 1/2. Graph D decreases at the greatest rate.',{focus:'Greatest fall when moving left',graphs:[{m:-2,b:3},{m:0.5,b:-2},{m:-0.5,b:0},{m:3,b:1}]});
  const ids=['sd1','f1','i1','t1','p1','s1','g1','t2','g2','s2','sd2','i2','p2','f2','i3','sd3','p3','g3','f3','s3','t3','p4','t4','f4','s4','g4','sd4','i4'];
- const data={appId:'marco-ma-nov08-test5-v1',session:'mixed-28-ma5-qr5-v1',title:'11/08/2026 MA Test 5 + QR direction practice',skills,questions,ids};
+ // The parent released this session’s report after 26 recorded first answers.
+ const data={appId:'marco-ma-nov08-test5-v1',session:'mixed-28-ma5-qr5-v1',reportAfterAnswered:26,title:'11/08/2026 MA Test 5 + QR direction practice',skills,questions,ids};
  root.MarcoMA5Practice=data;root.MarcoQR4Data=data;
 })(typeof window==='undefined'?globalThis:window);

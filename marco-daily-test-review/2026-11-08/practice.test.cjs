@@ -3,7 +3,7 @@ const {JSDOM}=require(process.env.MARCO_QA_JSDOM||'jsdom');
 const load=file=>fs.readFileSync(path.join(__dirname,file),'utf8');
 function page(saved){
  const dom=new JSDOM(load('index.html'),{url:'http://127.0.0.1:8879/marco-daily-test-review/2026-11-08/?session=1',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
- w.scrollTo=()=>{};w.Element.prototype.scrollIntoView=()=>{};w.requestAnimationFrame=fn=>{fn();return 1;};Object.defineProperty(w,'crypto',{value:crypto.webcrypto});w.fetch=()=>{throw Error('Preview must not contact live storage');};
+ w.scrollTo=()=>{};w.Element.prototype.scrollIntoView=function(){w.lastScrolledId=this.id;};w.requestAnimationFrame=fn=>{fn();return 1;};Object.defineProperty(w,'crypto',{value:crypto.webcrypto});w.fetch=()=>{throw Error('Preview must not contact live storage');};
  if(saved)w.localStorage.setItem('marco-ma-nov08-test5-v1:preview',saved);
  for(const script of w.document.querySelectorAll('script[src]')){const file=script.getAttribute('src').split('?')[0];if(file.includes('shared-activity-tracker'))continue;w.eval(load(file));}
  return dom;
@@ -46,4 +46,43 @@ test('instant miss, second chance, first-try scoring, seven-skill report, comple
 });
 test('engine merges two devices without deleting first answers or counting retries as points',()=>{
  const dom=page(),E=dom.window.MarcoQR4Engine;try{const a=E.empty(),b=E.empty();E.submit(a,'sd1',0,'2026-11-08T21:00:00Z','first-a');E.submit(a,'sd1',2,'2026-11-08T21:01:00Z','retry-a');E.submit(b,'f1',0,'2026-11-08T21:02:00Z','first-b');const out=E.merge(a,b);assert.equal(E.stats(out).answered,2);assert.equal(E.stats(out).first,1);assert.equal(E.stats(out).corrected,1);assert.equal(E.attempts(out,'sd1')[0].choice,0);assert.equal(E.valid(out),true);assert.equal(E.submit(out,'sd1',1),false);}finally{dom.window.close();}
+});
+
+test('the finished-for-now report preserves two unanswered questions and updates when they are answered later',()=>{
+ const dom=page(),w=dom.window,d=w.document;
+ const unanswered=new Set(['g3','f3']);
+ const misses=new Set(['p1','t2','g2','s2','p2','p3','t3','p4','g4']);
+ const corrected=new Set(['t2','s2','p3']);
+ try{
+  for(const id of D.ids.filter(id=>!unanswered.has(id))){
+   const correct=D.questions[id].correct;
+   answer(w,id,misses.has(id)?(correct+1)%4:correct);
+   if(misses.has(id))answer(w,id,corrected.has(id)?correct:(correct+2)%4);
+  }
+  const E=w.MarcoQR4Engine,state=JSON.parse(w.localStorage.getItem(D.appId+':preview'));
+  assert.equal(E.stats(state).answered,26);
+  assert.equal(E.stats(state).first,17);
+  assert.equal(E.stats(state).corrected,3);
+  assert.equal(E.stats(state).complete,false);
+  assert.match(d.querySelector('#skill-results h2').textContent,/17\/26/);
+  assert.equal(w.lastScrolledId,'skill-results');
+  assert.match(d.querySelector('.practice-status').textContent,/Finished for now/);
+  assert.match(d.querySelector('#skill-results .unanswered-note').textContent,/Q18/);
+  assert.match(d.querySelector('#skill-results .unanswered-note').textContent,/Q19/);
+  assert.match(d.querySelector('[data-skill="formula"] td').textContent,/3\/3/);
+  assert.match(d.querySelector('[data-skill="direction"] td').textContent,/1\/3/);
+  assert.match(d.querySelector('.skill-priorities li strong').textContent,/Replacement/);
+  for(const id of unanswered){assert.equal(E.attempts(state,id).length,0);assert.equal(d.querySelector(`#q-${id} input`).disabled,false);}
+  const restored=page(JSON.stringify(state));
+  try{
+   const r=restored.window.document;
+   r.querySelector('[data-view="analysis"]').click();
+   assert.equal(r.querySelector('#analysis').hidden,false);
+   assert.match(r.querySelector('#saved-skill-analysis h2').textContent,/17\/26/);
+   for(const id of unanswered)answer(restored.window,id,D.questions[id].correct);
+   assert.match(r.querySelector('#skill-results h2').textContent,/19\/28/);
+   assert.match(r.querySelector('.practice-status').textContent,/First pass finished/);
+   assert.equal(r.querySelector('#skill-results .unanswered-note'),null);
+  }finally{restored.window.close();}
+ }finally{w.close();}
 });

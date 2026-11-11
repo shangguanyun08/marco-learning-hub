@@ -27,3 +27,22 @@
 .jump a{width:auto;padding:5px 13px;height:auto;min-height:40px}.stage-head{padding-top:14px}.stage-head p{font-size:16px}footer a{margin-left:0;margin-right:20px}
 @media(max-width:600px){.date-switch a,.view-tabs a{font-size:14px;padding:10px 12px}.date-switch a[aria-current=page],.view-tabs a[aria-current=page]{padding:9px 11px}.answer-actions{display:grid}.reveal-button{width:100%;text-align:left}.question h3{font-size:21px}.result-table th,.result-table td{padding:9px}.diagram{padding:9px}.history-links{display:grid}}
 @media print{.topnav,.date-switch,.view-tabs,.answer-actions{display:none}.question{break-inside:avoid}.review-options li{padding:7px 10px}}
+
+.skill-analysis { scroll-margin-top: 20px; padding: 22px; border: 1px solid #b8c8d1; border-radius: 12px; background: #fffefa; margin: 24px 0; }
+.skill-analysis h2 { margin-top: 0; }
+.analysis-status { font-size: 14px; font-weight: 700; color: #216998; }
+.unanswered-note { padding: 12px; background: #edf3f8; border-radius: 8px; }
+.skill-table small { display: block; color: var(--muted); font-size: 13px; margin-top: 5px; }
+.skill-table td p { margin: 0 0 8px; }
+.skill-table td a { display: inline-block; margin: 3px 0; font-size: 14px; }
+.skill-priorities li { margin-bottom: 16px; }
+.skill-priorities li p { margin: 5px 0; }
+.skill-strengths { padding: 14px; background: #e6f4eb; border-radius: 8px; }
+.analysis-caution { font-size: 14px; color: var(--muted); }
+.skill-table .pending-questions { margin-top: 10px; }
+.analysis-pending { padding: 16px; background: #edf3f8; border-radius: 8px; }
+@media (max-width: 600px) {
+  .skill-analysis { padding: 14px; }
+  .skill-analysis h2 { font-size: 22px; }
+  .skill-table { min-width: 620px; }
+}
