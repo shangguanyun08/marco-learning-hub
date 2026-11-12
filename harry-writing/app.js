@@ -18,6 +18,8 @@
   try { state = JSON.parse(read(CACHE)); } catch {}
   if (!state || typeof state !== 'object' || !state.drafts || !Array.isArray(state.revisions)) state = { drafts: {}, revisions: [], selected: 1 };
   if (!Array.isArray(state.models)) state.models = [];
+  if (!Array.isArray(state.draftHistory)) state.draftHistory = [];
+  for (const row of state.draftHistory) row.recovery_id ||= crypto.randomUUID();
   let earlier = (!isPicture && state.earlier) || { drafts: [], revisions: [] };
   try {
     const old = !isPicture && JSON.parse(read('harry-writing:elephant-v1'));
@@ -28,9 +30,63 @@
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false, expandingIdeas = false;
   let writingChatUI = null;
   const conflicts = new Set();
-  function cache() { state.selected = selected; memoryOnly = !write(CACHE, JSON.stringify(state)); }
+  let displayedPart = null, displayedText = '', composing = false;
+  function rememberDraft(id, row, archived = false) {
+    if (typeof row.text !== 'string') return;
+    const existing = state.draftHistory.find(item => item.sentence_id === id && item.version === row.version && item.text === row.text);
+    if (existing) { existing.archived ||= archived; return; }
+    state.draftHistory.push({ recovery_id: row.recovery_id || crypto.randomUUID(), sentence_id: id, text: row.text, version: row.version || 0, updated_at: row.edited_at || row.updated_at || new Date().toISOString(), archived });
+  }
+  function cache() {
+    // Another open tab may have cached writing since this tab last rendered.
+    let other;
+    try { other = JSON.parse(read(CACHE)); } catch {}
+    for (const [id, row] of Object.entries(other?.drafts || {})) {
+      if (row.text && row.text !== state.drafts[id]?.text) rememberDraft(Number(id), row);
+    }
+    for (const row of other?.draftHistory || []) rememberDraft(row.sentence_id, row, row.archived);
+    for (const row of other?.revisions || []) if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row);
+    state.selected = selected;
+    // Older online versions remain in the database. Keep local-only backups.
+    const counts = new Map();
+    state.draftHistory.sort((a, b) => b.version - a.version);
+    state.draftHistory = state.draftHistory.filter(row => {
+      if (!row.archived) return true;
+      const count = (counts.get(row.sentence_id) || 0) + 1;
+      counts.set(row.sentence_id, count);
+      return count <= 20;
+    });
+    memoryOnly = !write(CACHE, JSON.stringify(state));
+  }
   function draft(id) { return state.drafts[id] ||= { text: '', version: 0, dirty: false }; }
   function editorText(id) { const row = draft(id), checked = latest(id); return row.dirty || !checked || row.updated_at > checked.checked_at ? row.text : checked.text; }
+  function captureEditor() {
+    if (displayedPart === null || $('revision').value === displayedText) return;
+    const row = draft(displayedPart);
+    if (!row.dirty && row.text) rememberDraft(displayedPart, row);
+    row.text = $('revision').value;
+    row.dirty = true;
+    row.edited_at = new Date().toISOString();
+    displayedText = row.text;
+    if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
+    cache();
+  }
+  function mergeDraft(remote) {
+    const local = draft(remote.sentence_id);
+    if (remote.version < local.version) return;
+    if (local.text === remote.text) {
+      local.version = remote.version;
+      local.updated_at = remote.updated_at;
+      local.dirty = false;
+      conflicts.delete(remote.sentence_id);
+    } else if (local.dirty || (local.version > 0 && local.version === remote.version)) {
+      rememberDraft(remote.sentence_id, remote);
+      if (local.version !== remote.version || !local.dirty) conflicts.add(remote.sentence_id);
+    } else {
+      if (local.text) rememberDraft(remote.sentence_id, local);
+      Object.assign(local, { text: remote.text, version: remote.version, updated_at: remote.updated_at, dirty: false });
+    }
+  }
   function revisions(id) { return state.revisions.filter(row => row.sentence_id === id).sort((a, b) => a.checked_at.localeCompare(b.checked_at) || a.id.localeCompare(b.id)); }
   function latest(id) { return revisions(id).filter(row => row.kind === 'revision').at(-1); }
   function addRevision(row) { if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row); cache(); }
@@ -50,7 +106,7 @@
   async function request(action, body) {
     let response;
     try {
-      response = await fetch(API + '?action=' + action + (isPicture && action === 'work' ? '&storyId=' + encodeURIComponent(window.WRITING_STORY_ID) : ''), { method: body ? 'POST' : 'GET', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID, ...(config.custom && !Object.hasOwn(body, 'topicTitle') ? { topicTitle: draft(0).text } : {}) }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
+      response = await fetch(API + '?action=' + action + (isPicture && action === 'work' ? '&storyId=' + encodeURIComponent(window.WRITING_STORY_ID) : ''), { method: body ? 'POST' : 'GET', keepalive: action === 'draft', headers: { authorization: 'Bearer ' + (read(SESSION) || ''), ...(body ? { 'content-type': 'application/json' } : {}) }, body: body ? JSON.stringify({ ...body, storyId: window.WRITING_STORY_ID, ...(config.custom && !Object.hasOwn(body, 'topicTitle') ? { topicTitle: draft(0).text } : {}) }) : undefined, signal: AbortSignal.timeout(55000), cache: 'no-store' });
     } catch { throw Error('Could not finish connecting. Your typing is kept on this device. Try again.'); }
     const result = await response.json();
     if (response.status === 401) {
@@ -62,6 +118,8 @@
   }
   function updateDraftControls() {
     $('resolve-conflict').hidden = !conflicts.has(selected) && !conflicts.has(0);
+    const status = $('writing-save-status');
+    if (status) status.textContent = conflicts.size ? 'Another version is saved. Choose a version below.' : saving ? 'Saving online…' : Object.values(state.drafts).some(row => row.dirty) ? 'Saved on this device · waiting to save online' : connected ? 'Saved online' : 'Saved on this device · connect to save online';
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function resizeRevision() {
@@ -127,7 +185,21 @@
     renderWritingHighlights(row);
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
-    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p>${isPicture ? '' : `<p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p>`}<div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div></article>`).join('');
+    $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p>${isPicture ? '' : `<p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p>`}<div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div>${row.kind === 'revision' ? `<button type="button" class="quiet" data-restore-check="${escape(row.id)}">Use this version</button>` : ''}</article>`).join('');
+    const savedDrafts = state.draftHistory.filter(row => row.sentence_id === selected && row.text !== editorText(selected)).sort((a, b) => b.updated_at.localeCompare(a.updated_at));
+    for (const row of savedDrafts) {
+      const article = document.createElement('article'), date = document.createElement('p'), text = document.createElement('p'), button = document.createElement('button');
+      date.className = 'small';
+      date.textContent = 'Saved draft · ' + new Date(row.updated_at).toLocaleString();
+      text.textContent = row.text;
+      button.className = 'quiet';
+      button.type = 'button';
+      button.textContent = 'Use this version';
+      button.dataset.restoreDraft = row.recovery_id;
+      article.append(date, text, button);
+      $('history-list').append(article);
+    }
+    $('history-count').textContent = '(' + (history.length + savedDrafts.length) + ')';
   }
   function renderOverview() {
     if (isPicture) {
@@ -179,14 +251,19 @@
     $('model-removed').hidden = !removedText.hasChildNodes();
   }
   function render() {
+    captureEditor();
     const checked = latest(selected);
     $('part-number').textContent = isPicture ? `${config.partNames[selected - 1].toUpperCase()} · PARAGRAPH ${selected} OF ${parts.length}` : `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
-    $('revision').value = editorText(selected);
+    if (!composing) {
+      $('revision').value = editorText(selected);
+      displayedPart = selected;
+      displayedText = $('revision').value;
+    }
     if (config.custom) { $('topic-title').value = draft(0).text; $('topic-title').disabled = busy; }
     $('revision').readOnly = false;
     $('next').disabled = busy || selected === parts.length;
-    $('revision').disabled = busy;
+    if (!composing) $('revision').disabled = busy;
     $('check').disabled = busy;
     $('check').hidden = false;
     renderModel();
@@ -196,6 +273,7 @@
   }
   async function loadWork() {
     const work = await request('work');
+    captureEditor();
     if (work.storyId !== window.WRITING_STORY_ID) throw Error('The writing page has changed. Reload to load the short sections.');
     if (work.earlierSentencePractice) {
       const rows = new Map(earlier.drafts.map(row => [row.sentence_id, row]));
@@ -204,12 +282,8 @@
       for (const row of work.earlierSentencePractice.revisions) history.set(row.id, row);
       earlier = { drafts: Array.from(rows.values()), revisions: Array.from(history.values()) }; state.earlier = earlier;
     }
-    for (const remote of work.drafts) {
-      const local = draft(remote.sentence_id);
-      if (!local.dirty) state.drafts[remote.sentence_id] = { text: remote.text, version: remote.version, updated_at: remote.updated_at, dirty: false };
-      else if (local.text === remote.text) { local.version = remote.version; local.updated_at = remote.updated_at; local.dirty = false; conflicts.delete(remote.sentence_id); }
-      else if (local.version !== remote.version) conflicts.add(remote.sentence_id);
-    }
+    for (const remote of work.drafts) { rememberDraft(remote.sentence_id, remote); mergeDraft(remote); }
+    for (const row of work.draftHistory || []) rememberDraft(row.sentence_id, row, true);
     for (const row of work.revisions) addRevision(row);
     for (const row of work.models || []) rememberModel(row);
     writingChatUI?.merge(work.chats || []);
@@ -222,6 +296,7 @@
   async function saveDrafts() {
     if (saving || !connected || !loaded) return;
     saving = true;
+    updateDraftControls();
     let failed = false;
     try {
       for (const [key, row] of Object.entries(state.drafts)) {
@@ -230,6 +305,8 @@
         const text = row.text;
         try {
           const result = await request('draft', { sentenceId: id, text, expectedVersion: row.version });
+          rememberDraft(id, { ...row, text, version: result.draft.version, updated_at: result.draft.updated_at }, true);
+          if (result.draft.version < row.version) continue;
           row.version = result.draft.version;
           row.updated_at = result.draft.updated_at;
           row.dirty = row.text !== text;
@@ -251,12 +328,12 @@
     button.setAttribute('aria-expanded', String(expanded));
   });
   $('revision').addEventListener('input', () => {
-    const row = draft(selected); row.text = $('revision').value; row.dirty = true; row.edited_at = new Date().toISOString();
-    if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
+    captureEditor();
     cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) { renderOverview(); renderExpansion(); resizeRevision(); } clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   function choose(id) {
-    if (busy) return;
+    if (busy || composing) return;
+    captureEditor();
     selected = id; feedbackSelection = null; cache(); error(); history.replaceState(null, '', '#part-' + id); $('history').open = false; render(); maybeAutoExample();
   }
   $('part-list').addEventListener('click', event => { const button = event.target.closest('[data-part]'); if (button) choose(Number(button.dataset.part)); });
@@ -267,14 +344,42 @@
     location.assign(CONNECT + '?state=' + pairing + (config.topicKey ? '&topic=' + encodeURIComponent(config.topicKey) : ''));
   });
   $('resolve-conflict').addEventListener('click', async () => {
+    captureEditor();
     const id = config.custom && conflicts.has(0) ? 0 : selected;
     try {
       const work = await request('work'), remote = work.drafts.find(row => row.sentence_id === id);
-      draft(id).version = remote?.version || 0; conflicts.delete(id); cache(); await saveDrafts();
+      if (remote) rememberDraft(id, remote);
+      draft(id).version = remote?.version || 0; draft(id).dirty = true; conflicts.delete(id); cache(); await saveDrafts();
     } catch (failure) { error(failure.message); }
   });
+  $('history-list').addEventListener('click', async event => {
+    const button = event.target.closest('[data-restore-check], [data-restore-draft]');
+    if (!button || busy || composing) return;
+    const saved = button.dataset.restoreCheck ? state.revisions.find(row => row.id === button.dataset.restoreCheck) : state.draftHistory.find(row => row.recovery_id === button.dataset.restoreDraft);
+    if (!saved || saved.sentence_id !== selected) return;
+    captureEditor();
+    const id = selected, row = draft(id), text = saved.text;
+    rememberDraft(id, { ...row, text: editorText(id) });
+    busy = true; render();
+    try {
+      if (connected) {
+        const work = await request('work'), remote = work.drafts.find(item => item.sentence_id === id);
+        if (remote) rememberDraft(id, remote);
+        row.version = remote?.version || 0;
+      }
+      row.text = text;
+      row.dirty = true;
+      row.edited_at = new Date().toISOString();
+      delete row.pending;
+      conflicts.delete(id);
+      feedbackSelection = null;
+      cache(); error();
+    } catch (failure) { error(failure.message); }
+    finally { busy = false; render(); saveDrafts(); }
+  });
   async function check(kind) {
-    if (busy) return;
+    if (busy || composing) return;
+    captureEditor();
     error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : editorText(selected).trim();
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
     if (!text) return error('Write your version first.');
@@ -294,7 +399,8 @@
   $('check').addEventListener('click', () => check('revision'));
   $('guide')?.addEventListener('click', () => check('guide'));
   async function showModel() {
-    if (busy || !latest(selected)) return;
+    if (busy || composing || !latest(selected)) return;
+    captureEditor();
     error();
     if (editorText(selected).trim() !== latest(selected).text) return error('Use AI checking on this rewrite first, then open its example.');
     if (currentModel()) { $(isPicture ? 'feedback' : 'model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
@@ -489,6 +595,26 @@
     clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   writingChatUI = setupWritingChat();
+  $('revision').addEventListener('compositionstart', () => { composing = true; });
+  $('revision').addEventListener('compositionend', () => { composing = false; captureEditor(); render(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900); });
+  function keepWriting() { captureEditor(); cache(); void saveDrafts(); }
+  window.addEventListener('pagehide', keepWriting);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) keepWriting(); });
+  window.addEventListener('storage', event => {
+    if (event.key !== CACHE || !event.newValue) return;
+    let incoming;
+    try { incoming = JSON.parse(event.newValue); } catch { return; }
+    captureEditor();
+    for (const [id, remote] of Object.entries(incoming.drafts || {})) {
+      const local = draft(Number(id));
+      rememberDraft(Number(id), remote);
+      if (remote.dirty && remote.text !== local.text) conflicts.add(Number(id));
+      else mergeDraft({ ...remote, sentence_id: Number(id) });
+    }
+    for (const row of incoming.draftHistory || []) rememberDraft(row.sentence_id, row, row.archived);
+    for (const row of incoming.revisions || []) if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row);
+    render();
+  });
   importEarlier();
   render();
   if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); updateConnectionButton(); });

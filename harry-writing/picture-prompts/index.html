@@ -8,7 +8,7 @@
   <script src="../activity.js?v=20261108-new-prompts" defer></script>
   <script src="../rewrite-diff.js?v=20261108-rewrite-diff" defer></script>
   <script src="../inline-feedback.js?v=20261108-inline-corrections" defer></script>
-  <script src="picture.js?v=20261108-inline-corrections" defer></script>
+  <script src="picture.js?v=20261111-draft-protection" defer></script>
 </head>
 <body><main class="shell">
   <nav class="topbar"><a href="../../">← Learning hub</a><a href="../">Elephant story</a><span>HARRY’S DAILY WRITING</span></nav>
@@ -35,13 +35,14 @@
         <section class="rewrite">
           <div class="rewrite-heading"><label for="revision">Write your paragraph</label></div>
           <div class="writing-editor-wrap"><div id="revision-highlights" class="revision-highlights" aria-hidden="true"></div><textarea id="revision" rows="4" maxlength="1200" placeholder="Write a few clear sentences for this paragraph." spellcheck="true" aria-describedby="feedback"></textarea></div>
-          <button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button>
+          <p id="writing-save-status" class="small" role="status"></p>
+          <button id="resolve-conflict" class="quiet" hidden>Keep my current version</button>
         </section>
 <section id="feedback" class="feedback" aria-live="polite" hidden></section>
         <div class="actions"><button id="check" class="primary">AI checking</button><button id="expand-ideas" class="primary" type="button" aria-controls="expansion-panel" aria-expanded="false">Idea/detail expansion</button><button id="next" class="quiet">Next paragraph →</button></div>
         <section id="expansion-panel" class="feedback" aria-live="polite" hidden><h3>Ideas to expand this paragraph</h3><div id="expansion-text"></div></section>
         <p id="error" class="error" role="alert" hidden></p>
-        <details id="history"><summary>Earlier tries <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
+        <details id="history"><summary>Saved versions <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
       </div>
     </section>
     <section id="full-story" class="story-panel"><h2>Read your three-paragraph story</h2><p class="small">Your latest writing: beginning, middle, and ending.</p><div id="revised-story"></div><details id="earlier-practice" hidden><summary>Earlier practice</summary><div id="earlier-practice-list"></div></details></section>
