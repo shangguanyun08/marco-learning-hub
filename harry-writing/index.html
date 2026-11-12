@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="style.css?v=20261108-rewrite-diff" />
   <script src="story.js?v=20261107-simple" defer></script>
   <script src="rewrite-diff.js?v=20261108-rewrite-diff" defer></script>
-  <script src="app.js?v=20261108-new-prompts" defer></script>
+  <script src="app.js?v=20261111-draft-protection" defer></script>
   <script src="examples.js?v=20261107-restored-models" defer></script>
 </head>
 <body>
@@ -27,7 +27,8 @@
         <section class="rewrite">
           <div class="rewrite-heading"><label for="revision">Re-write your clearer version</label><button id="resize-revision" class="quiet" type="button" aria-controls="revision" aria-expanded="false">More space</button></div>
           <textarea id="revision" rows="4" maxlength="1200" placeholder="Clear story and language" spellcheck="true"></textarea>
-          <button id="resolve-conflict" class="quiet" hidden>Save my version over the other draft</button>
+          <p id="writing-save-status" class="small" role="status"></p>
+          <button id="resolve-conflict" class="quiet" hidden>Keep my current version</button>
         </section>
         <section id="model-panel" class="model-panel" aria-live="polite" hidden>
           <h3>Re-write example</h3>
@@ -38,7 +39,7 @@
         <div class="actions"><button id="check" class="primary">AI checking</button><button id="show-model" class="primary" aria-controls="model-panel" aria-expanded="false" hidden>Show re-write example</button><button id="next" class="quiet">Next section →</button></div>
         <p id="error" class="error" role="alert" hidden></p>
         <section id="feedback" class="feedback" aria-live="polite" hidden></section>
-        <details id="history"><summary>Earlier tries <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
+        <details id="history"><summary>Saved versions <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
       </div>
     </section>
     <section id="full-story" class="story-panel"><h2>Read your story</h2><p class="small">The latest checked rewrite is shown for each section. Unrevised sections keep your original words.</p><div id="revised-story"></div><details id="earlier-practice" hidden><summary>Earlier sentence practice · saved</summary><div id="earlier-practice-list"></div></details></section>
