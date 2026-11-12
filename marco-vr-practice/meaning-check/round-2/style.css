@@ -84,3 +84,18 @@
 .all-words-link { margin: -6px 0 24px; }
 .all-words-link a { display: inline-block; padding: 13px 18px; border: 1px solid #175b79; border-radius: 10px; color: #fff; background: #175b79; font-weight: 700; text-decoration: none; }
 .all-words-link a:hover { background: #10455e; }
+
+/* Keep the quick review prominent and older tests folded until needed. */
+.primary-synonym-link { margin: 22px 0 12px; }
+.primary-synonym-link a { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; width: 100%; padding: 22px 26px; border-radius: 14px; background: #175b79; box-shadow: 0 5px 16px #17395720; }
+.primary-synonym-link strong { font: 800 25px/1.3 system-ui,sans-serif; }
+.primary-synonym-link span { font: 500 14px/1.4 system-ui,sans-serif; color: #e4f2f5; }
+.primary-synonym-link a:focus-visible { outline: 3px solid #d89932; outline-offset: 4px; }
+details.ai-test-launch > summary { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; cursor: pointer; list-style: none; }
+details.ai-test-launch > summary::-webkit-details-marker { display: none; }
+details.ai-test-launch > summary::before { content: "▸"; font-size: 20px; color: #173957; }
+details.ai-test-launch[open] > summary::before { content: "▾"; }
+details.ai-test-launch > summary h2 { display: inline; margin: 0; font-size: 23px; }
+details.ai-test-launch > summary span { color: #526c7e; font-size: 13px; }
+details.ai-test-launch > summary:focus-visible { outline: 3px solid #307dcb; outline-offset: 6px; border-radius: 3px; }
+@media (max-width: 600px) { .primary-synonym-link a { padding: 18px 20px; } .primary-synonym-link strong { font-size: 21px; } .primary-synonym-link span { font-size: 13px; } }
