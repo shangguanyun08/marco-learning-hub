@@ -99,3 +99,12 @@ details.ai-test-launch > summary h2 { display: inline; margin: 0; font-size: 23p
 details.ai-test-launch > summary span { color: #526c7e; font-size: 13px; }
 details.ai-test-launch > summary:focus-visible { outline: 3px solid #307dcb; outline-offset: 6px; border-radius: 3px; }
 @media (max-width: 600px) { .primary-synonym-link a { padding: 18px 20px; } .primary-synonym-link strong { font-size: 21px; } .primary-synonym-link span { font-size: 13px; } }
+
+.word-review-panel { margin: 18px 0; padding: 18px 20px; border: 1px solid #b5cddc; border-radius: 12px; background: #fff; }
+.word-review-panel > summary { display: flex; align-items: center; gap: 12px; cursor: pointer; list-style: none; color: #173957; font: 700 21px/1.4 system-ui,sans-serif; }
+.word-review-panel > summary::-webkit-details-marker { display: none; }
+.word-review-panel > summary::before { content: "▸"; font-size: 20px; }
+.word-review-panel[open] > summary::before { content: "▾"; }
+.word-review-panel > summary:focus-visible { outline: 3px solid #307dcb; outline-offset: 6px; border-radius: 3px; }
+.word-review-panel[open] > summary { margin-bottom: 18px; }
+@media (max-width: 600px) { .word-review-panel { padding: 16px; } .word-review-panel > summary { font-size: 18px; } }
