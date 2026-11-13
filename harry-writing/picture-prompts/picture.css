@@ -37,3 +37,7 @@
 @media(max-width:740px){.part-list{gap:8px}.part-list button{font-size:14px}.editor{padding:24px 18px}.inline-suggestions{font-size:15px}}
 
 .correction-example{margin:8px 0 0;padding:10px 12px;border-left:3px solid #4a8d69;background:#e5f1e5;border-radius:4px;font-size:16px}.correction-example strong{display:block;margin-bottom:3px}
+
+.writing-help-part{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+#rewrite-text{white-space:pre-wrap;font-size:17px;line-height:1.8;overflow-wrap:anywhere}
+#expansion-text .next-steps{white-space:normal}
