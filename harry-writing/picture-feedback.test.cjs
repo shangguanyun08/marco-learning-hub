@@ -30,7 +30,7 @@ function boot(revisions, saved = {}) {
     let result;
     if (action === 'work') result = { storyId: w.WRITING_STORY_ID, drafts: [], revisions, models: [], chats: saved.chats || [] };
     if (action === 'model') result = { model: { kind: 'rewrite', generation_version: 2, sentence_id: 1, revision_id: revisions.at(-1).id, source_text: row.text, text: 'A boy went home.' } };
-    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.includes('8/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : 'What did the boy notice on his way home?', created_at: '2026-11-08T14:00:00Z' } };
+    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : 'What did the boy notice on his way home?', created_at: '2026-11-08T14:00:00Z' } };
     if (action === 'draft') result = { draft: { version: 1, updated_at: '2026-11-08T14:01:00Z' } };
     return { ok: true, status: 200, json: async () => result };
   };
@@ -60,7 +60,8 @@ test('picture feedback skips the checklist, highlights text, expands automatical
     assert.equal(t.calls.filter(call => call.action === 'model').length, 0);
     box.value = 'A boy went home.'; box.dispatchEvent(new t.w.Event('input'));
     assert.equal(t.d.querySelector('#revision-highlights mark'), null);
-    assert.equal(t.d.querySelector('#expansion-panel').hidden, true);
+    assert.equal(t.d.querySelector('#expansion-panel').hidden, false);
+    assert.equal(t.d.querySelector('#expansion-reference').hidden, false);
   } finally { t.close(); }
 });
 
@@ -103,20 +104,23 @@ test('earlier grammar feedback is saved while the main box requests a sentence c
   } finally { t.close(); }
 });
 
-test('the 8/8 paragraph example shares the green box and survives reload in saved chat history', async () => {
-  const t = boot([row]);
+test('the 6/8 paragraph example shares the green box and survives reload in saved chat history', async () => {
+  const earlier = { id: 'earlier-eight', question: 'Write an 8/8 practice example of only the Beginning paragraph below.', reply: 'Earlier 8/8 example.', created_at: '2026-11-08T13:00:00Z' };
+  const t = boot([row], { drafts: {}, revisions: [row], models: [], chats: [earlier] });
   let saved;
   try {
     await settle();
-    t.d.querySelector('#rewrite-eight').click(); await settle();
+    assert.equal(t.d.querySelector('#rewrite-panel').hidden, true);
+    assert.match(t.d.querySelector('#chat-history').textContent, /Earlier 8\/8 example/);
+    t.d.querySelector('#rewrite-example').click(); await settle();
     const request = t.calls.find(call => call.action === 'chat');
-    assert.match(request.body.question, /8\/8 practice example of only the Beginning paragraph/);
+    assert.match(request.body.question, /6\/8 practice example of only the Beginning paragraph/);
     assert.equal(request.body.paragraphs[0], row.text);
     assert.equal(t.d.querySelector('#rewrite-panel').closest('.feedback').id, 'feedback');
     assert.match(t.d.querySelector('#rewrite-text').textContent, /dusty lid/);
     assert.match(t.d.querySelector('#chat-history').textContent, /dusty lid/);
     assert.equal(t.d.querySelector('#revision').value, row.text);
-    t.d.querySelector('#rewrite-eight').click(); await settle();
+    t.d.querySelector('#rewrite-example').click(); await settle();
     assert.equal(t.calls.filter(call => call.action === 'chat').length, 1);
     saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
   } finally { t.close(); }

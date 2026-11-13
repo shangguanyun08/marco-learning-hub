@@ -4,11 +4,11 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
   <title>Harry’s Daily Writing · Picture stories</title>
   <meta name="description" content="Choose one of four pictures or your own topic. Write a beginning, middle and ending, with saved AI feedback.">
-  <link rel="stylesheet" href="../style.css?v=20261108-rewrite-diff"><link rel="stylesheet" href="picture.css?v=20261112-clarity-help">
+  <link rel="stylesheet" href="../style.css?v=20261108-rewrite-diff"><link rel="stylesheet" href="picture.css?v=20261112-foldable-help">
   <script src="../activity.js?v=20261108-new-prompts" defer></script>
   <script src="../rewrite-diff.js?v=20261108-rewrite-diff" defer></script>
   <script src="../inline-feedback.js?v=20261108-inline-corrections" defer></script>
-  <script src="picture.js?v=20261112-clarity-help" defer></script>
+  <script src="picture.js?v=20261112-foldable-help" defer></script>
 </head>
 <body><main class="shell">
   <nav class="topbar"><a href="../../">← Learning hub</a><a href="../">Elephant story</a><span>HARRY’S DAILY WRITING</span></nav>
@@ -39,11 +39,11 @@
           <button id="resolve-conflict" class="quiet" hidden>Keep my current version</button>
         </section>
         <section id="feedback" class="feedback" aria-live="polite" hidden>
-          <div id="feedback-check" hidden></div>
-          <section id="expansion-panel" class="writing-help-part" hidden><h3>Ideas to expand this paragraph</h3><div id="expansion-text"></div></section>
-          <section id="rewrite-panel" class="writing-help-part" hidden><h3>8/8 rewrite example</h3><div id="rewrite-text"></div></section>
+          <details id="feedback-check" class="writing-help-part" open hidden><summary id="feedback-title">Re-work the highlighted words</summary><div id="feedback-body"></div></details>
+          <details id="expansion-panel" class="writing-help-part" open hidden><summary>Ideas to expand this paragraph</summary><p id="expansion-reference" class="small" hidden>Ideas based on your earlier draft.</p><div id="expansion-text"></div></details>
+          <details id="rewrite-panel" class="writing-help-part" open hidden><summary>6/8 rewrite example</summary><p id="rewrite-reference" class="small" hidden>Example based on your earlier draft.</p><div id="rewrite-text"></div></details>
         </section>
-        <div class="actions"><button id="check" class="primary">AI checking</button><button id="expand-ideas" class="primary" type="button" aria-controls="expansion-panel" aria-expanded="false">Idea/detail expansion</button><button id="rewrite-eight" class="primary" type="button" aria-controls="rewrite-panel" aria-expanded="false">8/8 rewrite example</button><button id="next" class="quiet">Next paragraph →</button></div>
+        <div class="actions"><button id="check" class="primary">AI checking</button><button id="expand-ideas" class="primary" type="button" aria-controls="expansion-panel" aria-expanded="false">Idea/detail expansion</button><button id="rewrite-example" class="primary" type="button" aria-controls="rewrite-panel" aria-expanded="false">6/8 rewrite example</button><button id="next" class="quiet">Next paragraph →</button></div>
         <p id="error" class="error" role="alert" hidden></p>
         <details id="history"><summary>Saved versions <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
       </div>
