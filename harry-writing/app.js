@@ -4,6 +4,7 @@
   const API = 'https://marco-round1-missed-mastery.alexsoton.chatgpt.site/api/shared/harry-writing';
   const CONNECT = 'https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/harry/writing-connect';
   const config = window.WRITING_CONFIG || {}, isPicture = Boolean(config.picture);
+  const FEEDBACK_FOCUS = 'sentence-clarity-v1';
   const SESSION = 'harry-meaning-ai:connection-v1', PAIRING = 'harry-writing:pairing', CACHE = 'harry-writing:' + window.WRITING_STORY_ID;
   const $ = id => document.getElementById(id), parts = window.ELEPHANT_PARTS;
   const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -28,7 +29,7 @@
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false, expandingIdeas = false;
-  let writingChatUI = null;
+  let writingChatUI = null, rewritingExample = false;
   const conflicts = new Set();
   let displayedPart = null, displayedText = '', composing = false;
   function rememberDraft(id, row, archived = false) {
@@ -129,6 +130,7 @@
     box.style.height = Math.max(240, box.scrollHeight + 2) + 'px';
   }
   function writingNotes(row) {
+    if (row.feedback.focus !== FEEDBACK_FOCUS) return { notes: [{ index: 0, start: -1, quote: '', suggestion: 'Use AI checking for periods, commas, sentence breaks, and clear meaning.' }], ranges: [] };
     const model = repeatedDifficulty() && row.id === latest(selected)?.id ? currentModel() : null;
     return window.WritingInlineFeedback(row.text, row.feedback, model?.text, model ? window.WritingRewriteDiff(row.text, model.text) : []);
   }
@@ -150,36 +152,46 @@
     host.append(text.slice(cursor) + '\n');
   }
   function repeatedDifficulty() {
-    const checked = revisions(selected).filter(row => row.kind === 'revision');
+    const checked = revisions(selected).filter(row => row.kind === 'revision' && row.feedback.focus === FEEDBACK_FOCUS);
     const tries = checked.filter((row, index) => index === 0 || row.text !== checked[index - 1].text).slice(-2);
     return tries.length === 2 && tries.every(row => !row.feedback.complete || !row.feedback.clear || !row.feedback.correct);
   }
   function expansionQuestion() {
     return 'Suggest three short, concrete ideas or details Harry could add to only the ' + config.partNames[selected - 1] + ' paragraph below. Use his actual characters and events. Offer choices as questions or optional details, using simple words for Harry. Do not rewrite the paragraph or give grammar feedback. Paragraph: ' + editorText(selected).trim();
   }
-  function renderExpansion() {
+  function rewriteQuestion() {
+    return 'Write an 8/8 practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. Improve the connections, concrete actions and useful details with natural English an eight-year-old can understand. Keep it near his paragraph’s length. Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
+  }
+  function renderWritingHelp() {
     if (!isPicture) return;
     const turn = (state.chats || []).filter(row => row.question === expansionQuestion()).at(-1);
     $('expansion-panel').hidden = !turn;
-    $('expansion-text').textContent = turn?.reply || '';
+    $('expansion-text').innerHTML = turn ? suggestionList(turn.reply) : '';
     $('expand-ideas').disabled = busy || expandingIdeas;
     $('expand-ideas').textContent = expandingIdeas ? 'Finding ideas…' : 'Idea/detail expansion';
     $('expand-ideas').setAttribute('aria-expanded', String(Boolean(turn)));
+    const example = (state.chats || []).filter(row => row.question === rewriteQuestion()).at(-1);
+    $('rewrite-panel').hidden = !example;
+    $('rewrite-text').textContent = example?.reply || '';
+    $('rewrite-eight').disabled = busy || rewritingExample;
+    $('rewrite-eight').textContent = rewritingExample ? 'Writing example…' : '8/8 rewrite example';
+    $('rewrite-eight').setAttribute('aria-expanded', String(Boolean(example)));
+    $('feedback').hidden = $('feedback-check').hidden && !turn && !example;
   }
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
     $('hint').hidden = isPicture || !hint;
     $('hint').innerHTML = hint ? suggestionList(hint.feedback.nextStep) : '';
-    const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = $('feedback');
+    const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = isPicture ? $('feedback-check') : $('feedback');
     host.hidden = !row;
     if (row) {
       const feedback = row.feedback;
       if (isPicture) {
         const plan = writingNotes(row);
         const needsWork = !feedback.complete || !feedback.clear || !feedback.correct;
-        host.innerHTML = `<h3>${needsWork ? 'Re-work the highlighted words' : 'Your paragraph is clear'}</h3>${editorText(selected).trim() !== row.text ? '<p class="small">These suggestions are from your last check. Check your changes when ready.</p>' : ''}<ol class="inline-suggestions">${plan.notes.map(note => `<li>${note.start >= 0 ? `<button type="button" class="quote-link" data-note="${note.index}"><mark>${escape(note.quote)}</mark></button> ` : ''}${escape(note.suggestion)}${note.correction ? `<p class="correction-example"><strong>Correct example</strong> ${escape(note.correction)}</p>` : ''}</li>`).join('')}</ol>`;
+        host.innerHTML = `<h3>${feedback.focus !== FEEDBACK_FOCUS ? 'Check sentence clarity' : needsWork ? 'Re-work the highlighted words' : 'Your paragraph is clear'}</h3>${editorText(selected).trim() !== row.text ? '<p class="small">These suggestions are from your last check. Check your changes when ready.</p>' : ''}<ol class="inline-suggestions">${plan.notes.map(note => `<li>${note.start >= 0 ? `<button type="button" class="quote-link" data-note="${note.index}"><mark>${escape(note.quote)}</mark></button> ` : ''}${escape(note.suggestion)}${note.correction ? `<p class="correction-example"><strong>Correct example</strong> ${escape(note.correction)}</p>` : ''}</li>`).join('')}</ol>`;
       } else {
-      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Correct language']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
+      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Periods and commas']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
       }
     }
     renderWritingHighlights(row);
@@ -269,7 +281,7 @@
     renderModel();
     if ($('guide')) $('guide').disabled = busy;
     $('check').textContent = makingModel ? 'Making example…' : busy ? 'Checking…' : 'AI checking';
-    renderOverview(); renderFeedback(); renderExpansion(); resizeRevision(); updateDraftControls();
+    renderOverview(); renderFeedback(); renderWritingHelp(); resizeRevision(); updateDraftControls();
   }
   async function loadWork() {
     const work = await request('work');
@@ -329,7 +341,7 @@
   });
   $('revision').addEventListener('input', () => {
     captureEditor();
-    cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) { renderOverview(); renderExpansion(); resizeRevision(); } clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
+    cache(); updateDraftControls(); renderFeedback(); renderModel(); if (isPicture) { renderOverview(); renderWritingHelp(); resizeRevision(); } clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   function choose(id) {
     if (busy || composing) return;
@@ -386,7 +398,7 @@
     if (!connected) return error('Connect AI checking first. Your draft is kept on this device.');
     const savedHint = kind === 'guide' && revisions(selected).find(item => item.kind === 'guide');
     if (savedHint) { renderFeedback(); $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return; }
-    if (!row.pending || row.pending.text !== text || row.pending.kind !== kind) row.pending = { requestId: crypto.randomUUID(), text, kind };
+    if (!row.pending || row.pending.text !== text || row.pending.kind !== kind || row.pending.focus !== FEEDBACK_FOCUS) row.pending = { requestId: crypto.randomUUID(), text, kind, focus: FEEDBACK_FOCUS };
     cache(); busy = true; render();
     try {
       const result = await request('check', { sentenceId: selected, ...row.pending });
@@ -424,28 +436,37 @@
     $('revision').focus();
     $('revision').setSelectionRange(note.start + offset, note.end + offset);
   });
-  $('expand-ideas')?.addEventListener('click', async () => {
-    if (busy || expandingIdeas) return;
+  async function requestWritingHelp(kind) {
+    if (busy || composing || (kind === 'ideas' ? expandingIdeas : rewritingExample)) return;
+    captureEditor();
     error();
     if (!editorText(selected).trim()) return error('Write a few words first so the ideas can grow from your paragraph.');
     if (!connected) return error('Connect AI checking to get ideas for your paragraph.');
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
-    const question = expansionQuestion();
+    const question = kind === 'ideas' ? expansionQuestion() : rewriteQuestion();
+    const panel = kind === 'ideas' ? 'expansion-panel' : 'rewrite-panel';
+    const pendingKey = kind === 'ideas' ? 'expansionPending' : 'rewritePending';
     if ((state.chats || []).some(row => row.question === question)) {
-      renderExpansion(); $('expansion-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
+      renderWritingHelp(); $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
     }
-    if (state.expansionPending?.question !== question) state.expansionPending = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
-    cache(); expandingIdeas = true; renderExpansion();
+    if (state[pendingKey]?.question !== question) state[pendingKey] = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
+    if (kind === 'ideas') expandingIdeas = true;
+    else rewritingExample = true;
+    cache(); renderWritingHelp();
     try {
-      const result = await request('chat', state.expansionPending);
+      const result = await request('chat', state[pendingKey]);
       writingChatUI.merge([result.turn]);
-      delete state.expansionPending; cache();
+      delete state[pendingKey]; cache();
     } catch (failure) { error(failure.message); }
     finally {
-      expandingIdeas = false; renderExpansion();
-      if (!$('expansion-panel').hidden) $('expansion-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (kind === 'ideas') expandingIdeas = false;
+      else rewritingExample = false;
+      renderWritingHelp();
+      if (!$(panel).hidden) $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
-  });
+  }
+  $('expand-ideas')?.addEventListener('click', () => requestWritingHelp('ideas'));
+  $('rewrite-eight')?.addEventListener('click', () => requestWritingHelp('rewrite'));
   if (isPicture) {
     window.addEventListener('resize', resizeRevision);
     document.fonts?.ready.then(resizeRevision);
