@@ -1,5 +1,9 @@
 # Harry’s selected NNAT practice
 
+## Direct question review
+
+Opening a set, completed review round, or history entry goes straight to its questions. Completed answers remain locked, and results are available through **See results**. A **Double wrong only** toggle above the question list shows only items with two valid checked choices that were both wrong in that saved round. A single wrong first try, an unsubmitted draft, or a correct second try does not qualify. The filter keeps the original question numbers, saved drafts, open explanations, scores, and completion times; toggling it never writes learner progress. An empty filter explains that there are no such questions. Next-round practice stays available below a completed question list.
+
 ## Mistake rounds
 
 Every original saved run is Round 1, including legacy records with no `round` field. Results offer **Round 2 with new similar questions for Round 1’s first-try mistakes**, then **Round 3 with different similar questions for Round 2’s first-try mistakes**. The main page has no extra round-chain panel. A correct same-round second try does not remove a skill from the next round. A round unlocks after every question in its parent has a checked first answer. Zero-miss parents show that nothing needs redoing; Round 3 never creates a Round 4.

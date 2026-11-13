@@ -3,6 +3,7 @@
   const variants=typeof module!=='undefined'?require('./variants.js'):root.NNATVariants;
   function attempts(q,r){return (r?.answers?.[q.id]||[]).filter(a=>Number.isInteger(a.choice)&&a.choice>=0&&a.choice<5&&Number.isFinite(Date.parse(a.checkedAt)));}
   function resolved(q,r){const aa=attempts(q,r);return aa.some(a=>a.choice===q.answer)||aa.length>=2;}
+  function doubleWrong(q,r){const aa=attempts(q,r);return aa.length>=2&&aa.slice(0,2).every(a=>a.choice!==q.answer);}
   function questions(course,r){return (r?.questionIds||[]).map(id=>course.questions.find(q=>q.id===id)||variants.get(course,id)).filter(Boolean);}
   function scores(course,r){const qs=questions(course,r);return {total:qs.length,answered:qs.filter(q=>attempts(q,r).length).length,first:qs.filter(q=>attempts(q,r)[0]?.choice===q.answer).length,resolved:qs.filter(q=>resolved(q,r)).length};}
   function round(r){return r?.round===2||r?.round===3?r.round:1;}
@@ -29,6 +30,6 @@
     if(mode==='warmup')return course.questions.filter(q=>q.level!=='challenge').map(q=>q.id);
     return [...(course.groups.find(g=>g.id===mode)?.questionIds||[])];
   }
-  const api={attempts,resolved,questions,scores,check,ids,round,firstWrongIds,canAdvance,firstPassKey,childOf,reviewRun};
+  const api={attempts,resolved,doubleWrong,questions,scores,check,ids,round,firstWrongIds,canAdvance,firstPassKey,childOf,reviewRun};
   if(typeof module!=='undefined')module.exports=api;else root.NNATCore=api;
 })(typeof window==='undefined'?{}:window);

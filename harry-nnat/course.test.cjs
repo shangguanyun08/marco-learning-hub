@@ -9,6 +9,83 @@ const card=(t,id)=>t.d.querySelector(id?`[data-question="${id}"]`:'.question-car
 const at='2026-11-08T04:00:00Z',later='2026-11-08T05:00:00Z',item=id=>course.questions.find(q=>q.id===id)||variants.get(course,id);
 function legacyRun(wrong=4){const r={id:'legacy-round-one',questionIds:core.ids(course,'pattern'),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};r.questionIds.forEach((id,i)=>{const q=item(id);core.check(course,r,q,i<wrong?(q.answer+1)%5:q.answer,at);if(i<wrong)core.check(course,r,q,q.answer,later);});return r;}
 
+test('double wrong requires two checked wrong choices, excluding corrections, drafts and invalid checks',()=>{
+  const r={questionIds:[q.id],answers:{},drafts:{[q.id]:{choice:0,updatedAt:at}}};
+  assert.equal(core.doubleWrong(q,r),false);
+  r.answers[q.id]=[{choice:0,checkedAt:at,answerOK:true}];
+  assert.equal(core.doubleWrong(q,r),false);
+  r.answers[q.id].push({choice:1,checkedAt:'invalid',answerOK:false});
+  assert.equal(core.doubleWrong(q,r),false);
+  r.answers[q.id][1].checkedAt=later;
+  assert.equal(core.doubleWrong(q,r),true);
+  r.answers[q.id][1].choice=q.answer;
+  assert.equal(core.doubleWrong(q,r),false);
+  r.answers[q.id][0].choice=q.answer;r.answers[q.id][1].choice=0;
+  assert.equal(core.doubleWrong(q,r),false);
+});
+
+test('finished sets open directly to questions and the double-wrong toggle preserves every saved answer',()=>{
+  const original=legacyRun(),expected=original.questionIds.slice(1,4);
+  for(const id of expected)original.answers[id][1].choice=(item(id).answer+2)%5;
+  const seed=JSON.stringify({version:1,articles:{pattern:[original]}}),t=boot(seed);
+  try{
+    assert.match(t.d.querySelector('[data-start="pattern"]').textContent,/Review questions/);
+    t.d.querySelector('[data-start="pattern"]').click();
+    assert.equal(t.d.querySelector('.results'),null);
+    assert.equal(t.d.querySelectorAll('.question-card:not([hidden])').length,8);
+    assert.equal(t.d.querySelectorAll('fieldset:disabled').length,8);
+    const button=t.d.querySelector('#wrong-only');
+    assert.match(button.textContent,/Double wrong only · 3/);
+    assert.equal(button.getAttribute('aria-pressed'),'false');
+    const firstDetails=card(t,original.questionIds[0]).querySelector('.explanation');firstDetails.open=true;
+    button.click();
+    assert.equal(button.getAttribute('aria-pressed'),'true');
+    assert.deepEqual([...t.d.querySelectorAll('.question-card:not([hidden])')].map(el=>el.dataset.question),expected);
+    assert.match(t.d.querySelector('#filter-count').textContent,/Showing 3 of 8/);
+    assert.match(card(t,expected[0]).querySelector('h2').textContent,/Question 2.*of 8/);
+    assert.equal(t.d.querySelector('#no-double-wrong').hidden,true);
+    button.click();
+    assert.equal(t.d.querySelectorAll('.question-card:not([hidden])').length,8);
+    assert.equal(firstDetails.open,true);
+    assert.equal(t.saved(),seed);
+    t.d.querySelector('#all-sets').click();t.d.querySelector('[data-history]').click();
+    assert.equal(t.d.querySelector('.results'),null);
+    assert.equal(t.d.querySelectorAll('.question-card:not([hidden])').length,8);
+    assert.equal(t.saved(),seed);
+  }finally{t.close();}
+});
+
+test('empty filters preserve live drafts and the count updates after a second miss',()=>{
+  const t=boot();try{
+    t.d.querySelector('[data-start="serial"]').click();choose(t,0);
+    const savedDraft=t.saved(),button=t.d.querySelector('#wrong-only');button.click();
+    assert.equal(t.d.querySelectorAll('.question-card:not([hidden])').length,0);
+    assert.equal(t.d.querySelector('#no-double-wrong').hidden,false);
+    assert.equal(t.saved(),savedDraft);
+    button.click();assert.equal(card(t).querySelector('input:checked').value,'0');check(t);
+    assert.match(button.textContent,/· 0/);choose(t,1);check(t);
+    assert.match(button.textContent,/· 1/);const savedChecks=t.saved();button.click();
+    assert.equal(t.d.querySelectorAll('.question-card:not([hidden])').length,1);
+    assert.equal(t.saved(),savedChecks);
+    t.d.querySelector('#all-sets').click();t.d.querySelector('[data-start="analogy"]').click();
+    assert.equal(t.d.querySelector('#wrong-only').getAttribute('aria-pressed'),'false');
+    assert.equal(t.d.querySelectorAll('.question-card:not([hidden])').length,8);
+  }finally{t.close();}
+});
+
+test('double-wrong filtering also works for completed similar rounds opened from history',()=>{
+  const parent=legacyRun(),second=core.reviewRun(course,parent,'similar-two',later);
+  second.questionIds.forEach((id,i)=>{const q=item(id);core.check(course,second,q,i<2?(q.answer+1)%5:q.answer,at);if(i<2)core.check(course,second,q,i===0?(q.answer+2)%5:q.answer,later);});
+  const seed=JSON.stringify({version:1,articles:{pattern:[parent,second]}}),t=boot(seed);
+  try{
+    t.d.querySelector('[data-history="similar-two"]').click();
+    assert.match(t.d.querySelector('.session-head h1').textContent,/Round 2.*Similar practice/);
+    assert.equal(t.d.querySelector('.results'),null);t.d.querySelector('#wrong-only').click();
+    assert.deepEqual([...t.d.querySelectorAll('.question-card:not([hidden])')].map(el=>el.dataset.question),[second.questionIds[0]]);
+    assert.equal(t.saved(),seed);
+  }finally{t.close();}
+});
+
 test('review pools use canonical first checked choices, including corrected second tries',()=>{const r=legacyRun(),before=JSON.stringify(r),expected=r.questionIds.slice(0,4);r.answers[expected[0]][0].answerOK=true;assert.equal(core.round(r),1);assert.deepEqual(core.firstWrongIds(course,r),expected);assert.equal(core.canAdvance(course,r),true);const child=core.reviewRun(course,r,'round-two',later);assert.equal(child.round,2);assert.deepEqual(child.questionIds,expected.map(id=>variants.idFor(item(id),2)));assert.deepEqual(child.answers,{});assert.deepEqual(child.drafts,{});assert.equal(child.completedAt,null);assert.equal(core.childOf(course,child,r),true);assert.equal(r.answers[expected[0]].length,2);r.answers[expected[0]][0].answerOK=false;assert.equal(JSON.stringify(r),before);});
 
 test('incomplete first passes, perfect passes and Round 3 cannot create another round',()=>{const r=legacyRun();delete r.answers[r.questionIds.at(-1)];r.drafts[r.questionIds.at(-1)]={choice:0,updatedAt:later};assert.equal(core.canAdvance(course,r),false);assert.equal(core.reviewRun(course,r,'blocked',later),null);assert.equal(core.reviewRun(course,legacyRun(0),'empty',later),null);const third={...legacyRun(),round:3};assert.equal(core.canAdvance(course,third),false);assert.equal(core.reviewRun(course,third,'four',later),null);});
@@ -25,7 +102,7 @@ test('review rounds and their own checked answers survive sync into a second bro
 
 test('each type shows all eight questions with independent answer groups and saved drafts',()=>{for(const group of course.groups){const t=boot();try{t.d.querySelector(`[data-start="${group.id}"]`).click();assert.equal(t.d.querySelectorAll('.question-card').length,8);assert.equal(t.d.querySelectorAll('.answer-form').length,8);assert.equal(new Set([...t.d.querySelectorAll('input')].map(el=>el.name)).size,8);const [first,second]=group.questionIds;choose(t,0,first);choose(t,1,second);assert.equal(card(t,first).querySelector('input:checked').value,'0');assert.equal(card(t,second).querySelector('input:checked').value,'1');const saved=JSON.parse(t.saved()).articles[group.id][0];assert.equal(saved.drafts[first].choice,0);assert.equal(saved.drafts[second].choice,1);assert.equal(t.d.querySelector('#session-results').disabled,true);}finally{t.close();}}});
 
-test('checking one question preserves other drafts and open explanations; results and review retain all eight',()=>{const t=boot();try{t.d.querySelector('[data-start="serial"]').click();const ids=core.ids(course,'serial'),first=course.questions.find(q=>q.id===ids[0]),second=course.questions.find(q=>q.id===ids[1]);choose(t,first.answer,first.id);check(t,first.id);card(t,first.id).querySelector('.explanation').open=true;choose(t,2,ids[2]);choose(t,second.answer,second.id);check(t,second.id);assert.equal(card(t,first.id).querySelector('.explanation').open,true);assert.equal(card(t,ids[2]).querySelector('input:checked').value,'2');assert.equal(t.d.querySelector('[data-progress]').textContent,'2/8');for(const id of ids.slice(2)){choose(t,course.questions.find(q=>q.id===id).answer,id);check(t,id);}assert.equal(t.d.querySelector('#session-results').disabled,false);assert.ok(JSON.parse(t.saved()).articles.serial[0].completedAt);t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.score').textContent,/8\/8/);t.d.querySelector('[data-review="6"]').click();assert.equal(t.d.querySelectorAll('.question-card').length,8);assert.equal(t.d.querySelectorAll('fieldset:disabled').length,8);assert.equal(t.d.querySelectorAll('.check-answer').length,0);assert.equal(t.d.querySelector('#session-results').textContent,'Back to results');t.d.querySelector('#session-results').click();assert.ok(t.d.querySelector('.results'));}finally{t.close();}});
+test('checking one question preserves other drafts and open explanations; results and review retain all eight',()=>{const t=boot();try{t.d.querySelector('[data-start="serial"]').click();const ids=core.ids(course,'serial'),first=course.questions.find(q=>q.id===ids[0]),second=course.questions.find(q=>q.id===ids[1]);choose(t,first.answer,first.id);check(t,first.id);card(t,first.id).querySelector('.explanation').open=true;choose(t,2,ids[2]);choose(t,second.answer,second.id);check(t,second.id);assert.equal(card(t,first.id).querySelector('.explanation').open,true);assert.equal(card(t,ids[2]).querySelector('input:checked').value,'2');assert.equal(t.d.querySelector('[data-progress]').textContent,'2/8');for(const id of ids.slice(2)){choose(t,course.questions.find(q=>q.id===id).answer,id);check(t,id);}assert.equal(t.d.querySelector('#session-results').disabled,false);assert.ok(JSON.parse(t.saved()).articles.serial[0].completedAt);t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.score').textContent,/8\/8/);t.d.querySelector('[data-review="6"]').click();assert.equal(t.d.querySelectorAll('.question-card').length,8);assert.equal(t.d.querySelectorAll('fieldset:disabled').length,8);assert.equal(t.d.querySelectorAll('.check-answer').length,0);assert.equal(t.d.querySelector('#session-results').textContent,'See results');t.d.querySelector('#session-results').click();assert.ok(t.d.querySelector('.results'));}finally{t.close();}});
 test('all four source sections have exactly two warm-ups and six challenges, with stable distinct IDs',()=>{assert.equal(course.sourceCount,120);assert.equal(course.questions.length,32);assert.equal(new Set(course.questions.map(q=>q.id)).size,32);assert.equal(core.ids(course,'mixed').length,24);assert.equal(core.ids(course,'warmup').length,8);for(const g of course.groups){const qs=g.questionIds.map(id=>course.questions.find(q=>q.id===id));assert.deepEqual(qs.slice(0,2).map(q=>q.level),['easy','medium']);assert.ok(qs.slice(2).every(q=>q.level==='challenge'));assert.ok(qs.every(q=>q.sourceNumber<=g.total));}});
 test('every selected diagram and choice exists with a PNG signature and a valid five-choice key',()=>{for(const q of course.questions){assert.ok(q.figures.length===1||q.figures.length===6,q.id);assert.ok(Number.isInteger(q.answer)&&q.answer>=0&&q.answer<5,q.id);for(const p of q.figures){const bytes=fs.readFileSync(path.join(__dirname,p));assert.equal(bytes.subarray(0,4).toString('hex'),'89504e47',p);}assert.ok(q.explanation.length>60);}});
 test('fifth answer E is valid, retries preserve first-choice score, and a third try is refused',()=>{const r={id:'r',questionIds:[q.id],answers:{}};assert.equal(q.answer,4);assert.equal(core.check(course,r,q,7,'2026-11-07T20:00:00Z'),null);assert.equal(core.check(course,r,q,0,'2026-11-07T20:00:00Z').answerOK,false);assert.equal(core.resolved(q,r),false);assert.equal(r.completedAt,undefined);assert.equal(core.check(course,r,q,4,'2026-11-07T20:01:00Z').answerOK,true);assert.equal(core.check(course,r,q,4,'2026-11-07T20:02:00Z'),null);assert.equal(core.scores(course,r).first,0);assert.equal(r.completedAt,'2026-11-07T20:01:00Z');});
@@ -33,7 +110,7 @@ test('incomplete choices do not consume tries, and two misses finish without cla
 test('five-choice progress preserves E and conflicting first checks remain separate histories',()=>{const a={version:1,articles:{serial:[{id:'same',questionIds:[q.id],answers:{[q.id]:[{choice:4,checkedAt:'2026-11-07T20:00:00Z',answerOK:true}]}}]}},b=JSON.parse(JSON.stringify(a));b.articles.serial[0].answers[q.id][0].choice=0;assert.equal(sync.normalize(a).articles.serial[0].answers[q.id][0].choice,4);assert.equal(sync.merge(a,b).articles.serial.length,2);assert.equal(sync.APP_ID,KEY);});
 test('drafts resume, answers reveal only after resolution, and retries do not change first scores',()=>{const t=boot();try{t.d.querySelector('[data-start="serial"]').click();assert.equal(card(t).querySelector('.check-answer').disabled,true);choose(t,0);const saved=t.saved();t.d.querySelector('#all-sets').click();assert.equal(t.saved(),saved);t.d.querySelector('[data-start="serial"]').click();assert.equal(t.d.querySelector('input:checked').value,'0');check(t);assert.equal(t.d.querySelector('.explanation'),null);assert.match(t.d.querySelector('.feedback').textContent,/try once more/);choose(t,4);check(t);assert.ok(t.d.querySelector('.explanation'));assert.equal(t.d.querySelector('.explanation').open,false);assert.equal(card(t).querySelector('.check-answer'),null);assert.equal(JSON.parse(t.saved()).articles.serial[0].answers['serial-1'].length,2);t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('[data-start="serial"]').closest('article').textContent,/First try 0\/8/);const reload=boot(t.saved());try{reload.d.querySelector('[data-start="serial"]').click();assert.match(reload.d.querySelector('.feedback').textContent,/Correct/);}finally{reload.close();}}finally{t.close();}});
 test('mixed challenge excludes warm-ups and enlargement leaves saved answers untouched',()=>{const t=boot();try{t.d.querySelector('[data-start="mixed"]').click();const saved=t.saved(),r=JSON.parse(saved).articles.mixed[0];assert.equal(r.questionIds.length,24);assert.equal(new Set(r.questionIds).size,24);assert.ok(r.questionIds.every(id=>course.questions.find(q=>q.id===id).level==='challenge'));t.d.querySelector('.enlarge').click();assert.equal(t.d.querySelector('dialog').open,true);assert.equal(t.saved(),saved);t.d.querySelector('#close-diagram').click();assert.equal(t.d.querySelector('dialog').open,false);}finally{t.close();}});
-test('finished runs retain a dated history and starting again appends a new record',()=>{const ids=core.ids(course,'warmup'),r={id:'done',startedAt:'2026-11-07T20:00:00Z',questionIds:ids,position:0,answers:{},drafts:{}};for(const id of ids){const item=course.questions.find(q=>q.id===id);core.check(course,r,item,item.answer,'2026-11-07T20:15:00Z');}const t=boot(JSON.stringify({version:1,articles:{warmup:[r]}}));try{t.d.querySelector('[data-start="warmup"]').click();assert.match(t.d.querySelector('.results').textContent,/Practice finished/);assert.match(t.d.querySelector('time').textContent,/Nov 7, 2026/);t.d.querySelector('#fresh').click();assert.equal(JSON.parse(t.saved()).articles.warmup.length,2);assert.equal(JSON.parse(t.saved()).articles.warmup[0].completedAt,r.completedAt);}finally{t.close();}});
+test('finished runs retain a dated history and starting again appends a new record',()=>{const ids=core.ids(course,'warmup'),r={id:'done',startedAt:'2026-11-07T20:00:00Z',questionIds:ids,position:0,answers:{},drafts:{}};for(const id of ids){const item=course.questions.find(q=>q.id===id);core.check(course,r,item,item.answer,'2026-11-07T20:15:00Z');}const t=boot(JSON.stringify({version:1,articles:{warmup:[r]}}));try{t.d.querySelector('[data-start="warmup"]').click();assert.equal(t.d.querySelector('.results'),null);assert.equal(t.d.querySelectorAll('.question-card').length,8);t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.results').textContent,/Practice finished/);assert.match(t.d.querySelector('time').textContent,/Nov 7, 2026/);t.d.querySelector('#fresh').click();assert.equal(JSON.parse(t.saved()).articles.warmup.length,2);assert.equal(JSON.parse(t.saved()).articles.warmup[0].completedAt,r.completedAt);}finally{t.close();}});
 test('saved NNAT work syncs into a second browser with five-choice answers intact',async()=>{let remote=null;const fetcher=async(_url,options)=>{if(options.method==='POST'){const p=JSON.parse(options.body);assert.equal(p.appId,KEY);remote={state:p.state,version:(remote?.version||0)+1};return {ok:true,json:async()=>({accepted:true,progress:remote})};}return {ok:true,json:async()=>({progress:remote})};};const saved=JSON.stringify({version:1,articles:{serial:[{id:'synced',questionIds:[q.id],startedAt:'2026-11-07T20:00:00Z',position:0,answers:{[q.id]:[{choice:4,checkedAt:'2026-11-07T20:01:00Z',answerOK:true}]},drafts:{}}]}}),a=boot(saved,fetcher);const settle=async t=>{for(let i=0;i<100&&t.d.querySelector('#save-status').textContent!=='Synced online';i++)await new Promise(r=>setTimeout(r,5));assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');};try{await settle(a);const b=boot(null,fetcher);try{await settle(b);assert.equal(JSON.parse(b.saved()).articles.serial[0].answers[q.id][0].choice,4);}finally{b.close();}}finally{a.close();}});
 test('the hub places NNAT after Writing and keeps Word Meaning Check archived',()=>{const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'));const ids=[...dom.window.document.querySelectorAll('.harry-grid:not(.archive-grid)>article')].map(el=>el.id);assert.deepEqual(ids,['harry-writing','harry-nnat']);assert.ok(dom.window.document.querySelector('.archive-grid #harry-word-meaning'));dom.window.close();});
 test('a newly checked answer stays in its workspace after cloud sync',async()=>{let remote=null;const fetcher=async(_url,options)=>{if(options.method==='POST'){const p=JSON.parse(options.body);remote={state:p.state,version:(remote?.version||0)+1};return {ok:true,json:async()=>({accepted:true,progress:remote})};}return {ok:true,json:async()=>({progress:remote})};};const t=boot(null,fetcher);const settle=async()=>{for(let i=0;i<200&&t.d.querySelector('#save-status').textContent!=='Synced online';i++)await new Promise(r=>setTimeout(r,5));assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');};try{await settle();t.d.querySelector('[data-start="serial"]').click();choose(t,4);check(t);t.d.querySelector('#sync-now').click();await settle();assert.match(t.d.querySelector('.source-ref').textContent,/Serial Reasoning.*#1/);assert.equal(t.d.querySelector('input:checked').value,'4');assert.match(t.d.querySelector('.feedback').textContent,/Correct/);assert.equal(remote.state.articles.serial[0].answers['serial-1'][0].choice,4);}finally{t.close();}});

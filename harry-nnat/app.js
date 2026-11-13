@@ -5,7 +5,7 @@
   const now=()=>new Date().toISOString(),byId=id=>course.questions.find(q=>q.id===id),group=q=>course.groups.find(g=>g.id===q.type);
   const modes=[...course.groups.map(g=>g.id),'mixed','warmup'];
   const title=id=>course.groups.find(g=>g.id===id)?.name||({mixed:'Mixed challenge',warmup:'Warm-up sampler'})[id]||'Practice';
-  let state={version:1,articles:{}},mode=null,run=null,review=false,sync=null,screen='home';
+  let state={version:1,articles:{}},mode=null,run=null,review=false,sync=null,screen='home',onlyDoubleWrong=false;
   try{if(!demo){const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1)state=NNATSync.normalize(saved);}}catch{}
   const runs=id=>state.articles[id]||[],latest=id=>runs(id).filter(r=>core.round(r)===1).at(-1),stat=()=>core.scores(course,run);
   const child=(id,parent)=>parent?runs(id).filter(r=>r.questionSet==='similar-v1'&&core.childOf(course,r,parent)).at(-1):null;
@@ -19,16 +19,16 @@
     catch{document.querySelector('#save-status').textContent='Storage unavailable · export a backup';}
   }
   function start(id,fresh=false){
-    mode=id;review=false;run=fresh?null:latest(id);
+    mode=id;onlyDoubleWrong=false;run=fresh?null:latest(id);
     if(!run){let questionIds=core.ids(course,id);if(id==='mixed')for(let i=questionIds.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[questionIds[i],questionIds[j]]=[questionIds[j],questionIds[i]];}
       run={id:crypto.randomUUID(),round:1,questionIds,startedAt:now(),position:0,completedAt:null,answers:{},drafts:{}};(state.articles[id]??=[]).push(run);save();}
-    if(stat().resolved===stat().total)summary();else workspace();window.scrollTo(0,0);
+    review=stat().resolved===stat().total;workspace();window.scrollTo(0,0);
   }
   function startReview(id,parentId){
     const parent=runs(id).find(r=>r.id===parentId);if(!parent||!core.canAdvance(course,parent))return;
     let next=child(id,parent);
     if(!next){next=core.reviewRun(course,parent,crypto.randomUUID(),now());if(!next)return;(state.articles[id]??=[]).push(next);save();}
-    mode=id;run=next;review=false;if(stat().resolved===stat().total)summary();else workspace();window.scrollTo(0,0);
+    mode=id;run=next;onlyDoubleWrong=false;review=stat().resolved===stat().total;workspace();window.scrollTo(0,0);
   }
   function roundStage(id,parent,n){
     const next=child(id,parent),ready=parent&&core.canAdvance(course,parent),ids=ready?core.firstWrongIds(course,parent):[],s=core.scores(course,next),done=next&&s.resolved===s.total;
@@ -38,10 +38,10 @@
   function nextRound(){return core.round(run)<3?`<section class="next-round"><h2>Next practice round</h2><p>New pictures practise the same rules as your first-try mistakes.</p>${roundStage(mode,run,core.round(run)+1)}</section>`:'';}
   function bindRounds(){app.querySelectorAll('[data-round-parent]').forEach(b=>b.onclick=()=>startReview(b.dataset.roundMode,b.dataset.roundParent));}
   function card(id,label,description){const r=latest(id),s=core.scores(course,r),total=core.ids(course,id).length,done=r&&s.resolved===total;
-    return `<article class="set-card ${done?'done':''}"><div class="set-icon" aria-hidden="true">${({pattern:'▦',analogy:'↔',serial:'⋯',spatial:'◈',mixed:'24',warmup:'8'})[id]}</div><p class="eyebrow">${label}</p><h2>${esc(title(id))}</h2><p>${esc(description)}</p>${r?`<p class="set-score">${done?'✓ Finished':`${s.resolved}/${total} checked`} · Round 1 · First try <strong>${s.first}/${total}</strong></p>${time(r)}`:''}<button class="primary" data-start="${id}">${done?'Review results':r?'Continue':'Start'} <span>→</span></button></article>`;}
+    return `<article class="set-card ${done?'done':''}"><div class="set-icon" aria-hidden="true">${({pattern:'▦',analogy:'↔',serial:'⋯',spatial:'◈',mixed:'24',warmup:'8'})[id]}</div><p class="eyebrow">${label}</p><h2>${esc(title(id))}</h2><p>${esc(description)}</p>${r?`<p class="set-score">${done?'✓ Finished':`${s.resolved}/${total} checked`} · Round 1 · First try <strong>${s.first}/${total}</strong></p>${time(r)}`:''}<button class="primary" data-start="${id}">${done?'Review questions':r?'Continue':'Start'} <span>→</span></button></article>`;}
   function home(){mode=null;run=null;review=false;screen='home';document.body.classList.remove('practising');
     app.innerHTML=`<section class="intro"><p class="eyebrow">Look closely. Test every rule.</p><h1>Harry’s NNAT<br>practice</h1><p>Eight warm-ups. Twenty-four carefully chosen challenges.</p><div class="intro-actions"><button class="primary" data-start="mixed">Mixed challenge · 24 questions →</button><button class="secondary" data-start="warmup">Warm up · 8 questions</button></div></section><section class="set-grid" aria-label="Four NNAT question types">${course.groups.map(g=>card(g.id,'2 warm-ups + 6 challenges',g.description)).join('')}</section><p class="home-note">Choose a picture, then check. A missed answer gets one more try before the explanation appears. Your first-try score stays separate from retries.</p><details class="parent-selection"><summary>Parent: why these questions?</summary><p>The 24 challenges are roughly 20% of the 120-item bank, balanced across the four types. Selection is based on rule count, visual detail, and easily confused alternatives; no official difficulty statistics were available.</p>${course.groups.map(g=>`<h3>${esc(g.name)}</h3><p>ZOZECK section question numbers. <a href="${esc(g.sourceUrl)}" target="_blank" rel="noopener">Open original section ↗</a></p><ul>${g.questionIds.map(id=>byId(id)).map(q=>`<li><strong>#${q.sourceNumber} · ${q.level==='challenge'?'Challenge':q.level==='easy'?'Easy warm-up':'Medium warm-up'}</strong> — ${esc(q.rationale)}</li>`).join('')}</ul>`).join('')}</details><details class="history"><summary>Practice history</summary><div>${history()}</div></details><button class="quiet" id="export">Export progress</button>`;
-    bindStarts();bindRounds();app.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;run=runs(mode).find(r=>r.id===b.dataset.history);summary();window.scrollTo(0,0);});app.querySelector('#export').onclick=exportProgress;
+    bindStarts();bindRounds();app.querySelectorAll('[data-history]').forEach(b=>b.onclick=()=>{mode=b.dataset.mode;run=runs(mode).find(r=>r.id===b.dataset.history);review=true;onlyDoubleWrong=false;workspace();window.scrollTo(0,0);});app.querySelector('#export').onclick=exportProgress;
   }
   function bindStarts(){app.querySelectorAll('[data-start]').forEach(b=>b.onclick=()=>start(b.dataset.start));}
   function history(){const rows=modes.flatMap(id=>runs(id).map(r=>({id,r}))).sort((a,b)=>Date.parse(b.r.startedAt)-Date.parse(a.r.startedAt));
@@ -64,7 +64,15 @@
   }
   function updateProgress(){
     const s=stat();app.querySelector('[data-progress]').textContent=`${s.resolved}/${s.total}`;
-    const button=app.querySelector('#session-results');button.disabled=!review&&s.resolved!==s.total;button.textContent=review?'Back to results':'See results';
+    const button=app.querySelector('#session-results');button.disabled=!review&&s.resolved!==s.total;
+    app.querySelector('#workspace-next-round').innerHTML=s.resolved===s.total?nextRound():'';bindRounds();updateQuestionFilter();
+  }
+  function updateQuestionFilter(){
+    const qs=core.questions(course,run),count=qs.filter(q=>core.doubleWrong(q,run)).length,button=app.querySelector('#wrong-only');
+    button.textContent=`Double wrong only · ${count}`;button.setAttribute('aria-pressed',String(onlyDoubleWrong));button.className=onlyDoubleWrong?'primary':'secondary';
+    app.querySelector('#filter-count').textContent=`Showing ${onlyDoubleWrong?count:qs.length} of ${qs.length} questions`;
+    qs.forEach(q=>{app.querySelector(`[data-question="${q.id}"]`).hidden=onlyDoubleWrong&&!core.doubleWrong(q,run);});
+    app.querySelector('#no-double-wrong').hidden=!onlyDoubleWrong||count>0;
   }
   function bindQuestion(node,q,index,total){
     node.querySelectorAll('input[type="radio"]').forEach(input=>input.onchange=()=>{
@@ -91,17 +99,18 @@
     const open=new Set(Array.from(app.querySelectorAll('.question-card .explanation[open]')).map(el=>el.closest('[data-question]').dataset.question));
     const active=document.activeElement,focus=active?.matches('input[type="radio"]')?{id:active.closest('[data-question]')?.dataset.question,value:active.value}:null;
     document.body.classList.add('practising');
-    app.innerHTML=`<div class="session-head"><div><p class="eyebrow">All ${qs.length} questions</p><h1>${esc(roundTitle(mode,run))}</h1></div><div class="question-progress"><strong data-progress>${stat().resolved}/${qs.length}</strong><span>checked</span></div></div><section class="question-list" aria-label="${esc(title(mode))} questions">${qs.map((q,index)=>questionCard(q,index,qs.length)).join('')}</section><div class="session-actions"><button class="primary" id="session-results">See results</button></div>`;
+    app.innerHTML=`<div class="session-head"><div><p class="eyebrow">All ${qs.length} questions</p><h1>${esc(roundTitle(mode,run))}</h1>${time(run)}</div><div class="question-progress"><strong data-progress>${stat().resolved}/${qs.length}</strong><span>checked</span></div></div><div class="question-filter"><button id="wrong-only" type="button" class="secondary" aria-pressed="false" aria-controls="session-questions">Double wrong only</button><p><span id="filter-count" role="status"></span><small>Double wrong = wrong on both the first and second try.</small></p></div><section class="question-list" id="session-questions" aria-label="${esc(title(mode))} questions"><p id="no-double-wrong" class="empty-filter" hidden>No questions were wrong on both tries in this round.</p>${qs.map((q,index)=>questionCard(q,index,qs.length)).join('')}</section><div class="session-actions"><button class="primary" id="session-results">See results</button></div><div id="workspace-next-round"></div>`;
     qs.forEach((q,index)=>bindQuestion(app.querySelector(`[data-question="${q.id}"]`),q,index,qs.length));updateProgress();
+    app.querySelector('#wrong-only').onclick=()=>{onlyDoubleWrong=!onlyDoubleWrong;updateQuestionFilter();};
     for(const id of open){const details=app.querySelector(`[data-question="${id}"] .explanation`);if(details)details.open=true;}
     if(focus)app.querySelector(`[data-question="${focus.id}"] input[value="${focus.value}"]`)?.focus({preventScroll:true});
     app.querySelector('#session-results').onclick=()=>{summary();window.scrollTo(0,0);};
   }
   function summary(){review=true;screen='summary';document.body.classList.remove('practising');const s=stat(),qs=core.questions(course,run),done=s.resolved===s.total;
     app.innerHTML=`<section class="results"><p class="eyebrow">${esc(roundTitle(mode,run))}</p><h1>${done?'Practice finished':'Saved practice'}</h1>${time(run)}<div class="score"><strong>${s.first}<span>/${s.total}</span></strong><p>correct on the first try</p></div><p>${s.resolved} of ${s.total} questions checked. Retries do not raise the first-try score.</p><div class="result-actions"><button class="primary" id="resume">${done?'Review questions':'Continue practice'} →</button>${done&&core.round(run)===1?'<button class="secondary" id="fresh">Start a fresh practice</button>':''}</div>${nextRound()}<h2>Your questions</h2><div class="result-list">${qs.map((q,i)=>{const aa=core.attempts(q,run),first=aa[0];return `<button class="result-row" data-review="${i}"><span>${i+1}. ${esc(group(q).name)} ${q.variantVersion?'· '+esc(q.title):'#'+q.sourceNumber}<small>${q.level==='challenge'?'Challenge':'Warm-up'}</small></span><strong class="${first?first.choice===q.answer?'correct':'incorrect':''}">${first?first.choice===q.answer?'✓ First try':'First try missed':'Not checked'}</strong></button>`;}).join('')}</div></section>`;
-    app.querySelector('#resume').onclick=()=>{review=done;run.position=done?0:Math.max(0,qs.findIndex(q=>!core.resolved(q,run)));workspace();scrollToQuestion(run.position);};
+    app.querySelector('#resume').onclick=()=>{review=done;onlyDoubleWrong=false;run.position=done?0:Math.max(0,qs.findIndex(q=>!core.resolved(q,run)));workspace();scrollToQuestion(run.position);};
     if(app.querySelector('#fresh'))app.querySelector('#fresh').onclick=()=>start(mode,true);bindRounds();
-    app.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{review=true;run.position=Number(b.dataset.review);workspace();scrollToQuestion(run.position);});
+    app.querySelectorAll('[data-review]').forEach(b=>b.onclick=()=>{review=true;onlyDoubleWrong=false;run.position=Number(b.dataset.review);workspace();scrollToQuestion(run.position);});
   }
   function exportProgress(){const blob=new Blob([JSON.stringify({...state,exportedAt:now()},null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='harry-nnat-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   document.querySelector('#all-sets').onclick=()=>{home();window.scrollTo(0,0);};document.querySelector('#close-diagram').onclick=()=>document.querySelector('#diagram-dialog').close();
