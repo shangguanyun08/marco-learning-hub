@@ -29,7 +29,8 @@
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false, expandingIdeas = false;
-  let writingChatUI = null, rewritingExample = false;
+  let writingChatUI = null;
+  const rewritingExamples = new Set();
   const conflicts = new Set();
   let displayedPart = null, displayedText = '', composing = false;
   function rememberDraft(id, row, archived = false) {
@@ -159,8 +160,10 @@
   function expansionQuestion() {
     return 'Suggest three short, concrete ideas or details Harry could add to only the ' + config.partNames[selected - 1] + ' paragraph below. Use his actual characters and events. Offer choices as questions or optional details, using simple words for Harry. Do not rewrite the paragraph or give grammar feedback. Paragraph: ' + editorText(selected).trim();
   }
-  function rewriteQuestion() {
-    return 'Write a 6/8 practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. Make a clear, attainable version for an eight-year-old with sensible sentences, connected events and a few simple, useful details. Use short, familiar words and stay close to his wording and paragraph length. Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
+  function rewriteQuestion(grade = 6) {
+    const opening = grade === 8 ? 'Write an 8/8' : 'Write a 6/8';
+    const guidance = grade === 8 ? 'Improve the connections, concrete actions and useful details with natural English an eight-year-old can understand. Keep it near his paragraph’s length.' : 'Make a clear, attainable version for an eight-year-old with sensible sentences, connected events and a few simple, useful details. Use short, familiar words and stay close to his wording and paragraph length.';
+    return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
   function paragraphHelp(question) {
     const prefix = question.slice(0, question.indexOf('Paragraph: '));
@@ -180,10 +183,17 @@
     $('rewrite-panel').hidden = !example;
     $('rewrite-reference').hidden = !example || example.question === rewriteQuestion();
     $('rewrite-text').textContent = example?.reply || '';
-    $('rewrite-example').disabled = busy || rewritingExample;
-    $('rewrite-example').textContent = rewritingExample ? 'Writing example…' : '6/8 rewrite example';
+    $('rewrite-example').disabled = busy || rewritingExamples.has(6);
+    $('rewrite-example').textContent = rewritingExamples.has(6) ? 'Writing 6/8 example…' : '6/8 rewrite example';
     $('rewrite-example').setAttribute('aria-expanded', String(Boolean(example)));
-    $('feedback').hidden = $('feedback-check').hidden && !turn && !example;
+    const eightExample = paragraphHelp(rewriteQuestion(8));
+    $('rewrite-eight-panel').hidden = !eightExample;
+    $('rewrite-eight-reference').hidden = !eightExample || eightExample.question === rewriteQuestion(8);
+    $('rewrite-eight-text').textContent = eightExample?.reply || '';
+    $('rewrite-eight').disabled = busy || rewritingExamples.has(8);
+    $('rewrite-eight').textContent = rewritingExamples.has(8) ? 'Writing 8/8 example…' : '8/8 rewrite example';
+    $('rewrite-eight').setAttribute('aria-expanded', String(Boolean(eightExample)));
+    $('feedback').hidden = $('feedback-check').hidden && !turn && !example && !eightExample;
   }
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
@@ -445,22 +455,22 @@
     $('revision').focus();
     $('revision').setSelectionRange(note.start + offset, note.end + offset);
   });
-  async function requestWritingHelp(kind) {
-    if (busy || composing || (kind === 'ideas' ? expandingIdeas : rewritingExample)) return;
+  async function requestWritingHelp(kind, grade = 6) {
+    if (busy || composing || (kind === 'ideas' ? expandingIdeas : rewritingExamples.has(grade))) return;
     captureEditor();
     error();
-    if (!editorText(selected).trim()) return error('Write a few words first so the ideas can grow from your paragraph.');
-    if (!connected) return error('Connect AI checking to get ideas for your paragraph.');
+    if (!editorText(selected).trim()) return error('Write a few words first so I can help with this paragraph.');
+    if (!connected) return error('Connect AI checking to get help with your paragraph.');
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
-    const question = kind === 'ideas' ? expansionQuestion() : rewriteQuestion();
-    const panel = kind === 'ideas' ? 'expansion-panel' : 'rewrite-panel';
-    const pendingKey = kind === 'ideas' ? 'expansionPending' : 'rewritePending';
+    const question = kind === 'ideas' ? expansionQuestion() : rewriteQuestion(grade);
+    const panel = kind === 'ideas' ? 'expansion-panel' : grade === 8 ? 'rewrite-eight-panel' : 'rewrite-panel';
+    const pendingKey = kind === 'ideas' ? 'expansionPending' : grade === 8 ? 'rewriteEightPending' : 'rewritePending';
     if ((state.chats || []).some(row => row.question === question)) {
       renderWritingHelp(); $(panel).open = true; $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
     }
     if (state[pendingKey]?.question !== question) state[pendingKey] = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
     if (kind === 'ideas') expandingIdeas = true;
-    else rewritingExample = true;
+    else rewritingExamples.add(grade);
     cache(); renderWritingHelp();
     try {
       const result = await request('chat', state[pendingKey]);
@@ -470,13 +480,14 @@
     } catch (failure) { error(failure.message); }
     finally {
       if (kind === 'ideas') expandingIdeas = false;
-      else rewritingExample = false;
+      else rewritingExamples.delete(grade);
       renderWritingHelp();
       if (!$(panel).hidden) $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
   $('expand-ideas')?.addEventListener('click', () => requestWritingHelp('ideas'));
   $('rewrite-example')?.addEventListener('click', () => requestWritingHelp('rewrite'));
+  $('rewrite-eight')?.addEventListener('click', () => requestWritingHelp('rewrite', 8));
   if (isPicture) {
     window.addEventListener('resize', resizeRevision);
     document.fonts?.ready.then(resizeRevision);

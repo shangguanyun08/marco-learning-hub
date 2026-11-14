@@ -43,5 +43,5 @@
 .writing-help-part>summary{font-size:18px;line-height:1.5;font-weight:700;cursor:pointer;min-height:32px}
 .writing-help-part>summary::marker{color:var(--teal)}
 .writing-help-part[open]>summary{margin-bottom:14px}
-#rewrite-text{white-space:pre-wrap;font-size:17px;line-height:1.8;overflow-wrap:anywhere}
+#rewrite-text,#rewrite-eight-text{white-space:pre-wrap;font-size:17px;line-height:1.8;overflow-wrap:anywhere}
 #expansion-text .next-steps{white-space:normal}
