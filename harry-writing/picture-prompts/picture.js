@@ -5,6 +5,8 @@
     kite: { title: 'A windy afternoon', image: 'images/kite.png', alt: 'A boy and a girl look at a red kite tangled on a low tree branch.' },
     garden: { title: 'The garden discovery', image: 'images/garden.png', alt: 'Two boys uncover a closed metal box among the roots in a school vegetable garden.' },
     boat: { title: 'The stuck sailboat', image: 'images/boat.png', alt: 'A boy and a girl hold a long branch as their red-sailed model boat sits caught in pond reeds.' },
+    robot: { title: 'The runaway robot', image: 'images/robot.png', alt: 'A boy and a girl watch their wheeled robot roll away with a wobbly stack of balls in a school playground.' },
+    dragon: { title: 'The treehouse surprise', image: 'images/dragon.png', alt: 'Two boys discover a tiny green dragon beside a cracked egg in their treehouse.' },
     own: { title: 'My own topic' }
   };
   const key = new URLSearchParams(location.search).get('topic');
