@@ -30,7 +30,7 @@ function boot(revisions, saved = {}) {
     let result;
     if (action === 'work') result = { storyId: w.WRITING_STORY_ID, drafts: [], revisions, models: [], chats: saved.chats || [] };
     if (action === 'model') result = { model: { kind: 'rewrite', generation_version: 2, sentence_id: 1, revision_id: revisions.at(-1).id, source_text: row.text, text: 'A boy went home.' } };
-    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : 'What did the boy notice on his way home?', created_at: '2026-11-08T14:00:00Z' } };
+    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: '2026-11-08T14:00:00Z' } };
     if (action === 'draft') result = { draft: { version: 1, updated_at: '2026-11-08T14:01:00Z' } };
     return { ok: true, status: 200, json: async () => result };
   };
@@ -129,6 +129,41 @@ test('the 6/8 paragraph example shares the green box and survives reload in save
     await settle();
     assert.equal(reload.d.querySelector('#rewrite-panel').hidden, false);
     assert.match(reload.d.querySelector('#rewrite-text').textContent, /dusty lid/);
+    assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
+  } finally { reload.close(); }
+});
+
+test('6/8 and 8/8 examples save independently and stay available while Harry rewrites', async () => {
+  const t = boot([row]);
+  let saved;
+  try {
+    await settle();
+    t.d.querySelector('#rewrite-example').click();
+    t.d.querySelector('#rewrite-eight').click();
+    await settle();
+    const requests = t.calls.filter(call => call.action === 'chat');
+    assert.equal(requests.length, 2);
+    assert.match(requests[0].body.question, /6\/8.*clear, attainable/);
+    assert.match(requests[1].body.question, /8\/8.*Improve the connections/);
+    assert.notEqual(requests[0].body.requestId, requests[1].body.requestId);
+    assert.match(t.d.querySelector('#rewrite-text').textContent, /dusty lid/);
+    assert.match(t.d.querySelector('#rewrite-eight-text').textContent, /brass latch/);
+    t.d.querySelector('#rewrite-panel').open = false;
+    const input = t.d.querySelector('#revision');
+    input.value = 'A boy went home. He found a box.';
+    input.dispatchEvent(new t.w.Event('input'));
+    assert.equal(t.d.querySelector('#rewrite-panel').hidden, false);
+    assert.equal(t.d.querySelector('#rewrite-panel').open, false);
+    assert.equal(t.d.querySelector('#rewrite-eight-panel').hidden, false);
+    assert.equal(t.d.querySelector('#rewrite-eight-panel').open, true);
+    assert.equal(input.value, 'A boy went home. He found a box.');
+    saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
+  } finally { t.close(); }
+  const reload = boot([row], saved);
+  try {
+    await settle();
+    assert.match(reload.d.querySelector('#rewrite-text').textContent, /dusty lid/);
+    assert.match(reload.d.querySelector('#rewrite-eight-text').textContent, /brass latch/);
     assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
   } finally { reload.close(); }
 });
