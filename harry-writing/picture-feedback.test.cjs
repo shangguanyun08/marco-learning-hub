@@ -38,7 +38,7 @@ function boot(revisions, saved = {}) {
   return { w, d: w.document, calls, close: () => w.close() };
 }
 
-test('picture feedback skips the checklist, highlights text, expands automatically and offers actual expansion ideas', async () => {
+test('picture feedback highlights text and asks for details within Harry’s own moments', async () => {
   const t = boot([row]);
   try {
     await settle();
@@ -52,10 +52,15 @@ test('picture feedback skips the checklist, highlights text, expands automatical
     const box = t.d.querySelector('#revision');
     assert.equal(box.value.slice(box.selectionStart, box.selectionEnd), 'he go');
     t.d.querySelector('#expand-ideas').click(); await settle();
-    assert.match(t.calls.find(call => call.action === 'chat').body.question, /only the Beginning paragraph/);
+    const question = t.calls.find(call => call.action === 'chat').body.question;
+    assert.match(question, /only the Beginning paragraph/);
+    assert.match(question, /Split bundled actions into separate moments/);
+    assert.match(question, /two short, specific questions/);
+    assert.ok(question.endsWith('Paragraph: ' + row.text));
     assert.match(t.d.querySelector('#expansion-text').textContent, /notice/);
     assert.equal(t.d.querySelector('#expansion-panel').hidden, false);
     assert.equal(t.d.querySelector('#expansion-panel').closest('.feedback').id, 'feedback');
+    assert.match(t.d.querySelector('#expansion-panel').textContent, /Answer one question at a time/);
     assert.equal(t.d.querySelector('.editor').querySelectorAll('.feedback').length, 1);
     assert.equal(t.calls.filter(call => call.action === 'model').length, 0);
     box.value = 'A boy went home.'; box.dispatchEvent(new t.w.Event('input'));
@@ -63,6 +68,30 @@ test('picture feedback skips the checklist, highlights text, expands automatical
     assert.equal(t.d.querySelector('#expansion-panel').hidden, false);
     assert.equal(t.d.querySelector('#expansion-reference').hidden, false);
   } finally { t.close(); }
+});
+
+test('the expansion button refreshes earlier generic ideas and saves moment questions without changing Harry’s words', async () => {
+  const earlier = { id: 'earlier-ideas', question: 'Suggest three short, concrete ideas or details Harry could add to only the Beginning paragraph below. Use his actual characters and events. Offer choices as questions or optional details, using simple words for Harry. Do not rewrite the paragraph or give grammar feedback. Paragraph: ' + row.text, reply: 'Earlier optional plot idea.', created_at: '2026-11-08T13:00:00Z' };
+  const t = boot([row], { drafts: {}, revisions: [row], models: [], chats: [earlier] });
+  let saved;
+  try {
+    await settle();
+    t.d.querySelector('#expand-ideas').click(); await settle();
+    assert.equal(t.calls.filter(call => call.action === 'chat').length, 1);
+    assert.equal(t.d.querySelector('#revision').value, row.text);
+    t.d.querySelector('#expand-ideas').click(); await settle();
+    assert.equal(t.calls.filter(call => call.action === 'chat').length, 1);
+    saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
+    assert.equal(saved.chats.length, 2);
+    assert.ok(saved.chats.some(turn => turn.reply === earlier.reply));
+  } finally { t.close(); }
+  const reload = boot([row], saved);
+  try {
+    await settle();
+    assert.equal(reload.d.querySelector('#expansion-panel').hidden, false);
+    assert.equal(reload.d.querySelector('#revision').value, row.text);
+    assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
+  } finally { reload.close(); }
 });
 
 test('a second unsuccessful version puts a corrected sentence inside its highlighted feedback', async () => {

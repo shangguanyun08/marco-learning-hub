@@ -158,7 +158,7 @@
     return tries.length === 2 && tries.every(row => !row.feedback.complete || !row.feedback.clear || !row.feedback.correct);
   }
   function expansionQuestion() {
-    return 'Suggest three short, concrete ideas or details Harry could add to only the ' + config.partNames[selected - 1] + ' paragraph below. Use his actual characters and events. Offer choices as questions or optional details, using simple words for Harry. Do not rewrite the paragraph or give grammar feedback. Paragraph: ' + editorText(selected).trim();
+    return 'Help Harry stretch one moment in only the ' + config.partNames[selected - 1] + ' paragraph below. Pick one or two moments already in his paragraph. Split bundled actions into separate moments. For each, quote a short phrase and ask two short, specific questions about what he did, saw, heard, or how someone reacted. Ask for new details inside that moment, not a repeat of what happened. Use bullets and simple words. Do not answer, invent events, rewrite, or correct grammar. Paragraph: ' + editorText(selected).trim();
   }
   function rewriteQuestion(grade = 6) {
     const opening = grade === 8 ? 'Write an 8/8' : 'Write a 6/8';
