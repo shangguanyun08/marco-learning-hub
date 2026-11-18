@@ -127,6 +127,13 @@
   function resizeRevision() {
     if (!isPicture) return;
     const box = $('revision');
+    const counter = $('word-count'), goal = [50, 100, 50][selected - 1];
+    if (counter) {
+      const count = box.value.split(/\s+/).filter(word => /[\p{L}\p{N}]/u.test(word)).length;
+      counter.textContent = count + ' / ' + goal + ' words';
+      counter.setAttribute('aria-label', config.partNames[selected - 1] + ': ' + count + ' words. Suggested goal: ' + goal + ' words.');
+      box.placeholder = 'Aim for about ' + goal + ' words for your ' + config.partNames[selected - 1].toLowerCase() + '.';
+    }
     box.style.height = 'auto';
     box.style.height = Math.max(240, box.scrollHeight + 2) + 'px';
   }

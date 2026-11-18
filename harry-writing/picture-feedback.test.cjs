@@ -38,6 +38,34 @@ function boot(revisions, saved = {}) {
   return { w, d: w.document, calls, close: () => w.close() };
 }
 
+test('word goals follow the selected paragraph and count live text without limiting writing', async () => {
+  const t = boot([row]);
+  try {
+    await settle();
+    const box = t.d.querySelector('#revision'), counter = t.d.querySelector('#word-count');
+    assert.equal(counter.textContent, '5 / 50 words');
+    assert.equal(box.value, row.text);
+    t.d.querySelector('[data-part="2"]').click();
+    assert.equal(counter.textContent, '0 / 100 words');
+    box.value = 'Bob’s dog ate. He said “hello”.\n$1,000 —';
+    box.dispatchEvent(new t.w.Event('input'));
+    assert.equal(counter.textContent, '7 / 100 words');
+    const longer = Array(105).fill('word').join(' ');
+    box.value = longer; box.dispatchEvent(new t.w.Event('input'));
+    assert.equal(counter.textContent, '105 / 100 words');
+    assert.equal(box.value, longer);
+    t.d.querySelector('[data-part="3"]').click();
+    assert.equal(counter.textContent, '0 / 50 words');
+    assert.match(box.placeholder, /50 words.*ending/);
+    t.d.querySelector('[data-part="2"]').click();
+    assert.equal(counter.textContent, '105 / 100 words');
+    assert.equal(box.value, longer);
+    t.d.querySelector('[data-part="1"]').click();
+    assert.equal(counter.textContent, '5 / 50 words');
+    assert.equal(box.value, row.text);
+  } finally { t.close(); }
+});
+
 test('picture feedback highlights text and asks for details within Harry’s own moments', async () => {
   const t = boot([row]);
   try {
