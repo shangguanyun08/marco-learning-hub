@@ -8,7 +8,7 @@
   <script src="../activity.js?v=20261108-new-prompts" defer></script>
   <script src="../rewrite-diff.js?v=20261108-rewrite-diff" defer></script>
   <script src="../inline-feedback.js?v=20261108-inline-corrections" defer></script>
-  <script src="picture.js?v=20261117-word-goals" defer></script>
+  <script src="picture.js?v=20261117-paragraph-score" defer></script>
 </head>
 <body><main class="shell">
   <nav class="topbar"><a href="../../">← Learning hub</a><a href="../">Elephant story</a><span>HARRY’S DAILY WRITING</span></nav>
@@ -43,10 +43,11 @@
         <section id="feedback" class="feedback" aria-live="polite" hidden>
           <details id="feedback-check" class="writing-help-part" open hidden><summary id="feedback-title">Re-work the highlighted words</summary><div id="feedback-body"></div></details>
           <details id="expansion-panel" class="writing-help-part" open hidden><summary>Add details to one moment</summary><p class="small">Choose one moment. Answer one question at a time, then add your own sentences.</p><p id="expansion-reference" class="small" hidden>Questions based on your earlier draft.</p><div id="expansion-text"></div></details>
+          <details id="score-panel" class="writing-help-part" open hidden><summary id="score-title">Paragraph score &amp; suggestions</summary><p class="small">Practice estimate for this paragraph, not an official APAAS result. Score again after editing.</p><div id="score-text"></div></details>
           <details id="rewrite-panel" class="writing-help-part" open hidden><summary>6/8 rewrite example</summary><p id="rewrite-reference" class="small" hidden>Example based on your earlier draft.</p><div id="rewrite-text"></div></details>
           <details id="rewrite-eight-panel" class="writing-help-part" open hidden><summary>8/8 rewrite example</summary><p id="rewrite-eight-reference" class="small" hidden>Example based on your earlier draft.</p><div id="rewrite-eight-text"></div></details>
         </section>
-        <div class="actions"><button id="check" class="primary">AI checking</button><button id="expand-ideas" class="primary" type="button" aria-controls="expansion-panel" aria-expanded="false">Idea/detail expansion</button><button id="rewrite-example" class="primary" type="button" aria-controls="rewrite-panel" aria-expanded="false">6/8 rewrite example</button><button id="rewrite-eight" class="primary" type="button" aria-controls="rewrite-eight-panel" aria-expanded="false">8/8 rewrite example</button><button id="next" class="quiet">Next paragraph →</button></div>
+        <div class="actions"><button id="check" class="primary">AI checking</button><button id="expand-ideas" class="primary" type="button" aria-controls="expansion-panel" aria-expanded="false">Idea/detail expansion</button><button id="score-paragraph" class="primary" type="button" aria-controls="score-panel" aria-expanded="false">Score &amp; suggestions</button><button id="rewrite-example" class="primary" type="button" aria-controls="rewrite-panel" aria-expanded="false">6/8 rewrite example</button><button id="rewrite-eight" class="primary" type="button" aria-controls="rewrite-eight-panel" aria-expanded="false">8/8 rewrite example</button><button id="next" class="quiet">Next paragraph →</button></div>
         <p id="error" class="error" role="alert" hidden></p>
         <details id="history"><summary>Saved versions <span id="history-count">(0)</span></summary><div id="history-list"></div></details>
       </div>
@@ -58,6 +59,7 @@
       <div id="chat-history" class="chat-history" role="log" aria-live="polite" aria-label="Saved writing chat history"></div>
       <div class="chat-shortcuts" aria-label="Writing questions">
         <button type="button" class="quiet" data-chat-question="How can Harry expand the ideas in his story? Give a few specific suggestions based on what he wrote.">Expand the ideas</button>
+        <button id="score-shortcut" type="button" class="quiet" data-chat-question="">Score &amp; suggestions</button>
         <button type="button" class="quiet" data-chat-question="Write a 6/8 practice example based on Harry’s story, in three paragraphs. Then explain the main improvements.">6/8 example</button>
         <button type="button" class="quiet" data-chat-question="Write an 8/8 practice example based on Harry’s story, in three paragraphs. Then explain the main improvements.">8/8 example</button>
       </div>
