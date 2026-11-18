@@ -1,7 +1,10 @@
 (function (root) {
   'use strict';
-  const APP_ID = 'harry-math-fractions-20261116-v1';
-  const questions = [
+  const session = root.HarryFractionSession || {};
+  const APP_ID = session.appId || 'harry-math-fractions-20261116-v1';
+  const SESSION_ID = session.sessionId || '2026-11-16';
+  const SESSION_LABEL = session.label || 'November 16';
+  const questions = session.questions || [
     {id: 'f1', prompt: '6 1/5 + 2 4/9', answer: '8 29/45', value: [389, 45], explanation: 'Use forty-fifths: 1/5 = 9/45 and 4/9 = 20/45. Add the whole numbers and fractions: 6 + 2 + 29/45 = 8 29/45.'},
     {id: 'f2', prompt: '23 5/12 − 13 7/12', answer: '9 5/6', value: [59, 6], explanation: 'Regroup 23 5/12 as 22 17/12. Then 22 17/12 − 13 7/12 = 9 10/12. Simplify 10/12 to 5/6.'},
     {id: 'f3', prompt: '4 − 1 2/5', answer: '2 3/5', value: [13, 5], explanation: 'Regroup 4 as 3 5/5. Subtract 1 2/5: the whole part is 2 and the fractional part is 3/5.'},
@@ -11,7 +14,7 @@
   const ids = questions.map(question => question.id);
   const clone = value => JSON.parse(JSON.stringify(value));
   const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
-  const empty = () => ({version: 1, sessionId: '2026-11-16', first: null, retry: null, conflicts: []});
+  const empty = () => ({version: 1, sessionId: SESSION_ID, first: null, retry: null, conflicts: []});
 
   function parse(text) {
     if (typeof text !== 'string' || text.length > 60) return null;
@@ -49,7 +52,7 @@
   }
 
   function valid(state) {
-    if (!object(state) || state.version !== 1 || state.sessionId !== '2026-11-16' || !Array.isArray(state.conflicts) || state.conflicts.length > 20) return false;
+    if (!object(state) || state.version !== 1 || state.sessionId !== SESSION_ID || !Array.isArray(state.conflicts) || state.conflicts.length > 20) return false;
     if (state.first !== null && !validBatch(state.first, ids)) return false;
     if (state.retry !== null && (!state.first || !missed(state).length || !validBatch(state.retry, missed(state).map(question => question.id), state.first.id))) return false;
     return state.conflicts.every(item => object(item) && ['first', 'retry'].includes(item.kind) &&
@@ -89,7 +92,7 @@
 
   const score = state => state.first ? questions.filter(question => correct(question, state.first.answers[question.id])).length : 0;
   const progressScore = state => (state.first ? 5 : 0) + (state.retry ? Object.keys(state.retry.answers).length : 0);
-  const api = {APP_ID, questions, empty, parse, correct, missed, valid, submit, merge, score, progressScore};
+  const api = {APP_ID, SESSION_ID, SESSION_LABEL, questions, empty, parse, correct, missed, valid, submit, merge, score, progressScore};
   if (typeof module !== 'undefined') module.exports = api;
   else root.HarryFractionReview = api;
 })(typeof window === 'undefined' ? globalThis : window);

@@ -5,6 +5,11 @@
   const demo = /^(localhost|127\.0\.0\.1)$/.test(location.hostname) || new URLSearchParams(location.search).has('demo');
   const host = document.getElementById('session-content');
   const status = document.getElementById('save-note');
+  const expectedApp = document.querySelector('script[data-app-id]')?.dataset.appId;
+  if (expectedApp && E.APP_ID !== expectedApp) {
+    status.textContent = 'This session could not load completely. Refresh the page before answering.';
+    return;
+  }
   const escape = text => String(text).replace(/[&<>"']/g, char => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[char]));
   const fraction = (n, d) => `<span class="fraction" aria-label="${n} over ${d}"><span>${n}</span><span>${d}</span></span>`;
   function math(text) {
@@ -76,7 +81,7 @@
     const score = E.score(state);
     const missed = E.missed(state);
     const finished = state.first && (!missed.length || state.retry);
-    host.innerHTML = `${state.first ? `<section class="panel" id="result" tabindex="-1"><h2>November 16 results</h2><strong class="result-number">${score}/5 · ${score * 20}%</strong><p class="score-caption">First-try score</p><p>${finished ? 'Review the methods below with your parent.' : 'Fill in each missed answer once more, then check your second try.'}</p>${state.retry ? `<p>${missed.filter(question => E.correct(question, state.retry.answers[question.id])).length}/${missed.length} mistakes corrected on the second try.</p>` : ''}</section>` : ''}
+    host.innerHTML = `${state.first ? `<section class="panel" id="result" tabindex="-1"><h2>${escape(E.SESSION_LABEL)} results</h2><strong class="result-number">${score}/5 · ${score * 20}%</strong><p class="score-caption">First-try score</p><p>${finished ? 'Review the methods below with your parent.' : 'Fill in each missed answer once more, then check your second try.'}</p>${state.retry ? `<p>${missed.filter(question => E.correct(question, state.retry.answers[question.id])).length}/${missed.length} mistakes corrected on the second try.</p>` : ''}</section>` : ''}
       <form id="session-form" novalidate>${E.questions.map(card).join('')}
       ${!finished ? `<section class="panel"><h2>${state.first ? 'Check your corrections' : 'Ready to check all five?'}</h2><p class="submit-note">${state.first ? 'Your original first-try score is kept.' : 'Fill in every answer before checking the set. Your first submitted answers earn the score.'}</p><p id="submit-note" role="status"></p><p id="format-error" class="format-error" role="alert"></p><button id="submit-answers" class="primary" type="submit">${state.first ? 'Check second try' : 'Submit all 5 answers'}</button></section>` : ''}</form>`;
     updateButton();
@@ -107,9 +112,9 @@
   });
   document.getElementById('download').onclick = () => {
     const link = document.createElement('a');
-    const url = URL.createObjectURL(new Blob([JSON.stringify({session: '2026-11-16', state, drafts}, null, 2)], {type: 'application/json'}));
+    const url = URL.createObjectURL(new Blob([JSON.stringify({session: E.SESSION_ID, state, drafts}, null, 2)], {type: 'application/json'}));
     link.href = url;
-    link.download = 'harry-math-2026-11-16.json';
+    link.download = `harry-math-${E.SESSION_ID}.json`;
     link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
