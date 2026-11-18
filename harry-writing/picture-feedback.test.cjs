@@ -156,6 +156,9 @@ test('one score action combines language and moment advice without separate chec
     assert.match(request.body.question, /language-use advice/);
     assert.match(request.body.question, /details inside one or two moments/);
     assert.match(request.body.question, /short, optional wording improvements/);
+    assert.match(request.body.question, /two or three concrete language-use bullets/);
+    assert.match(request.body.question, /commas, periods, capital letters, sentence clarity, or repeated and unnecessary words/);
+    assert.match(request.body.question, /Only address issues actually present/);
     assert.match(t.d.querySelector('#score-text').textContent, /Language:.*hurried home/);
     assert.match(t.d.querySelector('#score-text').textContent, /Detail:.*notice/);
     assert.equal(t.d.querySelector('#score-title').textContent, 'Score & suggestion');

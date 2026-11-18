@@ -27,7 +27,7 @@
   document.title = 'Harry’s Daily Writing · ' + topic.title;
   if (topic.image) { $('prompt-image').src = topic.image; $('prompt-image').alt = topic.alt; $('prompt-picture').hidden = false; }
   else $('own-topic').hidden = false;
-  const script = document.createElement('script'); script.src = '../app.js?v=20261118-unified-score'; document.head.append(script);
+  const script = document.createElement('script'); script.src = '../app.js?v=20261118-language-advice'; document.head.append(script);
 
   function read(key) {
     try { return localStorage.getItem(key); } catch { return null; }
