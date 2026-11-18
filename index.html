@@ -75,12 +75,12 @@
 
 
           <article class="site-card featured" id="marco-meaning-round2">
-            <div class="card-topline"><span>WORD MEANING CHECK</span><small>Round 2</small></div>
+            <div class="card-topline"><span>DAILY VR · SYNONYM REVIEW</span><small>Saved rounds and scores</small></div>
             <div class="icon">VR</div>
-            <h3>Marco’s Word Meaning Check</h3>
-            <p>Review each word with a simple meaning, an example, and pronunciation. Practise recall one section at a time, repeat unknown words in shuffled rounds, and open the AI-scored meaning tests.</p>
-            <ul><li>Word review and recall</li><li>AI-scored meaning tests</li><li>Saved rounds and scores</li></ul>
-            <a href="./marco-vr-practice/meaning-check/round-2/">Open Word Meaning Check · Round 2 <span>→</span></a>
+            <h3>Marco’s Daily VR</h3>
+            <p>Choose the closest synonym in a compact word list. Repeat only wrong or unsure answers in later rounds, until every word is correct.</p>
+            <ul><li>Four choices per word</li><li>“I don’t know” shows a short meaning</li><li>Scores and history saved online</li></ul>
+            <a href="https://marco-10-word-meaning-trial.alexsoton.chatgpt.site/marco/all-words#synonym-review">Open Daily VR</a>
           </article>
 
 
@@ -181,9 +181,17 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>21 sites</span>
+                <span>22 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+                <article class="site-card archived" id="marco-word-meaning-2026-11-18">
+                  <div class="card-topline"><span>ARCHIVED · WORD REVIEW &amp; AI TESTS</span><small>November 18, 2026</small></div>
+                  <div class="icon">VR</div>
+                  <h3>Word Meaning Check · 2026-11-18</h3>
+                  <p>The previous review-and-recall page, with examples, pronunciation, AI meaning tests, and saved scores.</p>
+                  <a href="./marco-vr-practice/meaning-check/round-2/archive-2026-11-18.html">Open November 18 archive</a>
+                </article>
+
           <article class="site-card archived" id="marco-vr-word-archive">
             <div class="card-topline"><span>ARCHIVED · VR WORDS</span><small>164 words</small></div>
             <div class="icon">Aa</div>
@@ -504,7 +512,7 @@
     <script src="./shared-activity-dashboard.js?v=20261107-minutes" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-vr-practice','#marco-vr-word-archive','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
+        if(['#archives','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-word-meaning-2026-11-18','#marco-vr-practice','#marco-vr-word-archive','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
