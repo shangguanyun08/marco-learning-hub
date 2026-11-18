@@ -1,5 +1,11 @@
 # Harry’s selected NNAT practice
 
+## Session 1117
+
+The November 17 session repeats 13 original challenge questions missed on the first try among the 24 challenges across the four completed Round 1 type sets. The selection uses the saved first checked choice, including questions corrected on a second try, and excludes warm-ups. It is a frozen selection in `data.js`, independent of later changes or new runs: 3 Pattern, 3 Analogy, 4 Serial, and 3 Spatial questions. No separate mixed-challenge run was saved at selection time.
+
+Its card sits above the four type sets on the same home page. It starts with clean answers and saves under `articles['session-1117']` in the existing NNAT namespace, with its own score, completion time, drafts, and history. Opening it again resumes the same saved run. Existing course answers and round histories are preserved. It uses the normal first/second checks, explanation timing, direct question view, and double-wrong filter.
+
 ## Direct question review
 
 Opening a set, completed review round, or history entry goes straight to its questions. Completed answers remain locked, and results are available through **See results**. A **Double wrong only** toggle above the question list shows only items with two valid checked choices that were both wrong in that saved round. A single wrong first try, an unsubmitted draft, or a correct second try does not qualify. The filter keeps the original question numbers, saved drafts, open explanations, scores, and completion times; toggling it never writes learner progress. An empty filter explains that there are no such questions. Next-round practice stays available below a completed question list.

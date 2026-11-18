@@ -1,6 +1,21 @@
 window.NNAT_COURSE = {
   "version": 1,
   "sourceCount": 120,
+  "sessions": [
+    {
+      "id": "session-1117",
+      "name": "Session 1117",
+      "date": "2026-11-17",
+      "sourceQuestionCount": 24,
+      "description": "Redo the first-try mistakes from your 24 challenge questions.",
+      "questionIds": [
+        "pattern-12", "pattern-25", "pattern-37",
+        "analogy-16", "analogy-19", "analogy-23",
+        "serial-4", "serial-5", "serial-9", "serial-14",
+        "spatial-8", "spatial-18", "spatial-24"
+      ]
+    }
+  ],
   "groups": [
     {
       "id": "pattern",

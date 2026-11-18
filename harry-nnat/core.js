@@ -28,7 +28,7 @@
   function ids(course,mode){
     if(mode==='mixed')return course.questions.filter(q=>q.level==='challenge').map(q=>q.id);
     if(mode==='warmup')return course.questions.filter(q=>q.level!=='challenge').map(q=>q.id);
-    return [...(course.groups.find(g=>g.id===mode)?.questionIds||[])];
+    return [...((course.sessions||[]).find(s=>s.id===mode)?.questionIds||course.groups.find(g=>g.id===mode)?.questionIds||[])];
   }
   const api={attempts,resolved,doubleWrong,questions,scores,check,ids,round,firstWrongIds,canAdvance,firstPassKey,childOf,reviewRun};
   if(typeof module!=='undefined')module.exports=api;else root.NNATCore=api;

@@ -9,6 +9,52 @@ const card=(t,id)=>t.d.querySelector(id?`[data-question="${id}"]`:'.question-car
 const at='2026-11-08T04:00:00Z',later='2026-11-08T05:00:00Z',item=id=>course.questions.find(q=>q.id===id)||variants.get(course,id);
 function legacyRun(wrong=4){const r={id:'legacy-round-one',questionIds:core.ids(course,'pattern'),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};r.questionIds.forEach((id,i)=>{const q=item(id);core.check(course,r,q,i<wrong?(q.answer+1)%5:q.answer,at);if(i<wrong)core.check(course,r,q,q.answer,later);});return r;}
 
+test('Session 1117 is a frozen set of 13 original challenges across all four types',()=>{
+  const session=course.sessions.find(s=>s.id==='session-1117'),ids=core.ids(course,session.id);
+  assert.equal(session.name,'Session 1117');assert.equal(session.date,'2026-11-17');assert.equal(session.sourceQuestionCount,24);
+  assert.equal(ids.length,13);assert.equal(new Set(ids).size,13);
+  assert.ok(ids.every(id=>course.questions.some(q=>q.id===id&&q.level==='challenge')));
+  assert.deepEqual(course.groups.map(g=>ids.filter(id=>item(id).type===g.id).length),[3,3,4,3]);
+  ids.pop();assert.equal(core.ids(course,session.id).length,13);
+  assert.equal(core.ids(course,'mixed').length,24);assert.equal(course.questions.length,32);
+});
+
+test('Session 1117 starts clean above the type sets and resumes its own answers without changing source work',()=>{
+  const original=legacyRun(),seed=JSON.stringify({version:1,articles:{pattern:[original]}}),t=boot(seed);
+  try{
+    const section=t.d.querySelector('.dated-sessions'),grid=t.d.querySelector('.set-grid');
+    assert.ok(section.compareDocumentPosition(grid)&t.w.Node.DOCUMENT_POSITION_FOLLOWING);
+    assert.equal(t.saved(),seed);t.d.querySelector('[data-start="session-1117"]').click();
+    assert.match(t.d.querySelector('.session-head h1').textContent,/Session 1117/);
+    assert.equal(t.d.querySelectorAll('.question-card').length,13);assert.equal(t.d.querySelector('input:checked'),null);
+    assert.equal(t.d.querySelector('.feedback'),null);assert.equal(t.d.querySelector('.explanation'),null);
+    let saved=JSON.parse(t.saved());assert.deepEqual(saved.articles.pattern,[original]);
+    const r=saved.articles['session-1117'][0];assert.deepEqual(r.questionIds,core.ids(course,'session-1117'));
+    assert.deepEqual(r.answers,{});assert.deepEqual(r.drafts,{});assert.equal(r.completedAt,null);
+    const first=item(r.questionIds[0]);choose(t,first.answer,first.id);check(t,first.id);
+    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('[data-start="session-1117"]').textContent,/Continue Session 1117/);
+    t.d.querySelector('[data-start="session-1117"]').click();assert.equal(card(t,first.id).querySelector('input:checked').value,String(first.answer));
+    saved=JSON.parse(t.saved());assert.equal(saved.articles['session-1117'].length,1);assert.deepEqual(saved.articles.pattern,[original]);
+    const reload=boot(t.saved());try{reload.d.querySelector('[data-start="session-1117"]').click();assert.equal(reload.d.querySelector('[data-progress]').textContent,'1/13');assert.match(card(reload,first.id).querySelector('.feedback').textContent,/Correct/);}finally{reload.close();}
+  }finally{t.close();}
+});
+
+test('Session 1117 keeps its first-try score, finish time, filtered review and history separate',()=>{
+  const original=legacyRun(),t=boot(JSON.stringify({version:1,articles:{pattern:[original]}}));
+  try{
+    t.d.querySelector('[data-start="session-1117"]').click();const ids=core.ids(course,'session-1117');
+    ids.forEach((id,i)=>{const q=item(id);choose(t,i===0?(q.answer+1)%5:q.answer,id);check(t,id);if(i===0){choose(t,(q.answer+2)%5,id);check(t,id);}});
+    const saved=JSON.parse(t.saved()),r=saved.articles['session-1117'][0];
+    assert.ok(r.completedAt);assert.deepEqual(core.scores(course,r),{total:13,answered:13,first:12,resolved:13});assert.deepEqual(saved.articles.pattern,[original]);
+    t.d.querySelector('#wrong-only').click();assert.deepEqual([...t.d.querySelectorAll('.question-card:not([hidden])')].map(el=>el.dataset.question),[ids[0]]);
+    t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.score').textContent,/12\/13/);
+    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('.dated-session').textContent,/Finished.*First try 12\/13/);
+    assert.ok([...t.d.querySelectorAll('.history-row h3')].some(el=>/Session 1117/.test(el.textContent)));
+    t.d.querySelector('[data-start="session-1117"]').click();assert.equal(t.d.querySelector('.results'),null);assert.equal(t.d.querySelectorAll('fieldset:disabled').length,13);
+    const merged=sync.merge({version:1,articles:{pattern:[original]}},saved);assert.deepEqual(merged.articles['session-1117'],[r]);assert.deepEqual(merged.articles.pattern,[original]);
+  }finally{t.close();}
+});
+
 test('double wrong requires two checked wrong choices, excluding corrections, drafts and invalid checks',()=>{
   const r={questionIds:[q.id],answers:{},drafts:{[q.id]:{choice:0,updatedAt:at}}};
   assert.equal(core.doubleWrong(q,r),false);
@@ -112,7 +158,7 @@ test('drafts resume, answers reveal only after resolution, and retries do not ch
 test('mixed challenge excludes warm-ups and enlargement leaves saved answers untouched',()=>{const t=boot();try{t.d.querySelector('[data-start="mixed"]').click();const saved=t.saved(),r=JSON.parse(saved).articles.mixed[0];assert.equal(r.questionIds.length,24);assert.equal(new Set(r.questionIds).size,24);assert.ok(r.questionIds.every(id=>course.questions.find(q=>q.id===id).level==='challenge'));t.d.querySelector('.enlarge').click();assert.equal(t.d.querySelector('dialog').open,true);assert.equal(t.saved(),saved);t.d.querySelector('#close-diagram').click();assert.equal(t.d.querySelector('dialog').open,false);}finally{t.close();}});
 test('finished runs retain a dated history and starting again appends a new record',()=>{const ids=core.ids(course,'warmup'),r={id:'done',startedAt:'2026-11-07T20:00:00Z',questionIds:ids,position:0,answers:{},drafts:{}};for(const id of ids){const item=course.questions.find(q=>q.id===id);core.check(course,r,item,item.answer,'2026-11-07T20:15:00Z');}const t=boot(JSON.stringify({version:1,articles:{warmup:[r]}}));try{t.d.querySelector('[data-start="warmup"]').click();assert.equal(t.d.querySelector('.results'),null);assert.equal(t.d.querySelectorAll('.question-card').length,8);t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.results').textContent,/Practice finished/);assert.match(t.d.querySelector('time').textContent,/Nov 7, 2026/);t.d.querySelector('#fresh').click();assert.equal(JSON.parse(t.saved()).articles.warmup.length,2);assert.equal(JSON.parse(t.saved()).articles.warmup[0].completedAt,r.completedAt);}finally{t.close();}});
 test('saved NNAT work syncs into a second browser with five-choice answers intact',async()=>{let remote=null;const fetcher=async(_url,options)=>{if(options.method==='POST'){const p=JSON.parse(options.body);assert.equal(p.appId,KEY);remote={state:p.state,version:(remote?.version||0)+1};return {ok:true,json:async()=>({accepted:true,progress:remote})};}return {ok:true,json:async()=>({progress:remote})};};const saved=JSON.stringify({version:1,articles:{serial:[{id:'synced',questionIds:[q.id],startedAt:'2026-11-07T20:00:00Z',position:0,answers:{[q.id]:[{choice:4,checkedAt:'2026-11-07T20:01:00Z',answerOK:true}]},drafts:{}}]}}),a=boot(saved,fetcher);const settle=async t=>{for(let i=0;i<100&&t.d.querySelector('#save-status').textContent!=='Synced online';i++)await new Promise(r=>setTimeout(r,5));assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');};try{await settle(a);const b=boot(null,fetcher);try{await settle(b);assert.equal(JSON.parse(b.saved()).articles.serial[0].answers[q.id][0].choice,4);}finally{b.close();}}finally{a.close();}});
-test('the hub places NNAT after Writing and keeps Word Meaning Check archived',()=>{const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'));const ids=[...dom.window.document.querySelectorAll('.harry-grid:not(.archive-grid)>article')].map(el=>el.id);assert.deepEqual(ids,['harry-writing','harry-nnat']);assert.ok(dom.window.document.querySelector('.archive-grid #harry-word-meaning'));dom.window.close();});
+test('the hub places NNAT after Writing and keeps Word Meaning Check archived',()=>{const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'../index.html'),'utf8'));const ids=[...dom.window.document.querySelectorAll('.harry-grid:not(.archive-grid)>article')].map(el=>el.id);assert.ok(ids.includes('harry-writing'));assert.equal(ids.indexOf('harry-nnat'),ids.indexOf('harry-writing')+1);assert.ok(dom.window.document.querySelector('.archive-grid #harry-word-meaning'));dom.window.close();});
 test('a newly checked answer stays in its workspace after cloud sync',async()=>{let remote=null;const fetcher=async(_url,options)=>{if(options.method==='POST'){const p=JSON.parse(options.body);remote={state:p.state,version:(remote?.version||0)+1};return {ok:true,json:async()=>({accepted:true,progress:remote})};}return {ok:true,json:async()=>({progress:remote})};};const t=boot(null,fetcher);const settle=async()=>{for(let i=0;i<200&&t.d.querySelector('#save-status').textContent!=='Synced online';i++)await new Promise(r=>setTimeout(r,5));assert.equal(t.d.querySelector('#save-status').textContent,'Synced online');};try{await settle();t.d.querySelector('[data-start="serial"]').click();choose(t,4);check(t);t.d.querySelector('#sync-now').click();await settle();assert.match(t.d.querySelector('.source-ref').textContent,/Serial Reasoning.*#1/);assert.equal(t.d.querySelector('input:checked').value,'4');assert.match(t.d.querySelector('.feedback').textContent,/Correct/);assert.equal(remote.state.articles.serial[0].answers['serial-1'][0].choice,4);}finally{t.close();}});
 
 
