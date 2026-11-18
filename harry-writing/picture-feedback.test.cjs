@@ -30,13 +30,89 @@ function boot(revisions, saved = {}) {
     let result;
     if (action === 'work') result = { storyId: w.WRITING_STORY_ID, drafts: [], revisions, models: [], chats: saved.chats || [] };
     if (action === 'model') result = { model: { kind: 'rewrite', generation_version: 2, sentence_id: 1, revision_id: revisions.at(-1).id, source_text: row.text, text: 'A boy went home.' } };
-    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: '2026-11-08T14:00:00Z' } };
+    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5/8' : '6/8') + '\n- Develop the moment when the lid opens.\n- Show how the boy reacts.' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
     if (action === 'draft') result = { draft: { version: 1, updated_at: '2026-11-08T14:01:00Z' } };
     return { ok: true, status: 200, json: async () => result };
   };
   for (const file of ['activity.js', 'rewrite-diff.js', 'inline-feedback.js', 'app.js']) w.eval(fs.readFileSync(path.join(__dirname, file), 'utf8'));
   return { w, d: w.document, calls, close: () => w.close() };
 }
+
+test('paragraph scoring precedes examples and keeps each part’s score and writing separate', async () => {
+  const middle = 'The boy tried a key.', ending = 'He opened the box.';
+  const t = boot([row], { drafts: { 2: { text: middle, version: 1 }, 3: { text: ending, version: 1 } }, revisions: [row], models: [], chats: [] });
+  let saved;
+  try {
+    await settle();
+    const button = t.d.querySelector('#score-paragraph');
+    assert.equal(button.nextElementSibling.id, 'rewrite-example');
+    assert.match(t.d.querySelector('#score-shortcut').nextElementSibling.textContent, /6\/8/);
+    button.click(); await settle();
+    const first = t.calls.find(call => call.action === 'chat').body;
+    assert.deepEqual(Array.from(first.paragraphs), [row.text, middle, ending]);
+    assert.match(first.question, /only Harry.s Beginning paragraph/);
+    assert.match(t.d.querySelector('#score-text').textContent, /6\/8/);
+    assert.equal(t.d.querySelector('#score-panel').closest('.feedback').id, 'feedback');
+    assert.equal(t.d.querySelector('#revision').value, row.text);
+    t.d.querySelector('#score-panel').open = false;
+    t.d.querySelector('[data-part="2"]').click();
+    const box = t.d.querySelector('#revision');
+    box.value = middle + ' It did not fit.'; box.dispatchEvent(new t.w.Event('input'));
+    assert.equal(t.d.querySelector('#score-panel').hidden, true);
+    button.click(); await settle();
+    const requests = t.calls.filter(call => call.action === 'chat');
+    assert.equal(requests.length, 2);
+    assert.notEqual(requests[0].body.requestId, requests[1].body.requestId);
+    assert.equal(requests[1].body.paragraphs[1], box.value);
+    assert.match(requests[1].body.question, /only Harry.s Middle paragraph/);
+    assert.equal(box.value, middle + ' It did not fit.');
+    assert.match(t.d.querySelector('#score-title').textContent, /Middle/);
+    assert.match(t.d.querySelector('#score-text').textContent, /5\/8/);
+    t.d.querySelector('[data-part="1"]').click();
+    assert.match(t.d.querySelector('#score-text').textContent, /6\/8/);
+    t.d.querySelector('[data-part="3"]').click();
+    assert.equal(t.d.querySelector('#score-panel').hidden, true);
+    t.d.querySelector('[data-part="2"]').click();
+    assert.match(t.d.querySelector('#score-text').textContent, /5\/8/);
+    saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
+    assert.equal(saved.chats.length, 2);
+  } finally { t.close(); }
+  const reload = boot([row], saved);
+  try {
+    await settle();
+    assert.equal(reload.d.querySelector('#score-panel').hidden, false);
+    assert.match(reload.d.querySelector('#score-text').textContent, /5\/8/);
+    assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
+  } finally { reload.close(); }
+});
+
+test('paragraph scoring permits unfinished surrounding paragraphs and retries a failed request with the same ID', async () => {
+  const t = boot([row]);
+  try {
+    await settle();
+    t.d.querySelector('[data-part="2"]').click();
+    t.d.querySelector('#score-paragraph').click(); await settle();
+    assert.equal(t.calls.filter(call => call.action === 'chat').length, 0);
+    assert.match(t.d.querySelector('#error').textContent, /this paragraph before scoring/);
+    const box = t.d.querySelector('#revision');
+    box.value = 'He tried the key.';
+    box.dispatchEvent(new t.w.Event('input'));
+    const fetch = t.w.fetch, requests = [];
+    t.w.fetch = async (url, options) => {
+      if (new URL(url).searchParams.get('action') === 'chat') {
+        requests.push(JSON.parse(options.body));
+        if (requests.length === 1) return { ok: false, status: 503, json: async () => ({ error: 'Try scoring again.' }) };
+      }
+      return fetch(url, options);
+    };
+    t.d.querySelector('#score-paragraph').click(); await settle();
+    assert.match(t.d.querySelector('#error').textContent, /Try scoring again/);
+    t.d.querySelector('#score-paragraph').click(); await settle();
+    assert.equal(requests[0].requestId, requests[1].requestId);
+    assert.equal(requests[1].paragraphs[2], '');
+    assert.equal(t.d.querySelector('#score-panel').hidden, false);
+  } finally { t.close(); }
+});
 
 test('word goals follow the selected paragraph and count live text without limiting writing', async () => {
   const t = boot([row]);

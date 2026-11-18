@@ -29,7 +29,7 @@
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false, expandingIdeas = false;
-  let writingChatUI = null;
+  let writingChatUI = null, scoringStory = false;
   const rewritingExamples = new Set();
   const conflicts = new Set();
   let displayedPart = null, displayedText = '', composing = false;
@@ -172,6 +172,9 @@
     const guidance = grade === 8 ? 'Improve the connections, concrete actions and useful details with natural English an eight-year-old can understand. Keep it near his paragraph’s length.' : 'Make a clear, attainable version for an eight-year-old with sensible sentences, connected events and a few simple, useful details. Use short, familiar words and stay close to his wording and paragraph length.';
     return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
+  function scoreQuestion() {
+    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Give a brief reason for the estimate and two specific suggestions to improve its language use, imagination, and idea development/structure. Judge its role in the story; other paragraphs are context only and may be unfinished. This is a practice estimate for this paragraph, not an official test score.';
+  }
   function paragraphHelp(question) {
     const prefix = question.slice(0, question.indexOf('Paragraph: '));
     const turns = (state.chats || []).filter(row => row.question.startsWith(prefix));
@@ -186,6 +189,15 @@
     $('expand-ideas').disabled = busy || expandingIdeas;
     $('expand-ideas').textContent = expandingIdeas ? 'Finding ideas…' : 'Idea/detail expansion';
     $('expand-ideas').setAttribute('aria-expanded', String(Boolean(turn)));
+    const score = (state.chats || []).filter(row => row.question === scoreQuestion()).at(-1);
+    $('score-panel').hidden = !score;
+    $('score-title').textContent = config.partNames[selected - 1] + ' score & suggestions';
+    $('score-text').innerHTML = score ? suggestionList(score.reply) : '';
+    $('score-paragraph').disabled = busy || scoringStory;
+    $('score-paragraph').textContent = scoringStory ? 'Scoring paragraph…' : 'Score & suggestions';
+    $('score-paragraph').setAttribute('aria-expanded', String(Boolean(score)));
+    $('score-shortcut').dataset.chatQuestion = scoreQuestion();
+    $('score-shortcut').textContent = 'Score ' + config.partNames[selected - 1];
     const example = paragraphHelp(rewriteQuestion());
     $('rewrite-panel').hidden = !example;
     $('rewrite-reference').hidden = !example || example.question === rewriteQuestion();
@@ -200,7 +212,7 @@
     $('rewrite-eight').disabled = busy || rewritingExamples.has(8);
     $('rewrite-eight').textContent = rewritingExamples.has(8) ? 'Writing 8/8 example…' : '8/8 rewrite example';
     $('rewrite-eight').setAttribute('aria-expanded', String(Boolean(eightExample)));
-    $('feedback').hidden = $('feedback-check').hidden && !turn && !example && !eightExample;
+    $('feedback').hidden = $('feedback-check').hidden && !turn && !score && !example && !eightExample;
   }
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
@@ -492,6 +504,30 @@
       if (!$(panel).hidden) $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
+  async function scoreParagraph() {
+    if (busy || composing || scoringStory) return;
+    captureEditor(); error();
+    const part = selected, question = scoreQuestion(), paragraphs = parts.map((_, index) => editorText(index + 1).trim());
+    if (!paragraphs[part - 1]) return error('Write a few words in this paragraph before scoring it.');
+    if (!connected) return error('Connect AI checking to score your paragraph.');
+    if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
+    if (!state.scorePending || state.scorePending.question !== question || JSON.stringify(state.scorePending.paragraphs) !== JSON.stringify(paragraphs) || state.scorePending.topicTitle !== (config.custom ? draft(0).text : undefined)) {
+      state.scorePending = { requestId: crypto.randomUUID(), question, paragraphs, ...(config.custom ? { topicTitle: draft(0).text } : {}) };
+    }
+    const pending = state.scorePending;
+    scoringStory = true; cache(); renderWritingHelp();
+    try {
+      const result = await request('chat', pending);
+      writingChatUI.merge([result.turn]);
+      if (selected === part) $('score-panel').open = true;
+      delete state.scorePending; cache();
+    } catch (failure) { error(failure.message); }
+    finally {
+      scoringStory = false; renderWritingHelp();
+      if (selected === part && !$('score-panel').hidden) $('score-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+  $('score-paragraph')?.addEventListener('click', scoreParagraph);
   $('expand-ideas')?.addEventListener('click', () => requestWritingHelp('ideas'));
   $('rewrite-example')?.addEventListener('click', () => requestWritingHelp('rewrite'));
   $('rewrite-eight')?.addEventListener('click', () => requestWritingHelp('rewrite', 8));
@@ -571,6 +607,7 @@
       cache();
       renderHistory();
       updateConnection();
+      renderWritingHelp();
     }
 
     questionBox.addEventListener('input', () => {
