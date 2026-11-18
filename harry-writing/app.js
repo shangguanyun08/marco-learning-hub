@@ -13,9 +13,15 @@
     return '<ul class="next-steps">' + lines.map(line => '<li>' + escape(line) + '</li>').join('') + '</ul>';
   }
   function scoreSuggestions(text, source) {
+    let content = String(text || ''), badge = '';
+    const score = content.match(/^[ \t]*(Estimated practice score|Earlier estimate)[ \t]*:[ \t]*([1-8])[ \t]*\/[ \t]*8\b([^\r\n]*)/im);
+    if (score) {
+      badge = '<div class="practice-score"><span>' + escape(score[1]) + ': </span><strong aria-label="' + score[2] + ' out of 8">' + score[2] + '/8</strong></div>';
+      content = content.replace(score[0], score[3].trim());
+    }
     const groups = [{ title: 'Language use', lines: [] }, { title: 'Development', lines: [] }], intro = [];
     let current = null;
-    for (const raw of String(text || '').split(/\r?\n/)) {
+    for (const raw of content.split(/\r?\n/)) {
       const line = raw.trim();
       if (!line) continue;
       const heading = line.replace(/[*#:]/g, '').trim().toLowerCase();
@@ -23,7 +29,7 @@
       if (group) current = group;
       else (current ? current.lines : intro).push(line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, ''));
     }
-    if (groups.some(group => !group.lines.length)) return suggestionList(text);
+    if (groups.some(group => !group.lines.length)) return badge + (content.trim() ? suggestionList(content) : '');
     const highlight = line => {
       let html = '', offset = 0;
       for (const match of line.matchAll(/“([^”\n]+)”|"([^"\n]+)"/g)) {
@@ -34,7 +40,7 @@
       }
       return html + escape(line.slice(offset));
     };
-    return intro.map(line => '<p>' + escape(line) + '</p>').join('') + groups.map(group => '<section class="score-advice"><h3>' + group.title + '</h3><ul class="next-steps">' + group.lines.map(line => '<li>' + highlight(line) + '</li>').join('') + '</ul></section>').join('');
+    return badge + intro.map(line => '<p>' + escape(line) + '</p>').join('') + groups.map(group => '<section class="score-advice"><h3>' + group.title + '</h3><ul class="next-steps">' + group.lines.map(line => '<li>' + highlight(line) + '</li>').join('') + '</ul></section>').join('');
   }
   function read(key, storage = localStorage) { try { return storage.getItem(key); } catch { return null; } }
   function write(key, value, storage = localStorage) { try { storage.setItem(key, value); return true; } catch { return false; } }
