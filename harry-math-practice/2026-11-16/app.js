@@ -78,6 +78,7 @@
   }
 
   function render() {
+    root.HarryFractionDashboard?.update(E.APP_ID, state);
     const score = E.score(state);
     const missed = E.missed(state);
     const finished = state.first && (!missed.length || state.retry);

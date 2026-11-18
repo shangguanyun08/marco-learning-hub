@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const session = {
-    appId: 'harry-math-fractions-20261117-v1', sessionId: '2026-11-17', label: 'November 17',
+    appId: 'harry-math-fractions-20261117-v1', sessionId: '2026-11-17', label: 'Session 1',
     questions: [
       {id: 'f1', prompt: '5 2/5 + 3 1/3', answer: '8 11/15', value: [131, 15], explanation: 'Use fifteenths: 2/5 = 6/15 and 1/3 = 5/15. Add the whole numbers and fractions: 5 + 3 + 11/15 = 8 11/15.'},
       {id: 'f2', prompt: '21 3/8 − 12 5/8', answer: '8 3/4', value: [35, 4], explanation: 'Regroup 21 3/8 as 20 11/8. Then 20 11/8 − 12 5/8 = 8 6/8. Simplify 6/8 to 3/4.'},

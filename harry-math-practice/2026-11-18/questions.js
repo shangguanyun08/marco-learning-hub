@@ -1,7 +1,7 @@
 (function (root) {
   'use strict';
   const session = {
-    appId: 'harry-math-fractions-20261118-v1', sessionId: '2026-11-18', label: 'November 18',
+    appId: 'harry-math-fractions-20261118-v1', sessionId: '2026-11-18', label: 'Session 2',
     questions: [
       {id: 'f1', prompt: '7 1/4 + 2 2/3', answer: '9 11/12', value: [119, 12], explanation: 'Use twelfths: 1/4 = 3/12 and 2/3 = 8/12. Add the whole numbers and fractions: 7 + 2 + 11/12 = 9 11/12.'},
       {id: 'f2', prompt: '24 5/12 − 14 11/12', answer: '9 1/2', value: [19, 2], explanation: 'Regroup 24 5/12 as 23 17/12. Then 23 17/12 − 14 11/12 = 9 6/12. Simplify 6/12 to 1/2.'},

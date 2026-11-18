@@ -3,7 +3,7 @@
   const session = root.HarryFractionSession || {};
   const APP_ID = session.appId || 'harry-math-fractions-20261116-v1';
   const SESSION_ID = session.sessionId || '2026-11-16';
-  const SESSION_LABEL = session.label || 'November 16';
+  const SESSION_LABEL = session.label || 'Redo';
   const questions = session.questions || [
     {id: 'f1', prompt: '6 1/5 + 2 4/9', answer: '8 29/45', value: [389, 45], explanation: 'Use forty-fifths: 1/5 = 9/45 and 4/9 = 20/45. Add the whole numbers and fractions: 6 + 2 + 29/45 = 8 29/45.'},
     {id: 'f2', prompt: '23 5/12 − 13 7/12', answer: '9 5/6', value: [59, 6], explanation: 'Regroup 23 5/12 as 22 17/12. Then 22 17/12 − 13 7/12 = 9 10/12. Simplify 10/12 to 5/6.'},

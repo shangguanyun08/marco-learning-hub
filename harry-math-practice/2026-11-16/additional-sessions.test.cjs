@@ -63,7 +63,7 @@ for (const session of sessions) {
     assert.equal(document.querySelectorAll('.prompt .fraction').length, 9);
     assert.equal(document.querySelector('.explanation'), null);
     assert.match(document.querySelector('[aria-current=page]').textContent, new RegExp(session.label));
-    assert.equal(document.querySelector('[data-app-id]').dataset.appId, session.appId);
+    assert.equal(document.querySelector('script[data-app-id]').dataset.appId, session.appId);
     const fill = (id, value) => {
       const input = document.getElementById('answer-' + id);
       input.value = value;
