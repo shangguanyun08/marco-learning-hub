@@ -4,7 +4,7 @@ window.NNAT_COURSE = {
   "sessions": [
     {
       "id": "session-1117",
-      "name": "Session 1117",
+      "name": "Review session",
       "date": "2026-11-17",
       "sourceQuestionCount": 24,
       "description": "Redo the first-try mistakes from your 24 challenge questions.",

@@ -1,10 +1,10 @@
 # Harry’s selected NNAT practice
 
-## Session 1117
+## Review session (1117)
 
 The November 17 session repeats 13 original challenge questions missed on the first try among the 24 challenges across the four completed Round 1 type sets. The selection uses the saved first checked choice, including questions corrected on a second try, and excludes warm-ups. It is a frozen selection in `data.js`, independent of later changes or new runs: 3 Pattern, 3 Analogy, 4 Serial, and 3 Spatial questions. No separate mixed-challenge run was saved at selection time.
 
-Its card sits above the four type sets on the same home page. It starts with clean answers and saves under `articles['session-1117']` in the existing NNAT namespace, with its own score, completion time, drafts, and history. Opening it again resumes the same saved run. Existing course answers and round histories are preserved. It uses the normal first/second checks, explanation timing, direct question view, and double-wrong filter.
+It is labelled **Review session**, with Session 1117 in its small label. It uses the same dashboard card as the four type sets and follows them in the grid, placing it in the second row on desktop. It starts with clean answers and saves under `articles['session-1117']` in the existing NNAT namespace, with its own score, completion time, drafts, and history. Opening it again resumes the same saved run. Existing course answers and round histories are preserved. It uses the normal first/second checks, explanation timing, direct question view, and double-wrong filter.
 
 ## Direct question review
 

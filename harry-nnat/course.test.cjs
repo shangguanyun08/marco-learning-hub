@@ -11,7 +11,7 @@ function legacyRun(wrong=4){const r={id:'legacy-round-one',questionIds:core.ids(
 
 test('Session 1117 is a frozen set of 13 original challenges across all four types',()=>{
   const session=course.sessions.find(s=>s.id==='session-1117'),ids=core.ids(course,session.id);
-  assert.equal(session.name,'Session 1117');assert.equal(session.date,'2026-11-17');assert.equal(session.sourceQuestionCount,24);
+  assert.equal(session.name,'Review session');assert.equal(session.date,'2026-11-17');assert.equal(session.sourceQuestionCount,24);
   assert.equal(ids.length,13);assert.equal(new Set(ids).size,13);
   assert.ok(ids.every(id=>course.questions.some(q=>q.id===id&&q.level==='challenge')));
   assert.deepEqual(course.groups.map(g=>ids.filter(id=>item(id).type===g.id).length),[3,3,4,3]);
@@ -19,20 +19,20 @@ test('Session 1117 is a frozen set of 13 original challenges across all four typ
   assert.equal(core.ids(course,'mixed').length,24);assert.equal(course.questions.length,32);
 });
 
-test('Session 1117 starts clean above the type sets and resumes its own answers without changing source work',()=>{
+test('Session 1117 starts clean after the type sets and resumes its own answers without changing source work',()=>{
   const original=legacyRun(),seed=JSON.stringify({version:1,articles:{pattern:[original]}}),t=boot(seed);
   try{
-    const section=t.d.querySelector('.dated-sessions'),grid=t.d.querySelector('.set-grid');
-    assert.ok(section.compareDocumentPosition(grid)&t.w.Node.DOCUMENT_POSITION_FOLLOWING);
+    const grid=t.d.querySelector('.set-grid'),section=grid.querySelector('.review-session');
+    assert.equal([...grid.children].indexOf(section),4);assert.ok(section.classList.contains('set-card'));
     assert.equal(t.saved(),seed);t.d.querySelector('[data-start="session-1117"]').click();
-    assert.match(t.d.querySelector('.session-head h1').textContent,/Session 1117/);
+    assert.match(t.d.querySelector('.session-head h1').textContent,/Review session/);
     assert.equal(t.d.querySelectorAll('.question-card').length,13);assert.equal(t.d.querySelector('input:checked'),null);
     assert.equal(t.d.querySelector('.feedback'),null);assert.equal(t.d.querySelector('.explanation'),null);
     let saved=JSON.parse(t.saved());assert.deepEqual(saved.articles.pattern,[original]);
     const r=saved.articles['session-1117'][0];assert.deepEqual(r.questionIds,core.ids(course,'session-1117'));
     assert.deepEqual(r.answers,{});assert.deepEqual(r.drafts,{});assert.equal(r.completedAt,null);
     const first=item(r.questionIds[0]);choose(t,first.answer,first.id);check(t,first.id);
-    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('[data-start="session-1117"]').textContent,/Continue Session 1117/);
+    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('[data-start="session-1117"]').textContent,/Continue/);
     t.d.querySelector('[data-start="session-1117"]').click();assert.equal(card(t,first.id).querySelector('input:checked').value,String(first.answer));
     saved=JSON.parse(t.saved());assert.equal(saved.articles['session-1117'].length,1);assert.deepEqual(saved.articles.pattern,[original]);
     const reload=boot(t.saved());try{reload.d.querySelector('[data-start="session-1117"]').click();assert.equal(reload.d.querySelector('[data-progress]').textContent,'1/13');assert.match(card(reload,first.id).querySelector('.feedback').textContent,/Correct/);}finally{reload.close();}
@@ -48,8 +48,8 @@ test('Session 1117 keeps its first-try score, finish time, filtered review and h
     assert.ok(r.completedAt);assert.deepEqual(core.scores(course,r),{total:13,answered:13,first:12,resolved:13});assert.deepEqual(saved.articles.pattern,[original]);
     t.d.querySelector('#wrong-only').click();assert.deepEqual([...t.d.querySelectorAll('.question-card:not([hidden])')].map(el=>el.dataset.question),[ids[0]]);
     t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.score').textContent,/12\/13/);
-    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('.dated-session').textContent,/Finished.*First try 12\/13/);
-    assert.ok([...t.d.querySelectorAll('.history-row h3')].some(el=>/Session 1117/.test(el.textContent)));
+    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('.review-session').textContent,/Finished.*First try 12\/13/);
+    assert.ok([...t.d.querySelectorAll('.history-row h3')].some(el=>/Review session/.test(el.textContent)));
     t.d.querySelector('[data-start="session-1117"]').click();assert.equal(t.d.querySelector('.results'),null);assert.equal(t.d.querySelectorAll('fieldset:disabled').length,13);
     const merged=sync.merge({version:1,articles:{pattern:[original]}},saved);assert.deepEqual(merged.articles['session-1117'],[r]);assert.deepEqual(merged.articles.pattern,[original]);
   }finally{t.close();}
