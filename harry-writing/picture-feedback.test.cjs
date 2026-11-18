@@ -30,7 +30,7 @@ function boot(revisions, saved = {}) {
     let result;
     if (action === 'work') result = { storyId: w.WRITING_STORY_ID, drafts: [], revisions, models: [], chats: saved.chats || [] };
     if (action === 'model') result = { model: { kind: 'rewrite', generation_version: 2, sentence_id: 1, revision_id: revisions.at(-1).id, source_text: row.text, text: 'A boy went home.' } };
-    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5/8' : '6/8') + '\n- Develop the moment when the lid opens.\n- Show how the boy reacts.' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
+    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5/8' : '6/8') + '\n- Language: Try "hurried home" instead of "go home" if he is in a rush.\n- Detail: What did the boy notice when he got home?' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
     if (action === 'draft') result = { draft: { version: 1, updated_at: '2026-11-08T14:01:00Z' } };
     return { ok: true, status: 200, json: async () => result };
   };
@@ -66,7 +66,7 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
     assert.equal(requests[1].body.paragraphs[1], box.value);
     assert.match(requests[1].body.question, /only Harry.s Middle paragraph/);
     assert.equal(box.value, middle + ' It did not fit.');
-    assert.match(t.d.querySelector('#score-title').textContent, /Middle/);
+    assert.equal(t.d.querySelector('#score-title').textContent, 'Score & suggestion');
     assert.match(t.d.querySelector('#score-text').textContent, /5\/8/);
     t.d.querySelector('[data-part="1"]').click();
     assert.match(t.d.querySelector('#score-text').textContent, /6\/8/);
@@ -142,98 +142,51 @@ test('word goals follow the selected paragraph and count live text without limit
   } finally { t.close(); }
 });
 
-test('picture feedback highlights text and asks for details within Harry’s own moments', async () => {
+test('one score action combines language and moment advice without separate checking or expansion controls', async () => {
   const t = boot([row]);
   try {
     await settle();
-    assert.equal(t.d.querySelector('#guide'), null);
-    assert.equal(t.d.querySelector('#resize-revision'), null);
-    assert.equal(t.d.querySelector('#show-model'), null);
-    assert.equal(t.d.querySelector('#revision-highlights mark').textContent, 'he go');
-    assert.doesNotMatch(t.d.querySelector('#feedback').textContent, /Works well|Complete sentences|Correct language/);
-    assert.equal(t.d.querySelector('#revision').style.height, '240px');
-    t.d.querySelector('[data-note]').click();
-    const box = t.d.querySelector('#revision');
-    assert.equal(box.value.slice(box.selectionStart, box.selectionEnd), 'he go');
-    t.d.querySelector('#expand-ideas').click(); await settle();
-    const question = t.calls.find(call => call.action === 'chat').body.question;
-    assert.match(question, /only the Beginning paragraph/);
-    assert.match(question, /Split bundled actions into separate moments/);
-    assert.match(question, /two short, specific questions/);
-    assert.ok(question.endsWith('Paragraph: ' + row.text));
-    assert.match(t.d.querySelector('#expansion-text').textContent, /notice/);
-    assert.equal(t.d.querySelector('#expansion-panel').hidden, false);
-    assert.equal(t.d.querySelector('#expansion-panel').closest('.feedback').id, 'feedback');
-    assert.match(t.d.querySelector('#expansion-panel').textContent, /Answer one question at a time/);
+    for (const id of ['check', 'expand-ideas', 'feedback-check', 'expansion-panel']) assert.equal(t.d.querySelector('#' + id), null);
+    assert.equal(t.d.querySelector('.actions button').id, 'score-paragraph');
+    assert.deepEqual(Array.from(t.d.querySelectorAll('.actions .primary'), el => el.textContent), ['Score & suggestion', '6/8 rewrite example', '8/8 rewrite example']);
+    assert.equal(t.d.querySelector('#progress').textContent, '0 of 3 paragraphs scored');
+    assert.equal(t.d.querySelector('#revision-highlights mark'), null);
+    t.d.querySelector('#score-paragraph').click(); await settle();
+    const request = t.calls.find(call => call.action === 'chat');
+    assert.match(request.body.question, /language-use advice/);
+    assert.match(request.body.question, /details inside one or two moments/);
+    assert.match(request.body.question, /short, optional wording improvements/);
+    assert.match(t.d.querySelector('#score-text').textContent, /Language:.*hurried home/);
+    assert.match(t.d.querySelector('#score-text').textContent, /Detail:.*notice/);
+    assert.equal(t.d.querySelector('#score-title').textContent, 'Score & suggestion');
+    assert.equal(t.d.querySelector('#score-shortcut').textContent, 'Score & suggestion');
     assert.equal(t.d.querySelector('.editor').querySelectorAll('.feedback').length, 1);
-    assert.equal(t.calls.filter(call => call.action === 'model').length, 0);
-    box.value = 'A boy went home.'; box.dispatchEvent(new t.w.Event('input'));
-    assert.equal(t.d.querySelector('#revision-highlights mark'), null);
-    assert.equal(t.d.querySelector('#expansion-panel').hidden, false);
-    assert.equal(t.d.querySelector('#expansion-reference').hidden, false);
-  } finally { t.close(); }
-});
-
-test('the expansion button refreshes earlier generic ideas and saves moment questions without changing Harry’s words', async () => {
-  const earlier = { id: 'earlier-ideas', question: 'Suggest three short, concrete ideas or details Harry could add to only the Beginning paragraph below. Use his actual characters and events. Offer choices as questions or optional details, using simple words for Harry. Do not rewrite the paragraph or give grammar feedback. Paragraph: ' + row.text, reply: 'Earlier optional plot idea.', created_at: '2026-11-08T13:00:00Z' };
-  const t = boot([row], { drafts: {}, revisions: [row], models: [], chats: [earlier] });
-  let saved;
-  try {
-    await settle();
-    t.d.querySelector('#expand-ideas').click(); await settle();
-    assert.equal(t.calls.filter(call => call.action === 'chat').length, 1);
+    assert.equal(t.d.querySelector('#progress').textContent, '1 of 3 paragraphs scored');
     assert.equal(t.d.querySelector('#revision').value, row.text);
-    t.d.querySelector('#expand-ideas').click(); await settle();
-    assert.equal(t.calls.filter(call => call.action === 'chat').length, 1);
-    saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
-    assert.equal(saved.chats.length, 2);
-    assert.ok(saved.chats.some(turn => turn.reply === earlier.reply));
-  } finally { t.close(); }
-  const reload = boot([row], saved);
-  try {
-    await settle();
-    assert.equal(reload.d.querySelector('#expansion-panel').hidden, false);
-    assert.equal(reload.d.querySelector('#revision').value, row.text);
-    assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
-  } finally { reload.close(); }
-});
-
-test('a second unsuccessful version puts a corrected sentence inside its highlighted feedback', async () => {
-  const t = boot([{ ...row, text: 'A boy go home.' }, { ...row, id: 'try-2', checked_at: '2026-11-08T13:00:00Z' }]);
-  try {
-    await settle();
-    assert.equal(t.calls.filter(call => call.action === 'model').length, 1);
-    assert.equal(t.d.querySelector('#model-panel'), null);
-    assert.match(t.d.querySelector('#feedback .correction-example').textContent, /A boy went home\./);
-    assert.equal(t.d.querySelector('.rewrite').nextElementSibling.id, 'feedback');
-    assert.ok(t.d.querySelector('#feedback').compareDocumentPosition(t.d.querySelector('.actions')) & t.w.Node.DOCUMENT_POSITION_FOLLOWING);
-    const box = t.d.querySelector('#revision');
-    box.value = 'Another draft.'; box.dispatchEvent(new t.w.Event('input'));
-    assert.equal(t.d.querySelector('#feedback .correction-example'), null);
+    assert.equal(t.calls.filter(call => ['check', 'model'].includes(call.action)).length, 0);
   } finally { t.close(); }
 });
 
-
-test('rechecking an unchanged paragraph does not count as another modification', async () => {
-  const t = boot([row, { ...row, id: 'try-2', checked_at: '2026-11-08T13:00:00Z' }]);
+test('earlier checks, expansion replies and scores stay saved without reviving their removed panels or automatic requests', async () => {
+  const oldIdeas = { id: 'earlier-ideas', question: 'Help Harry stretch one moment in only the Beginning paragraph below. Paragraph: ' + row.text, reply: 'Earlier detail questions.', created_at: '2026-11-08T12:00:00Z' };
+  const oldScore = { id: 'earlier-score', question: "Score only Harry's Beginning paragraph out of 8 for APAAS practice. Give a brief reason for the estimate and two specific suggestions.", reply: 'Earlier estimate: 5/8.', created_at: '2026-11-08T13:00:00Z' };
+  const revisions = [row, { ...row, id: 'try-2', checked_at: '2026-11-08T13:00:00Z' }];
+  const t = boot(revisions, { drafts: {}, revisions, models: [], chats: [oldIdeas, oldScore] });
   try {
     await settle();
-    assert.equal(t.calls.filter(call => call.action === 'model').length, 0);
-    assert.equal(t.d.querySelector('#model-panel'), null);
-    assert.equal(t.d.querySelector('.rewrite').nextElementSibling.id, 'feedback');
-  } finally { t.close(); }
-});
-
-test('earlier grammar feedback is saved while the main box requests a sentence clarity check', async () => {
-  const legacy = { ...row, feedback: { ...row.feedback, focus: undefined } };
-  const t = boot([legacy]);
-  try {
-    await settle();
-    assert.match(t.d.querySelector('#feedback-check').textContent, /periods, commas, sentence breaks, and clear meaning/);
-    assert.doesNotMatch(t.d.querySelector('#feedback-check').textContent, /he went/);
-    assert.equal(t.d.querySelector('#revision-highlights mark'), null);
+    assert.match(t.d.querySelector('#chat-history').textContent, /Earlier detail questions/);
+    assert.match(t.d.querySelector('#score-text').textContent, /Earlier estimate: 5\/8/);
     assert.match(t.d.querySelector('#history-list').textContent, /he went/);
+    assert.equal(t.d.querySelector('#feedback-check'), null);
+    assert.equal(t.d.querySelector('#expansion-panel'), null);
+    assert.equal(t.calls.filter(call => call.action !== 'work').length, 0);
     assert.equal(t.d.querySelector('#revision').value, row.text);
+    t.d.querySelector('#score-paragraph').click(); await settle();
+    assert.equal(t.calls.filter(call => call.action === 'chat').length, 1);
+    const saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
+    assert.equal(saved.chats.length, 3);
+    assert.ok(saved.chats.some(turn => turn.id === oldIdeas.id));
+    assert.ok(saved.chats.some(turn => turn.id === oldScore.id));
   } finally { t.close(); }
 });
 
