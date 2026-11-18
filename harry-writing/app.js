@@ -143,7 +143,7 @@
     return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
   function scoreQuestion() {
-    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Combine the score with specific language-use advice and questions to add details inside one or two moments already in his paragraph. Quote his words and offer short, optional wording improvements. Include useful sentence-break or punctuation advice when needed. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
+    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Combine the score with specific language-use advice and questions to add details inside one or two moments already in his paragraph. Give two or three concrete language-use bullets covering the most useful changes to commas, periods, capital letters, sentence clarity, or repeated and unnecessary words. Quote his words, explain each change and offer short, optional wording improvements. Only address issues actually present; do not invent problems to fill the bullets. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
   }
   function paragraphScore(id = selected) {
     const prefix = "Score only Harry's " + config.partNames[id - 1] + ' paragraph out of 8 for APAAS practice.';
