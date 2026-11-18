@@ -28,7 +28,7 @@
   } catch {}
   let selected = Number(location.hash.match(/^#part-(\d+)$/)?.[1] || state.selected || 1);
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
-  let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false, expandingIdeas = false;
+  let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false;
   let writingChatUI = null, scoringStory = false;
   const rewritingExamples = new Set();
   const conflicts = new Set();
@@ -95,7 +95,7 @@
   function rememberModel(row) { state.models = state.models.filter(item => item.revision_id !== row.revision_id || item.kind !== row.kind).concat(row); cache(); }
   function error(message = '') { $('error').hidden = !message; $('error').textContent = message; }
   function updateConnectionButton() {
-    $('connect').textContent = connected ? 'Connected' : 'Connect AI checking';
+    $('connect').textContent = connected ? 'Connected' : isPicture ? 'Connect AI' : 'Connect AI checking';
     writingChatUI?.updateConnection();
   }
   if (location.hash.includes('&ai_session=')) {
@@ -137,43 +137,17 @@
     box.style.height = 'auto';
     box.style.height = Math.max(240, box.scrollHeight + 2) + 'px';
   }
-  function writingNotes(row) {
-    if (row.feedback.focus !== FEEDBACK_FOCUS) return { notes: [{ index: 0, start: -1, quote: '', suggestion: 'Use AI checking for periods, commas, sentence breaks, and clear meaning.' }], ranges: [] };
-    const model = repeatedDifficulty() && row.id === latest(selected)?.id ? currentModel() : null;
-    return window.WritingInlineFeedback(row.text, row.feedback, model?.text, model ? window.WritingRewriteDiff(row.text, model.text) : []);
-  }
-  function renderWritingHighlights(row) {
-    if (!isPicture) return;
-    const host = $('revision-highlights'), text = $('revision').value;
-    host.replaceChildren();
-    const plan = row && text.trim() === row.text ? writingNotes(row) : { ranges: [] };
-    const offset = text.indexOf(text.trim());
-    let cursor = 0;
-    for (const range of plan.ranges) {
-      const start = range.start + offset, end = range.end + offset;
-      host.append(text.slice(cursor, start));
-      const mark = document.createElement('mark');
-      mark.textContent = text.slice(start, end);
-      host.append(mark);
-      cursor = end;
-    }
-    host.append(text.slice(cursor) + '\n');
-  }
-  function repeatedDifficulty() {
-    const checked = revisions(selected).filter(row => row.kind === 'revision' && row.feedback.focus === FEEDBACK_FOCUS);
-    const tries = checked.filter((row, index) => index === 0 || row.text !== checked[index - 1].text).slice(-2);
-    return tries.length === 2 && tries.every(row => !row.feedback.complete || !row.feedback.clear || !row.feedback.correct);
-  }
-  function expansionQuestion() {
-    return 'Help Harry stretch one moment in only the ' + config.partNames[selected - 1] + ' paragraph below. Pick one or two moments already in his paragraph. Split bundled actions into separate moments. For each, quote a short phrase and ask two short, specific questions about what he did, saw, heard, or how someone reacted. Ask for new details inside that moment, not a repeat of what happened. Use bullets and simple words. Do not answer, invent events, rewrite, or correct grammar. Paragraph: ' + editorText(selected).trim();
-  }
   function rewriteQuestion(grade = 6) {
     const opening = grade === 8 ? 'Write an 8/8' : 'Write a 6/8';
     const guidance = grade === 8 ? 'Improve the connections, concrete actions and useful details with natural English an eight-year-old can understand. Keep it near his paragraph’s length.' : 'Make a clear, attainable version for an eight-year-old with sensible sentences, connected events and a few simple, useful details. Use short, familiar words and stay close to his wording and paragraph length.';
     return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
   function scoreQuestion() {
-    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Give a brief reason for the estimate and two specific suggestions to improve its language use, imagination, and idea development/structure. Judge its role in the story; other paragraphs are context only and may be unfinished. This is a practice estimate for this paragraph, not an official test score.';
+    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Combine the score with specific language-use advice and questions to add details inside one or two moments already in his paragraph. Quote his words and offer short, optional wording improvements. Include useful sentence-break or punctuation advice when needed. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
+  }
+  function paragraphScore(id = selected) {
+    const prefix = "Score only Harry's " + config.partNames[id - 1] + ' paragraph out of 8 for APAAS practice.';
+    return (state.chats || []).filter(row => row.question.startsWith(prefix)).at(-1);
   }
   function paragraphHelp(question) {
     const prefix = question.slice(0, question.indexOf('Paragraph: '));
@@ -182,22 +156,15 @@
   }
   function renderWritingHelp() {
     if (!isPicture) return;
-    const turn = paragraphHelp(expansionQuestion());
-    $('expansion-panel').hidden = !turn;
-    $('expansion-reference').hidden = !turn || turn.question === expansionQuestion();
-    $('expansion-text').innerHTML = turn ? suggestionList(turn.reply) : '';
-    $('expand-ideas').disabled = busy || expandingIdeas;
-    $('expand-ideas').textContent = expandingIdeas ? 'Finding ideas…' : 'Idea/detail expansion';
-    $('expand-ideas').setAttribute('aria-expanded', String(Boolean(turn)));
-    const score = (state.chats || []).filter(row => row.question === scoreQuestion()).at(-1);
+    const score = paragraphScore();
     $('score-panel').hidden = !score;
-    $('score-title').textContent = config.partNames[selected - 1] + ' score & suggestions';
+    $('score-title').textContent = 'Score & suggestion';
     $('score-text').innerHTML = score ? suggestionList(score.reply) : '';
     $('score-paragraph').disabled = busy || scoringStory;
-    $('score-paragraph').textContent = scoringStory ? 'Scoring paragraph…' : 'Score & suggestions';
+    $('score-paragraph').textContent = scoringStory ? 'Scoring…' : 'Score & suggestion';
     $('score-paragraph').setAttribute('aria-expanded', String(Boolean(score)));
     $('score-shortcut').dataset.chatQuestion = scoreQuestion();
-    $('score-shortcut').textContent = 'Score ' + config.partNames[selected - 1];
+    $('score-shortcut').textContent = 'Score & suggestion';
     const example = paragraphHelp(rewriteQuestion());
     $('rewrite-panel').hidden = !example;
     $('rewrite-reference').hidden = !example || example.question === rewriteQuestion();
@@ -212,26 +179,20 @@
     $('rewrite-eight').disabled = busy || rewritingExamples.has(8);
     $('rewrite-eight').textContent = rewritingExamples.has(8) ? 'Writing 8/8 example…' : '8/8 rewrite example';
     $('rewrite-eight').setAttribute('aria-expanded', String(Boolean(eightExample)));
-    $('feedback').hidden = $('feedback-check').hidden && !turn && !score && !example && !eightExample;
+    $('feedback').hidden = !score && !example && !eightExample;
   }
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
     $('hint').hidden = isPicture || !hint;
     $('hint').innerHTML = hint ? suggestionList(hint.feedback.nextStep) : '';
-    const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = isPicture ? $('feedback-check') : $('feedback');
-    host.hidden = !row;
-    if (row) {
-      const feedback = row.feedback;
-      if (isPicture) {
-        const plan = writingNotes(row);
-        const needsWork = !feedback.complete || !feedback.clear || !feedback.correct;
-        $('feedback-title').textContent = feedback.focus !== FEEDBACK_FOCUS ? 'Check sentence clarity' : needsWork ? 'Re-work the highlighted words' : 'Your paragraph is clear';
-        $('feedback-body').innerHTML = `${editorText(selected).trim() !== row.text ? '<p class="small">These suggestions are from your last check. Check your changes when ready.</p>' : ''}<ol class="inline-suggestions">${plan.notes.map(note => `<li>${note.start >= 0 ? `<button type="button" class="quote-link" data-note="${note.index}"><mark>${escape(note.quote)}</mark></button> ` : ''}${escape(note.suggestion)}${note.correction ? `<p class="correction-example"><strong>Correct example</strong> ${escape(note.correction)}</p>` : ''}</li>`).join('')}</ol>`;
-      } else {
-      host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Periods and commas']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
+    const row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected), host = $('feedback');
+    if (!isPicture) {
+      host.hidden = !row;
+      if (row) {
+        const feedback = row.feedback;
+        host.innerHTML = `<h3>${editorText(selected).trim() === row.text ? 'Feedback on your rewrite' : 'Feedback on your last check'}</h3><div class="checks">${[['complete', 'Complete sentences'], ['clear', 'Clear meaning'], ['correct', 'Periods and commas']].map(([key, label]) => `<span class="${feedback[key] ? 'good' : 'bad'}"><span aria-hidden="true">${feedback[key] ? '✓' : '✗'}</span> ${label}<span class="sr-only">: ${feedback[key] ? 'Right' : 'Wrong'}</span></span>`).join('')}</div><p><strong>Works well</strong><br>${escape(feedback.strength)}</p><div class="suggestions"><strong>Try next</strong>${suggestionList(feedback.nextStep)}</div><p class="small">Read your rewrite, then compare it with the re-write example.</p>`;
       }
     }
-    renderWritingHighlights(row);
     const history = revisions(selected).slice().reverse();
     $('history-count').textContent = '(' + history.length + ')';
     $('history-list').innerHTML = history.map(row => `<article><p class="small">${row.kind === 'guide' ? 'Hint on the original' : 'Harry’s rewrite'} · ${escape(new Date(row.checked_at).toLocaleString())}</p><p>${escape(row.text)}</p>${isPicture ? '' : `<p class="small"><strong>Works well</strong> ${escape(row.feedback.strength)}</p>`}<div class="small suggestions"><strong>Try next</strong>${suggestionList(row.feedback.nextStep)}</div>${row.kind === 'revision' ? `<button type="button" class="quiet" data-restore-check="${escape(row.id)}">Use this version</button>` : ''}</article>`).join('');
@@ -255,11 +216,11 @@
       const hasWriting = Object.entries(state.drafts).some(([id, row]) => Number(id) > 0 && row.text.trim()) || state.revisions.some(row => row.kind === 'revision');
       window.WritingActivity.render($('last-writing-attempt'), window.WritingActivity.latest(state), hasWriting ? 'Writing date not recorded' : 'Not started yet');
     }
-    const checked = parts.filter((_, index) => latest(index + 1));
-    $('progress').textContent = `${checked.length} of ${parts.length} ${isPicture ? 'paragraphs checked' : 'sections revised'}`;
+    const checked = parts.filter((_, index) => isPicture ? paragraphScore(index + 1) : latest(index + 1));
+    $('progress').textContent = `${checked.length} of ${parts.length} ${isPicture ? 'paragraphs scored' : 'sections revised'}`;
     $('part-list').innerHTML = parts.map((_, index) => {
-      const id = index + 1, row = latest(id);
-      return `<button type="button" data-part="${id}" class="${id === selected ? 'active ' : ''}${row ? 'revised' : ''}" aria-label="${isPicture ? config.partNames[index] : 'Section ' + id}${row ? ', revised' : ', not revised'}" ${id === selected ? 'aria-current="step"' : ''} ${busy ? 'disabled' : ''}>${isPicture ? config.partNames[index] : id}</button>`;
+      const id = index + 1, row = isPicture ? paragraphScore(id) : latest(id);
+      return `<button type="button" data-part="${id}" class="${id === selected ? 'active ' : ''}${row ? 'revised' : ''}" aria-label="${isPicture ? config.partNames[index] : 'Section ' + id}${row ? (isPicture ? ', scored' : ', revised') : (isPicture ? ', not scored' : ', not revised')}" ${id === selected ? 'aria-current="step"' : ''} ${busy ? 'disabled' : ''}>${isPicture ? config.partNames[index] : id}</button>`;
     }).join('');
     const revised = parts.map((text, index) => isPicture ? editorText(index + 1) : latest(index + 1)?.text || text);
     $('revised-story').innerHTML = revised.map((text, index) => text ? '<p>' + escape(text) + '</p>' : '<p class="small">' + escape(config.partNames[index]) + ' paragraph — not written yet.</p>').join('');
@@ -270,7 +231,7 @@
   }
   function renderModel() {
     if (isPicture) return;
-    const checked = latest(selected), model = isPicture && !repeatedDifficulty() ? null : currentModel();
+    const checked = latest(selected), model = currentModel();
     if ($('show-model')) {
     $('show-model').hidden = !checked;
     $('show-model').disabled = busy;
@@ -313,11 +274,10 @@
     $('revision').readOnly = false;
     $('next').disabled = busy || selected === parts.length;
     if (!composing) $('revision').disabled = busy;
-    $('check').disabled = busy;
-    $('check').hidden = false;
+    if ($('check')) { $('check').disabled = busy; $('check').hidden = false; }
     renderModel();
     if ($('guide')) $('guide').disabled = busy;
-    $('check').textContent = makingModel ? 'Making example…' : busy ? 'Checking…' : 'AI checking';
+    if ($('check')) $('check').textContent = makingModel ? 'Making example…' : busy ? 'Checking…' : 'AI checking';
     renderOverview(); renderFeedback(); renderWritingHelp(); resizeRevision(); updateDraftControls();
   }
   async function loadWork() {
@@ -340,7 +300,6 @@
     connected = true; loaded = true; cache();
     updateConnectionButton();
     render();
-    maybeAutoExample();
   }
   async function saveDrafts() {
     if (saving || !connected || !loaded) return;
@@ -383,7 +342,7 @@
   function choose(id) {
     if (busy || composing) return;
     captureEditor();
-    selected = id; feedbackSelection = null; cache(); error(); history.replaceState(null, '', '#part-' + id); $('history').open = false; render(); maybeAutoExample();
+    selected = id; feedbackSelection = null; cache(); error(); history.replaceState(null, '', '#part-' + id); $('history').open = false; render();
   }
   $('part-list').addEventListener('click', event => { const button = event.target.closest('[data-part]'); if (button) choose(Number(button.dataset.part)); });
   $('next').addEventListener('click', () => { if (selected < parts.length) choose(selected + 1); });
@@ -427,7 +386,7 @@
     finally { busy = false; render(); saveDrafts(); }
   });
   async function check(kind) {
-    if (busy || composing) return;
+    if (isPicture || busy || composing) return;
     captureEditor();
     error(); const row = draft(selected), text = kind === 'guide' ? parts[selected - 1] : editorText(selected).trim();
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
@@ -440,16 +399,15 @@
     try {
       const result = await request('check', { sentenceId: selected, ...row.pending });
       addRevision(result.revision); feedbackSelection = result.revision;
-      if (isPicture && kind === 'revision') $('feedback-check').open = true;
       if (kind === 'revision') { row.text = result.revision.text; row.dirty = true; }
       delete row.pending; cache();
     } catch (failure) { error(failure.message); }
-    finally { busy = false; render(); saveDrafts(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); if (isPicture && kind === 'revision') { $('revision').scrollIntoView({ behavior: 'smooth', block: 'center' }); maybeAutoExample(); } }
+    finally { busy = false; render(); saveDrafts(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); if (isPicture && kind === 'revision') { $('revision').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
   }
-  $('check').addEventListener('click', () => check('revision'));
+  $('check')?.addEventListener('click', () => check('revision'));
   $('guide')?.addEventListener('click', () => check('guide'));
   async function showModel() {
-    if (busy || composing || !latest(selected)) return;
+    if (isPicture || busy || composing || !latest(selected)) return;
     captureEditor();
     error();
     if (editorText(selected).trim() !== latest(selected).text) return error('Use AI checking on this rewrite first, then open its example.');
@@ -462,34 +420,21 @@
     } catch (failure) { error(failure.message); }
     finally { busy = false; makingModel = false; render(); if (isPicture) $('feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); else if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }  }
   $('show-model')?.addEventListener('click', showModel);
-  function maybeAutoExample() {
-    if (isPicture && connected && !busy && repeatedDifficulty() && !currentModel() && editorText(selected).trim() === latest(selected)?.text) void showModel();
-  }
-  $('feedback').addEventListener('click', event => {
-    if (!isPicture) return;
-    const button = event.target.closest('[data-note]'), row = feedbackSelection?.kind === 'revision' ? feedbackSelection : latest(selected);
-    if (!button || !row || $('revision').value.trim() !== row.text) return;
-    const note = writingNotes(row).notes[Number(button.dataset.note)];
-    const offset = $('revision').value.indexOf(row.text);
-    $('revision').focus();
-    $('revision').setSelectionRange(note.start + offset, note.end + offset);
-  });
-  async function requestWritingHelp(kind, grade = 6) {
-    if (busy || composing || (kind === 'ideas' ? expandingIdeas : rewritingExamples.has(grade))) return;
+  async function requestWritingHelp(grade = 6) {
+    if (busy || composing || rewritingExamples.has(grade)) return;
     captureEditor();
     error();
     if (!editorText(selected).trim()) return error('Write a few words first so I can help with this paragraph.');
-    if (!connected) return error('Connect AI checking to get help with your paragraph.');
+    if (!connected) return error('Connect AI to get help with your paragraph.');
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
-    const question = kind === 'ideas' ? expansionQuestion() : rewriteQuestion(grade);
-    const panel = kind === 'ideas' ? 'expansion-panel' : grade === 8 ? 'rewrite-eight-panel' : 'rewrite-panel';
-    const pendingKey = kind === 'ideas' ? 'expansionPending' : grade === 8 ? 'rewriteEightPending' : 'rewritePending';
+    const question = rewriteQuestion(grade);
+    const panel = grade === 8 ? 'rewrite-eight-panel' : 'rewrite-panel';
+    const pendingKey = grade === 8 ? 'rewriteEightPending' : 'rewritePending';
     if ((state.chats || []).some(row => row.question === question)) {
       renderWritingHelp(); $(panel).open = true; $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
     }
     if (state[pendingKey]?.question !== question) state[pendingKey] = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
-    if (kind === 'ideas') expandingIdeas = true;
-    else rewritingExamples.add(grade);
+    rewritingExamples.add(grade);
     cache(); renderWritingHelp();
     try {
       const result = await request('chat', state[pendingKey]);
@@ -498,8 +443,7 @@
       delete state[pendingKey]; cache();
     } catch (failure) { error(failure.message); }
     finally {
-      if (kind === 'ideas') expandingIdeas = false;
-      else rewritingExamples.delete(grade);
+      rewritingExamples.delete(grade);
       renderWritingHelp();
       if (!$(panel).hidden) $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
@@ -509,7 +453,7 @@
     captureEditor(); error();
     const part = selected, question = scoreQuestion(), paragraphs = parts.map((_, index) => editorText(index + 1).trim());
     if (!paragraphs[part - 1]) return error('Write a few words in this paragraph before scoring it.');
-    if (!connected) return error('Connect AI checking to score your paragraph.');
+    if (!connected) return error('Connect AI to score your paragraph.');
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
     if (!state.scorePending || state.scorePending.question !== question || JSON.stringify(state.scorePending.paragraphs) !== JSON.stringify(paragraphs) || state.scorePending.topicTitle !== (config.custom ? draft(0).text : undefined)) {
       state.scorePending = { requestId: crypto.randomUUID(), question, paragraphs, ...(config.custom ? { topicTitle: draft(0).text } : {}) };
@@ -528,9 +472,8 @@
     }
   }
   $('score-paragraph')?.addEventListener('click', scoreParagraph);
-  $('expand-ideas')?.addEventListener('click', () => requestWritingHelp('ideas'));
-  $('rewrite-example')?.addEventListener('click', () => requestWritingHelp('rewrite'));
-  $('rewrite-eight')?.addEventListener('click', () => requestWritingHelp('rewrite', 8));
+  $('rewrite-example')?.addEventListener('click', () => requestWritingHelp(6));
+  $('rewrite-eight')?.addEventListener('click', () => requestWritingHelp(8));
   if (isPicture) {
     window.addEventListener('resize', resizeRevision);
     document.fonts?.ready.then(resizeRevision);
@@ -557,7 +500,7 @@
       sendButton.textContent = sending ? 'Thinking…' : 'Send';
       shortcuts.forEach(button => { button.disabled = sending; });
       status.textContent = sending ? 'Thinking about Harry’s story…' :
-        connected ? 'Chat history saved online for this topic.' : 'Connect AI checking above to load and save your chat.';
+        connected ? 'Chat history saved online for this topic.' : 'Connect AI above to load and save your chat.';
     }
 
     function renderHistory() {
@@ -608,6 +551,7 @@
       renderHistory();
       updateConnection();
       renderWritingHelp();
+      if (isPicture) renderOverview();
     }
 
     questionBox.addEventListener('input', () => {
@@ -626,7 +570,7 @@
       if (sending || !questionBox.value.trim()) return;
       chatError.hidden = true;
       if (!connected) {
-        chatError.textContent = 'Connect AI checking above to send your question.';
+        chatError.textContent = 'Connect AI above to send your question.';
         chatError.hidden = false;
         return;
       }
