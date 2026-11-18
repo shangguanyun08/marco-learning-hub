@@ -2,7 +2,11 @@
 .hero h1 { margin: 10px 0; }
 .date-sessions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 3px 24px; }
 .date-sessions a { display: flex; flex-direction: column; justify-content: center; gap: 5px; min-height: 78px; padding: 12px 8px; border: 1px solid #b8cdc5; border-radius: 9px; background: #edf3ef; color: #173f54; text-align: center; text-decoration: none; font-size: 18px; }
-.date-sessions .session-progress { font-size: 12px; line-height: 1.4; }
+.date-sessions .session-progress { font-size: .875rem; line-height: 1.4; }
+.date-sessions .session-details { display: flex; flex-direction: column; gap: 7px; font-size: .875rem; line-height: 1.4; }
+.date-sessions .session-score, .date-sessions .session-finished { display: flex; flex-direction: column; }
+.date-sessions .session-score strong { font-size: inherit; }
+.date-sessions .session-finished[hidden] { display: none; }
 .date-sessions .is-finished { background: var(--teal); border-color: var(--teal); color: #fff; }
 .date-sessions [aria-current] { outline: 2px solid #173f54; outline-offset: 3px; }
 .date-sessions a:focus-visible { outline: 3px solid #173f54; outline-offset: 3px; }

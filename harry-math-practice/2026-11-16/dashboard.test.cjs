@@ -12,6 +12,7 @@ function open(t, date='2026-11-17', demo=false) {
   const file=path.join(__dirname,'..',date,'index.html');
   const dom=new JSDOM(fs.readFileSync(file,'utf8'),{url:`https://example.test/harry-math-practice/${date}/${demo?'?demo=1':''}`,runScripts:'outside-only'});
   t.after(()=>dom.window.close());
+  dom.window.HarryFractionReview = E;
   return dom.window;
 }
 const run = window => window.eval(fs.readFileSync(path.join(__dirname,'dashboard.js'),'utf8'));
@@ -43,14 +44,42 @@ test('online completion makes Redo dark while the currently open unfinished Sess
   const links=[...window.document.querySelectorAll('.date-sessions a')];
   assert.deepEqual(links.map(el=>el.classList.contains('is-finished')),[true,false,false]);
   assert.equal(links[0].querySelector('.session-progress').textContent,'Finished');
+  assert.equal(links[0].querySelector('.session-score strong').textContent,'0/5 · 0%');
+  assert.equal(links[0].querySelector('time').dateTime,'2026-11-18T17:00:00.000Z');
+  assert.equal(links[0].querySelector('.finished-date').textContent,'Nov 18, 2026');
+  assert.equal(links[0].querySelector('.finished-time').textContent,'9:00 AM PST');
   assert.equal(links[1].getAttribute('aria-current'),'page');
   assert.equal(links[1].querySelector('.session-progress').textContent,'Not finished');
+  assert.equal(links[1].querySelector('.session-details'),null);
   assert.equal(calls.length,3);
   assert.ok(calls.every(call=>!call.options.body&&!call.options.method));
   window.HarryFractionDashboard.update(appId(dates[1]),state(dates[1],true));
   assert.equal(links[1].classList.contains('is-finished'),true);
   window.HarryFractionDashboard.update(appId(dates[1]),state(dates[1]));
   assert.equal(links[1].classList.contains('is-finished'),true);
+});
+
+test('all three session cards grade only first answers and retain the original finish time after corrections', t => {
+  const window=open(t,dates[1],true);
+  run(window);
+  const banks = [E.questions, require('../2026-11-17/questions.js').questions, require('../2026-11-18/questions.js').questions];
+  for (let index=0; index<dates.length; index++) {
+    const record = state(dates[index]);
+    record.first = {id:'score-first-batch',at:'2026-11-19T01:30:00Z',answers:Object.fromEntries(banks[index].map(question=>[question.id,question.answer]))};
+    const before = JSON.stringify(record);
+    window.HarryFractionDashboard.update(appId(dates[index]),record);
+    assert.equal(JSON.stringify(record),before);
+    const link=window.document.querySelector(`[data-session-id="${dates[index]}"]`);
+    assert.equal(link.querySelector('.session-score strong').textContent,'5/5 · 100%');
+    assert.equal(link.querySelector('.finished-date').textContent,'Nov 18, 2026');
+    assert.equal(link.querySelector('.finished-time').textContent,'5:30 PM PST');
+    record.first.answers.f5 = '0';
+    record.retry = {id:'score-retry-batch',parentId:record.first.id,at:'2026-11-19T02:00:00Z',answers:{f5:banks[index][4].answer}};
+    window.HarryFractionDashboard.update(appId(dates[index]),record);
+    assert.equal(link.querySelector('.session-score strong').textContent,'4/5 · 80%');
+    assert.equal(link.querySelector('time').dateTime,record.first.at.replace('00Z','00.000Z'));
+    assert.equal(link.querySelector('.finished-time').textContent,'5:30 PM PST');
+  }
 });
 
 test('completion survives offline using saved answers, and demo records do not mix with real records', async t => {
