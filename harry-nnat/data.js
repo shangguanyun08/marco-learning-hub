@@ -14,6 +14,22 @@ window.NNAT_COURSE = {
         "serial-4", "serial-5", "serial-9", "serial-14",
         "spatial-8", "spatial-18", "spatial-24"
       ]
+    },
+    {
+      "id": "session-1117-similar",
+      "name": "Review session 2",
+      "date": "2026-11-17",
+      "sourceSessionId": "session-1117",
+      "sourceQuestionCount": 13,
+      "questionSet": "similar-v1",
+      "followUpRounds": false,
+      "description": "New similar questions for the same 13 missed skills.",
+      "questionIds": [
+        "pattern-12-similar-v1-r4", "pattern-25-similar-v1-r4", "pattern-37-similar-v1-r4",
+        "analogy-16-similar-v1-r4", "analogy-19-similar-v1-r4", "analogy-23-similar-v1-r4",
+        "serial-4-similar-v1-r4", "serial-5-similar-v1-r4", "serial-9-similar-v1-r4", "serial-14-similar-v1-r4",
+        "spatial-8-similar-v1-r4", "spatial-18-similar-v1-r4", "spatial-24-similar-v1-r4"
+      ]
     }
   ],
   "groups": [

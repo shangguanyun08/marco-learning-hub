@@ -9,6 +9,56 @@ const card=(t,id)=>t.d.querySelector(id?`[data-question="${id}"]`:'.question-car
 const at='2026-11-08T04:00:00Z',later='2026-11-08T05:00:00Z',item=id=>course.questions.find(q=>q.id===id)||variants.get(course,id);
 function legacyRun(wrong=4){const r={id:'legacy-round-one',questionIds:core.ids(course,'pattern'),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};r.questionIds.forEach((id,i)=>{const q=item(id);core.check(course,r,q,i<wrong?(q.answer+1)%5:q.answer,at);if(i<wrong)core.check(course,r,q,q.answer,later);});return r;}
 
+test('Review session 2 has fresh, valid five-choice diagrams for each of the same 13 skills',()=>{
+  const source=course.sessions[0],session=course.sessions.find(s=>s.id==='session-1117-similar'),ids=core.ids(course,session.id);
+  assert.equal(session.name,'Review session 2');assert.equal(ids.length,13);assert.equal(new Set(ids).size,13);
+  assert.deepEqual(ids.map(id=>item(id).sourceId),source.questionIds);
+  for(const id of ids){const q=item(id),original=item(q.sourceId);
+    assert.ok(q.answer>=0&&q.answer<5);assert.equal(q.figures.length,6);assert.equal(new Set(q.figures.slice(1)).size,5,id);
+    assert.notEqual(q.figures[0],original.figures[0],id);
+    for(const round of [2,3])assert.notEqual(q.figures[0],item(variants.idFor(original,round)).figures[0],id);
+    for(const figure of q.figures){const dom=new JSDOM(decodeURIComponent(figure.split(',').slice(1).join(',')),{contentType:'image/svg+xml'});assert.equal(dom.window.document.querySelector('parsererror'),null);dom.window.close();}
+    assert.equal(variants.get(JSON.parse(JSON.stringify(course)),id).answer,q.answer);
+  }
+});
+
+test('the fresh analogy and serial answer keys match the demonstrated transformations',()=>{
+  const key=id=>{const q=item(id+'-similar-v1-r4');return q.choiceModels[q.answer];};
+  const blue='#245b88',gold='#e9b94c',white='#fff';
+  assert.deepEqual(key('analogy-19').tokens,[['triangle',blue],['square',white],['square',gold]]);
+  assert.deepEqual(key('analogy-23').sectors,[blue,blue,gold,gold]);
+  const nested=key('serial-4');assert.equal(nested.outer,'circle');assert.equal(nested.inner,'square');assert.equal(nested.outerSize,84);assert.equal(nested.innerSize,18);
+  const arrows=key('serial-14');assert.equal(((arrows.angle%360)+360)%360,90);assert.equal(((arrows.secondAngle%360)+360)%360,225);
+});
+
+test('Review session 2 opens fresh beside the first review and resumes independently',()=>{
+  const first={...legacyRun(),id:'first-review',questionIds:core.ids(course,'session-1117'),answers:{},drafts:{}};
+  core.check(course,first,item(first.questionIds[0]),item(first.questionIds[0]).answer,at);
+  const t=boot(JSON.stringify({version:1,articles:{'session-1117':[first]}}));try{
+    const cards=[...t.d.querySelectorAll('.set-grid>.set-card')];assert.match(cards[4].querySelector('h2').textContent,/^Review session$/);assert.equal(cards[5].querySelector('h2').textContent,'Review session 2');
+    t.d.querySelector('[data-start="session-1117-similar"]').click();
+    assert.match(t.d.querySelector('.session-head h1').textContent,/Review session 2.*Similar practice/);
+    assert.equal(t.d.querySelectorAll('.question-card').length,13);assert.equal(t.d.querySelector('input:checked'),null);assert.equal(t.d.querySelector('.explanation'),null);
+    const id=core.ids(course,'session-1117-similar')[0];choose(t,item(id).answer,id);check(t,id);
+    t.d.querySelector('#all-sets').click();t.d.querySelector('[data-start="session-1117-similar"]').click();
+    const saved=JSON.parse(t.saved());assert.deepEqual(saved.articles['session-1117'],[first]);assert.equal(saved.articles['session-1117-similar'].length,1);
+    assert.equal(t.d.querySelector('[data-progress]').textContent,'1/13');assert.match(card(t,id).querySelector('.feedback').textContent,/Correct/);
+    const reload=boot(t.saved());try{reload.d.querySelector('[data-start="session-1117-similar"]').click();assert.equal(reload.d.querySelector('[data-progress]').textContent,'1/13');}finally{reload.close();}
+  }finally{t.close();}
+});
+
+test('Review session 2 finishes with its own date and score without repeating an automatic round',()=>{
+  const t=boot();try{
+    t.d.querySelector('[data-start="session-1117-similar"]').click();
+    for(const id of core.ids(course,'session-1117-similar')){choose(t,item(id).answer,id);check(t,id);}
+    assert.equal(t.d.querySelector('.next-round'),null);t.d.querySelector('#session-results').click();
+    assert.match(t.d.querySelector('.score').textContent,/13\/13/);assert.equal(t.d.querySelector('.next-round'),null);
+    const saved=JSON.parse(t.saved()),r=saved.articles['session-1117-similar'][0];assert.ok(r.completedAt);assert.equal(r.questionSet,'similar-v1');
+    assert.deepEqual(sync.merge(null,saved).articles['session-1117-similar'],[r]);
+    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('[data-start="session-1117-similar"]').closest('article').textContent,/Finished.*First try 13\/13/);
+  }finally{t.close();}
+});
+
 test('Session 1117 is a frozen set of 13 original challenges across all four types',()=>{
   const session=course.sessions.find(s=>s.id==='session-1117'),ids=core.ids(course,session.id);
   assert.equal(session.name,'Review session');assert.equal(session.date,'2026-11-17');assert.equal(session.sourceQuestionCount,24);

@@ -6,6 +6,10 @@ The November 17 session repeats 13 original challenge questions missed on the fi
 
 It is labelled **Review session**, with Session 1117 in its small label. It uses the same dashboard card as the four type sets and follows them in the grid, placing it in the second row on desktop. It starts with clean answers and saves under `articles['session-1117']` in the existing NNAT namespace, with its own score, completion time, drafts, and history. Opening it again resumes the same saved run. Existing course answers and round histories are preserved. It uses the normal first/second checks, explanation timing, direct question view, and double-wrong filter.
 
+## Review session 2
+
+**Review session 2** sits beside the first review card and practices the same 13 source skills with fresh diagrams, five choices, and explanations. It has its own `session-1117-similar` progress key. Stable `similar-v1-r4` IDs identify this new collection, including fresh layouts for the colour-code analogy, sector analogy, and nested-shape serial question; existing r2/r3 diagrams remain unchanged. These are new practice questions, labelled as similar practice. It uses the same two checks per question, completion times, resume, history, and double-wrong filter. It does not offer an automatic follow-up round that would reuse the same diagrams.
+
 ## Direct question review
 
 Opening a set, completed review round, or history entry goes straight to its questions. Completed answers remain locked, and results are available through **See results**. A **Double wrong only** toggle above the question list shows only items with two valid checked choices that were both wrong in that saved round. A single wrong first try, an unsubmitted draft, or a correct second try does not qualify. The filter keeps the original question numbers, saved drafts, open explanations, scores, and completion times; toggling it never writes learner progress. An empty filter explains that there are no such questions. Next-round practice stays available below a completed question list.

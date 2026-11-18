@@ -21,7 +21,8 @@
   function start(id,fresh=false){
     mode=id;onlyDoubleWrong=false;run=fresh?null:latest(id);
     if(!run){let questionIds=core.ids(course,id);if(id==='mixed')for(let i=questionIds.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[questionIds[i],questionIds[j]]=[questionIds[j],questionIds[i]];}
-      run={id:crypto.randomUUID(),round:1,questionIds,startedAt:now(),position:0,completedAt:null,answers:{},drafts:{}};(state.articles[id]??=[]).push(run);save();}
+      const session=(course.sessions||[]).find(s=>s.id===id);
+      run={id:crypto.randomUUID(),round:1,...(session?.questionSet?{questionSet:session.questionSet}:{}),questionIds,startedAt:now(),position:0,completedAt:null,answers:{},drafts:{}};(state.articles[id]??=[]).push(run);save();}
     review=stat().resolved===stat().total;workspace();window.scrollTo(0,0);
   }
   function startReview(id,parentId){
@@ -35,7 +36,7 @@
     const unneeded=parent&&ready&&!ids.length;
     return `<div class="round-stage ${unneeded?'clear':ready?'ready':'locked'}"><div><h3>Round ${n}</h3><p>${next?`${s.total} questions · First try ${s.first}/${s.total}`:unneeded?`No first-try mistakes in Round ${n-1}.`:ready?`${ids.length} new similar ${ids.length===1?'question':'questions'} for first-try mistakes from Round ${n-1}`:`Finish all first tries in Round ${n-1} first.`}</p>${time(next)}</div>${next||ready&&ids.length?`<button class="${next?'secondary':'primary'}" data-round-parent="${esc(parent.id)}" data-round-mode="${id}">${done?'Review':next?'Continue':'Start'} Round ${n} →</button>`:!unneeded?`<span class="round-status">${parent?'Not ready yet':'Waiting for Round '+(n-1)}</span>`:'<span class="round-status">Nothing to redo</span>'}</div>`;
   }
-  function nextRound(){return core.round(run)<3?`<section class="next-round"><h2>Next practice round</h2><p>New pictures practise the same rules as your first-try mistakes.</p>${roundStage(mode,run,core.round(run)+1)}</section>`:'';}
+  function nextRound(){return (course.sessions||[]).find(s=>s.id===mode)?.followUpRounds!==false&&core.round(run)<3?`<section class="next-round"><h2>Next practice round</h2><p>New pictures practise the same rules as your first-try mistakes.</p>${roundStage(mode,run,core.round(run)+1)}</section>`:'';}
   function bindRounds(){app.querySelectorAll('[data-round-parent]').forEach(b=>b.onclick=()=>startReview(b.dataset.roundMode,b.dataset.roundParent));}
   function card(id,label,description,kind=''){const r=latest(id),s=core.scores(course,r),total=core.ids(course,id).length,done=r&&s.resolved===total;
     return `<article class="set-card ${done?'done':''} ${kind}"><div class="set-icon" aria-hidden="true">${({pattern:'▦',analogy:'↔',serial:'⋯',spatial:'◈',mixed:'24',warmup:'8'})[id]||'↻'}</div><p class="eyebrow">${label}</p><h2>${esc(title(id))}</h2><p>${esc(description)}</p>${r?`<p class="set-score">${done?'✓ Finished':`${s.resolved}/${total} checked`} · Round 1 · First try <strong>${s.first}/${total}</strong></p>${time(r)}`:''}<button class="primary" data-start="${id}">${done?'Review questions':r?'Continue':'Start'} <span>→</span></button></article>`;}
