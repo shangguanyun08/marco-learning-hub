@@ -30,7 +30,7 @@ function boot(revisions, saved = {}) {
     let result;
     if (action === 'work') result = { storyId: w.WRITING_STORY_ID, drafts: [], revisions, models: [], chats: saved.chats || [] };
     if (action === 'model') result = { model: { kind: 'rewrite', generation_version: 2, sentence_id: 1, revision_id: revisions.at(-1).id, source_text: row.text, text: 'A boy went home.' } };
-    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5/8' : '6/8') + '\n- Language: Try "hurried home" instead of "go home" if he is in a rush.\n- Detail: What did the boy notice when he got home?' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
+    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5/8' : '6/8') + '\nLanguage use\n- "go home": Try "hurried home" if he is in a rush.\n- "A boy he": Use one subject so the sentence is easier to follow.\nDevelopment\n- "go home": What did the boy notice when he got home?' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
     if (action === 'draft') result = { draft: { version: 1, updated_at: '2026-11-08T14:01:00Z' } };
     return { ok: true, status: 200, json: async () => result };
   };
@@ -159,8 +159,11 @@ test('one score action combines language and moment advice without separate chec
     assert.match(request.body.question, /two or three concrete language-use bullets/);
     assert.match(request.body.question, /commas, periods, capital letters, sentence clarity, or repeated and unnecessary words/);
     assert.match(request.body.question, /Only address issues actually present/);
-    assert.match(t.d.querySelector('#score-text').textContent, /Language:.*hurried home/);
-    assert.match(t.d.querySelector('#score-text').textContent, /Detail:.*notice/);
+    assert.deepEqual(Array.from(t.d.querySelectorAll('#score-text h3'), el => el.textContent), ['Language use', 'Development']);
+    assert.match(t.d.querySelector('#score-text').textContent, /hurried home/);
+    assert.deepEqual(Array.from(t.d.querySelectorAll('#score-text mark'), el => el.textContent), ['"go home"', '"A boy he"', '"go home"']);
+    assert.match(t.d.querySelector('#score-text').textContent, /Development.*notice/s);
+    assert.match(request.body.question, /Assess only language use and development/);
     assert.equal(t.d.querySelector('#score-title').textContent, 'Score & suggestion');
     assert.equal(t.d.querySelector('#score-shortcut').textContent, 'Score & suggestion');
     assert.equal(t.d.querySelector('.editor').querySelectorAll('.feedback').length, 1);

@@ -12,6 +12,30 @@
     const lines = String(text || '').split(/\r?\n/).map(line => line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, '').trim()).filter(Boolean);
     return '<ul class="next-steps">' + lines.map(line => '<li>' + escape(line) + '</li>').join('') + '</ul>';
   }
+  function scoreSuggestions(text, source) {
+    const groups = [{ title: 'Language use', lines: [] }, { title: 'Development', lines: [] }], intro = [];
+    let current = null;
+    for (const raw of String(text || '').split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line) continue;
+      const heading = line.replace(/[*#:]/g, '').trim().toLowerCase();
+      const group = groups.find(item => item.title.toLowerCase() === heading);
+      if (group) current = group;
+      else (current ? current.lines : intro).push(line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, ''));
+    }
+    if (groups.some(group => !group.lines.length)) return suggestionList(text);
+    const highlight = line => {
+      let html = '', offset = 0;
+      for (const match of line.matchAll(/“([^”\n]+)”|"([^"\n]+)"/g)) {
+        html += escape(line.slice(offset, match.index));
+        const quote = match[1] || match[2];
+        html += source.includes(quote) ? '<mark>' + escape(match[0]) + '</mark>' : escape(match[0]);
+        offset = match.index + match[0].length;
+      }
+      return html + escape(line.slice(offset));
+    };
+    return intro.map(line => '<p>' + escape(line) + '</p>').join('') + groups.map(group => '<section class="score-advice"><h3>' + group.title + '</h3><ul class="next-steps">' + group.lines.map(line => '<li>' + highlight(line) + '</li>').join('') + '</ul></section>').join('');
+  }
   function read(key, storage = localStorage) { try { return storage.getItem(key); } catch { return null; } }
   function write(key, value, storage = localStorage) { try { storage.setItem(key, value); return true; } catch { return false; } }
   function remove(key, storage = localStorage) { try { storage.removeItem(key); } catch {} }
@@ -143,7 +167,7 @@
     return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
   function scoreQuestion() {
-    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Combine the score with specific language-use advice and questions to add details inside one or two moments already in his paragraph. Give two or three concrete language-use bullets covering the most useful changes to commas, periods, capital letters, sentence clarity, or repeated and unnecessary words. Quote his words, explain each change and offer short, optional wording improvements. Only address issues actually present; do not invent problems to fill the bullets. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
+    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Assess only language use and development, using those two headings. Keep the earlier re-work and add-details style concise: combine specific language-use advice with questions to add details inside one or two moments already in his paragraph. Give two or three concrete language-use bullets covering the most useful changes to commas, periods, capital letters, sentence clarity, or repeated and unnecessary words. Quote his words, explain each change and offer short, optional wording improvements. Only address issues actually present; do not invent problems to fill the bullets. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
   }
   function paragraphScore(id = selected) {
     const prefix = "Score only Harry's " + config.partNames[id - 1] + ' paragraph out of 8 for APAAS practice.';
@@ -159,7 +183,7 @@
     const score = paragraphScore();
     $('score-panel').hidden = !score;
     $('score-title').textContent = 'Score & suggestion';
-    $('score-text').innerHTML = score ? suggestionList(score.reply) : '';
+    $('score-text').innerHTML = score ? scoreSuggestions(score.reply, editorText(selected)) : '';
     $('score-paragraph').disabled = busy || scoringStory;
     $('score-paragraph').textContent = scoringStory ? 'Scoring…' : 'Score & suggestion';
     $('score-paragraph').setAttribute('aria-expanded', String(Boolean(score)));
