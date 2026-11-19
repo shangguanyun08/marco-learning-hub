@@ -51,7 +51,7 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
     const first = t.calls.find(call => call.action === 'chat').body;
     assert.deepEqual(Array.from(first.paragraphs), [row.text, middle, ending]);
     assert.match(first.question, /only Harry.s Beginning paragraph/);
-    assert.match(t.d.querySelector('#score-text').textContent, /6\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /6\/8/);
     assert.equal(t.d.querySelector('#score-panel').closest('.feedback').id, 'feedback');
     assert.equal(t.d.querySelector('#revision').value, row.text);
     t.d.querySelector('#score-panel').open = false;
@@ -66,14 +66,14 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
     assert.equal(requests[1].body.paragraphs[1], box.value);
     assert.match(requests[1].body.question, /only Harry.s Middle paragraph/);
     assert.equal(box.value, middle + ' It did not fit.');
-    assert.equal(t.d.querySelector('#score-title').textContent, 'Score & suggestion');
-    assert.match(t.d.querySelector('#score-text').textContent, /5\/8/);
+    assert.equal(t.d.querySelector('#score-label').textContent, 'Score & suggestion');
+    assert.match(t.d.querySelector('#score-value').textContent, /5\/8/);
     t.d.querySelector('[data-part="1"]').click();
-    assert.match(t.d.querySelector('#score-text').textContent, /6\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /6\/8/);
     t.d.querySelector('[data-part="3"]').click();
     assert.equal(t.d.querySelector('#score-panel').hidden, true);
     t.d.querySelector('[data-part="2"]').click();
-    assert.match(t.d.querySelector('#score-text').textContent, /5\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /5\/8/);
     saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
     assert.equal(saved.chats.length, 2);
   } finally { t.close(); }
@@ -81,7 +81,7 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
   try {
     await settle();
     assert.equal(reload.d.querySelector('#score-panel').hidden, false);
-    assert.match(reload.d.querySelector('#score-text').textContent, /5\/8/);
+    assert.match(reload.d.querySelector('#score-value').textContent, /5\/8/);
     assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
   } finally { reload.close(); }
 });
@@ -164,7 +164,7 @@ test('one score action combines language and moment advice without separate chec
     assert.deepEqual(Array.from(t.d.querySelectorAll('#score-text mark'), el => el.textContent), ['"go home"', '"A boy he"', '"go home"']);
     assert.match(t.d.querySelector('#score-text').textContent, /Development.*notice/s);
     assert.match(request.body.question, /Assess only language use and development/);
-    assert.equal(t.d.querySelector('#score-title').textContent, 'Score & suggestion');
+    assert.equal(t.d.querySelector('#score-label').textContent, 'Score & suggestion');
     assert.equal(t.d.querySelector('#score-shortcut').textContent, 'Score & suggestion');
     assert.equal(t.d.querySelector('.editor').querySelectorAll('.feedback').length, 1);
     assert.equal(t.d.querySelector('#progress').textContent, '1 of 3 paragraphs scored');
@@ -181,7 +181,7 @@ test('earlier checks, expansion replies and scores stay saved without reviving t
   try {
     await settle();
     assert.match(t.d.querySelector('#chat-history').textContent, /Earlier detail questions/);
-    assert.match(t.d.querySelector('#score-text').textContent, /Earlier estimate: 5\/8/);
+    assert.equal(t.d.querySelector('#score-value').textContent, '5/8');
     assert.match(t.d.querySelector('#history-list').textContent, /he went/);
     assert.equal(t.d.querySelector('#feedback-check'), null);
     assert.equal(t.d.querySelector('#expansion-panel'), null);
