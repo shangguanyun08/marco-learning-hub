@@ -20,9 +20,21 @@
     const remainder = /^(?:\.|[—–-]?\s*(?:Beginning|Middle|Ending) paragraph\.?)$/i.test(tail) ? '' : tail;
     return { number: score[2] + '/8', content: content.replace(score[0], remainder) };
   }
-  function scoreSuggestions(text, source) {
-    const { content } = scoreResult(text);
-    const groups = [{ title: 'Language use', lines: [] }, { title: 'Development', lines: [] }], intro = [];
+  function scoreSuggestions({ number, content }, source) {
+    const points = Number.parseInt(number, 10);
+    let goal = '';
+    if (points < 7) goal = 'Aim for +1';
+    if (points === 7) goal = 'Aim for 8/8';
+    const groups = [
+      { title: 'Language use', action: 'Fix the language issues.', lines: [] },
+      { title: 'Development', action: 'Add detail to one idea.', lines: [] },
+    ];
+    const intro = [];
+    const heading = group => {
+      const badge = goal ? `<span class="score-point-goal">${goal}</span>` : '';
+      const action = goal ? `<p class="score-goal-action">${group.action}</p>` : '';
+      return `<div class="score-advice-heading"><h3>${group.title}</h3>${badge}</div>${action}`;
+    };
     let current = null;
     for (const raw of content.split(/\r?\n/)) {
       const line = raw.trim();
@@ -32,7 +44,11 @@
       if (group) current = group;
       else (current ? current.lines : intro).push(line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, ''));
     }
-    if (groups.some(group => !group.lines.length)) return content.trim() ? suggestionList(content) : '';
+    if (groups.some(group => !group.lines.length)) {
+      if (!content.trim()) return '';
+      const goals = goal ? groups.map(group => `<section class="score-advice">${heading(group)}</section>`).join('') : '';
+      return goals + suggestionList(content);
+    }
     const highlight = line => {
       let html = '', offset = 0;
       for (const match of line.matchAll(/“([^”\n]+)”|"([^"\n]+)"/g)) {
@@ -43,7 +59,12 @@
       }
       return html + escape(line.slice(offset));
     };
-    return intro.map(line => '<p>' + escape(line) + '</p>').join('') + groups.map(group => '<section class="score-advice"><h3>' + group.title + '</h3><ul class="next-steps">' + group.lines.map(line => '<li>' + highlight(line) + '</li>').join('') + '</ul></section>').join('');
+    const introduction = intro.map(line => `<p>${escape(line)}</p>`).join('');
+    const sections = groups.map(group => {
+      const suggestions = group.lines.map(line => `<li>${highlight(line)}</li>`).join('');
+      return `<section class="score-advice">${heading(group)}<ul class="next-steps">${suggestions}</ul></section>`;
+    });
+    return introduction + sections.join('');
   }
   function read(key, storage = localStorage) { try { return storage.getItem(key); } catch { return null; } }
   function write(key, value, storage = localStorage) { try { storage.setItem(key, value); return true; } catch { return false; } }
@@ -191,11 +212,12 @@
     if (!isPicture) return;
     const score = paragraphScore();
     $('score-panel').hidden = !score;
-    const number = scoreResult(score?.reply).number;
+    const result = scoreResult(score?.reply);
+    const { number } = result;
     $('score-value').textContent = number;
     $('score-value').hidden = !number;
     $('score-value').setAttribute('aria-label', number.replace('/', ' out of '));
-    $('score-text').innerHTML = score ? scoreSuggestions(score.reply, editorText(selected)) : '';
+    $('score-text').innerHTML = score ? scoreSuggestions(result, editorText(selected)) : '';
     $('score-paragraph').disabled = busy || scoringStory;
     $('score-paragraph').textContent = scoringStory ? 'Scoring…' : 'Score & suggestion';
     $('score-paragraph').setAttribute('aria-expanded', String(Boolean(score)));
