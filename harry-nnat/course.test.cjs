@@ -1,13 +1,76 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const core=require('./core.js'),sync=require('./sync.js'),variants=require('./variants.js'),context={window:{}};
+const core=require('./core.js'),sync=require('./sync.js'),variants=require('./variants.js'),focus=require('./focus.js'),context={window:{}};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'data.js'),'utf8'),context);
 const course=JSON.parse(JSON.stringify(context.window.NNAT_COURSE)),q=course.questions.find(q=>q.id==='serial-1');
 let JSDOM;try{({JSDOM}=require('jsdom'));}catch{({JSDOM}=require('../harry-math-practice/node_modules/jsdom'));}
 const KEY='harry-nnat-2026-11-07-v1';
-function boot(saved,fetcher){const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),{url:fetcher?'https://shangguanyun08.github.io/marco-learning-hub/harry-nnat/':'http://localhost/harry-nnat/',runScripts:'outside-only'}),w=dom.window;w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};if(saved)w.localStorage.setItem(KEY,saved);if(fetcher){w.fetch=fetcher;w.AbortSignal=AbortSignal;}for(const f of ['data.js','variants.js','core.js','sync.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));return {w,d:w.document,close:()=>w.close(),saved:()=>w.localStorage.getItem(KEY)};}
+function boot(saved,fetcher){const dom=new JSDOM(fs.readFileSync(path.join(__dirname,'index.html'),'utf8'),{url:fetcher?'https://shangguanyun08.github.io/marco-learning-hub/harry-nnat/':'http://localhost/harry-nnat/',runScripts:'outside-only'}),w=dom.window;w.scrollTo=()=>{};w.HTMLElement.prototype.scrollIntoView=function(){};w.HTMLDialogElement.prototype.showModal=function(){this.open=true;};w.HTMLDialogElement.prototype.close=function(){this.open=false;};if(saved)w.localStorage.setItem(KEY,saved);if(fetcher){w.fetch=fetcher;w.AbortSignal=AbortSignal;}for(const f of ['data.js','variants.js','focus.js','core.js','sync.js','app.js'])w.eval(fs.readFileSync(path.join(__dirname,f),'utf8'));return {w,d:w.document,close:()=>w.close(),saved:()=>w.localStorage.getItem(KEY)};}
 const card=(t,id)=>t.d.querySelector(id?`[data-question="${id}"]`:'.question-card'),choose=(t,n,id)=>card(t,id).querySelector(`input[value="${n}"]`).click(),check=(t,id)=>card(t,id).querySelector('.answer-form').dispatchEvent(new t.w.Event('submit',{bubbles:true,cancelable:true}));
-const at='2026-11-08T04:00:00Z',later='2026-11-08T05:00:00Z',item=id=>course.questions.find(q=>q.id===id)||variants.get(course,id);
+const at='2026-11-08T04:00:00Z',later='2026-11-08T05:00:00Z',item=id=>course.questions.find(q=>q.id===id)||variants.get(course,id)||focus.get(id);
 function legacyRun(wrong=4){const r={id:'legacy-round-one',questionIds:core.ids(course,'pattern'),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};r.questionIds.forEach((id,i)=>{const q=item(id);core.check(course,r,q,i<wrong?(q.answer+1)%5:q.answer,at);if(i<wrong)core.check(course,r,q,q.answer,later);});return r;}
+
+test('focused Review session 3 has twelve new questions with distinct choices and valid diagrams',()=>{
+  const ids=core.ids(course,'session-1119-focus'),qs=core.questions(course,{questionIds:ids});
+  assert.equal(ids.length,12);assert.equal(qs.length,12);assert.equal(new Set(ids).size,12);
+  assert.deepEqual(qs.slice(0,2).map(q=>q.level),['easy','medium']);assert.ok(qs.slice(2).every(q=>q.level==='challenge'));
+  assert.equal(qs.filter(q=>q.skillCode==='conditional-code').length,6);assert.equal(qs.filter(q=>q.skillCode==='sector-colour-code').length,6);
+  assert.ok(qs.every(q=>q.type==='analogy'&&['analogy-19','analogy-23'].includes(q.sourceId)));
+  for(const q of qs){
+    assert.ok(q.answer>=0&&q.answer<5);assert.equal(q.figures.length,6);assert.equal(new Set(q.figures.slice(1)).size,5,q.id);
+    assert.equal(new Set(q.choiceModels.map(m=>JSON.stringify(m))).size,5,q.id);
+    for(const figure of q.figures){const dom=new JSDOM(decodeURIComponent(figure.split(',').slice(1).join(',')),{contentType:'image/svg+xml'});assert.equal(dom.window.document.querySelector('parsererror'),null);dom.window.close();}
+    assert.equal(focus.get(q.id).answer,q.answer);assert.ok(q.explanation.length>90);
+  }
+  assert.deepEqual(core.questions(course,{questionIds:['focus-1119-99']}),[]);
+  assert.equal(core.ids(course,'mixed').length,24);assert.equal(course.questions.length,32);
+});
+
+test('all focused answer keys independently match the demonstrated colour and shape codes',()=>{
+  const t=(color,shape='square')=>({color,shape}),symbols=ts=>({kind:'tokens',tokens:ts}),wheel=cs=>({kind:'sectors',colors:cs});
+  const expected=[
+    symbols([t('yellow','triangle'),t('white','circle'),t('yellow','diamond')]),
+    wheel(['white','yellow','blue','white']),
+    symbols([t('white'),t('blue','triangle'),t('yellow')]),
+    symbols([t('blue','diamond'),t('white'),t('yellow','circle')]),
+    symbols([t('white'),t('yellow'),t('yellow','triangle'),t('yellow')]),
+    symbols([t('yellow','triangle'),t('blue'),t('yellow','triangle'),t('blue')]),
+    symbols([t('yellow','triangle'),t('blue','circle'),t('yellow'),t('blue','circle')]),
+    wheel(['blue','blue','yellow','yellow']),wheel(['blue','white','white','blue']),
+    wheel(['white','yellow','yellow','white']),wheel(['yellow','blue','blue','yellow']),wheel(['yellow','white','blue','blue'])
+  ];
+  core.ids(course,'session-1119-focus').forEach((id,i)=>{const q=focus.get(id);assert.deepEqual(q.choiceModels[q.answer],expected[i],id);});
+});
+
+test('the focused session starts fresh, hides solutions, and resumes without changing earlier reviews',()=>{
+  const old={id:'older-review',round:1,questionIds:core.ids(course,'session-1117'),startedAt:at,position:0,completedAt:null,answers:{},drafts:{}};
+  core.check(course,old,item(old.questionIds[0]),item(old.questionIds[0]).answer,at);
+  const seed=JSON.stringify({version:1,articles:{'session-1117':[old]}}),t=boot(seed);
+  try{
+    assert.equal(t.saved(),seed);t.d.querySelector('[data-start="session-1119-focus"]').click();
+    assert.match(t.d.querySelector('h1').textContent,/Review session 3.*Focused practice/);
+    assert.match(t.d.querySelector('.session-instructions').textContent,/Check what stays the same/);
+    assert.equal(t.d.querySelectorAll('.question-card').length,12);assert.equal(t.d.querySelector('input:checked'),null);assert.equal(t.d.querySelector('.feedback,.explanation'),null);
+    const id=core.ids(course,'session-1119-focus')[0];choose(t,item(id).answer,id);check(t,id);
+    t.d.querySelector('#all-sets').click();t.d.querySelector('[data-start="session-1119-focus"]').click();
+    const saved=JSON.parse(t.saved());assert.deepEqual(saved.articles['session-1117'],[old]);assert.equal(saved.articles['session-1119-focus'].length,1);
+    assert.equal(saved.articles['session-1119-focus'][0].questionSet,'focus-1119-v1');assert.equal(t.d.querySelector('[data-progress]').textContent,'1/12');
+    const reload=boot(t.saved());try{reload.d.querySelector('[data-start="session-1119-focus"]').click();assert.equal(reload.d.querySelector('[data-progress]').textContent,'1/12');assert.match(card(reload,id).querySelector('.feedback').textContent,/Correct/);}finally{reload.close();}
+  }finally{t.close();}
+});
+
+test('focused scores, second tries, double-wrong filter, dates and sync stay independent',()=>{
+  const t=boot();try{
+    t.d.querySelector('[data-start="session-1119-focus"]').click();const ids=core.ids(course,'session-1119-focus');
+    ids.forEach((id,i)=>{const q=item(id);choose(t,i===0?(q.answer+1)%5:q.answer,id);check(t,id);if(i===0){choose(t,(q.answer+2)%5,id);check(t,id);}});
+    const saved=JSON.parse(t.saved()),r=saved.articles['session-1119-focus'][0];assert.ok(r.completedAt);assert.deepEqual(core.scores(course,r),{total:12,answered:12,first:11,resolved:12});
+    assert.equal(t.d.querySelector('.next-round'),null);t.d.querySelector('#wrong-only').click();
+    assert.deepEqual([...t.d.querySelectorAll('.question-card:not([hidden])')].map(el=>el.dataset.question),[ids[0]]);
+    t.d.querySelector('#session-results').click();assert.match(t.d.querySelector('.score').textContent,/11\/12/);assert.equal(t.d.querySelector('.next-round'),null);
+    assert.deepEqual(sync.merge(null,saved).articles['session-1119-focus'],[r]);
+    t.d.querySelector('#all-sets').click();assert.match(t.d.querySelector('[data-start="session-1119-focus"]').closest('article').textContent,/Finished.*First try 11\/12/);
+    assert.ok([...t.d.querySelectorAll('.history-row h3')].some(el=>/Review session 3/.test(el.textContent)));
+  }finally{t.close();}
+});
 
 test('Review session 2 has fresh, valid five-choice diagrams for each of the same 13 skills',()=>{
   const source=course.sessions[0],session=course.sessions.find(s=>s.id==='session-1117-similar'),ids=core.ids(course,session.id);

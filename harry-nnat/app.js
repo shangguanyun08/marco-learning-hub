@@ -9,7 +9,7 @@
   try{if(!demo){const saved=JSON.parse(localStorage.getItem(KEY)||'null');if(saved?.version===1)state=NNATSync.normalize(saved);}}catch{}
   const runs=id=>state.articles[id]||[],latest=id=>runs(id).filter(r=>core.round(r)===1).at(-1),stat=()=>core.scores(course,run);
   const child=(id,parent)=>parent?runs(id).filter(r=>r.questionSet==='similar-v1'&&core.childOf(course,r,parent)).at(-1):null;
-  const roundTitle=(id,r)=>`${title(id)} · Round ${core.round(r)}${r?.questionSet==='similar-v1'?' · Similar practice':core.round(r)>1?' · Earlier repeat':''}`;
+  const roundTitle=(id,r)=>`${title(id)} · Round ${core.round(r)}${r?.questionSet==='focus-1119-v1'?' · Focused practice':r?.questionSet==='similar-v1'?' · Similar practice':core.round(r)>1?' · Earlier repeat':''}`;
   const dates=new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZoneName:'short'});
   const date=at=>Number.isFinite(Date.parse(at))?dates.format(new Date(at)):'Time not recorded';
   const time=r=>r?.completedAt?`<p class="completion">Finished <time datetime="${esc(r.completedAt)}">${esc(date(r.completedAt))}</time></p>`:'';
@@ -99,10 +99,12 @@
   }
   function workspace(){
     screen='workspace';const qs=core.questions(course,run);if(!qs.length){home();return;}
+    const instructions=(course.sessions||[]).find(s=>s.id===mode)?.instructions;
     const open=new Set(Array.from(app.querySelectorAll('.question-card .explanation[open]')).map(el=>el.closest('[data-question]').dataset.question));
     const active=document.activeElement,focus=active?.matches('input[type="radio"]')?{id:active.closest('[data-question]')?.dataset.question,value:active.value}:null;
     document.body.classList.add('practising');
     app.innerHTML=`<div class="session-head"><div><p class="eyebrow">All ${qs.length} questions</p><h1>${esc(roundTitle(mode,run))}</h1>${time(run)}</div><div class="question-progress"><strong data-progress>${stat().resolved}/${qs.length}</strong><span>checked</span></div></div><div class="question-filter"><button id="wrong-only" type="button" class="secondary" aria-pressed="false" aria-controls="session-questions">Double wrong only</button><p><span id="filter-count" role="status"></span><small>Double wrong = wrong on both the first and second try.</small></p></div><section class="question-list" id="session-questions" aria-label="${esc(title(mode))} questions"><p id="no-double-wrong" class="empty-filter" hidden>No questions were wrong on both tries in this round.</p>${qs.map((q,index)=>questionCard(q,index,qs.length)).join('')}</section><div class="session-actions"><button class="primary" id="session-results">See results</button></div><div id="workspace-next-round"></div>`;
+    if(instructions)app.querySelector('.question-filter').insertAdjacentHTML('beforebegin',`<p class="session-instructions">${esc(instructions)}</p>`);
     qs.forEach((q,index)=>bindQuestion(app.querySelector(`[data-question="${q.id}"]`),q,index,qs.length));updateProgress();
     app.querySelector('#wrong-only').onclick=()=>{onlyDoubleWrong=!onlyDoubleWrong;updateQuestionFilter();};
     for(const id of open){const details=app.querySelector(`[data-question="${id}"] .explanation`);if(details)details.open=true;}

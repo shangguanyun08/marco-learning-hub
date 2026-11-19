@@ -1,10 +1,11 @@
 (function(root){
   'use strict';
   const variants=typeof module!=='undefined'?require('./variants.js'):root.NNATVariants;
+  const focus=typeof module!=='undefined'?require('./focus.js'):root.NNATFocus;
   function attempts(q,r){return (r?.answers?.[q.id]||[]).filter(a=>Number.isInteger(a.choice)&&a.choice>=0&&a.choice<5&&Number.isFinite(Date.parse(a.checkedAt)));}
   function resolved(q,r){const aa=attempts(q,r);return aa.some(a=>a.choice===q.answer)||aa.length>=2;}
   function doubleWrong(q,r){const aa=attempts(q,r);return aa.length>=2&&aa.slice(0,2).every(a=>a.choice!==q.answer);}
-  function questions(course,r){return (r?.questionIds||[]).map(id=>course.questions.find(q=>q.id===id)||variants.get(course,id)).filter(Boolean);}
+  function questions(course,r){return (r?.questionIds||[]).map(id=>course.questions.find(q=>q.id===id)||variants.get(course,id)||focus?.get(id)).filter(Boolean);}
   function scores(course,r){const qs=questions(course,r);return {total:qs.length,answered:qs.filter(q=>attempts(q,r).length).length,first:qs.filter(q=>attempts(q,r)[0]?.choice===q.answer).length,resolved:qs.filter(q=>resolved(q,r)).length};}
   function round(r){return r?.round===2||r?.round===3?r.round:1;}
   function firstWrongIds(course,r){return questions(course,r).filter(q=>{const first=attempts(q,r)[0];return first&&first.choice!==q.answer;}).map(q=>q.id);}

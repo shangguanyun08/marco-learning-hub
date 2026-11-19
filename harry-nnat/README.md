@@ -1,5 +1,11 @@
 # Harry’s selected NNAT practice
 
+## Review session 3: focused colour-and-shape practice
+
+The November 19 session targets the two analogy skills missed in the latest similar-question review: conditional colour/shape codes and colour substitution without moving sectors. `focus.js` supplies twelve new, stable questions: two warm-ups and ten challenges, split evenly between symbol codes and sector codes. The examples explicitly demonstrate every starting colour. Several questions keep white unchanged; others change white while leaving blue or yellow unchanged, so the child must read the current rule. Harder symbol questions repeat a starting colour at multiple positions and independently vary shape and colour.
+
+All five answer choices are distinct. Distractors include leaving the picture unchanged, changing a part that should stay unchanged, getting one colour wrong, and moving the correctly transformed parts. The session reminder asks Harry to name each change, check what stays the same, and check positions. Answers and explanations stay hidden under the existing first/second-try rules. It saves separately as `session-1119-focus`, alongside the earlier review cards, and does not create automatic follow-up rounds from this fixed set.
+
 ## Review session (1117)
 
 The November 17 session repeats 13 original challenge questions missed on the first try among the 24 challenges across the four completed Round 1 type sets. The selection uses the saved first checked choice, including questions corrected on a second try, and excludes warm-ups. It is a frozen selection in `data.js`, independent of later changes or new runs: 3 Pattern, 3 Analogy, 4 Serial, and 3 Spatial questions. No separate mixed-challenge run was saved at selection time.

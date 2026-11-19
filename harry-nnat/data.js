@@ -30,6 +30,20 @@ window.NNAT_COURSE = {
         "serial-4-similar-v1-r4", "serial-5-similar-v1-r4", "serial-9-similar-v1-r4", "serial-14-similar-v1-r4",
         "spatial-8-similar-v1-r4", "spatial-18-similar-v1-r4", "spatial-24-similar-v1-r4"
       ]
+    },
+    {
+      "id": "session-1119-focus",
+      "name": "Review session 3",
+      "date": "2026-11-19",
+      "questionSet": "focus-1119-v1",
+      "followUpRounds": false,
+      "description": "Focus on colour-and-shape codes: what changes, what stays, and where each part belongs.",
+      "instructions": "Before choosing, name each change. Check what stays the same, then check every position.",
+      "questionIds": [
+        "focus-1119-01", "focus-1119-02", "focus-1119-03", "focus-1119-04",
+        "focus-1119-05", "focus-1119-06", "focus-1119-07", "focus-1119-08",
+        "focus-1119-09", "focus-1119-10", "focus-1119-11", "focus-1119-12"
+      ]
     }
   ],
   "groups": [
