@@ -1,0 +1,29 @@
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {JSDOM}=require(process.env.MARCO_QA_JSDOM||'jsdom'),read=f=>fs.readFileSync(path.join(__dirname,f),'utf8');
+const c={window:{}};vm.runInNewContext(read('session-cards.js'),c);const Cards=c.window.MarcoMathSessionCards;
+function state(number,{answered,right,corrected=0}={}){const course=Cards.courses[number],ids=Object.keys(course.keys).slice(0,answered),answers=Object.fromEntries(ids.map((id,i)=>[id,{attempts:[{id:'first-'+id,at:'2026-11-19T20:00:00.000Z',choice:i<right?course.keys[id]:(course.keys[id]+1)%4,correct:i<right}]}]));for(const id of ids.slice(right,right+corrected))answers[id].attempts.push({id:'retry-'+id,at:'2026-11-19T20:01:00.000Z',choice:course.keys[id],correct:true});return{version:1,sessions:{[course.session]:[{id:course.session,answers,notes:{}}]}};}
+test('card definitions match every live course key and finish threshold',()=>{
+ for(const[n,file]of[[1,'practice-data.js'],[2,'session-2/data.js'],[3,'session-3/data.js']]){const x={window:{}};vm.runInNewContext(read(file),x);const d=x.window.MarcoMA5Practice,course=Cards.courses[n];assert.equal(course.appId,d.appId);assert.equal(course.session,d.session);assert.equal(course.reportAfter,d.reportAfterAnswered||d.ids.length);assert.equal(JSON.stringify(course.keys),JSON.stringify(Object.fromEntries(d.ids.map(id=>[id,d.questions[id].correct]))));}
+});
+test('completed Session 2 keeps its 9/16 first-try score after corrections',()=>{
+ const s=Cards.summarize(Cards.courses[2],[state(2,{answered:16,right:9,corrected:7})]);assert.equal(s.first,9);assert.equal(s.corrected,7);assert.equal(s.complete,true);assert.match(Cards.statusText(s),/9\/16 correct first try/);
+ const partial=Cards.summarize(Cards.courses[1],[state(1,{answered:26,right:17})]);assert.equal(partial.ready,true);assert.equal(partial.complete,false);assert.match(Cards.statusText(partial),/17\/26 first try · 2 unanswered/);
+});
+test('first answers merge across device snapshots without awarding retry points',()=>{
+ const a=state(2,{answered:8,right:8}),b=state(2,{answered:16,right:9,corrected:7}),s=Cards.summarize(Cards.courses[2],[a,b]);assert.equal(s.answered,16);assert.equal(s.first,9);assert.equal(s.corrected,7);assert.equal(JSON.stringify(a),JSON.stringify(state(2,{answered:8,right:8})));
+ const bad=state(2,{answered:1,right:1});bad.sessions[Cards.courses[2].session][0].answers['c2-1'].attempts[0].at='invalid';assert.equal(Cards.summarize(Cards.courses[2],[bad]).answered,0);
+});
+test('remote cards update completion and score using GET only and leave the active card alone',async()=>{
+ const dom=new JSDOM('<nav class="view-tabs"><a id="practice-tab" data-session-card="1"><small class="practice-status">Active session status</small></a><a data-session-card="2"><strong>Session 2</strong></a><a data-session-card="3"><strong>Session 3</strong></a></nav>',{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
+ let requests=0,second=state(2,{answered:6,right:3});const third=state(3,{answered:16,right:14});w.fetch=async(url,init)=>{assert.equal(init.method,'GET');assert.equal(init.body,undefined);requests++;const id=new URL(url).searchParams.get('appId');assert.notEqual(id,Cards.courses[1].appId);return{ok:true,json:async()=>({progress:{state:id===Cards.courses[2].appId?second:third}})};};
+ try{w.eval(read('session-cards.js'));const controller=w.MarcoMathSessionCards.controller;await controller.ready;const card=w.document.querySelector('[data-session-card="2"]');assert.ok(card.classList.contains('is-in-progress'));assert.match(card.textContent,/6\/16 answered · 3\/6 correct first try/);second=state(2,{answered:16,right:9,corrected:7});await controller.refresh();assert.ok(card.classList.contains('is-complete'));assert.ok(!card.classList.contains('is-in-progress'));assert.match(card.textContent,/9\/16 correct first try/);assert.equal(w.document.querySelector('#practice-tab').textContent,'Active session status');assert.ok(w.document.querySelector('[data-session-card="3"]').classList.contains('is-complete'));assert.equal(requests,4);assert.equal(w.localStorage.length,0);controller.stop();}finally{w.close();}
+});
+test('offline cards use saved local scores; unknown records are not falsely called unstarted',async()=>{
+ const dom=new JSDOM('<nav class="view-tabs"><a data-session-card="2"></a><a data-session-card="3"></a></nav>',{url:'https://example.test/',runScripts:'outside-only',pretendToBeVisual:true}),w=dom.window;
+ const saved=JSON.stringify(state(2,{answered:16,right:9}));w.localStorage.setItem(Cards.courses[2].appId,saved);w.fetch=async()=>{throw Error('offline');};
+ try{w.eval(read('session-cards.js'));await w.MarcoMathSessionCards.controller.ready;assert.match(w.document.querySelector('[data-session-card="2"]').textContent,/9\/16/);assert.ok(w.document.querySelector('[data-session-card="2"]').classList.contains('is-complete'));assert.match(w.document.querySelector('[data-session-card="3"]').textContent,/Score unavailable/);assert.equal(w.localStorage.getItem(Cards.courses[2].appId),saved);w.MarcoMathSessionCards.controller.stop();}finally{w.close();}
+});
+test('all three pages include live score cards and the shared updater',()=>{
+ for(const file of ['index.html','session-2/index.html','session-3/index.html']){const d=new JSDOM(read(file)).window.document;assert.equal(d.querySelectorAll('.view-tabs [data-session-card]').length,3);assert.ok(d.querySelector('script[src*="session-cards.js?v=20261119-card-scores"]'));assert.ok(d.querySelector('link[href*="style.css?v=20261119-card-scores"]'));}
+ assert.match(read('style.css'),/\.view-tabs \.is-complete[^}]+#d5f0df/);assert.match(read('style.css'),/\.view-tabs \.is-in-progress[^}]+#fff4df/);
+});

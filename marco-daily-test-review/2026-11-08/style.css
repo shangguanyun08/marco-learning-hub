@@ -7,6 +7,7 @@
 .hero{padding-bottom:10px}.review-note{font-size:15px;color:var(--muted);max-width:850px}
 .view-tabs{border-bottom:1px solid var(--line);padding-bottom:18px}
 .view-tabs a{flex:1 1 240px}.view-tabs strong,.view-tabs small{display:block}.view-tabs small{font-size:13px;font-weight:500;margin-top:7px}.view-tabs .is-complete,.view-tabs .is-complete[aria-current=page]{background:#d5f0df;border-color:#6ca781;color:#154b35}
+.view-tabs .is-in-progress,.view-tabs .is-in-progress[aria-current=page]{background:#fff4df;border-color:#c59b46;color:#735000}.view-tabs .session-score{font-size:14px;font-weight:600;margin-top:9px}
 #save-note{font-size:14px;color:var(--muted)}#save-note[data-kind=live]{color:#206a4d}#save-note[data-kind=offline]{color:#955000}
 .practice-diagram{max-width:400px;border:1px solid var(--line);border-radius:12px;background:white;padding:10px}.practice-diagram svg{width:100%;height:auto;display:block;fill:#173957;font:16px system-ui}
 .review-graphs,.graph-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.review-graphs figure{margin:0;border:1px solid var(--line);border-radius:10px;background:white;padding:10px}.review-graphs figcaption{font-size:16px;font-weight:700;color:var(--ink)}.line-plot{width:100%;height:auto;display:block;fill:#173957;font:13px system-ui}
