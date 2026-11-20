@@ -131,28 +131,11 @@
 
 
 
-      <section id="application" aria-labelledby="application-heading">
-        <div class="section-heading">
-          <div><span class="section-number">03</span><h2 id="application-heading">Application</h2></div>
-          <p>A shared editing desk for Marco’s Sage Hill application</p>
-        </div>
-        <div class="card-grid">
-          <article class="site-card featured">
-            <div class="card-topline"><span>MARCO · FAMILY REVIEW</span><small>5 questions · select & comment</small></div>
-            <div class="icon">✎</div>
-            <h3>Marco’s Sage Hill Application</h3>
-            <p>Compare the counselor’s original with the earlier suggested answer. Select an area in either version, add your notes, and submit feedback. Your working drafts and versions stay saved.</p>
-            <ul><li>Draft and comments saved online</li><li>34 numbered review decisions</li><li>Submit feedback · export · print</li></ul>
-            <a href="./application/">Open application editor <span>→</span></a>
-          </article>
-        </div>
-      </section>
-
       <section id="archives" class="archive-section" aria-labelledby="archive-heading">
         <details class="archive-disclosure">
           <summary class="section-heading">
             <div>
-              <span class="section-number">04</span>
+              <span class="section-number">03</span>
               <h2 id="archive-heading">Archived learning sites</h2>
             </div>
             <span class="archive-summary-meta">
@@ -181,9 +164,18 @@
                   <span class="archive-owner">Marco</span>
                   <h3 id="marco-archive-heading">Marco’s archived sites</h3>
                 </div>
-                <span>22 sites</span>
+                <span>23 sites</span>
               </div>
               <div class="card-grid marco-grid archive-grid">
+                <article class="site-card archived" id="application">
+                  <div class="card-topline"><span>ARCHIVED · FAMILY REVIEW</span><small>5 questions · select & comment</small></div>
+                  <div class="icon">✎</div>
+                  <h3>Marco’s Sage Hill Application</h3>
+                  <p>Compare the counselor’s original with the earlier suggested answer. Select an area in either version, add your notes, and submit feedback. Your working drafts and versions stay saved.</p>
+                  <ul><li>Draft and comments saved online</li><li>34 numbered review decisions</li><li>Submit feedback · export · print</li></ul>
+                  <a href="./application/">Open application editor <span>→</span></a>
+                </article>
+
                 <article class="site-card archived" id="marco-word-meaning-2026-11-18">
                   <div class="card-topline"><span>ARCHIVED · WORD REVIEW &amp; AI TESTS</span><small>November 18, 2026</small></div>
                   <div class="icon">VR</div>
@@ -512,7 +504,7 @@
     <script src="./shared-activity-dashboard.js?v=20261107-minutes" defer></script>
   <script>
       function revealArchives(){
-        if(['#archives','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-word-meaning-2026-11-18','#marco-vr-practice','#marco-vr-word-archive','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
+        if(['#archives','#application','#archive-heading','#harry-archive-heading','#harry-word-meaning','#harry-daily-math','#harry-reading','#harry-daily-vocabulary','#reading-archive-heading','#how-to-live-better-archive','#marco-archive-heading','#marco-word-meaning-2026-11-18','#marco-vr-practice','#marco-vr-word-archive','#marco-combined-word-review','#chinese-reading-heading','#marco-vocabulary-selection','#marco-zozeck-hard-2026'].includes(location.hash)){
           document.querySelector('.archive-disclosure').open=true;
           requestAnimationFrame(()=>document.querySelector(location.hash).scrollIntoView({block:'start'}));
         }
