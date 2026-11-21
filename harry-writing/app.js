@@ -79,7 +79,7 @@
   if (!Number.isInteger(selected) || selected < 1 || selected > parts.length) selected = 1;
   let connected = false, busy = false, saving = false, loaded = false, saveTimer, memoryOnly = false, feedbackSelection = null, makingModel = false;
   let writingChatUI = null, scoringStory = false;
-  const rewritingExamples = new Set();
+  let rewritingExample = false;
   const conflicts = new Set();
   let displayedPart = null, displayedText = '', composing = false;
   function rememberDraft(id, row, archived = false) {
@@ -186,10 +186,8 @@
     box.style.height = 'auto';
     box.style.height = Math.max(240, box.scrollHeight + 2) + 'px';
   }
-  function rewriteQuestion(grade = 6) {
-    const opening = grade === 8 ? 'Write an 8/8' : 'Write a 6/8';
-    const guidance = grade === 8 ? 'Improve the connections, concrete actions and useful details with natural English an eight-year-old can understand. Keep it near his paragraph’s length.' : 'Make a clear, attainable version for an eight-year-old with sensible sentences, connected events and a few simple, useful details. Use short, familiar words and stay close to his wording and paragraph length.';
-    return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
+  function rewriteQuestion() {
+    return 'Write an 8/8 practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. Improve the connections, concrete actions and useful details with natural English an eight-year-old can understand. Keep it near his paragraph’s length. Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
   function scoreQuestion() {
     return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Give the score to one decimal place. Assess only language use and development, using those two headings. Start each actionable bullet with its estimated gain in the form Estimated +0.3: and estimate the gain from that change alone, within the 8/8 ceiling. Keep the earlier re-work and add-details style concise: combine specific language-use advice with questions to add details inside one or two moments already in his paragraph. Give two or three concrete language-use bullets covering the most useful changes to commas, periods, capital letters, sentence clarity, or repeated and unnecessary words. Quote his words, explain each change and offer short, optional wording improvements. Only address issues actually present; do not invent problems to fill the bullets. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
@@ -218,21 +216,15 @@
     $('score-paragraph').setAttribute('aria-expanded', String(Boolean(score)));
     $('score-shortcut').dataset.chatQuestion = scoreQuestion();
     $('score-shortcut').textContent = 'Score & suggestion';
-    const example = paragraphHelp(rewriteQuestion());
-    $('rewrite-panel').hidden = !example;
-    $('rewrite-reference').hidden = !example || example.question === rewriteQuestion();
-    $('rewrite-text').textContent = example?.reply || '';
-    $('rewrite-example').disabled = busy || rewritingExamples.has(6);
-    $('rewrite-example').textContent = rewritingExamples.has(6) ? 'Writing 6/8 example…' : '6/8 rewrite example';
-    $('rewrite-example').setAttribute('aria-expanded', String(Boolean(example)));
-    const eightExample = paragraphHelp(rewriteQuestion(8));
+    const question = rewriteQuestion();
+    const eightExample = paragraphHelp(question);
     $('rewrite-eight-panel').hidden = !eightExample;
-    $('rewrite-eight-reference').hidden = !eightExample || eightExample.question === rewriteQuestion(8);
+    $('rewrite-eight-reference').hidden = !eightExample || eightExample.question === question;
     $('rewrite-eight-text').textContent = eightExample?.reply || '';
-    $('rewrite-eight').disabled = busy || rewritingExamples.has(8);
-    $('rewrite-eight').textContent = rewritingExamples.has(8) ? 'Writing 8/8 example…' : '8/8 rewrite example';
+    $('rewrite-eight').disabled = busy || rewritingExample;
+    $('rewrite-eight').textContent = rewritingExample ? 'Writing 8/8 example…' : '8/8 rewrite example';
     $('rewrite-eight').setAttribute('aria-expanded', String(Boolean(eightExample)));
-    $('feedback').hidden = !score && !example && !eightExample;
+    $('feedback').hidden = !score && !eightExample;
   }
   function renderFeedback() {
     const hint = revisions(selected).find(row => row.kind === 'guide');
@@ -473,32 +465,31 @@
     } catch (failure) { error(failure.message); }
     finally { busy = false; makingModel = false; render(); if (isPicture) $('feedback').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); else if (!$('model-panel').hidden) $('model-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }  }
   $('show-model')?.addEventListener('click', showModel);
-  async function requestWritingHelp(grade = 6) {
-    if (busy || composing || rewritingExamples.has(grade)) return;
+  async function requestRewriteExample() {
+    if (busy || composing || rewritingExample) return;
     captureEditor();
     error();
     if (!editorText(selected).trim()) return error('Write a few words first so I can help with this paragraph.');
     if (!connected) return error('Connect AI to get help with your paragraph.');
     if (config.custom && !draft(0).text.trim()) return error('Write your topic first.');
-    const question = rewriteQuestion(grade);
-    const panel = grade === 8 ? 'rewrite-eight-panel' : 'rewrite-panel';
-    const pendingKey = grade === 8 ? 'rewriteEightPending' : 'rewritePending';
+    const question = rewriteQuestion();
+    const panel = $('rewrite-eight-panel');
     if ((state.chats || []).some(row => row.question === question)) {
-      renderWritingHelp(); $(panel).open = true; $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
+      renderWritingHelp(); panel.open = true; panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); return;
     }
-    if (state[pendingKey]?.question !== question) state[pendingKey] = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
-    rewritingExamples.add(grade);
+    if (state.rewriteEightPending?.question !== question) state.rewriteEightPending = { requestId: crypto.randomUUID(), question, paragraphs: parts.map((_, index) => editorText(index + 1)), ...(config.custom ? { topicTitle: draft(0).text } : {}) };
+    rewritingExample = true;
     cache(); renderWritingHelp();
     try {
-      const result = await request('chat', state[pendingKey]);
+      const result = await request('chat', state.rewriteEightPending);
       writingChatUI.merge([result.turn]);
-      $(panel).open = true;
-      delete state[pendingKey]; cache();
+      panel.open = true;
+      delete state.rewriteEightPending; cache();
     } catch (failure) { error(failure.message); }
     finally {
-      rewritingExamples.delete(grade);
+      rewritingExample = false;
       renderWritingHelp();
-      if (!$(panel).hidden) $(panel).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (!panel.hidden) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
   async function scoreParagraph() {
@@ -525,8 +516,7 @@
     }
   }
   $('score-paragraph')?.addEventListener('click', scoreParagraph);
-  $('rewrite-example')?.addEventListener('click', () => requestWritingHelp(6));
-  $('rewrite-eight')?.addEventListener('click', () => requestWritingHelp(8));
+  $('rewrite-eight')?.addEventListener('click', requestRewriteExample);
   if (isPicture) {
     window.addEventListener('resize', resizeRevision);
     document.fonts?.ready.then(resizeRevision);
