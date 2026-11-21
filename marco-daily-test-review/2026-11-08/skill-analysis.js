@@ -20,7 +20,7 @@
 
   function assessment(stats) {
     if (!stats.answered) return 'Not checked yet.';
-    if (stats.first === stats.answered) return stats.complete ? 'Strong on these four questions.' : `All answered questions are correct, with ${stats.total - stats.answered} unanswered.`;
+    if (stats.first === stats.answered) return stats.complete ? `Strong on these ${stats.total} questions.` : `All answered questions are correct, with ${stats.total - stats.answered} unanswered.`;
     if (stats.first / stats.answered < 0.5) return 'Priority practice.';
     if (stats.corrected === stats.wrong) return 'Corrected on the second try. Confirm with a fresh check.';
     return 'Needs targeted practice.';
@@ -56,9 +56,9 @@
           <td><p>${assessment(skill.stats)}</p>${skill.missed.map(question => questionLink(question)).join('<br>')}${skill.unanswered.length ? `<p class="pending-questions">Still unanswered<br>${skill.unanswered.map(question => questionLink(question)).join('<br>')}</p>` : ''}</td>
         </tr>`).join('')}</tbody>
       </table></div>
-      ${priorities.length ? `<div class="skill-priorities"><h3>Practice priorities</h3><ol>${priorities.map(skill => `<li><strong>${escape(skill.name)} · ${skill.stats.first}/${skill.stats.answered} first try</strong><p>${nextSteps[skill.key]}</p></li>`).join('')}</ol></div>` : ''}
+      ${priorities.length ? `<div class="skill-priorities"><h3>Practice priorities</h3><ol>${priorities.map(skill => `<li><strong>${escape(skill.name)} · ${skill.stats.first}/${skill.stats.answered} first try</strong><p>${escape(D.nextSteps?.[skill.key] || nextSteps[skill.key] || 'Try another example of this skill and explain your first step.')}</p></li>`).join('')}</ol></div>` : ''}
       ${strengths.length ? `<p class="skill-strengths"><strong>Stronger on this check</strong> · ${strengths.map(skill => `${escape(skill.name)} (${skill.stats.first}/${skill.stats.answered}${skill.unanswered.length ? ' answered' : ''})`).join(' · ')}.</p>` : ''}
-      <p class="analysis-caution">Each skill has four questions in this follow-up. A delayed check with fresh questions will help confirm retention.</p>
+      <p class="analysis-caution">A delayed check with fresh questions will help confirm retention.</p>
     </section>`;
   }
 

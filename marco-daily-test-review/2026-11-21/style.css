@@ -1,0 +1,14 @@
+.mock-scores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 20px 0 4px; max-width: 720px; }
+.mock-scores > div { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid #b8c8d1; border-radius: 10px; background: #f1f7fb; }
+.mock-scores strong { font-size: 1.25rem; }
+.mock-scores span, .source-note { font-size: .875rem; }
+.math-fraction { display: inline-flex; flex-direction: column; text-align: center; vertical-align: middle; line-height: 1.15; }
+.math-fraction > span { padding: .1em .15em; }
+.math-fraction > span:first-child { border-bottom: 1.5px solid currentColor; }
+.stacked-expression { font-size: 1.4rem; margin: 0 0 18px; }
+.intercept-plot { margin: 0 0 18px; }
+.intercept-plot img { display: block; width: min(100%, 420px); height: auto; border: 1px solid #b8c8d1; border-radius: 10px; }
+#analysis .result-table caption { text-align: left; font-weight: 700; margin-bottom: 8px; }
+@media (max-width: 470px) {
+  .mock-scores { grid-template-columns: 1fr; }
+}
