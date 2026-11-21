@@ -55,3 +55,8 @@
 
 
 #score-title{display:flex;align-items:center;gap:8px;list-style:none}#score-title::-webkit-details-marker{display:none}#score-title::before{content:"\25B8";color:var(--teal);flex-shrink:0}#score-panel[open]>#score-title::before{content:"\25BE"}#score-label{flex:1;min-width:0}.feedback #score-value{margin-left:auto;font-size:36px;line-height:1.1;font-weight:800;letter-spacing:-1px;color:#174f45;white-space:nowrap}
+
+@media (max-width: 420px) {
+  #score-title { gap: 6px; }
+  .feedback #score-value { font-size: 32px; }
+}
