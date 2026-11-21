@@ -9,12 +9,12 @@
   <link rel="stylesheet" href="../2026-10-04/style.css?v=4">
   <link rel="stylesheet" href="../2026-11-08/style.css?v=20261119-card-scores">
   <link rel="stylesheet" href="style.css?v=20261121">
-  <script defer src="data.js?v=20261121"></script>
+  <script defer src="data.js?v=20261121-split"></script>
   <script defer src="../2026-10-23/engine.js?v=20261028-sync2"></script>
   <script defer src="../2026-10-23/sync.js?v=20261028-sync2"></script>
   <script defer src="../2026-11-08/visuals.js?v=20261108-practice1"></script>
   <script defer src="../2026-11-08/skill-analysis.js?v=20261121"></script>
-  <script defer src="../2026-11-08/practice.js?v=20261121"></script>
+  <script defer src="../2026-11-08/practice.js?v=20261121-mastery"></script>
   <script defer src="../2026-11-08/session-2/app.js?v=20261110-session2"></script>
 </head>
 <body>
@@ -30,13 +30,15 @@
     </div>
   </header>
   <nav class="view-tabs" aria-label="November 21 review views">
-    <a id="practice-tab" data-view="practice" href="?view=practice#practice" aria-current="page"><strong>Redo and practice</strong><small>5 missed questions · 10 fresh checks</small><small class="practice-status">0/15 first answers recorded</small></a>
+    <a id="practice-tab" data-view="practice" href="?view=practice#practice" aria-current="page"><strong>Review</strong><small>5 missed mock questions</small><small class="practice-status">0/5 first answers recorded</small></a>
+    <a href="./session-1/"><strong>Session 1</strong><small>20 new questions · 4 per skill</small></a>
     <a data-view="analysis" href="?view=analysis#analysis"><strong>Skill comparison</strong><small>November 6, November 8 and the new mock</small></a>
   </nav>
   <p id="save-note" role="status" aria-live="polite">Connecting to saved progress…</p>
   <section id="practice" aria-labelledby="practice-heading">
-    <div class="stage-head"><h2 id="practice-heading">Redo the five misses</h2><p>Questions 1–5 restate the missed mock items. Questions 6–15 give two fresh checks per skill. Check each answer as you go. A miss gets one second try before its explanation appears.</p></div>
+    <div class="stage-head"><h2 id="practice-heading">Redo the five misses</h2><p>Check each answer as you go. A miss gets one second try before its explanation appears.</p></div>
     <div id="practice-content"></div>
+    <p><a class="primary" href="./session-1/">Start Session 1 practice</a></p>
   </section>
   <section id="analysis" aria-labelledby="analysis-heading" hidden>
     <article class="analysis">
@@ -70,9 +72,8 @@
       <p class="source-note">Sources: Test Innovators Official Middle, November 21 first-attempt score report and QR/MA answer review. Practice counts are from the saved November 6 and November 8 records, including the three follow-up sessions. The report does not show Marco’s written work.</p>
       <p><a href="../2026-11-06/">November 6 QR review</a> · <a href="../2026-11-08/?view=analysis#analysis">November 8 MA and skill analysis</a></p>
     </article>
-    <div id="live-skill-analysis" aria-live="polite"></div>
   </section>
-  <footer><button id="download" type="button">Download answers and skill report</button><p>First-try points and corrections are recorded separately.</p></footer>
+  <footer><button id="download" type="button">Download review answers</button></footer>
 </main>
 <script defer src="../../shared-activity-tracker.js?v=20261022-time3" data-app-id="marco-math-nov21-official-middle-v1" data-course="November 21 Official Middle QR and MA Review" data-subject="math"></script>
 </body>

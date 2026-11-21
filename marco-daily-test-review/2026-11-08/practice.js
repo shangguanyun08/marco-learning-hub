@@ -19,7 +19,9 @@
  }
  function render(){
   const s=E.stats(state),all=E.firstPass(state),reportReady=A.ready(state),tab=$('#practice-tab');tab.classList.toggle('is-complete',reportReady);tab.classList.toggle('is-in-progress',s.answered>0&&!reportReady);tab.querySelector('.practice-status').textContent=s.complete?`✓ First pass finished · ${s.first}/${s.total} correct first try`:reportReady?`✓ Finished for now · ${s.first}/${s.answered} first try · ${s.total-s.answered} unanswered`:`${s.answered}/${s.total} first answers recorded${s.answered?' · '+s.first+'/'+s.answered+' correct first try':''}`;
-  $('#live-skill-analysis').innerHTML=reportReady?A.render(state,'saved-skill-analysis'):'<p class="analysis-pending">The skill analysis will appear here when the practice is finished.</p>';
+  const analysis=$('#live-skill-analysis');
+  if(analysis) analysis.innerHTML=reportReady?A.render(state,'saved-skill-analysis'):'<p class="analysis-pending">The skill analysis will appear here when the practice is finished.</p>';
+  const reportHTML=!wrongOnly&&reportReady&&D.showSkillReport!==false?report():'';
   const scoreText=s.answered?`${s.first}/${s.answered} correct first try${all?' · First pass finished':''}`:'No answers checked yet';
   const groups=Array.from({length:Math.ceil(D.ids.length/GROUP)},(_,g)=>D.ids.slice(g*GROUP,g*GROUP+GROUP));
   const jump=groups.map((ids,g)=>`<span class="jump-group" role="group" aria-label="Questions ${g*GROUP+1} to ${Math.min(g*GROUP+GROUP,D.ids.length)}">${ids.map((id,j)=>{const a=E.attempts(state,id);return`<a href="#q-${id}" class="${a.length?a[0].correct?'first-correct':'incorrect':''}" aria-label="Question ${g*GROUP+j+1}${a.length?', '+(a[0].correct?'correct':'missed')+' first try':''}">${g*GROUP+j+1}</a>`;}).join('')}${g<groups.length-1?'<span class="jump-divider" aria-hidden="true"></span>':''}</span>`).join('');
@@ -28,10 +30,16 @@
   const filters=`<div class="practice-filters" role="group" aria-label="Questions to show"><button type="button" data-practice-filter="all" aria-pressed="${!wrongOnly}">All questions</button><button type="button" data-practice-filter="wrong" aria-pressed="${wrongOnly}">Wrong only · ${missed.length}</button>${wrongOnly?'<span>First-try misses · grouped by skill</span>':''}</div>`;
   const wrongJump=skills.map(group=>`<span class="wrong-skill-jump"><strong>${esc(group.name)}</strong>${group.ids.map(id=>`<a href="#q-${id}" class="incorrect" aria-label="Question ${D.ids.indexOf(id)+1}">${D.ids.indexOf(id)+1}</a>`).join('')}</span>`).join('');
   const wrongQuestions=skills.map(group=>`<section class="wrong-skill-group" aria-labelledby="wrong-skill-${group.key}"><h3 id="wrong-skill-${group.key}">${esc(group.name)} <span>· ${group.ids.length} ${group.ids.length===1?'question':'questions'}</span></h3>${group.ids.map(id=>question(id,D.ids.indexOf(id))).join('')}</section>`).join('');
-  $('#practice-content').innerHTML=`<div class="scorebar"><strong>${s.answered}/${s.total} first answers recorded</strong><span>${scoreText}</span></div>${filters}<nav class="jump practice-jump" aria-label="Jump to a practice question">${wrongOnly?wrongJump:jump}</nav>${!wrongOnly&&reportReady?report():''}${wrongOnly?(wrongQuestions||'<p class="no-wrong-questions">No first-try mistakes recorded yet.</p>'):D.ids.map((id,i)=>question(id,i)+(i<D.ids.length-1&&(i+1)%GROUP===0?`<hr class="question-group-divider" aria-label="End of questions ${i-GROUP+2} to ${i+1}">`:'')).join('')}`;
+  $('#practice-content').innerHTML=`<div class="scorebar"><strong>${s.answered}/${s.total} first answers recorded</strong><span>${scoreText}</span></div>${filters}<nav class="jump practice-jump" aria-label="Jump to a practice question">${wrongOnly?wrongJump:jump}</nav>${D.masteryCheck?'':reportHTML}${wrongOnly?(wrongQuestions||'<p class="no-wrong-questions">No first-try mistakes recorded yet.</p>'):D.ids.map((id,i)=>question(id,i)+(i<D.ids.length-1&&(i+1)%GROUP===0?`<hr class="question-group-divider" aria-label="End of questions ${i-GROUP+2} to ${i+1}">`:'')).join('')}${D.masteryCheck?reportHTML:''}`;
   statusNote();
  }
- function redraw(){const y=window.scrollY,hadReport=Boolean($('#skill-results'));render();if(!hadReport&&A.ready(state)&&!$('#practice').hidden)$('#skill-results').scrollIntoView({block:'start',behavior:'smooth'});else window.scrollTo(0,y);}
+ function redraw(){
+  const y=window.scrollY,hadReport=Boolean($('#skill-results'));
+  render();
+  const reportPanel=$('#skill-results');
+  if(!hadReport&&reportPanel&&!$('#practice').hidden) reportPanel.scrollIntoView({block:'start',behavior:'smooth'});
+  else window.scrollTo(0,y);
+ }
  function remote(s){state=E.merge(state,s);save(false);redraw();}
  document.addEventListener('change',e=>{if(e.target.matches('#practice input[type=radio]'))selected.set(e.target.name,Number(e.target.value));});
  document.addEventListener('click',e=>{const b=e.target.closest('[data-practice-filter]');if(!b)return;wrongOnly=b.dataset.practiceFilter==='wrong';const url=new URL(location.href);if(wrongOnly)url.searchParams.set('wrong','1');else url.searchParams.delete('wrong');history.replaceState(null,'',url);render();$('#practice-content [data-practice-filter="'+(wrongOnly?'wrong':'all')+'"]').focus();});

@@ -86,7 +86,7 @@
   const fraction = (top, bottom) => '<span class="math-fraction"><span>' + top + '</span><span>' + bottom + '</span></span>';
   function formatMath(text) {
     return escape(text).replace(/(−?\d+)\/(\d+)|\b(a)\/(b)\b/g, (_, n, d, a, b) => fraction(n ?? a, d ?? b))
-      .replace(/10\^(\d+)/g, '10<sup>$1</sup>');
+      .replace(/10\^(?:\(([^()]+)\)|([\da-z]+))/g, (_, expression, exponent) => '10<sup>' + (expression ?? exponent) + '</sup>');
   }
   function questionVisual(q) {
     if (q.stacked) return '<div class="stacked-expression">' + fraction(...q.stacked.map(formatMath)) + '</div>';
@@ -105,7 +105,10 @@
       fractionOrder:'Evaluate the full numerator, then multiply by the reciprocal of the bottom fraction.',
       slope:'Write both points and compute the signed rise and run in the same order.'
     },
-    ids:Object.keys(questions), downloadName:'marco-2026-11-21-qr-ma-review.json', formatMath, questionVisual
+    // Keep the original bank valid for saved attempts from the earlier combined set.
+    ids:Object.keys(questions).filter(id => questions[id].source),
+    showSkillReport:false,
+    downloadName:'marco-2026-11-21-qr-ma-review.json', formatMath, questionVisual
   };
   root.MarcoMA5Practice = data;
   root.MarcoQR4Data = data;

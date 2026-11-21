@@ -19,6 +19,7 @@
   }
 
   function assessment(stats) {
+    if (D.masteryCheck) return stats.first === stats.total ? 'Mastered on this set' : 'Needs practice';
     if (!stats.answered) return 'Not checked yet.';
     if (stats.first === stats.answered) return stats.complete ? `Strong on these ${stats.total} questions.` : `All answered questions are correct, with ${stats.total - stats.answered} unanswered.`;
     if (stats.first / stats.answered < 0.5) return 'Priority practice.';
@@ -44,7 +45,8 @@
     const pending = unanswered.length ? `<p class="unanswered-note">${unanswered.length} unanswered ${unanswered.length === 1 ? 'question remains' : 'questions remain'} · ${unanswered.map(question => questionLink(question)).join(' · ')}. These questions have no recorded result.</p>` : '';
     return `<section class="panel skill-analysis" id="${id}" aria-labelledby="${id}-heading">
       <p class="analysis-status">${total.complete ? 'First pass finished' : 'Finished for now'} · ${total.answered}/${total.total} questions answered</p>
-      <h2 id="${id}-heading">Skill analysis · ${total.first}/${total.answered} correct first try · ${Math.round(total.first / total.answered * 100)}%</h2>
+      <h2 id="${id}-heading">${D.masteryCheck ? 'Session 1 skill report' : 'Skill analysis'} · ${total.first}/${total.answered} correct first try · ${Math.round(total.first / total.answered * 100)}%</h2>
+      ${D.masteryCheck ? `<p><strong>${strengths.length}/${skills.length} skills mastered on this set.</strong> Mastery means 4/4 correct on first tries. Second tries show corrections.</p>` : ''}
       <p>${total.wrong} first-try misses · ${total.corrected} corrected on a second try · ${total.wrong - total.corrected} still incorrect. First-try scores keep the original answers.</p>
       ${pending}
       <div class="table-wrap"><table class="result-table skill-table">
@@ -57,7 +59,7 @@
         </tr>`).join('')}</tbody>
       </table></div>
       ${priorities.length ? `<div class="skill-priorities"><h3>Practice priorities</h3><ol>${priorities.map(skill => `<li><strong>${escape(skill.name)} · ${skill.stats.first}/${skill.stats.answered} first try</strong><p>${escape(D.nextSteps?.[skill.key] || nextSteps[skill.key] || 'Try another example of this skill and explain your first step.')}</p></li>`).join('')}</ol></div>` : ''}
-      ${strengths.length ? `<p class="skill-strengths"><strong>Stronger on this check</strong> · ${strengths.map(skill => `${escape(skill.name)} (${skill.stats.first}/${skill.stats.answered}${skill.unanswered.length ? ' answered' : ''})`).join(' · ')}.</p>` : ''}
+      ${strengths.length && !D.masteryCheck ? `<p class="skill-strengths"><strong>Stronger on this check</strong> · ${strengths.map(skill => `${escape(skill.name)} (${skill.stats.first}/${skill.stats.answered}${skill.unanswered.length ? ' answered' : ''})`).join(' · ')}.</p>` : ''}
       <p class="analysis-caution">A delayed check with fresh questions will help confirm retention.</p>
     </section>`;
   }
