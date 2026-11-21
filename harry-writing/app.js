@@ -14,27 +14,19 @@
   }
   function scoreResult(text) {
     const content = String(text || '');
-    const score = content.match(/^[ \t]*(Estimated practice score|Earlier estimate)[ \t]*:[ \t]*([1-8])[ \t]*\/[ \t]*8\b([^\r\n]*)/im);
+    const score = content.match(/^[ \t]*(Estimated practice score|Earlier estimate)[ \t]*:[ \t]*([1-7](?:\.\d)?|8(?:\.0)?)[ \t]*\/[ \t]*8\b([^\r\n]*)/im);
     if (!score) return { number: '', content };
     const tail = score[3].trim();
     const remainder = /^(?:\.|[—–-]?\s*(?:Beginning|Middle|Ending) paragraph\.?)$/i.test(tail) ? '' : tail;
     return { number: score[2] + '/8', content: content.replace(score[0], remainder) };
   }
   function scoreSuggestions({ number, content }, source) {
-    const points = Number.parseInt(number, 10);
-    let goal = '';
-    if (points < 7) goal = 'Aim for +1';
-    if (points === 7) goal = 'Aim for 8/8';
+    const availablePoints = number ? 8 - Number.parseFloat(number) : 0;
     const groups = [
-      { title: 'Language use', action: 'Fix the language issues.', lines: [] },
-      { title: 'Development', action: 'Add detail to one idea.', lines: [] },
+      { title: 'Language use', lines: [] },
+      { title: 'Development', lines: [] },
     ];
     const intro = [];
-    const heading = group => {
-      const badge = goal ? `<span class="score-point-goal">${goal}</span>` : '';
-      const action = goal ? `<p class="score-goal-action">${group.action}</p>` : '';
-      return `<div class="score-advice-heading"><h3>${group.title}</h3>${badge}</div>${action}`;
-    };
     let current = null;
     for (const raw of content.split(/\r?\n/)) {
       const line = raw.trim();
@@ -44,11 +36,7 @@
       if (group) current = group;
       else (current ? current.lines : intro).push(line.replace(/^\s*(?:[-*•]\s+|\d+[.)]\s+)/, ''));
     }
-    if (groups.some(group => !group.lines.length)) {
-      if (!content.trim()) return '';
-      const goals = goal ? groups.map(group => `<section class="score-advice">${heading(group)}</section>`).join('') : '';
-      return goals + suggestionList(content);
-    }
+    if (groups.some(group => !group.lines.length)) return content.trim() ? suggestionList(content) : '';
     const highlight = line => {
       let html = '', offset = 0;
       for (const match of line.matchAll(/“([^”\n]+)”|"([^"\n]+)"/g)) {
@@ -59,10 +47,17 @@
       }
       return html + escape(line.slice(offset));
     };
+    const suggestion = line => {
+      const estimate = line.match(/^Estimated \+(0\.[1-9]):\s+/i);
+      if (!estimate) return `<li>${highlight(line)}</li>`;
+      const gain = Math.min(Number(estimate[1]), availablePoints);
+      const label = gain > 0 ? `<span class="score-estimate" title="Estimated gain from this change alone">Est. +${gain.toFixed(1)}</span>` : '';
+      return `<li>${label}${highlight(line.slice(estimate[0].length))}</li>`;
+    };
     const introduction = intro.map(line => `<p>${escape(line)}</p>`).join('');
     const sections = groups.map(group => {
-      const suggestions = group.lines.map(line => `<li>${highlight(line)}</li>`).join('');
-      return `<section class="score-advice">${heading(group)}<ul class="next-steps">${suggestions}</ul></section>`;
+      const suggestions = group.lines.map(suggestion).join('');
+      return `<section class="score-advice"><h3>${group.title}</h3><ul class="next-steps">${suggestions}</ul></section>`;
     });
     return introduction + sections.join('');
   }
@@ -197,7 +192,7 @@
     return opening + ' practice example of only the ' + config.partNames[selected - 1] + ' paragraph below. Keep Harry’s characters, main events and outcome. ' + guidance + ' Return only the rewritten paragraph, without a heading or feedback. Paragraph: ' + editorText(selected).trim();
   }
   function scoreQuestion() {
-    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Assess only language use and development, using those two headings. Keep the earlier re-work and add-details style concise: combine specific language-use advice with questions to add details inside one or two moments already in his paragraph. Give two or three concrete language-use bullets covering the most useful changes to commas, periods, capital letters, sentence clarity, or repeated and unnecessary words. Quote his words, explain each change and offer short, optional wording improvements. Only address issues actually present; do not invent problems to fill the bullets. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
+    return "Score only Harry's " + config.partNames[selected - 1] + ' paragraph out of 8 for APAAS practice. Give the score to one decimal place. Assess only language use and development, using those two headings. Start each actionable bullet with its estimated gain in the form Estimated +0.3: and estimate the gain from that change alone, within the 8/8 ceiling. Keep the earlier re-work and add-details style concise: combine specific language-use advice with questions to add details inside one or two moments already in his paragraph. Give two or three concrete language-use bullets covering the most useful changes to commas, periods, capital letters, sentence clarity, or repeated and unnecessary words. Quote his words, explain each change and offer short, optional wording improvements. Only address issues actually present; do not invent problems to fill the bullets. Other paragraphs are context only and may be unfinished. This is a practice estimate, not an official test score.';
   }
   function paragraphScore(id = selected) {
     const prefix = "Score only Harry's " + config.partNames[id - 1] + ' paragraph out of 8 for APAAS practice.';
