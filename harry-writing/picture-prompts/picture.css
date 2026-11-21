@@ -49,10 +49,8 @@
 #expansion-text .next-steps{white-space:normal}
 
 .score-advice{margin-top:18px}
-.score-advice-heading{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;margin-bottom:6px}
-.score-advice-heading h3{margin:0}
-.score-point-goal{display:inline-block;padding:2px 9px;border:1px solid #b4cdb4;border-radius:999px;background:#e2efdf;color:#174f45;font-size:.875rem;font-weight:700;white-space:nowrap}
-.score-goal-action{margin:0 0 6px;font-size:.9375rem}
+.score-advice h3{margin:0 0 6px}
+.score-estimate{display:inline-block;margin-right:.45em;padding:1px 7px;border:1px solid #b4cdb4;border-radius:999px;background:#e2efdf;color:#174f45;font-size:.875rem;font-weight:700;white-space:nowrap}
 .score-advice mark{background:#ffdf8c;color:var(--ink);padding:1px 3px;border-radius:3px}
 
 

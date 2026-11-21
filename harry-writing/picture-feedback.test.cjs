@@ -30,7 +30,7 @@ function boot(revisions, saved = {}) {
     let result;
     if (action === 'work') result = { storyId: w.WRITING_STORY_ID, drafts: [], revisions, models: [], chats: saved.chats || [] };
     if (action === 'model') result = { model: { kind: 'rewrite', generation_version: 2, sentence_id: 1, revision_id: revisions.at(-1).id, source_text: row.text, text: 'A boy went home.' } };
-    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5/8' : '6/8') + '\nLanguage use\n- "go home": Try "hurried home" if he is in a rush.\n- "A boy he": Use one subject so the sentence is easier to follow.\nDevelopment\n- "go home": What did the boy notice when he got home?' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
+    if (action === 'chat') result = { turn: { id: body.requestId, question: body.question, reply: body.question.startsWith("Score only Harry's") ? 'Estimated practice score: ' + (body.question.includes('Middle paragraph') ? '5.1/8' : '6.2/8') + '\nLanguage use\n- Estimated +0.2: "go home": Try "hurried home" if he is in a rush.\n- Estimated +0.3: "A boy he": Use one subject so the sentence is easier to follow.\nDevelopment\n- Estimated +0.4: "go home": What did the boy notice when he got home?' : body.question.includes('6/8') ? 'The boy paused beside the box. He lifted its dusty lid and peered inside.' : body.question.includes('8/8') ? 'The boy brushed dust from the brass latch before carefully lifting the mysterious lid.' : 'What did the boy notice on his way home?', created_at: new Date(Date.UTC(2026, 10, 8, 14, 0, calls.length)).toISOString() } };
     if (action === 'draft') result = { draft: { version: 1, updated_at: '2026-11-08T14:01:00Z' } };
     return { ok: true, status: 200, json: async () => result };
   };
@@ -51,7 +51,7 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
     const first = t.calls.find(call => call.action === 'chat').body;
     assert.deepEqual(Array.from(first.paragraphs), [row.text, middle, ending]);
     assert.match(first.question, /only Harry.s Beginning paragraph/);
-    assert.match(t.d.querySelector('#score-value').textContent, /6\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /6\.2\/8/);
     assert.equal(t.d.querySelector('#score-panel').closest('.feedback').id, 'feedback');
     assert.equal(t.d.querySelector('#revision').value, row.text);
     t.d.querySelector('#score-panel').open = false;
@@ -67,13 +67,13 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
     assert.match(requests[1].body.question, /only Harry.s Middle paragraph/);
     assert.equal(box.value, middle + ' It did not fit.');
     assert.equal(t.d.querySelector('#score-label').textContent, 'Score & suggestion');
-    assert.match(t.d.querySelector('#score-value').textContent, /5\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /5\.1\/8/);
     t.d.querySelector('[data-part="1"]').click();
-    assert.match(t.d.querySelector('#score-value').textContent, /6\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /6\.2\/8/);
     t.d.querySelector('[data-part="3"]').click();
     assert.equal(t.d.querySelector('#score-panel').hidden, true);
     t.d.querySelector('[data-part="2"]').click();
-    assert.match(t.d.querySelector('#score-value').textContent, /5\/8/);
+    assert.match(t.d.querySelector('#score-value').textContent, /5\.1\/8/);
     saved = JSON.parse(t.w.localStorage.getItem('harry-writing:' + t.w.WRITING_STORY_ID));
     assert.equal(saved.chats.length, 2);
   } finally { t.close(); }
@@ -81,7 +81,7 @@ test('paragraph scoring precedes examples and keeps each part’s score and writ
   try {
     await settle();
     assert.equal(reload.d.querySelector('#score-panel').hidden, false);
-    assert.match(reload.d.querySelector('#score-value').textContent, /5\/8/);
+    assert.match(reload.d.querySelector('#score-value').textContent, /5\.1\/8/);
     assert.equal(reload.calls.filter(call => call.action === 'chat').length, 0);
   } finally { reload.close(); }
 });
@@ -160,6 +160,8 @@ test('one score action combines language and moment advice without separate chec
     assert.match(request.body.question, /commas, periods, capital letters, sentence clarity, or repeated and unnecessary words/);
     assert.match(request.body.question, /Only address issues actually present/);
     assert.deepEqual(Array.from(t.d.querySelectorAll('#score-text h3'), el => el.textContent), ['Language use', 'Development']);
+    assert.deepEqual(Array.from(t.d.querySelectorAll('.score-estimate'), el => el.textContent), ['Est. +0.2', 'Est. +0.3', 'Est. +0.4']);
+    assert.doesNotMatch(t.d.querySelector('#score-text').textContent, /Aim for/);
     assert.match(t.d.querySelector('#score-text').textContent, /hurried home/);
     assert.deepEqual(Array.from(t.d.querySelectorAll('#score-text mark'), el => el.textContent), ['"go home"', '"A boy he"', '"go home"']);
     assert.match(t.d.querySelector('#score-text').textContent, /Development.*notice/s);
