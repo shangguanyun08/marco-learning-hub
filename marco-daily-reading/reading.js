@@ -19,7 +19,6 @@
   const articles = new Map();
   const jumps = new Map();
   let storageOK = true;
-  let sync = null;
   let state = engine.empty();
 
   try {
@@ -42,6 +41,22 @@
       storageOK = false;
     }
     updateStatus(storageOK ? 'local' : 'offline', 'Progress saved on this device.');
+  }
+
+  function refreshFromDevice() {
+    let other;
+    try {
+      other = JSON.parse(localStorage.getItem(storageKey));
+    } catch {
+      return;
+    }
+    if (!engine.valid(other)) return;
+    const previous = state;
+    state = engine.merge(state, other);
+    for (const id of course.ids) {
+      if (JSON.stringify(engine.attempts(previous, id)) !== JSON.stringify(engine.attempts(state, id))) renderQuestion(id);
+    }
+    renderResults();
   }
 
   function escapeHTML(text) {
@@ -167,32 +182,18 @@
       form.querySelector('.feedback').textContent = 'Choose an answer first.';
       return;
     }
+    refreshFromDevice();
     if (engine.submit(state, id, Number(choice.value))) {
       save();
       renderQuestion(id);
       renderResults();
       articles.get(id).querySelector('.feedback').focus({preventScroll: true});
-      void sync?.push();
     }
   });
 
   setup();
-  if (local) {
-    updateStatus('local', 'Progress saved on this device.');
-  } else {
-    sync = window.MarcoQR4Sync.create({
-      getState: () => state,
-      onRemote(next) {
-        const previous = state;
-        state = next;
-        save();
-        for (const id of course.ids) {
-          if (JSON.stringify(engine.attempts(previous, id)) !== JSON.stringify(engine.attempts(state, id))) renderQuestion(id);
-        }
-        renderResults();
-      },
-      onStatus: updateStatus
-    });
-    void sync.start();
-  }
+  updateStatus('local', 'Progress saved on this device.');
+  window.addEventListener('storage', event => {
+    if (event.key === storageKey) refreshFromDevice();
+  });
 })();

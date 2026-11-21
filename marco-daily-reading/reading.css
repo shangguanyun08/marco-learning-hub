@@ -43,7 +43,6 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 .skill-scores strong { font-size: 1.0625rem; color: var(--ink); }
 .skill-scores .corrections { color: var(--green); }
 .save-note { margin-top: 10px; }
-.save-note[data-kind=live] { color: var(--green); }
 
 .jump a { width: auto; min-width: 40px; height: 40px; padding: 0 5px; }
 .jump a[data-result=correct] { background: #e5f4eb; border-color: #83b59b; }
