@@ -86,6 +86,7 @@
     const article = articles.get(id);
     const selected = article.querySelector('input:checked:not(:disabled)')?.value;
     const title = question.mock ? `Mock #${question.mock} · ${question.title}` : question.title;
+    const source = question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '';
     const num = question.mock || course.ids.indexOf(id) + 1;
     const resultText = {
       pending: '',
@@ -95,7 +96,8 @@
     };
 
     article.innerHTML = `
-      <header><h3 id="title-${id}">${escapeHTML(title)}</h3><span class="source">${escapeHTML(skills[question.skill])}</span></header>
+      <header><h3 id="title-${id}">${escapeHTML(title)}</h3><span class="source">${escapeHTML(skills[question.skill])}</span>
+        ${source ? `<span class="source">${escapeHTML(source)}</span>` : ''}</header>
       <div class="reading-passage" aria-label="Passage">${formatPassage(question.passage, question.skill === 'organization' && (review || revealed))}</div>
       <form data-question="${id}">
         <fieldset class="choices">
@@ -142,9 +144,13 @@
   }
 
   function setup() {
-    if (!review) {
+    if (course.number === 2) {
       document.querySelector('#session-heading').textContent = 'Session 2 · Practice both skills';
       document.querySelector('#session-intro').textContent = 'Read each short passage and answer one question. Your first answers count toward the two skill scores. A miss gets one second try.';
+    }
+    if (course.number === 3) {
+      document.querySelector('#session-heading').textContent = 'Session 3 · Practice Tests 1 and 2';
+      document.querySelector('#session-intro').textContent = 'Answer 10 questions from Test Innovators Practice Tests 1 and 2. Read the excerpt provided with each question. A miss gets one second try.';
     }
     for (const tab of document.querySelectorAll('.reading-sessions [data-session]')) {
       tab.href = sessionLink(tab.dataset.session);
@@ -152,8 +158,9 @@
       else tab.removeAttribute('aria-current');
     }
     const otherSession = document.querySelector('#other-session');
-    otherSession.href = sessionLink(review ? 2 : 1);
-    otherSession.textContent = review ? 'Open Session 2' : 'Open Session 1';
+    const nextSession = course.number === 3 ? 1 : course.number + 1;
+    otherSession.href = sessionLink(nextSession);
+    otherSession.textContent = `Open Session ${nextSession}`;
 
     for (const [index, id] of course.ids.entries()) {
       const article = document.createElement('article');

@@ -151,9 +151,14 @@
     }
   ];
 
-  const number = new URLSearchParams(location.search).get('session') === '2' ? 2 : 1;
-  const items = number === 1 ? review : practice;
-  const session = number === 1 ? 'review' : 'practice';
+  const sessions = [
+    {id: 'review', items: review},
+    {id: 'practice', items: practice},
+    {id: 'practice-tests-1-2', items: window.MarcoPracticeTestQuestions}
+  ];
+  const requested = Number(new URLSearchParams(location.search).get('session'));
+  const number = Number.isInteger(requested) && requested >= 1 && requested <= sessions.length ? requested : 1;
+  const {id: session, items} = sessions[number - 1];
   window.MarcoQR4Data = {
     number,
     session,

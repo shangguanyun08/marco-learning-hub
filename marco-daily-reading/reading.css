@@ -19,7 +19,7 @@ body { background: #f3f7fb; }
   gap: 12px;
 }
 
-.reading-sessions { margin-bottom: 20px; }
+.reading-sessions { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 20px; }
 .reading-sessions .session-card { gap: 2px; padding: 14px 18px; border-radius: 12px; }
 .reading-sessions .session-card b { font-size: 1.125rem; }
 .reading-sessions .session-card span { color: var(--muted); }
@@ -69,6 +69,7 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 .end-links { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
 
 @media (max-width: 550px) {
+  .reading-sessions { grid-template-columns: 1fr; gap: 8px; }
   .reading-sessions .session-card { padding: 11px 12px; }
   .reading-sessions .session-card[aria-current=page] { padding: 10px 11px; }
   .signal-guide { padding: 13px 14px; }
@@ -77,5 +78,5 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 }
 
 @media (max-width: 360px) {
-  .reading-sessions, .skill-scores { grid-template-columns: 1fr; }
+  .skill-scores { grid-template-columns: 1fr; }
 }
