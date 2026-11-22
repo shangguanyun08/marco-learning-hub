@@ -45,7 +45,7 @@
     const pending = unanswered.length ? `<p class="unanswered-note">${unanswered.length} unanswered ${unanswered.length === 1 ? 'question remains' : 'questions remain'} · ${unanswered.map(question => questionLink(question)).join(' · ')}. These questions have no recorded result.</p>` : '';
     return `<section class="panel skill-analysis" id="${id}" aria-labelledby="${id}-heading">
       <p class="analysis-status">${total.complete ? 'First pass finished' : 'Finished for now'} · ${total.answered}/${total.total} questions answered</p>
-      <h2 id="${id}-heading">${D.masteryCheck ? 'Session 1 skill report' : 'Skill analysis'} · ${total.first}/${total.answered} correct first try · ${Math.round(total.first / total.answered * 100)}%</h2>
+      <h2 id="${id}-heading">${D.masteryCheck ? 'Session ' + (D.sessionNumber ?? 1) + ' skill report' : 'Skill analysis'} · ${total.first}/${total.answered} correct first try · ${Math.round(total.first / total.answered * 100)}%</h2>
       ${D.masteryCheck ? `<p><strong>${strengths.length}/${skills.length} skills mastered on this set.</strong> Mastery means 4/4 correct on first tries. Second tries show corrections.</p>` : ''}
       <p>${total.wrong} first-try misses · ${total.corrected} corrected on a second try · ${total.wrong - total.corrected} still incorrect. First-try scores keep the original answers.</p>
       ${pending}

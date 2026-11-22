@@ -21,7 +21,7 @@
   const s=E.stats(state),all=E.firstPass(state),reportReady=A.ready(state),tab=$('#practice-tab');tab.classList.toggle('is-complete',reportReady);tab.classList.toggle('is-in-progress',s.answered>0&&!reportReady);tab.querySelector('.practice-status').textContent=s.complete?`✓ First pass finished · ${s.first}/${s.total} correct first try`:reportReady?`✓ Finished for now · ${s.first}/${s.answered} first try · ${s.total-s.answered} unanswered`:`${s.answered}/${s.total} first answers recorded${s.answered?' · '+s.first+'/'+s.answered+' correct first try':''}`;
   const analysis=$('#live-skill-analysis');
   if(analysis) analysis.innerHTML=reportReady?A.render(state,'saved-skill-analysis'):'<p class="analysis-pending">The skill analysis will appear here when the practice is finished.</p>';
-  const reportHTML=!wrongOnly&&reportReady&&D.showSkillReport!==false?report():'';
+  const reportHTML=(!wrongOnly||D.masteryCheck)&&reportReady&&D.showSkillReport!==false?report():'';
   const scoreText=s.answered?`${s.first}/${s.answered} correct first try${all?' · First pass finished':''}`:'No answers checked yet';
   const groups=Array.from({length:Math.ceil(D.ids.length/GROUP)},(_,g)=>D.ids.slice(g*GROUP,g*GROUP+GROUP));
   const jump=groups.map((ids,g)=>`<span class="jump-group" role="group" aria-label="Questions ${g*GROUP+1} to ${Math.min(g*GROUP+GROUP,D.ids.length)}">${ids.map((id,j)=>{const a=E.attempts(state,id);return`<a href="#q-${id}" class="${a.length?a[0].correct?'first-correct':'incorrect':''}" aria-label="Question ${g*GROUP+j+1}${a.length?', '+(a[0].correct?'correct':'missed')+' first try':''}">${g*GROUP+j+1}</a>`;}).join('')}${g<groups.length-1?'<span class="jump-divider" aria-hidden="true"></span>':''}</span>`).join('');

@@ -99,16 +99,33 @@
     appId:'marco-math-nov21-official-middle-v1', session:'official-middle-nov21-review-v1',
     title:'November 21 · Official Middle QR + MA Review', groupSize:5, skills, questions,
     nextSteps:{
-      fractionScale:'Write each operation as a factor of the same positive amount before comparing.',
-      powers:'Compare the total exponent and coefficient after writing both products in the same form.',
-      fee:'Check the formula at the number of hours covered by the initial charge.',
-      fractionOrder:'Evaluate the full numerator, then multiply by the reciprocal of the bottom fraction.',
-      slope:'Write both points and compute the signed rise and run in the same order.'
+      fractionScale:'Turn division into multiplication by the reciprocal. Compare that multiplier with 1 to predict the effect on a positive number.',
+      powers:'Multiply the coefficients and add the exponents. Moving the coefficient’s decimal one place left increases the exponent by 1.',
+      fee:'Separate the included units from the extra units. Find each plan’s total before comparing.',
+      fractionOrder:'Simplify the full numerator and denominator separately, then divide.',
+      slope:'Write both intercepts as ordered pairs. Find the change in y divided by the change in x using the same point order.'
     },
     // Keep the original bank valid for saved attempts from the earlier combined set.
     ids:Object.keys(questions).filter(id => questions[id].source),
     showSkillReport:false,
-    downloadName:'marco-2026-11-21-qr-ma-review.json', formatMath, questionVisual
+    downloadName:'marco-2026-11-21-qr-ma-review.json', formatMath, questionVisual,
+    practiceSet(number, questions) {
+      return {
+        appId: 'marco-math-nov21-session' + number + '-v1',
+        session: 'official-middle-nov21-session' + number + '-v1',
+        title: 'November 21 · Session ' + number + ' · Five Skills',
+        sessionNumber: number,
+        groupSize: 5,
+        skills,
+        nextSteps: data.nextSteps,
+        formatMath,
+        questionVisual,
+        questions,
+        ids: Object.keys(questions),
+        masteryCheck: true,
+        downloadName: 'marco-2026-11-21-session-' + number + '.json'
+      };
+    }
   };
   root.MarcoMA5Practice = data;
   root.MarcoQR4Data = data;
