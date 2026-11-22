@@ -7,7 +7,10 @@
  const selected=new Map();
  let wrongOnly=params.get('wrong')==='1';
  try{const old=JSON.parse(localStorage.getItem(KEY)||'null');if(E.valid(old))state=E.merge(state,old);}catch{storageOK=false;}
- function statusNote(){const n=$('#save-note');n.textContent=storageOK?status:'Device storage unavailable. Keep this page open and download your answers.';n.dataset.kind=storageOK?kind:'offline';}
+ function statusNote(){
+  const n=$('#save-note');n.textContent=storageOK?status:'Device storage unavailable. Keep this page open and download your answers.';n.dataset.kind=storageOK?kind:'offline';
+  window.MarcoNov21SessionCards?.paintActive($('#practice-tab'),E.stats(state),kind);
+ }
  function save(upload=true){try{localStorage.setItem(KEY,JSON.stringify(state));}catch{storageOK=false;}statusNote();if(upload)void sync?.push();}
  function table(t){return`<div class="table-wrap"><table class="result-table"><thead><tr>${t.headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')}</tr></thead><tbody>${t.rows.map(row=>'<tr>'+row.map((v,i)=>i?'<td>'+esc(v)+'</td>':'<th scope="row">'+esc(v)+'</th>').join('')+'</tr>').join('')}</tbody></table></div>`;}
  function solution(q){return`<div class="solution"><h4>Answer: ${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}</h4><p class="trick"><strong>KEY TRICK</strong><br>${math(q.tip)}</p><p>${math(q.explanation)}</p></div>`;}
@@ -18,7 +21,11 @@
   return`<article class="question" id="q-${id}" data-study-subject="math"><header><h3>Question ${i+1} of ${D.ids.length}</h3>${q.source?'<span class="source">'+esc(q.source)+'</span>':''}${all?'<span class="source">'+esc(D.skills[q.skill])+'</span>':''}</header><p class="prompt">${math(q.prompt)}</p>${D.questionVisual?.(q)||''}${q.table?table(q.table):''}${q.diagram?V.diagram(q.diagram):''}<form data-question="${id}"><fieldset class="choices${q.graphs?' graph-choices':''}"><legend>${a.length&&!retry?'Your recorded answer':'Choose one answer'}</legend>${q.choices.map((c,j)=>`<label class="choice${reveal&&j===q.correct?' correct':''}${a.some(t=>!t.correct&&t.choice===j)?' wrong':''}"><input type="radio" name="${id}" value="${j}" ${choice===j?'checked':''} ${locked||a.some(t=>t.choice===j)?'disabled':''}><span class="letter">${'ABCD'[j]}</span><span class="choice-content">${math(c)}${q.graphs?V.plot(q.graphs[j],id+'-'+j,c+', equal x and y unit scales'):''}</span></label>`).join('')}</fieldset>${!a.length||retry?'<button class="primary" type="submit" '+(!ready?'disabled':'')+'>'+(retry?'Check second try':'Check answer')+'</button>':''}<p class="feedback" role="status" data-result="${a.length?(a.at(-1).correct?'correct':'wrong'):'pending'}">${feedback}</p></form>${reveal?'<details class="answer-reveal"><summary>Show answer, trick & explanation</summary>'+solution(q)+'</details>':''}</article>`;
  }
  function render(){
-  const s=E.stats(state),all=E.firstPass(state),reportReady=A.ready(state),tab=$('#practice-tab');tab.classList.toggle('is-complete',reportReady);tab.classList.toggle('is-in-progress',s.answered>0&&!reportReady);tab.querySelector('.practice-status').textContent=s.complete?`✓ First pass finished · ${s.first}/${s.total} correct first try`:reportReady?`✓ Finished for now · ${s.first}/${s.answered} first try · ${s.total-s.answered} unanswered`:`${s.answered}/${s.total} first answers recorded${s.answered?' · '+s.first+'/'+s.answered+' correct first try':''}`;
+  const s=E.stats(state),all=E.firstPass(state),reportReady=A.ready(state),tab=$('#practice-tab');
+  if(!window.MarcoNov21SessionCards){
+   tab.classList.toggle('is-complete',reportReady);tab.classList.toggle('is-in-progress',s.answered>0&&!reportReady);
+   tab.querySelector('.practice-status').textContent=s.complete?`✓ First pass finished · ${s.first}/${s.total} correct first try`:reportReady?`✓ Finished for now · ${s.first}/${s.answered} first try · ${s.total-s.answered} unanswered`:`${s.answered}/${s.total} first answers recorded${s.answered?' · '+s.first+'/'+s.answered+' correct first try':''}`;
+  }
   const analysis=$('#live-skill-analysis');
   if(analysis) analysis.innerHTML=reportReady?A.render(state,'saved-skill-analysis'):'<p class="analysis-pending">The skill analysis will appear here when the practice is finished.</p>';
   const reportHTML=(!wrongOnly||D.masteryCheck)&&reportReady&&D.showSkillReport!==false?report():'';

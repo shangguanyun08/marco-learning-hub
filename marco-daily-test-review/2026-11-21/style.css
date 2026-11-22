@@ -6,3 +6,8 @@
 .intercept-plot { margin: 0 0 18px; }
 .intercept-plot img { display: block; width: min(100%, 420px); height: auto; border: 1px solid #b8c8d1; border-radius: 10px; }
 #analysis .result-table caption { text-align: left; font-weight: 700; margin-bottom: 8px; }
+.view-tabs a.is-complete,
+.view-tabs a.is-complete[aria-current="page"] { background: #185640; border-color: #185640; color: #fff; }
+.view-tabs a.is-complete[aria-current="page"] { box-shadow: 0 0 0 2px #fffefa, 0 0 0 4px #173957; }
+.view-tabs [data-session-card] .practice-status,
+.view-tabs [data-session-card] .session-score { font-size: 14px; font-weight: 650; }

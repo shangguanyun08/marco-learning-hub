@@ -4,13 +4,14 @@ const path = require('node:path');
 const {test} = require('node:test');
 const {JSDOM} = require('jsdom');
 
-function open(t, directory, records = {}) {
+function open(t, directory, records = {}, options = {}) {
   const file = path.resolve(__dirname, directory, 'index.html');
   const dom = new JSDOM(fs.readFileSync(file, 'utf8'), {
-    url:'http://localhost/?demo=1', runScripts:'outside-only', pretendToBeVisual:true
+    url: options.url || 'http://localhost/?demo=1', runScripts:'outside-only', pretendToBeVisual:true
   });
   t.after(() => dom.window.close());
   const w = dom.window;
+  if (options.fetch) w.fetch = options.fetch;
   w.scrollTo = () => {};
   w.HTMLElement.prototype.scrollIntoView = () => {};
   for (const [key, value] of Object.entries(records)) w.localStorage.setItem(key, value);
@@ -19,6 +20,56 @@ function open(t, directory, records = {}) {
   }
   return w;
 }
+
+test('November 21 cards use the saved first-try scores on every page, including inactive sessions', async t => {
+  const directories = ['..', '.', '../session-2', '../session-3'];
+  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3'];
+  const records = new Map();
+  for (const [i, directory] of directories.entries()) {
+    const w = open(t, directory);
+    const data = w.MarcoMA5Practice;
+    const definition = w.MarcoNov21SessionCards.courses[cardIds[i]];
+    assert.equal(definition.appId, data.appId);
+    assert.equal(definition.session, data.session);
+    assert.equal(definition.reportAfter, data.ids.length);
+    assert.equal(JSON.stringify(definition.keys), JSON.stringify(Object.fromEntries(data.ids.map(id => [id, data.questions[id].correct]))));
+    assert.equal(w.document.querySelector('#practice-tab').dataset.sessionCard, cardIds[i]);
+    const state = w.MarcoQR4Engine.empty();
+    const ids = i === 3 ? [] : i === 2 ? data.ids.slice(0, 3) : data.ids;
+    for (const [index, id] of ids.entries()) {
+      const correct = data.questions[id].correct;
+      const firstCorrect = index < [1, 10, 2][i];
+      w.MarcoQR4Engine.submit(state, id, firstCorrect ? correct : (correct + 1) % 4, '2026-11-21T18:00:00.000Z');
+      if (!firstCorrect) w.MarcoQR4Engine.submit(state, id, correct, '2026-11-21T18:01:00.000Z');
+    }
+    if (i === 0) w.MarcoQR4Engine.submit(state, 'r1', data.questions.r1.correct);
+    records.set(data.appId, {version: 1, state});
+  }
+
+  const fetch = async (url, options) => {
+    assert.equal(options.method, 'GET');
+    const progress = records.get(new URL(url).searchParams.get('appId'));
+    assert.ok(progress);
+    return {ok: true, json: async () => ({progress})};
+  };
+  for (const directory of directories) {
+    const w = open(t, directory, {}, {url: 'https://example.test/', fetch});
+    await w.MarcoNov21SessionCards.controller.ready;
+    for (let n = 0; w.document.querySelector('#save-note').dataset.kind !== 'live' && n < 10; n++) {
+      await new Promise(resolve => setImmediate(resolve));
+    }
+    const card = id => w.document.querySelector('[data-session-card="' + id + '"]');
+    assert.ok(card('nov21-review').classList.contains('is-complete'));
+    assert.match(card('nov21-review').textContent, /1\/5 \(20%\) first try/);
+    assert.ok(card('nov21-1').classList.contains('is-complete'));
+    assert.match(card('nov21-1').textContent, /10\/20 \(50%\) first try/);
+    assert.ok(card('nov21-2').classList.contains('is-in-progress'));
+    assert.match(card('nov21-2').textContent, /3\/20 answered · 2\/3 correct first try/);
+    assert.ok(!card('nov21-3').classList.contains('is-complete'));
+    assert.match(card('nov21-3').textContent, /Not started · 0\/20 answered/);
+    assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
+  }
+});
 
 function submit(w, id, choice) {
   const form = w.document.querySelector('#q-' + id + ' form');

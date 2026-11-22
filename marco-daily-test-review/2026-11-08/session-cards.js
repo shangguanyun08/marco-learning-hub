@@ -30,23 +30,35 @@
     if(s.answered)return `${s.answered}/${s.total} answered · ${s.first}/${s.answered} correct first try`;
     return `Not started · 0/${s.total} answered`;
   }
-  function mount(){
-    const cards=[...root.document.querySelectorAll('.view-tabs [data-session-card]')].filter(card=>card.id!=='practice-tab'&&courses[card.dataset.sessionCard]);
+  function paintCard(card, stats, message, available = true) {
+    let text = card.querySelector('.practice-status, .session-score');
+    if (!text) {
+      text = root.document.createElement('small');
+      text.className = 'session-score';
+      text.setAttribute('aria-live', 'polite');
+      card.append(text);
+    }
+    if (text.textContent !== message) text.textContent = message;
+    card.classList.toggle('is-complete', available && stats.ready);
+    card.classList.toggle('is-in-progress', available && stats.answered > 0 && !stats.ready);
+  }
+  function mount({courses: roster = courses, formatStatus = statusText} = {}){
+    const cards=[...root.document.querySelectorAll('.view-tabs [data-session-card]')].filter(card=>card.id!=='practice-tab'&&Object.hasOwn(roster,card.dataset.sessionCard));
+    if (!cards.length) return;
     const params=new URLSearchParams(root.location.search),preview=params.has('demo')||['localhost','127.0.0.1'].includes(root.location.hostname)||root.location.protocol==='file:',suffix=params.has('demo')?':demo':preview?':preview':'';
     const cached=new Map(),known=new Set(),failed=new Set();let busy=false,stopped=false,timer;
     function local(course){try{return JSON.parse(root.localStorage.getItem(course.appId+suffix)||'null');}catch{return null;}}
     function paint(card){
-      const n=card.dataset.sessionCard,course=courses[n],device=local(course),s=summarize(course,[device,cached.get(n)]);
-      let text=card.querySelector('.session-score');if(!text){text=root.document.createElement('small');text.className='session-score';text.setAttribute('aria-live','polite');card.append(text);}
+      const n=card.dataset.sessionCard,course=roster[n],device=local(course),s=summarize(course,[device,cached.get(n)]);
       const available=preview||known.has(n)||!!answers(course,device);
-      const message=available?statusText(s):failed.has(n)?'Score unavailable · Reconnect to sync':'Loading saved score…';if(text.textContent!==message)text.textContent=message;
-      card.classList.toggle('is-complete',available&&s.ready);card.classList.toggle('is-in-progress',available&&s.answered>0&&!s.ready);
+      const message=available?formatStatus(s):failed.has(n)?'Score unavailable · Reconnect to sync':'Loading saved score…';
+      paintCard(card, s, message, available);
     }
     async function refresh(){
       if(stopped||busy)return;cards.forEach(paint);if(preview||root.document.visibilityState==='hidden')return;
       busy=true;
       try{await Promise.all(cards.map(async card=>{
-        const n=card.dataset.sessionCard,course=courses[n],controller=new root.AbortController(),timeout=root.setTimeout(()=>controller.abort(),10000);
+        const n=card.dataset.sessionCard,course=roster[n],controller=new root.AbortController(),timeout=root.setTimeout(()=>controller.abort(),10000);
         try{
           const response=await root.fetch(API+'?appId='+encodeURIComponent(course.appId),{method:'GET',cache:'no-store',signal:controller.signal});
           if(!response.ok)throw Error('Score unavailable');const body=await response.json(),state=body.progress?.state;
@@ -61,6 +73,6 @@
     timer=root.setInterval(refresh,4000);
     return {ready:refresh(),refresh,stop(){stopped=true;root.clearInterval(timer);root.removeEventListener('focus',refresh);root.removeEventListener('online',refresh);root.removeEventListener('pageshow',refresh);root.removeEventListener('storage',refresh);root.document.removeEventListener('visibilitychange',visible);}};
   }
-  root.MarcoMathSessionCards={courses,summarize,statusText,mount};
+  root.MarcoMathSessionCards={courses,summarize,statusText,paintCard,mount};
   if(root.document&&root.fetch)root.MarcoMathSessionCards.controller=mount();
 })(typeof window==='undefined'?globalThis:window);

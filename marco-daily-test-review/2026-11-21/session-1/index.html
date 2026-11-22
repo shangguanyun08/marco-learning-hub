@@ -8,13 +8,15 @@
   <meta name="description" content="Twenty new practice questions on five skills from Marco’s November 21 mock, with a first-try skill report.">
   <link rel="stylesheet" href="../../2026-10-04/style.css?v=4">
   <link rel="stylesheet" href="../../2026-11-08/style.css?v=20261119-card-scores">
-  <link rel="stylesheet" href="../style.css?v=20261121">
+  <link rel="stylesheet" href="../style.css?v=20261121-dashboard">
   <script defer src="../data.js?v=20261121-follow-ups"></script>
   <script defer src="data.js?v=20261121-session1"></script>
   <script defer src="../../2026-10-23/engine.js?v=20261028-sync2"></script>
   <script defer src="../../2026-10-23/sync.js?v=20261028-sync2"></script>
   <script defer src="../../2026-11-08/skill-analysis.js?v=20261121-follow-ups"></script>
-  <script defer src="../../2026-11-08/practice.js?v=20261121-follow-ups"></script>
+  <script defer src="../../2026-11-08/session-cards.js?v=20261121-dashboard"></script>
+  <script defer src="../session-dashboard.js?v=20261121-dashboard"></script>
+  <script defer src="../../2026-11-08/practice.js?v=20261121-dashboard"></script>
 </head>
 <body>
 <main class="shell">
@@ -25,10 +27,10 @@
     <p>20 new questions, four per skill. Check each answer as you go, with one retry on each miss.</p>
   </header>
   <nav class="view-tabs" aria-label="November 21 review views">
-    <a href="../"><strong>Review</strong><small>5 missed mock questions</small></a>
-    <a id="practice-tab" href="#practice" aria-current="page"><strong>Session 1</strong><small>20 new questions · 4 per skill</small><small class="practice-status">0/20 first answers recorded</small></a>
-    <a href="../session-2/"><strong>Session 2</strong><small>20 new questions · 4 per skill</small></a>
-    <a href="../session-3/"><strong>Session 3</strong><small>20 new questions · 4 per skill</small></a>
+    <a data-session-card="nov21-review" href="../"><strong>Review</strong><small>5 missed mock questions</small></a>
+    <a data-session-card="nov21-1" id="practice-tab" href="#practice" aria-current="page"><strong>Session 1</strong><small>20 new questions · 4 per skill</small><small class="practice-status">0/20 first answers recorded</small></a>
+    <a data-session-card="nov21-2" href="../session-2/"><strong>Session 2</strong><small>20 new questions · 4 per skill</small></a>
+    <a data-session-card="nov21-3" href="../session-3/"><strong>Session 3</strong><small>20 new questions · 4 per skill</small></a>
     <a href="../?view=analysis#analysis"><strong>Skill comparison</strong><small>November 6, November 8 and the new mock</small></a>
   </nav>
   <p id="save-note" role="status" aria-live="polite">Connecting to saved progress…</p>
