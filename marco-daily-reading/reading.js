@@ -19,6 +19,7 @@
   const articles = new Map();
   const jumps = new Map();
   let storageOK = true;
+  let ready = local;
   let state = engine.empty();
 
   try {
@@ -29,8 +30,9 @@
   }
 
   function updateStatus(kind, message) {
-    saveNote.dataset.kind = storageOK ? kind : 'offline';
-    saveNote.textContent = storageOK ? message : 'Device storage is unavailable. Keep this page open while you work.';
+    const saved = storageOK || kind === 'live';
+    saveNote.dataset.kind = saved ? kind : 'offline';
+    saveNote.textContent = saved ? message : 'Device storage is unavailable. Keep this page open while you work.';
   }
 
   function save() {
@@ -40,7 +42,19 @@
     } catch {
       storageOK = false;
     }
-    updateStatus(storageOK ? 'local' : 'offline', 'Progress saved on this device.');
+  }
+
+  function mergeProgress(other) {
+    const previous = state;
+    state = engine.merge(state, other);
+    let changed = false;
+    for (const id of course.ids) {
+      if (JSON.stringify(engine.attempts(previous, id)) !== JSON.stringify(engine.attempts(state, id))) {
+        renderQuestion(id);
+        changed = true;
+      }
+    }
+    if (changed) renderResults();
   }
 
   function refreshFromDevice() {
@@ -50,13 +64,7 @@
     } catch {
       return;
     }
-    if (!engine.valid(other)) return;
-    const previous = state;
-    state = engine.merge(state, other);
-    for (const id of course.ids) {
-      if (JSON.stringify(engine.attempts(previous, id)) !== JSON.stringify(engine.attempts(state, id))) renderQuestion(id);
-    }
-    renderResults();
+    if (engine.valid(other)) mergeProgress(other);
   }
 
   function escapeHTML(text) {
@@ -112,7 +120,7 @@
             </label>`;
           }).join('')}
         </fieldset>
-        ${revealed ? '' : `<button class="primary" type="submit">${last ? 'Check second try' : 'Check answer'}</button>`}
+        ${revealed ? '' : `<button class="primary" type="submit" ${ready ? '' : 'disabled'}>${last ? 'Check second try' : 'Check answer'}</button>`}
         <p class="feedback" data-result="${result}" tabindex="-1" role="status">${resultText[result]}</p>
       </form>
       ${revealed ? `<p class="reading-explanation"><strong>Answer ${letters[question.correct]}.</strong> ${escapeHTML(question.explanation)}</p>` : ''}`;
@@ -180,18 +188,36 @@
     renderResults();
   }
 
+  const sync = local ? null : window.MarcoQR4Sync.create({
+    appId: course.appId,
+    engine,
+    getState() {
+      refreshFromDevice();
+      return state;
+    },
+    onRemote(other) {
+      mergeProgress(other);
+      save();
+    },
+    onStatus: updateStatus
+  });
+
   questionList.addEventListener('submit', event => {
     event.preventDefault();
     const form = event.target;
+    if (!ready) return;
+    refreshFromDevice();
+    if (!form.isConnected) return;
     const id = form.dataset.question;
     const choice = form.querySelector('input:checked:not(:disabled)');
     if (!choice) {
       form.querySelector('.feedback').textContent = 'Choose an answer first.';
       return;
     }
-    refreshFromDevice();
     if (engine.submit(state, id, Number(choice.value))) {
       save();
+      if (sync) void sync.push();
+      else updateStatus('local', 'Progress saved on this device.');
       renderQuestion(id);
       renderResults();
       articles.get(id).querySelector('.feedback').focus({preventScroll: true});
@@ -199,8 +225,13 @@
   });
 
   setup();
-  updateStatus('local', 'Progress saved on this device.');
   window.addEventListener('storage', event => {
     if (event.key === storageKey) refreshFromDevice();
   });
+  if (sync) {
+    void sync.start().finally(() => {
+      ready = true;
+      for (const button of questionList.querySelectorAll('button[type="submit"]')) button.disabled = false;
+    });
+  } else updateStatus('local', 'Progress saved on this device.');
 })();
