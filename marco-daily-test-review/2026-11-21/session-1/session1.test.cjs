@@ -22,8 +22,8 @@ function open(t, directory, records = {}, options = {}) {
 }
 
 test('November 21 cards use the saved first-try scores on every page, including inactive sessions', async t => {
-  const directories = ['..', '.', '../session-2', '../session-3'];
-  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3'];
+  const directories = ['..', '.', '../session-2', '../session-3', '../session-4'];
+  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4'];
   const records = new Map();
   for (const [i, directory] of directories.entries()) {
     const w = open(t, directory);
@@ -35,7 +35,7 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.equal(JSON.stringify(definition.keys), JSON.stringify(Object.fromEntries(data.ids.map(id => [id, data.questions[id].correct]))));
     assert.equal(w.document.querySelector('#practice-tab').dataset.sessionCard, cardIds[i]);
     const state = w.MarcoQR4Engine.empty();
-    const ids = i === 3 ? [] : i === 2 ? data.ids.slice(0, 3) : data.ids;
+    const ids = i >= 3 ? [] : i === 2 ? data.ids.slice(0, 3) : data.ids;
     for (const [index, id] of ids.entries()) {
       const correct = data.questions[id].correct;
       const firstCorrect = index < [1, 10, 2][i];
@@ -67,6 +67,7 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.match(card('nov21-2').textContent, /3\/20 answered · 2\/3 correct first try/);
     assert.ok(!card('nov21-3').classList.contains('is-complete'));
     assert.match(card('nov21-3').textContent, /Not started · 0\/20 answered/);
+    assert.match(card('nov21-4').textContent, /Not started · 0\/10 answered/);
     assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
   }
 });
@@ -76,6 +77,40 @@ function submit(w, id, choice) {
   form.querySelector('input[value="' + choice + '"]').click();
   form.dispatchEvent(new w.Event('submit', {bubbles:true, cancelable:true}));
 }
+
+test('Session 4 lists both perfect two-question skills, plus slope totals before and after retries', t => {
+  const w = open(t, '../session-4');
+  const d = w.document, data = w.MarcoMA5Practice;
+  const keyed = data.ids.map(id => data.questions[id]);
+  assert.deepEqual(Object.keys(data.skills), ['slope', 'fractionScale', 'fee']);
+  assert.deepEqual(Object.keys(data.skills).map(skill => keyed.filter(question => question.skill === skill).length), [6, 2, 2]);
+  assert.deepEqual([...keyed.map(q => q.choices[q.correct])], [
+    '2/3', 'n × 5/6', '18', '6', '(1, 4) and (5, −2)',
+    '4', 'x ÷ 4/3', '−3', 'C = 8 + 2.50(b − 1)', 'It falls 3 units each time x increases by 4.'
+  ]);
+  const missed = ['slope-1', 'slope-2'];
+  const choose = id => {
+    const q = data.questions[id];
+    submit(w, id, missed.includes(id) ? (q.correct + 1) % 4 : q.correct);
+  };
+  for (const id of data.ids.slice(0, -1)) choose(id);
+  assert.equal(d.querySelector('#skill-results'), null);
+  choose(data.ids.at(-1));
+  submit(w, missed[0], data.questions[missed[0]].correct);
+  assert.match(d.querySelector('#practice-tab').textContent, /8\/10 \(80%\) first try/);
+
+  d.querySelector('[data-practice-filter=wrong]').click();
+  assert.equal(d.querySelectorAll('.wrong-skill-group .question').length, 2);
+  const report = d.querySelector('#skill-results');
+  assert.equal(d.querySelector('#practice-content').lastElementChild, report);
+  assert.equal(report.querySelectorAll('.skill-table tbody tr').length, 3);
+  assert.match(report.textContent, /2\/3 skills mastered/);
+  assert.match(report.querySelector('[data-skill=slope]').textContent, /4\/6[\s\S]*5\/6[\s\S]*1\/2 first misses corrected/);
+  const perfect = report.querySelector('.skill-strengths').textContent;
+  assert.ok(perfect.includes('Compare multiplication and division by fractions (2/2)'));
+  assert.ok(perfect.includes('Write a fee rule with an included first unit (2/2)'));
+  assert.ok(!perfect.includes('Find signed slope'));
+});
 
 test('the Review shows only the five missed items and preserves old saved answers', t => {
   const review = open(t, '..');

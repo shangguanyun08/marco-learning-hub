@@ -41,20 +41,24 @@
     const priorities = skills.filter(skill => skill.stats.wrong > 0)
       .sort((a, b) => a.stats.first / a.stats.answered - b.stats.first / b.stats.answered || b.stats.wrong - a.stats.wrong)
       .slice(0, 3);
-    const strengths = skills.filter(skill => skill.stats.answered >= 3 && !skill.stats.wrong);
+    const strengths = skills.filter(({stats}) => D.masteryCheck
+      ? stats.total > 0 && stats.first === stats.total
+      : stats.answered >= 3 && !stats.wrong);
     const pending = unanswered.length ? `<p class="unanswered-note">${unanswered.length} unanswered ${unanswered.length === 1 ? 'question remains' : 'questions remain'} · ${unanswered.map(question => questionLink(question)).join(' · ')}. These questions have no recorded result.</p>` : '';
     return `<section class="panel skill-analysis" id="${id}" aria-labelledby="${id}-heading">
       <p class="analysis-status">${total.complete ? 'First pass finished' : 'Finished for now'} · ${total.answered}/${total.total} questions answered</p>
       <h2 id="${id}-heading">${D.masteryCheck ? 'Session ' + (D.sessionNumber ?? 1) + ' skill report' : 'Skill analysis'} · ${total.first}/${total.answered} correct first try · ${Math.round(total.first / total.answered * 100)}%</h2>
-      ${D.masteryCheck ? `<p><strong>${strengths.length}/${skills.length} skills mastered on this set.</strong> Mastery means 4/4 correct on first tries. Second tries show corrections.</p>` : ''}
+      ${D.masteryCheck ? `<p><strong>${strengths.length}/${skills.length} skills mastered on this set.</strong> Mastery means getting every question for that skill right on the first try.</p>` : ''}
+      ${D.masteryCheck && strengths.length ? `<p class="skill-strengths"><strong>Perfect on the first try</strong> · ${strengths.map(skill => `${escape(skill.name)} (${skill.stats.first}/${skill.stats.total})`).join(' · ')}.</p>` : ''}
       <p>${total.wrong} first-try misses · ${total.corrected} corrected on a second try · ${total.wrong - total.corrected} still incorrect. First-try scores keep the original answers.</p>
       ${pending}
       <div class="table-wrap"><table class="result-table skill-table">
-        <thead><tr><th scope="col">Skill</th><th scope="col">First try</th><th scope="col">Corrected on second try</th><th scope="col">Assessment and questions</th></tr></thead>
+        <thead><tr><th scope="col">Skill</th><th scope="col">${D.masteryCheck ? 'First-try correct / total' : 'First try'}</th><th scope="col">${D.masteryCheck ? 'Correct / total after retries' : 'Corrected on second try'}</th><th scope="col">Assessment and questions</th></tr></thead>
         <tbody>${skills.map(skill => `<tr class="${!skill.stats.wrong ? 'strong' : 'needs'}" data-skill="${skill.key}">
           <th scope="row">${escape(skill.name)}</th>
-          <td>${skill.stats.answered ? skill.stats.first + '/' + skill.stats.answered : '—'}${skill.unanswered.length ? `<small>${skill.unanswered.length} unanswered</small>` : ''}</td>
-          <td>${skill.stats.wrong ? skill.stats.corrected + '/' + skill.stats.wrong + ' first misses' : '—'}</td>
+          <td>${D.masteryCheck ? skill.stats.first + '/' + skill.stats.total : skill.stats.answered ? skill.stats.first + '/' + skill.stats.answered : '—'}${skill.unanswered.length ? `<small>${skill.unanswered.length} unanswered</small>` : ''}</td>
+          <td>${D.masteryCheck ? `${skill.stats.first + skill.stats.corrected}/${skill.stats.total}${skill.stats.wrong ? `<small>${skill.stats.corrected}/${skill.stats.wrong} first misses corrected</small>` : ''}`
+            : skill.stats.wrong ? skill.stats.corrected + '/' + skill.stats.wrong + ' first misses' : '—'}</td>
           <td><p>${assessment(skill.stats)}</p>${skill.missed.map(question => questionLink(question)).join('<br>')}${skill.unanswered.length ? `<p class="pending-questions">Still unanswered<br>${skill.unanswered.map(question => questionLink(question)).join('<br>')}</p>` : ''}</td>
         </tr>`).join('')}</tbody>
       </table></div>
