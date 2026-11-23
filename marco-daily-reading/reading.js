@@ -4,11 +4,14 @@
   const course = window.MarcoQR4Data;
   const engine = window.MarcoQR4Engine;
   const review = course.number === 1;
+  const evidenceReview = course.number === 4;
   const params = new URLSearchParams(location.search);
   const demo = params.has('demo');
   const local = demo || ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
   const storageKey = course.appId + (local ? ':preview' : '');
   const skills = {
+    inference: 'Inference',
+    vocabulary: 'Vocabulary in Context',
     organization: 'Organization / Logic',
     tone: 'Tone / Style / Figurative Language'
   };
@@ -18,6 +21,7 @@
   const saveNote = document.querySelector('#save-note');
   const articles = new Map();
   const jumps = new Map();
+  const highlighted = new Set();
   let storageOK = true;
   let ready = local;
   let state = engine.empty();
@@ -95,7 +99,8 @@
     const selected = article.querySelector('input:checked:not(:disabled)')?.value;
     const title = question.mock ? `Mock #${question.mock} · ${question.title}` : question.title;
     const source = question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '';
-    const num = question.mock || course.ids.indexOf(id) + 1;
+    const num = question.mock || (evidenceReview ? question.questionNumber : course.ids.indexOf(id) + 1);
+    const showClue = evidenceReview ? highlighted.has(id) : question.skill === 'organization' && (review || revealed);
     const resultText = {
       pending: '',
       retry: 'Try once more. Reread the passage and choose a different answer.',
@@ -106,7 +111,8 @@
     article.innerHTML = `
       <header><h3 id="title-${id}">${escapeHTML(title)}</h3><span class="source">${escapeHTML(skills[question.skill])}</span>
         ${source ? `<span class="source">${escapeHTML(source)}</span>` : ''}</header>
-      <div class="reading-passage" aria-label="Passage">${formatPassage(question.passage, question.skill === 'organization' && (review || revealed))}</div>
+      <div class="reading-passage" id="passage-${id}" aria-label="Passage">${formatPassage(question.passage, showClue)}</div>
+      ${evidenceReview ? `<button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="passage-${id}" aria-pressed="${showClue}" aria-label="Highlight evidence for question ${num}">Highlight evidence</button>` : ''}
       <form data-question="${id}">
         <fieldset class="choices">
           <legend class="prompt">${escapeHTML(question.prompt)}</legend>
@@ -137,7 +143,8 @@
     document.querySelector('#overall-score').textContent = overall.complete
       ? `Complete · ${overall.first}/${overall.total} (${percent(overall)}%) first try`
       : `${overall.answered} of ${overall.total} answered`;
-    document.querySelector('#skill-scores').innerHTML = Object.entries(skills).map(([key, label]) => {
+    const activeSkills = new Set(course.ids.map(id => course.questions[id].skill));
+    document.querySelector('#skill-scores').innerHTML = Object.entries(skills).filter(([key]) => activeSkills.has(key)).map(([key, label]) => {
       const score = engine.stats(state, key);
       const summary = score.complete
         ? `${score.first}/${score.total} · ${percent(score)}%`
@@ -160,13 +167,19 @@
       document.querySelector('#session-heading').textContent = 'Session 3 · Practice Tests 1 and 2';
       document.querySelector('#session-intro').textContent = 'Answer 10 questions from Test Innovators Practice Tests 1 and 2. Read the excerpt provided with each question. A miss gets one second try.';
     }
+    if (evidenceReview) {
+      document.querySelector('#session-heading').textContent = 'Session 4 · Review five misses';
+      document.querySelector('#session-intro').textContent = 'Retry five questions from Practice Test 4. The excerpts are shortened and adapted for this review.';
+      document.querySelector('.signal-guide').hidden = true;
+      document.querySelector('#evidence-guide').hidden = false;
+    }
     for (const tab of document.querySelectorAll('.reading-sessions [data-session]')) {
       tab.href = sessionLink(tab.dataset.session);
       if (Number(tab.dataset.session) === course.number) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     }
     const otherSession = document.querySelector('#other-session');
-    const nextSession = course.number === 3 ? 1 : course.number + 1;
+    const nextSession = course.number === course.sessionCount ? 1 : course.number + 1;
     otherSession.href = sessionLink(nextSession);
     otherSession.textContent = `Open Session ${nextSession}`;
 
@@ -180,7 +193,7 @@
 
       const jump = document.createElement('a');
       jump.href = `#item-${id}`;
-      jump.textContent = course.questions[id].mock || index + 1;
+      jump.textContent = course.questions[id].mock || (evidenceReview ? course.questions[id].questionNumber : index + 1);
       jumpList.append(jump);
       jumps.set(id, jump);
       renderQuestion(id);
@@ -200,6 +213,17 @@
       save();
     },
     onStatus: updateStatus
+  });
+
+  questionList.addEventListener('click', event => {
+    const button = event.target.closest('button[data-evidence]');
+    if (!button) return;
+    const id = button.dataset.evidence;
+    const show = !highlighted.has(id);
+    if (show) highlighted.add(id);
+    else highlighted.delete(id);
+    button.setAttribute('aria-pressed', String(show));
+    document.querySelector(`#passage-${id}`).innerHTML = formatPassage(course.questions[id].passage, show);
   });
 
   questionList.addEventListener('submit', event => {

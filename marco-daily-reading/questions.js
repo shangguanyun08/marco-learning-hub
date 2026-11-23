@@ -154,15 +154,17 @@
   const sessions = [
     {id: 'review', items: review},
     {id: 'practice', items: practice},
-    {id: 'practice-tests-1-2', items: window.MarcoPracticeTestQuestions}
+    {id: 'practice-tests-1-2', items: window.MarcoPracticeTestQuestions},
+    {id: 'practice-test-4-review', appId: 'marco-reading-nov23-practice-test-4-v1', items: window.MarcoPracticeTest4Review}
   ];
   const requested = Number(new URLSearchParams(location.search).get('session'));
   const number = Number.isInteger(requested) && requested >= 1 && requested <= sessions.length ? requested : 1;
-  const {id: session, items} = sessions[number - 1];
+  const {id: session, appId = `marco-reading-nov21-${session}-v1`, items} = sessions[number - 1];
   window.MarcoQR4Data = {
     number,
     session,
-    appId: `marco-reading-nov21-${session}-v1`,
+    appId,
+    sessionCount: sessions.length,
     ids: items.map(item => item.id),
     questions: Object.fromEntries(items.map(item => [item.id, item]))
   };
