@@ -21,6 +21,8 @@
   const questionList = document.querySelector('#questions');
   const jumpList = document.querySelector('#question-jump');
   const saveNote = document.querySelector('#save-note');
+  const repeatReview = document.querySelector('#repeat-review');
+  const dashboard = window.MarcoReadingCards?.mount(course, engine, local);
   const articles = new Map();
   const jumps = new Map();
   const groups = new Map();
@@ -41,6 +43,7 @@
     const saved = storageOK || kind === 'live';
     saveNote.dataset.kind = saved ? kind : 'offline';
     saveNote.textContent = saved ? message : 'Device storage is unavailable. Keep this page open while you work.';
+    dashboard?.paintActive(state, saveNote.dataset.kind);
   }
 
   function save() {
@@ -93,6 +96,31 @@
     return attempts.length === 1 ? 'retry' : 'missed';
   }
 
+  function compareOriginal(question, attempts) {
+    const [first, second] = attempts;
+    if (first?.correct !== false || !second || !Number.isInteger(question.originalChoice)) return null;
+    const original = question.originalChoice;
+    const matchedAttempt = first.choice === original ? 1 : second.choice === original ? 2 : 0;
+    const message = matchedAttempt === 1
+      ? `Same wrong choice on the first try. ${second.correct ? 'Corrected on the second try.' : 'Still missed on the second try.'}`
+      : matchedAttempt === 2 ? 'Same wrong choice on the second try.' : 'Chose a different wrong option this time.';
+    return {question, matchedAttempt, message};
+  }
+
+  function renderRepeatReview() {
+    const reviewed = course.ids.map(id => compareOriginal(course.questions[id], engine.attempts(state, id))).filter(Boolean);
+    const matches = reviewed.filter(result => result.matchedAttempt);
+    repeatReview.hidden = reviewed.length === 0;
+    if (repeatReview.hidden) return;
+    repeatReview.querySelector('summary').textContent = `Repeat misses · ${matches.length} matched the original`;
+    document.querySelector('#repeat-review-results').innerHTML =
+      `<p>${matches.length} of ${reviewed.length} misses with a completed second try matched the original wrong choice.</p>` +
+      (matches.length ? `<ul>${matches.map(({question, message}) => `<li>
+        <a href="#item-${question.id}" data-repeat-question="${question.id}">${escapeHTML(question.title)} · Mock ${question.mockNumber}, Q${question.questionNumber}</a>
+        <span>${escapeHTML(message)}</span>
+      </li>`).join('')}</ul>` : '');
+  }
+
   function renderQuestion(id) {
     const question = course.questions[id];
     const attempts = engine.attempts(state, id);
@@ -109,6 +137,7 @@
     const showClue = evidenceReview ? highlighted.has(id) : question.skill === 'organization' && (review || revealed);
     const showOriginal = shownOriginals.has(id);
     const original = question.originalChoice;
+    const comparison = archiveReview ? compareOriginal(question, attempts) : null;
     const evidenceId = archiveReview ? `evidence-${id}` : `passage-${id}`;
     const evidenceButton = `<button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="${evidenceId}" aria-pressed="${showClue}" aria-label="Highlight evidence for ${archiveReview ? title.toLowerCase() : 'question ' + num}">Highlight evidence</button>`;
     const resultText = {
@@ -125,9 +154,9 @@
       ${archiveReview ? '' : `<div class="reading-passage" id="passage-${id}" aria-label="Passage">${formatPassage(question.passage, showClue)}</div>`}
       ${practiceTestReview ? `<div class="review-tools">
         ${evidenceButton}
-        <button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>
+        ${revealed ? `<button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>` : ''}
       </div>
-      <p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}
+      ${revealed ? `<p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}` : ''}
       <form data-question="${id}">
         <fieldset class="choices">
           <legend class="prompt">${escapeHTML(question.prompt)}</legend>
@@ -148,7 +177,12 @@
         <div class="review-evidence" id="${evidenceId}" ${showClue ? '' : 'hidden'}>
           ${question.evidence.map(clue => `<p><mark>${escapeHTML(clue)}</mark></p>`).join('')}
         </div>` : ''}
-      ${revealed ? `<p class="reading-explanation"><strong>Answer ${letters[question.correct]}.</strong> ${escapeHTML(question.explanation)}</p>` : ''}`;
+      ${revealed ? `<p class="reading-explanation"><strong>Answer ${letters[question.correct]}.</strong> ${escapeHTML(question.explanation)}</p>` : ''}
+      ${comparison ? `<details class="original-comparison">
+        <summary>Compare with original mock</summary>
+        <p><strong>Original choice · ${letters[original]}.</strong> ${escapeHTML(question.choices[original])}</p>
+        <p>${escapeHTML(comparison.message)}</p>
+      </details>` : ''}`;
 
     const jump = jumps.get(id);
     if (!jump) return;
@@ -158,6 +192,7 @@
   }
 
   function renderResults() {
+    dashboard?.paintActive(state, saveNote.dataset.kind);
     const overall = engine.stats(state);
     const percent = score => Math.round(100 * score.first / score.total);
     document.querySelector('#overall-score').textContent = overall.complete
@@ -172,6 +207,7 @@
       return `<section><h4>${escapeHTML(label)}</h4><p><strong>${summary}</strong> first try</p>
         ${score.corrected ? `<p class="corrections">${score.corrected} corrected on the second try</p>` : ''}</section>`;
     }).join('');
+    if (repeatReview) renderRepeatReview();
   }
 
   function sessionLink(number, redo = false) {
@@ -192,8 +228,15 @@
       groups.set(id, group);
       filter.add(new Option(`${title} · Mock ${mockNumber}`, id));
     }
-    filter.addEventListener('change', () => {
+    function showPassage() {
       for (const [id, group] of groups) group.hidden = Boolean(filter.value && filter.value !== id);
+    }
+    filter.addEventListener('change', showPassage);
+    repeatReview.addEventListener('click', event => {
+      const link = event.target.closest('[data-repeat-question]');
+      if (!link) return;
+      if (filter.value) filter.value = course.questions[link.dataset.repeatQuestion].passageId;
+      showPassage();
     });
   }
 

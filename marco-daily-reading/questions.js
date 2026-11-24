@@ -156,19 +156,23 @@
     {id: 'practice', items: practice},
     {id: 'practice-tests-1-2', items: window.MarcoPracticeTestQuestions},
     {id: 'practice-test-4-review', appId: 'marco-reading-nov23-practice-test-4-v1', items: window.MarcoPracticeTest4Review}
-  ];
+  ].map(({id, items, appId = `marco-reading-nov21-${id}-v1`}) => ({
+    session: id,
+    appId,
+    ids: items.map(item => item.id),
+    questions: Object.fromEntries(items.map(item => [item.id, item]))
+  }));
   const params = new URLSearchParams(location.search);
   const requested = Number(params.get('session'));
   const number = Number.isInteger(requested) && requested >= 1 && requested <= sessions.length ? requested : 1;
-  const {id: session, appId = `marco-reading-nov21-${session}-v1`, items} = sessions[number - 1];
+  const current = sessions[number - 1];
   const redo = number === 4 && params.get('redo') === '1';
   window.MarcoQR4Data = {
+    ...current,
     number,
-    session,
-    appId: redo ? 'marco-reading-nov23-practice-test-4-redo-v1' : appId,
+    appId: redo ? 'marco-reading-nov23-practice-test-4-redo-v1' : current.appId,
     redo,
     sessionCount: sessions.length,
-    ids: items.map(item => item.id),
-    questions: Object.fromEntries(items.map(item => [item.id, item]))
+    dashboardCourses: sessions
   };
 })();

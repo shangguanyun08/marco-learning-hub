@@ -7,11 +7,11 @@
   <meta name="description" content="Redo earlier ISEE Middle reading misses, grouped by passage.">
   <title>Earlier Reading Review · Marco’s Daily Reading</title>
   <link rel="stylesheet" href="../../marco-daily-test-review/2026-10-04/style.css?v=4">
-  <link rel="stylesheet" href="../reading.css?v=6">
-  <script defer src="./questions.js?v=2"></script>
+  <link rel="stylesheet" href="../reading.css?v=7">
+  <script defer src="./questions.js?v=3"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/engine.js?v=20261028-sync2"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/sync.js?v=20261028-sync2"></script>
-  <script defer src="../reading.js?v=8"></script>
+  <script defer src="../reading.js?v=9"></script>
 </head>
 <body class="earlier-reading">
   <main class="shell">
@@ -50,6 +50,10 @@
         <details class="review-score-breakdown">
           <summary>Scores by skill</summary>
           <div id="skill-scores" class="skill-scores"></div>
+        </details>
+        <details id="repeat-review" class="review-score-breakdown" hidden>
+          <summary id="repeat-review-heading">Repeat misses</summary>
+          <div id="repeat-review-results"></div>
         </details>
         <p id="save-note" class="save-note" role="status">Loading saved progress…</p>
       </section>

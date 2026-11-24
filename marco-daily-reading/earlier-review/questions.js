@@ -10,14 +10,22 @@
     tone: 'Tone, style, and figurative language'
   };
 
+  // Choices recorded on the original scored Reading answer sheets. Mock 1 Q15 was blank.
+  const originalChoices = [
+    {3: 'B', 5: 'A', 7: 'B', 8: 'B', 9: 'C', 11: 'B', 16: 'C', 17: 'B', 21: 'C', 24: 'D', 25: 'C', 26: 'B', 27: 'D', 28: 'C', 29: 'B'},
+    {4: 'B', 5: 'A', 6: 'A', 8: 'C', 9: 'C', 13: 'C', 21: 'A', 25: 'C', 33: 'C', 34: 'C', 35: 'A'},
+    {6: 'C', 8: 'A', 11: 'C', 12: 'A', 14: 'D', 18: 'B', 21: 'D', 22: 'D', 26: 'C', 27: 'B', 28: 'C', 29: 'D', 30: 'B', 31: 'A', 33: 'B', 35: 'B', 36: 'B'}
+  ];
   // Each adaptation keeps the original question number, skill, and answer order.
   // Double brackets mark the evidence available after the first attempt.
   const questions = {};
   function add(mock, questionNumber, skill, title, passage, prompt, choices, letter, explanation) {
     const id = 'm' + mock + 'q' + questionNumber;
+    const previous = originalChoices[mock][questionNumber];
     questions[id] = {
       id, mockNumber: mock, questionNumber, skill, title, passage, prompt, choices, explanation,
-      correct: 'ABCD'.indexOf(letter)
+      correct: 'ABCD'.indexOf(letter),
+      originalChoice: previous ? 'ABCD'.indexOf(previous) : null
     };
   }
 
@@ -49,7 +57,7 @@
     'The slow thaw after the freeze.', 'New lakes built around the groves.', 'Smoke from fires that warmed the groves.', 'Harvesting the fruit before the freeze.'
   ], 'A', 'The second paragraph connects gradual thawing to fruit remaining usable.');
   add(0, 11, 'organization', 'Florida’s citrus freezes', freezes, 'What is the main job of the second paragraph?', [
-    'Describe Florida’s first disastrous citrus freeze of the twentieth century.', 'Compare weather records for several nineteenth-century freezes.',
+    'Describe Florida’s first disastrous citrus freeze of the twentieth century.', 'Compare the 1962 freeze with citrus freezes of the previous century.',
     'Explain how weather determines the prices shoppers pay.', 'Show how frozen juice concentrate protects fruit from cold.'
   ], 'A', 'The second paragraph moves the account to the 1962 event and describes the cold and its immediate effect on the crop.');
 
@@ -59,7 +67,7 @@
   ];
   add(0, 16, 'main', 'Postural echo', posture, 'What is the main point of the paragraph about the group?', [
     'People only mirror the posture of their closest friends.', 'Groups feel more at ease when their members settle into similar postures.',
-    'Most groups of friends prefer to talk while seated.', 'Everyone must intentionally agree to copy one another.'
+    'A group of friends will usually sit down when they talk.', 'Everyone must intentionally agree to copy one another.'
   ], 'B', 'The invitation to sit and the example of a stiff stance both show how matching or breaking the pattern affects the group’s ease.');
   add(0, 17, 'tone', 'Postural echo', posture, 'What does taking an “alien posture” mean here?', [
     'Striking a boastful pose.', 'Sitting in a physically painful way.', 'Intentionally offending the group.', 'Holding your body differently from the others.'
@@ -106,7 +114,7 @@
     'One suggestion about the inception of the label looks to the [[plagues and severe loss of life]] that marked parts of the period. These hardships may have [[given the period its name]].'
   ];
   add(1, 4, 'vocabulary', 'The “Dark Ages”', darkAges, 'What does “inception” mean here?', [
-    'Origin.', 'End.', 'Definition.', 'Imagination.'
+    'Origin.', 'Shortcomings.', 'Definition.', 'Imagination.'
   ], 'A', 'The following words propose how the label came about. “Origin of the label” fits that context.');
   add(1, 5, 'vocabulary', 'The “Dark Ages”', darkAges, 'What is meant by “all but stopped” using the term?', [
     'No scholar uses it anymore.', 'Most scholars keep using it.', 'Scholars have almost entirely stopped using it.', 'It is only just beginning to fall out of favor.'
@@ -147,10 +155,10 @@
 
   add(1, 25, 'main', 'The Salton Sea', [
     'Water from the Colorado River flooded a basin in Southern California and formed the Salton Sea. Over time, resorts and fishing drew visitors to its shores.',
-    'As salinity rose, fish and wildlife suffered and the once-busy resorts declined. Today the changes in the lake create new problems for nearby communities.'
+    'As salinity rose, fish and wildlife suffered and the once-busy resorts declined. Today the abandoned resorts have earned the Salton Sea the nickname “ghost lake.”'
   ].map(p => '[[' + p + ']]'), 'What is the main purpose of the passage?', [
-    'Give a short history of the Salton Sea’s rise and decline.', 'Explain only how the river escaped its channel.',
-    'Convince readers to visit the resorts.', 'Describe a plan that will restore the lake.'
+    'Give a short history of the Salton Sea’s rise and decline.', 'Explain why the lake became a popular vacation spot.',
+    'Show why the lake is called a “ghost lake.”', 'Make the case for restoring the lake to its former glory.'
   ], 'A', 'The first paragraph follows the lake from its formation to its popularity. The second follows the decline. The broad answer covers both.');
 
   const coral = [
@@ -174,7 +182,7 @@
     '[[In a forest, some birds hunt on the floor while others pick insects off the ends of branches.]] In a lake, dabbling ducks feed on the surface while diving ducks feed deeper down.'
   ], 'How is the passage organized?', [
     'It introduces a process and uses examples to explain it.', 'It states a claim about birds and lists research findings against it.',
-    'It compares how the process differs across unrelated kinds of animals.', 'It traces the evolution of one kind of bird.'
+    'It compares how the process differs among various animals.', 'It traces the evolution of one kind of bird.'
   ], 'A', 'The opening names and explains the process. The forest and lake show the same process in two settings.');
 
   const peppers = [
@@ -184,14 +192,14 @@
     'Capsaicin activates a receptor called TRPV1. [[The same receptor responds to the temperature of a genuinely hot drink.]] Capsaicin comes from plants in the genus Capsicum, which originated in the Americas. [[Spanish explorers took these peppers to Europe in the 1500s]]. Portuguese traders later introduced them to India and China.'
   ];
   add(2, 8, 'organization', 'What makes peppers hot?', peppers, 'What does the third paragraph do for the reader?', [
-    'Explain exactly how a heat receptor works.', 'Describe a typical trip to buy groceries.',
+    'Explain why capsaicin is responsible for the level of spice in certain foods.', 'Describe a typical trip to buy groceries.',
     'Introduce several foods that will each be discussed in detail later.', 'Show what kind of spice and heat the author is talking about.'
   ], 'D', 'The familiar examples make the topic concrete before the passage explains the receptor.');
   add(2, 11, 'inference', 'What makes peppers hot?', peppers, 'Which action would also activate TRPV1?', [
     'Drinking cool milk.', 'Eating watermelon seeds.', 'Eating a mild, sweet pepper.', 'Drinking a cup of hot tea.'
   ], 'D', 'TRPV1 responds to physical heat as well as capsaicin. Hot tea supplies the kind of heat described.');
   add(2, 12, 'detail', 'What makes peppers hot?', peppers, 'Which statement about Capsicum is supported by the passage?', [
-    'It includes peppers and many unrelated types of plants.', 'It originated only in Mexico.',
+    'It includes peppers and other kinds of plants.', 'It originated only in Mexico.',
     'It was brought to Europe during the sixteenth century.', 'It reached India before it reached Europe.'
   ], 'C', 'The passage names the Spanish voyages in the 1500s. Those years fall in the sixteenth century.');
 
@@ -223,11 +231,11 @@
   ], 'A', 'Once they stop keeping score, they keep playing for the kicks themselves. That is evidence about how much winning mattered in this game.');
   add(2, 22, 'organization', 'An indoor kickball game', kickball, 'Why does the author include Josie’s thought about taking a test?', [
     'To show that Josie enjoys taking tests.', 'To show that Josie generally thinks of school as a safe place.',
-    'To show how much Josie dreads facing her dad when he comes home.', 'To show that Josie knows exactly what her punishment will be.'
-  ], 'C', 'The thought comes when a car arrives and Josie is worried about explaining the television. Preferring a test shows how unpleasant that moment feels to her.');
+    'To show how much Josie dreads her dad coming home.', 'To show that Josie is terrified of being punished for breaking the television.'
+  ], 'C', 'The thought comes when a car arrives and shows that Josie is dreading Dad’s arrival. The passage leaves open how he will react and whether there will be a punishment.');
 
   const ocean = [
-    'The ocean stores carbon. One way carbon moves in is when carbon dioxide dissolves in seawater. In another process, some shell-building organisms release carbon dioxide while making shells. These two processes, [[the solubility and carbonate pumps, move carbon in opposite directions]].',
+    'Plants, animals, and the ocean store carbon in different forms. One way carbon moves into the ocean is when carbon dioxide dissolves in seawater. In another process, some shell-building organisms release carbon dioxide while making shells. These two processes, [[the solubility and carbonate pumps, move carbon in opposite directions]].',
     'In the biological pump, [[phytoplankton near the surface use carbon dioxide as they make food]]. Some carbon moves back into the ocean through the food chain, and some eventually settles to the seafloor.',
     'By taking up carbon, [[the ocean cushions some effects of climate change]], but its capacity is limited. As dissolved carbon builds up, [[the chemistry of seawater changes and it absorbs carbon less readily]]. The water [[becomes more acidic, which can harm marine life]].'
   ];
@@ -242,7 +250,7 @@
   add(2, 28, 'detail', 'Carbon in the ocean', ocean, 'Which statement is supported by the passage?', [
     'Phytoplankton help regulate carbon dioxide by taking it up near the ocean’s surface.',
     'The ocean has absorbed over half of all human carbon emissions.',
-    'All carbon dioxide that enters an animal stays there permanently.',
+    'Plants and animals store carbon in the form of carbon dioxide.',
     'Burning fossil fuels creates more carbon dioxide in the atmosphere than all other sources combined.'
   ], 'A', 'The second paragraph explains that phytoplankton use carbon dioxide, giving them a part in the movement and storage of carbon.');
   add(2, 29, 'detail', 'Carbon in the ocean', ocean, 'Why can the ocean absorb less carbon as dissolved carbon builds up?', [
@@ -268,7 +276,7 @@
     'Puzzled.', 'Humored.', 'Repelled.', 'Captivated.'
   ], 'D', 'Visitors are drawn to the town’s new look and events. “Captivated” describes their strong interest.');
   add(2, 35, 'organization', 'Leavenworth’s new identity', town, 'What is the job of the third paragraph?', [
-    'List the steps for rebuilding downtown.', 'Describe the area’s geography for its own sake.',
+    'List the steps for rebuilding downtown.', 'Describe where Leavenworth is and what its geography is like.',
     'Provide a history of Solvang, California.', 'Explain what inspired Leavenworth’s change.'
   ], 'D', 'Both details explain where the idea came from: the mountains suggested the Alps, and the other town showed that a theme could attract visitors.');
   add(2, 36, 'detail', 'Leavenworth’s new identity', town, 'Which feature inspired Leavenworth to adopt a Bavarian theme?', [

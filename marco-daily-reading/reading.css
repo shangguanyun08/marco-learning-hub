@@ -24,6 +24,14 @@ body { background: #f3f7fb; }
 .reading-sessions .session-card b { font-size: 1.125rem; }
 .reading-sessions .session-card span { color: var(--muted); }
 .reading-sessions .session-card[aria-current=page] { padding: 13px 17px; background: #e7f1ff; }
+.reading-sessions .session-card.is-complete {
+  border-color: #73aa8e;
+  background: #d9f2e3;
+  color: #184d37;
+}
+.reading-sessions .is-complete span, .reading-sessions .is-complete .reading-session-score { color: #184d37; }
+.reading-sessions .is-complete[aria-current=page] { outline: 2px solid #29684b; outline-offset: 2px; }
+.reading-session-score { color: var(--muted); font-size: .875rem; font-weight: 650; }
 
 .signal-guide { padding: 16px 20px; border: 1px solid #e1cb7f; border-radius: 12px; background: #fffaf0; }
 .signal-guide h2, .score-heading h3 { margin: 0; font: 750 1.0625rem/1.4 system-ui, sans-serif; }
@@ -104,8 +112,13 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
   background: var(--paper);
   font: inherit;
 }
-.review-score-breakdown summary { color: var(--blue); cursor: pointer; font-weight: 650; }
+.review-score-breakdown summary, .original-comparison summary { color: var(--blue); cursor: pointer; font-weight: 650; }
 .review-score-breakdown .skill-scores { margin-top: 8px; }
+.review-score-breakdown + .review-score-breakdown, .original-comparison { margin-top: 12px; }
+.original-comparison p, #repeat-review-results p { margin: 6px 0 0; }
+#repeat-review-results ul { margin: 8px 0 0; padding-left: 20px; }
+#repeat-review-results li + li { margin-top: 8px; }
+#repeat-review-results li span { display: block; color: var(--muted); }
 .review-group { margin-top: 24px; }
 .review-group + .review-group { padding-top: 16px; border-top: 1px solid var(--line); }
 .review-group > h3 { font-size: clamp(1.25rem, 4vw, 1.7rem); margin: 0 0 4px; }

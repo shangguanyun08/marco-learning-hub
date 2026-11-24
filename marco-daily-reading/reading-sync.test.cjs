@@ -28,6 +28,7 @@ function open(t, session, fetch, seedAnswer = false) {
     if (earlier) window.MarcoQR4Engine.submit(state, 'm1q21', course.questions.m1q21.correct);
     window.localStorage.setItem(course.appId, JSON.stringify(state));
   }
+  if (!earlier) window.eval(read('session-cards.js'));
   window.eval(read('reading.js'));
   const select = selector => window.document.querySelector(selector);
   return {
@@ -149,4 +150,94 @@ test('earlier review shows selected misses with one shared text per passage', as
   assert.equal(visible[0].querySelectorAll('.question').length, 4);
   assert.match(visible[0].querySelector('.reading-passage').textContent, /In the neighborhood/);
   assert.equal(doc.querySelector('#item-m0q28 .read-passage').getAttribute('href'), '#passage-' + gravity);
+});
+
+test('repeat choices are compared only once the retry is used', async t => {
+  let progress = null;
+  const review = open(t, 'earlier', async (_, {method, body}) => {
+    if (method === 'POST') progress = {version: (progress?.version ?? 0) + 1, state: JSON.parse(body).state};
+    return {ok: true, json: async () => ({progress, accepted: method === 'POST'})};
+  });
+  await until(() => review.status() === 'live');
+  const doc = review.window.document;
+  const report = doc.querySelector('#repeat-review');
+  const note = id => doc.querySelector(`#item-${id} .original-comparison`);
+  assert.equal(report.hidden, true);
+  assert.equal(note('m0q3'), null);
+  assert.equal(review.course.questions.m0q3.originalChoice, 1);
+  assert.equal(review.course.questions.m0q5.originalChoice, 0);
+  assert.equal(review.course.questions.m1q15.originalChoice, null);
+
+  review.answer('m0q3', 1);
+  assert.equal(note('m0q3'), null);
+  assert.equal(report.hidden, true);
+  review.answer('m0q3', 2);
+  assert.match(note('m0q3').textContent, /Same wrong choice on the first try. Corrected on the second try/);
+
+  review.answer('m0q5', 1);
+  assert.equal(note('m0q5'), null);
+  review.answer('m0q5', 0);
+  assert.match(note('m0q5').textContent, /Same wrong choice on the second try/);
+
+  review.answer('m0q8', 2);
+  review.answer('m0q8', 3);
+  assert.match(note('m0q8').textContent, /different wrong option/);
+  review.answer('m0q11', 0);
+  assert.equal(note('m0q11'), null);
+
+  assert.equal(report.hidden, false);
+  assert.match(report.textContent, /2 of 3 misses/);
+  assert.equal(report.querySelectorAll('li').length, 2);
+  const picker = doc.querySelector('#review-passage');
+  picker.value = review.course.questions.m0q8.passageId;
+  picker.dispatchEvent(new review.window.Event('change'));
+  report.querySelector('[data-repeat-question="m0q3"]').click();
+  assert.equal(picker.value, review.course.questions.m0q3.passageId);
+});
+
+test('reading cards use saved results and turn green after pending retries are finished', async t => {
+  const records = new Map();
+  const reading = open(t, 1, async url => {
+    const appId = new URL(url).searchParams.get('appId');
+    return {ok: true, json: async () => ({progress: records.get(appId) ?? null})};
+  });
+  await until(() => reading.status() === 'live');
+  const doc = reading.window.document;
+  const card = number => doc.querySelector(`[data-session="${number}"]`);
+  const engine = reading.window.MarcoQR4Engine;
+  for (const [index, data] of reading.course.dashboardCourses.entries()) {
+    const model = engine.forCourse(data);
+    const state = model.empty();
+    for (const [position, id] of data.ids.entries()) {
+      const key = data.questions[id].correct;
+      model.submit(state, id, index === 1 && position === 0 ? (key + 1) % 4 : key);
+    }
+    records.set(data.appId, {version: 1, state});
+  }
+  reading.window.dispatchEvent(new reading.window.Event('focus'));
+  await until(() => [1, 3, 4].every(number => card(number).classList.contains('is-complete')));
+  assert.match(card(1).textContent, /Finished · 6\/6 correct first try/);
+  assert.match(card(2).textContent, /11\/12 correct first try · Retry available/);
+  assert.equal(card(2).classList.contains('is-complete'), false);
+
+  const practice = reading.course.dashboardCourses[1];
+  const saved = records.get(practice.appId);
+  const id = practice.ids[0];
+  engine.forCourse(practice).submit(saved.state, id, practice.questions[id].correct);
+  saved.version += 1;
+  reading.window.dispatchEvent(new reading.window.Event('focus'));
+  await until(() => card(2).classList.contains('is-complete'));
+  assert.match(card(2).textContent, /Finished · 11\/12 correct first try/);
+});
+
+test('Practice Test 4 hides the original answer while a retry is available', async t => {
+  const reading = open(t, 4, async () => ({ok: true, json: async () => ({progress: null})}));
+  await until(() => reading.status() === 'live');
+  const doc = reading.window.document;
+  const showOriginal = () => doc.querySelector(`#item-${reading.first} [data-original]`);
+  assert.equal(showOriginal(), null);
+  reading.answer(reading.first, (reading.correct + 1) % 4);
+  assert.equal(showOriginal(), null);
+  reading.answer(reading.first, reading.correct);
+  assert.ok(showOriginal());
 });
