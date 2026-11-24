@@ -191,21 +191,56 @@
     jump.setAttribute('aria-label', `${review ? 'Mock question' : 'Question'} ${num}, ${jumpStatus[result]}`);
   }
 
+  function renderReviewScore(score) {
+    const answered = `${score.answered} of ${score.total} answered`;
+    document.getElementById('overall-score').textContent = score.answered
+      ? `${Math.round(100 * score.first / score.answered)}% · ${answered}`
+      : answered;
+    document.getElementById('review-correct').textContent = score.first;
+    document.getElementById('review-wrong').textContent = score.wrong;
+    document.getElementById('review-total').textContent = score.total;
+
+    const pending = course.ids.filter(id => {
+      const tries = engine.attempts(state, id);
+      return tries.length === 1 && !tries[0].correct;
+    }).length;
+    const retrySummary = [];
+    if (score.wrong > pending) {
+      if (score.complete && pending === 0) retrySummary.push(`After retries · ${score.first + score.corrected}/${score.total} correct`);
+      retrySummary.push(`${score.corrected} corrected on the second try`, `${score.wrong - score.corrected - pending} still wrong`);
+    }
+    if (pending) retrySummary.push(`${pending} ${pending === 1 ? 'retry' : 'retries'} available`);
+    const retryScore = document.getElementById('review-retry-score');
+    retryScore.textContent = retrySummary.join(' · ');
+    retryScore.hidden = !retrySummary.length;
+  }
+
   function renderResults() {
     dashboard?.paintActive(state, saveNote.dataset.kind);
     const overall = engine.stats(state);
     const percent = score => Math.round(100 * score.first / score.total);
-    document.querySelector('#overall-score').textContent = overall.complete
-      ? `Complete · ${overall.first}/${overall.total} (${percent(overall)}%) first try`
-      : `${overall.answered} of ${overall.total} answered`;
+    if (archiveReview) {
+      renderReviewScore(overall);
+    } else {
+      document.getElementById('overall-score').textContent = overall.complete
+        ? `Complete · ${overall.first}/${overall.total} (${percent(overall)}%) first try`
+        : `${overall.answered} of ${overall.total} answered`;
+    }
     const activeSkills = new Set(course.ids.map(id => course.questions[id].skill));
-    document.querySelector('#skill-scores').innerHTML = Object.entries(skills).filter(([key]) => activeSkills.has(key)).map(([key, label]) => {
+    document.getElementById('skill-scores').innerHTML = Object.entries(skills).filter(([key]) => activeSkills.has(key)).map(([key, label]) => {
       const score = engine.stats(state, key);
+      const corrections = score.corrected ? `<p class="corrections">${score.corrected} corrected on the second try</p>` : '';
+      if (archiveReview) {
+        const missing = score.total - score.answered;
+        return `<section><h3>${escapeHTML(label)}</h3>
+          <p><strong>${score.first}/${score.total} correct</strong> · ${score.wrong} wrong${missing ? ` · ${missing} unanswered` : ''}</p>
+          ${corrections}</section>`;
+      }
       const summary = score.complete
         ? `${score.first}/${score.total} · ${percent(score)}%`
         : `${score.first} correct · ${score.answered}/${score.total} answered`;
       return `<section><h4>${escapeHTML(label)}</h4><p><strong>${summary}</strong> first try</p>
-        ${score.corrected ? `<p class="corrections">${score.corrected} corrected on the second try</p>` : ''}</section>`;
+        ${corrections}</section>`;
     }).join('');
     if (repeatReview) renderRepeatReview();
   }

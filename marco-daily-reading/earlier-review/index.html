@@ -7,11 +7,11 @@
   <meta name="description" content="Redo earlier ISEE Middle reading misses, grouped by passage.">
   <title>Earlier Reading Review · Marco’s Daily Reading</title>
   <link rel="stylesheet" href="../../marco-daily-test-review/2026-10-04/style.css?v=4">
-  <link rel="stylesheet" href="../reading.css?v=7">
+  <link rel="stylesheet" href="../reading.css?v=8">
   <script defer src="./questions.js?v=3"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/engine.js?v=20261028-sync2"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/sync.js?v=20261028-sync2"></script>
-  <script defer src="../reading.js?v=9"></script>
+  <script defer src="../reading.js?v=10"></script>
 </head>
 <body class="earlier-reading">
   <main class="shell">
@@ -30,6 +30,28 @@
       </details>
     </header>
 
+    <section class="score-panel review-score-panel" aria-labelledby="score-title">
+      <div class="score-heading">
+        <h2 id="score-title">First-try score</h2>
+        <p id="overall-score" aria-live="polite">Loading saved score…</p>
+      </div>
+      <dl class="review-score-counts">
+        <div><dt>Correct</dt><dd id="review-correct">—</dd></div>
+        <div><dt>Wrong</dt><dd id="review-wrong">—</dd></div>
+        <div><dt>Total</dt><dd id="review-total">38</dd></div>
+      </dl>
+      <p id="review-retry-score" hidden></p>
+      <details class="review-score-breakdown">
+        <summary>Scores by skill</summary>
+        <div id="skill-scores" class="skill-scores"></div>
+      </details>
+      <details id="repeat-review" class="review-score-breakdown" hidden>
+        <summary id="repeat-review-heading">Repeat misses</summary>
+        <div id="repeat-review-results"></div>
+      </details>
+      <p id="save-note" class="save-note" role="status">Loading saved progress…</p>
+    </section>
+
     <aside class="signal-guide" aria-labelledby="routine-title">
       <h2 id="routine-title">Eliminate, then compare the last two</h2>
       <p><strong>Cross out the weaker choices.</strong> Reread the question and drop answers that go against the passage or answer a different question.</p>
@@ -42,22 +64,6 @@
         <h2 id="session-heading">Practice by passage</h2>
         <p>First answers count toward your score. Each miss gets one retry.</p>
       </div>
-      <section class="score-panel" aria-labelledby="score-title">
-        <div class="score-heading">
-          <h3 id="score-title">First-try results</h3>
-          <p id="overall-score" aria-live="polite">0 of 38 answered</p>
-        </div>
-        <details class="review-score-breakdown">
-          <summary>Scores by skill</summary>
-          <div id="skill-scores" class="skill-scores"></div>
-        </details>
-        <details id="repeat-review" class="review-score-breakdown" hidden>
-          <summary id="repeat-review-heading">Repeat misses</summary>
-          <div id="repeat-review-results"></div>
-        </details>
-        <p id="save-note" class="save-note" role="status">Loading saved progress…</p>
-      </section>
-
       <div class="review-filter">
         <label for="review-passage">Choose a passage</label>
         <select id="review-passage"></select>

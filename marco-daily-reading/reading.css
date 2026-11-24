@@ -34,7 +34,7 @@ body { background: #f3f7fb; }
 .reading-session-score { color: var(--muted); font-size: .875rem; font-weight: 650; }
 
 .signal-guide { padding: 16px 20px; border: 1px solid #e1cb7f; border-radius: 12px; background: #fffaf0; }
-.signal-guide h2, .score-heading h3 { margin: 0; font: 750 1.0625rem/1.4 system-ui, sans-serif; }
+.signal-guide h2, .score-heading :is(h2, h3) { margin: 0; font: 750 1.0625rem/1.4 system-ui, sans-serif; }
 .signal-guide p, .signals { margin: 8px 0 0; font-size: 1rem; }
 .signals { display: flex; flex-wrap: wrap; column-gap: 18px; row-gap: 6px; padding: 0; list-style: none; }
 mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00; font-weight: 680; }
@@ -46,7 +46,7 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 .score-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; margin-bottom: 10px; }
 .score-heading p, .save-note { margin: 0; font-size: .875rem; color: var(--muted); }
 .skill-scores section { padding: 10px 12px; border-radius: 8px; background: #edf4fb; }
-.skill-scores h4 { margin: 0; font-size: .9375rem; }
+.skill-scores :is(h3, h4) { margin: 0; font-size: .9375rem; }
 .skill-scores p { margin: 3px 0 0; font-size: .875rem; }
 .skill-scores strong { font-size: 1.0625rem; color: var(--ink); }
 .skill-scores .corrections { color: var(--green); }
@@ -113,6 +113,20 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
   font: inherit;
 }
 .review-score-breakdown summary, .original-comparison summary { color: var(--blue); cursor: pointer; font-weight: 650; }
+.review-score-panel { margin-bottom: 16px; }
+.review-score-panel #overall-score { color: var(--ink); font-weight: 650; }
+.review-score-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.review-score-counts div { padding: 8px 10px; border-radius: 8px; background: #edf4fb; }
+.review-score-counts dt { font-size: .875rem; font-weight: 650; }
+.review-score-counts dd { margin: 0; font-size: 1.5rem; font-weight: 750; line-height: 1.2; }
+.review-score-counts div:first-child { background: #e8f5ec; color: #215740; }
+.review-score-counts div:nth-child(2) { background: #fcecef; color: #873a41; }
+#review-retry-score { margin: 0 0 12px; font-size: .9375rem; }
 .review-score-breakdown .skill-scores { margin-top: 8px; }
 .review-score-breakdown + .review-score-breakdown, .original-comparison { margin-top: 12px; }
 .original-comparison p, #repeat-review-results p { margin: 6px 0 0; }

@@ -90,10 +90,16 @@ test('all reading sessions migrate device answers and sync corrections after rec
     await until(() => a.result() === 'correct');
     const skill = a.course.questions[a.first].skill;
     const skillTotal = a.course.ids.filter(id => a.course.questions[id].skill === skill).length;
-    assert.ok(a.text('#skill-scores').includes(`0 correct · 1/${skillTotal} answered`));
+    const skillResult = session === 'earlier'
+      ? `0/${skillTotal} correct · 1 wrong · ${skillTotal - 1} unanswered`
+      : `0 correct · 1/${skillTotal} answered`;
+    assert.ok(a.text('#skill-scores').includes(skillResult));
     assert.match(a.text('#skill-scores'), /1 corrected on the second try/);
     if (session === 'earlier') {
-      assert.equal(a.text('#overall-score'), '1 of 38 answered');
+      assert.equal(a.text('#overall-score'), '0% · 1 of 38 answered');
+      assert.equal(a.text('#review-correct'), '0');
+      assert.equal(a.text('#review-wrong'), '1');
+      assert.equal(a.text('#review-total'), '38');
       const saved = server.get(a.course.appId).state;
       assert.equal(saved.sessions[a.course.session][0].answers.m1q21.attempts.length, 1);
     }
@@ -171,6 +177,7 @@ test('repeat choices are compared only once the retry is used', async t => {
   review.answer('m0q3', 1);
   assert.equal(note('m0q3'), null);
   assert.equal(report.hidden, true);
+  assert.equal(review.text('#review-retry-score'), '1 retry available');
   review.answer('m0q3', 2);
   assert.match(note('m0q3').textContent, /Same wrong choice on the first try. Corrected on the second try/);
 
@@ -184,6 +191,10 @@ test('repeat choices are compared only once the retry is used', async t => {
   assert.match(note('m0q8').textContent, /different wrong option/);
   review.answer('m0q11', 0);
   assert.equal(note('m0q11'), null);
+  assert.equal(review.text('#overall-score'), '25% · 4 of 38 answered');
+  assert.equal(review.text('#review-correct'), '1');
+  assert.equal(review.text('#review-wrong'), '3');
+  assert.equal(review.text('#review-retry-score'), '1 corrected on the second try · 2 still wrong');
 
   assert.equal(report.hidden, false);
   assert.match(report.textContent, /2 of 3 misses/);
