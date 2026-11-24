@@ -17,7 +17,7 @@
       passage: [geneticsIntro, inheritance.replace('biological parents', '[[biological parents]]').replace('Half come from their mother and half from their father.', '[[Half come from their mother and half from their father.]]')],
       prompt: 'Why does the author specify “biological parents”?',
       choices: ['To clarify a previous question.', 'To acknowledge that some people are adopted.', 'To specify whose parents were being identified.', 'To reinforce the importance of genetic inheritance.'],
-      correct: 3,
+      originalChoice: 2, correct: 3,
       explanation: 'The next sentence explains where the chromosomes come from. That makes the author’s reason genetic inheritance. Choice C describes what the phrase literally identifies, but it leaves out why the distinction matters.'
     },
     {
@@ -25,7 +25,7 @@
       passage: [geneticsIntro, `${inheritance} ${contrast} [[${dominant}]]`],
       prompt: 'In the passage, “recessive” most nearly means',
       choices: ['imaginable.', 'immobilized.', 'inactive.', 'individual.'],
-      correct: 2,
+      originalChoice: 1, correct: 2,
       explanation: 'The recessive form can be present without showing in the trait. “Inactive” is the closest option here. “Immobilized” means unable to move, and movement has nothing to do with the contrast.'
     },
     {
@@ -36,7 +36,7 @@
       ],
       prompt: 'Based on the passage, what can you infer?',
       choices: ['Cleaning products are always highly toxic.', 'Butyl cellosolve is a good alternative to harmful chemicals.', 'It can be difficult to tell whether a product contains harmful ingredients.', 'Chemicals with complicated names are usually harmful.'],
-      correct: 2,
+      originalChoice: 1, correct: 2,
       explanation: 'Put two ideas together: the names are hard to interpret, and a complicated name doesn’t tell you whether a chemical is safe. Choice B reverses the author’s point about butyl cellosolve. It is in the products the author suggests replacing.'
     },
     {
@@ -47,7 +47,7 @@
       ],
       prompt: 'Which phrase best describes the tone of the passage?',
       choices: ['Balanced and factual.', 'Dynamic and surprising.', 'Philosophical and musing.', 'Inspirational and enlightening.'],
-      correct: 0,
+      originalChoice: 2, correct: 0,
       explanation: 'The author reports what witnesses claimed and what investigators could prove. The passage takes a measured approach. A mysterious topic alone doesn’t make the writing philosophical.'
     },
     {
@@ -55,7 +55,7 @@
       passage: [lochNess[0], lochNess[1].replace('Alleged sightings and rumors', '[[Alleged sightings and rumors]]').replace('The crew left without proof.', '[[The crew left without proof.]]')],
       prompt: 'Why does the author use the phrase “alleged sightings and rumors”?',
       choices: ['To suggest that the rumors are probably true.', 'To emphasize that there have been no proven sightings of Nessie.', 'To highlight the amount of evidence that Nessie exists.', 'To contrast the sightings with the earlier offer of a reward for catching Nessie.'],
-      correct: 1,
+      originalChoice: 2, correct: 1,
       explanation: '“Alleged” means claimed but unconfirmed. The word “rumors” and the later lack of proof reinforce that uncertainty. The author distinguishes reports from verified evidence.'
     }
   ];

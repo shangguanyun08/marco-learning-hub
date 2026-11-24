@@ -22,6 +22,7 @@
   const articles = new Map();
   const jumps = new Map();
   const highlighted = new Set();
+  const shownOriginals = new Set();
   let storageOK = true;
   let ready = local;
   let state = engine.empty();
@@ -101,6 +102,8 @@
     const source = question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '';
     const num = question.mock || (evidenceReview ? question.questionNumber : course.ids.indexOf(id) + 1);
     const showClue = evidenceReview ? highlighted.has(id) : question.skill === 'organization' && (review || revealed);
+    const showOriginal = shownOriginals.has(id);
+    const original = question.originalChoice;
     const resultText = {
       pending: '',
       retry: 'Try once more. Reread the passage and choose a different answer.',
@@ -112,7 +115,11 @@
       <header><h3 id="title-${id}">${escapeHTML(title)}</h3><span class="source">${escapeHTML(skills[question.skill])}</span>
         ${source ? `<span class="source">${escapeHTML(source)}</span>` : ''}</header>
       <div class="reading-passage" id="passage-${id}" aria-label="Passage">${formatPassage(question.passage, showClue)}</div>
-      ${evidenceReview ? `<button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="passage-${id}" aria-pressed="${showClue}" aria-label="Highlight evidence for question ${num}">Highlight evidence</button>` : ''}
+      ${evidenceReview ? `<div class="review-tools">
+        <button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="passage-${id}" aria-pressed="${showClue}" aria-label="Highlight evidence for question ${num}">Highlight evidence</button>
+        <button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>
+      </div>
+      <p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}
       <form data-question="${id}">
         <fieldset class="choices">
           <legend class="prompt">${escapeHTML(question.prompt)}</legend>
@@ -154,8 +161,8 @@
     }).join('');
   }
 
-  function sessionLink(number) {
-    return `?session=${number}${demo ? '&demo=1' : ''}`;
+  function sessionLink(number, redo = false) {
+    return `?session=${number}${redo ? '&redo=1' : ''}${demo ? '&demo=1' : ''}`;
   }
 
   function setup() {
@@ -168,13 +175,17 @@
       document.querySelector('#session-intro').textContent = 'Answer 10 questions from Test Innovators Practice Tests 1 and 2. Read the excerpt provided with each question. A miss gets one second try.';
     }
     if (evidenceReview) {
-      document.querySelector('#session-heading').textContent = 'Session 4 · Review five misses';
+      document.querySelector('#session-heading').textContent = course.redo ? 'Session 4 · Redo five misses' : 'Session 4 · Review five misses';
       document.querySelector('#session-intro').textContent = 'Retry five questions from Practice Test 4. The excerpts are shortened and adapted for this review.';
       document.querySelector('.signal-guide').hidden = true;
       document.querySelector('#evidence-guide').hidden = false;
+      const redoLink = document.querySelector('#redo-review');
+      document.querySelector('.review-redo').hidden = false;
+      redoLink.href = sessionLink(4, !course.redo);
+      redoLink.textContent = course.redo ? 'Back to saved review' : 'Redo from scratch';
     }
     for (const tab of document.querySelectorAll('.reading-sessions [data-session]')) {
-      tab.href = sessionLink(tab.dataset.session);
+      tab.href = sessionLink(tab.dataset.session, Number(tab.dataset.session) === 4 && course.redo);
       if (Number(tab.dataset.session) === course.number) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     }
@@ -216,6 +227,17 @@
   });
 
   questionList.addEventListener('click', event => {
+    const originalButton = event.target.closest('button[data-original]');
+    if (originalButton) {
+      const id = originalButton.dataset.original;
+      const show = !shownOriginals.has(id);
+      if (show) shownOriginals.add(id);
+      else shownOriginals.delete(id);
+      originalButton.setAttribute('aria-expanded', String(show));
+      originalButton.textContent = show ? 'Hide Marco’s answer' : 'Show Marco’s answer';
+      document.querySelector(`#original-${id}`).hidden = !show;
+      return;
+    }
     const button = event.target.closest('button[data-evidence]');
     if (!button) return;
     const id = button.dataset.evidence;

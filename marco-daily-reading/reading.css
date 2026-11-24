@@ -58,6 +58,10 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 .evidence-toggle { min-height: 40px; padding: 6px 12px; border: 1px solid #a17d25; border-radius: 8px; background: #fff; color: var(--ink); font: inherit; font-weight: 650; cursor: pointer; }
 .evidence-toggle[aria-pressed=true] { background: #ffeba0; color: #241a00; }
 .evidence-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+.review-tools { display: flex; flex-wrap: wrap; gap: 8px; }
+.review-tools [aria-expanded=true] { background: #edf4fb; }
+.original-choice { margin: 8px 0; padding: 8px 12px; border-left: 3px solid #9eb9d5; background: #edf4fb; }
+.review-redo .evidence-toggle { display: inline-flex; align-items: center; }
 .question .prompt { margin: 12px 0 4px; font-size: 1.0625rem; font-weight: 720; }
 .question .choices { margin-top: 8px; }
 .choice { line-height: 1.5; font-size: 1rem; align-items: flex-start; }
