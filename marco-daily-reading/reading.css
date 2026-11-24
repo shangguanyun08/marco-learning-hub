@@ -87,3 +87,23 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 @media (max-width: 360px) {
   .skill-scores { grid-template-columns: 1fr; }
 }
+.earlier-reading .hero > p:not(.eyebrow) { margin: 0 0 8px; }
+.review-coverage { margin-bottom: 6px; color: var(--muted); }
+.review-coverage summary { font-weight: 650; cursor: pointer; }
+.review-coverage p { margin: 8px 0; }
+.review-filter { display: grid; gap: 4px; max-width: 28rem; margin: 20px 0 0; }
+.review-filter label { font-weight: 700; }
+.review-filter select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 10px;
+  border: 1px solid #9eb3c8;
+  border-radius: 8px;
+  color: var(--ink);
+  background: var(--paper);
+  font: inherit;
+}
+.review-group > h3 { font-size: clamp(1.25rem, 4vw, 1.7rem); margin: 22px 0 4px; }
+.review-group > p { margin: 0 0 12px; }
+.earlier-reading [hidden] { display: none; }

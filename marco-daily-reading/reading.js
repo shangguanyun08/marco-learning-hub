@@ -4,12 +4,14 @@
   const course = window.MarcoQR4Data;
   const engine = window.MarcoQR4Engine;
   const review = course.number === 1;
-  const evidenceReview = course.number === 4;
+  const archiveReview = course.archiveReview === true;
+  const practiceTestReview = course.number === 4;
+  const evidenceReview = practiceTestReview || archiveReview;
   const params = new URLSearchParams(location.search);
   const demo = params.has('demo');
   const local = demo || ['localhost', '127.0.0.1'].includes(location.hostname) || location.protocol === 'file:';
   const storageKey = course.appId + (local ? ':preview' : '');
-  const skills = {
+  const skills = course.skills || {
     inference: 'Inference',
     vocabulary: 'Vocabulary in Context',
     organization: 'Organization / Logic',
@@ -21,6 +23,7 @@
   const saveNote = document.querySelector('#save-note');
   const articles = new Map();
   const jumps = new Map();
+  const groups = new Map();
   const highlighted = new Set();
   const shownOriginals = new Set();
   let storageOK = true;
@@ -99,8 +102,9 @@
     const article = articles.get(id);
     const selected = article.querySelector('input:checked:not(:disabled)')?.value;
     const title = question.mock ? `Mock #${question.mock} · ${question.title}` : question.title;
-    const source = question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '';
-    const num = question.mock || (evidenceReview ? question.questionNumber : course.ids.indexOf(id) + 1);
+    const source = question.source || (question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '');
+    const num = question.mock || (practiceTestReview ? question.questionNumber : course.ids.indexOf(id) + 1);
+    const canHighlight = evidenceReview && (!archiveReview || attempts.length > 0);
     const showClue = evidenceReview ? highlighted.has(id) : question.skill === 'organization' && (review || revealed);
     const showOriginal = shownOriginals.has(id);
     const original = question.originalChoice;
@@ -115,11 +119,11 @@
       <header><h3 id="title-${id}">${escapeHTML(title)}</h3><span class="source">${escapeHTML(skills[question.skill])}</span>
         ${source ? `<span class="source">${escapeHTML(source)}</span>` : ''}</header>
       <div class="reading-passage" id="passage-${id}" aria-label="Passage">${formatPassage(question.passage, showClue)}</div>
-      ${evidenceReview ? `<div class="review-tools">
+      ${canHighlight ? `<div class="review-tools">
         <button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="passage-${id}" aria-pressed="${showClue}" aria-label="Highlight evidence for question ${num}">Highlight evidence</button>
-        <button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>
-      </div>
-      <p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}
+        ${practiceTestReview ? `<button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>` : ''}
+      </div>` : ''}
+      ${practiceTestReview ? `<p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}
       <form data-question="${id}">
         <fieldset class="choices">
           <legend class="prompt">${escapeHTML(question.prompt)}</legend>
@@ -165,6 +169,27 @@
     return `?session=${number}${redo ? '&redo=1' : ''}${demo ? '&demo=1' : ''}`;
   }
 
+  function setupSkillGroups() {
+    const filter = document.querySelector('#review-skill');
+    filter.add(new Option(`All skills (${course.ids.length})`, ''));
+    for (const [key, label] of Object.entries(skills)) {
+      const total = engine.stats(state, key).total;
+      if (!total) continue;
+      const group = document.createElement('section');
+      group.className = 'review-group';
+      group.setAttribute('aria-labelledby', `skill-${key}`);
+      group.innerHTML = `<h3 id="skill-${key}">${escapeHTML(label)} · ${total} ${total === 1 ? 'question' : 'questions'}</h3>
+        <p>${escapeHTML(course.tips[key])}</p>`;
+      questionList.append(group);
+      groups.set(key, group);
+      filter.add(new Option(`${label} (${total})`, key));
+    }
+    filter.addEventListener('change', () => {
+      for (const [skill, group] of groups) group.hidden = Boolean(filter.value && filter.value !== skill);
+      for (const [id, jump] of jumps) jump.hidden = Boolean(filter.value && filter.value !== course.questions[id].skill);
+    });
+  }
+
   function setup() {
     if (course.number === 2) {
       document.querySelector('#session-heading').textContent = 'Session 2 · Practice both skills';
@@ -174,7 +199,7 @@
       document.querySelector('#session-heading').textContent = 'Session 3 · Practice Tests 1 and 2';
       document.querySelector('#session-intro').textContent = 'Answer 10 questions from Test Innovators Practice Tests 1 and 2. Read the excerpt provided with each question. A miss gets one second try.';
     }
-    if (evidenceReview) {
+    if (practiceTestReview) {
       document.querySelector('#session-heading').textContent = course.redo ? 'Session 4 · Redo five misses' : 'Session 4 · Review five misses';
       document.querySelector('#session-intro').textContent = 'Retry five questions from Practice Test 4. The excerpts are shortened and adapted for this review.';
       document.querySelector('.signal-guide').hidden = true;
@@ -190,21 +215,25 @@
       else tab.removeAttribute('aria-current');
     }
     const otherSession = document.querySelector('#other-session');
-    const nextSession = course.number === course.sessionCount ? 1 : course.number + 1;
-    otherSession.href = sessionLink(nextSession);
-    otherSession.textContent = `Open Session ${nextSession}`;
+    if (otherSession) {
+      const nextSession = course.number === course.sessionCount ? 1 : course.number + 1;
+      otherSession.href = sessionLink(nextSession);
+      otherSession.textContent = `Open Session ${nextSession}`;
+    }
 
+    if (archiveReview) setupSkillGroups();
     for (const [index, id] of course.ids.entries()) {
+      const question = course.questions[id];
       const article = document.createElement('article');
       article.className = 'question';
       article.id = `item-${id}`;
       article.setAttribute('aria-labelledby', `title-${id}`);
-      questionList.append(article);
+      (groups.get(question.skill) || questionList).append(article);
       articles.set(id, article);
 
       const jump = document.createElement('a');
       jump.href = `#item-${id}`;
-      jump.textContent = course.questions[id].mock || (evidenceReview ? course.questions[id].questionNumber : index + 1);
+      jump.textContent = question.mock || (practiceTestReview ? question.questionNumber : index + 1);
       jumpList.append(jump);
       jumps.set(id, jump);
       renderQuestion(id);
