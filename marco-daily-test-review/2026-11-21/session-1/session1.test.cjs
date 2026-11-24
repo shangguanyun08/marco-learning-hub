@@ -101,6 +101,13 @@ test('Session 4 lists both perfect two-question skills, plus slope totals before
 
   d.querySelector('[data-practice-filter=wrong]').click();
   assert.equal(d.querySelectorAll('.wrong-skill-group .question').length, 2);
+  const summary = d.querySelector('.wrong-skill-summary');
+  assert.equal(d.querySelector('.practice-filters').nextElementSibling, summary);
+  assert.match(summary.querySelector('[data-skill-summary=slope]').textContent, /4 correct · 2 wrong · 6 total/);
+  assert.match(summary.querySelector('[data-skill-summary=fractionScale]').textContent, /2 correct · 0 wrong · 2 total/);
+  assert.match(summary.querySelector('[data-skill-summary=fee]').textContent, /2 correct · 0 wrong · 2 total/);
+  assert.deepEqual([...summary.querySelectorAll('a')].map(link => link.textContent), ['1', '3']);
+  assert.match(d.querySelector('#wrong-skill-slope').textContent, /2\/6 wrong first try/);
   const report = d.querySelector('#skill-results');
   assert.equal(d.querySelector('#practice-content').lastElementChild, report);
   assert.equal(report.querySelectorAll('.skill-table tbody tr').length, 3);
@@ -204,6 +211,7 @@ for (const number of [2, 3]) {
     submit(w, missed, (data.questions[missed].correct + 1) % 4);
     d.querySelector('[data-practice-filter=wrong]').click();
     assert.equal(d.querySelectorAll('.question').length, 1);
+    assert.match(d.querySelector('[data-skill-summary=fractionScale]').textContent, /0 correct · 1 wrong · 4 total · 3 unanswered/);
     assert.match(d.querySelector('#q-' + missed).textContent, /Check second try/);
     assert.equal(d.querySelector('.answer-reveal'), null);
     submit(w, missed, data.questions[missed].correct);

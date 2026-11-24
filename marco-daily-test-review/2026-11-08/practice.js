@@ -15,6 +15,22 @@
  function table(t){return`<div class="table-wrap"><table class="result-table"><thead><tr>${t.headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')}</tr></thead><tbody>${t.rows.map(row=>'<tr>'+row.map((v,i)=>i?'<td>'+esc(v)+'</td>':'<th scope="row">'+esc(v)+'</th>').join('')+'</tr>').join('')}</tbody></table></div>`;}
  function solution(q){return`<div class="solution"><h4>Answer: ${'ABCD'[q.correct]} · ${math(q.choices[q.correct])}</h4><p class="trick"><strong>KEY TRICK</strong><br>${math(q.tip)}</p><p>${math(q.explanation)}</p></div>`;}
  function report(){return A.render(state);}
+ function missedQuestionLinks(ids) {
+  return ids.map(id => {
+   const number = D.ids.indexOf(id) + 1;
+   return `<a href="#q-${id}" class="incorrect" aria-label="Question ${number}">${number}</a>`;
+  }).join('');
+ }
+ function wrongSkillSummary(skills) {
+  return `<section class="wrong-skill-summary" aria-labelledby="wrong-skill-summary-heading">
+   <h3 id="wrong-skill-summary-heading">First-try scores by skill</h3>
+   <ul>${skills.map(({key, name, stats, ids}) => `<li data-skill-summary="${esc(key)}">
+    <strong>${esc(name)}</strong>
+    <p>${stats.first} correct · ${stats.wrong} wrong · ${stats.total} total${stats.complete ? '' : ` · ${stats.total - stats.answered} unanswered`}</p>
+    ${ids.length ? `<div class="jump practice-jump" role="group" aria-label="Missed questions for ${esc(name)}">${missedQuestionLinks(ids)}</div>` : ''}
+   </li>`).join('')}</ul>
+  </section>`;
+ }
  function question(id,i){
   const q=D.questions[id],a=E.attempts(state,id),all=E.firstPass(state),retry=a.length===1&&!a[0].correct,reveal=E.reveal(state,id),locked=!ready||a.length>0&&!retry,choice=locked?a.at(-1)?.choice:selected.get(id)??a.at(-1)?.choice;
   const feedback=!a.length?'No answer recorded yet.':a[0].correct?'Correct first try · 1 point.':retry?'Incorrect · Try once more. The answer and trick stay hidden until your second try.':a[1]?.correct?'Corrected on second try · first-try points unchanged.':'Incorrect on second try. The answer and trick are available below.';
@@ -33,18 +49,26 @@
   const groups=Array.from({length:Math.ceil(D.ids.length/GROUP)},(_,g)=>D.ids.slice(g*GROUP,g*GROUP+GROUP));
   const jump=groups.map((ids,g)=>`<span class="jump-group" role="group" aria-label="Questions ${g*GROUP+1} to ${Math.min(g*GROUP+GROUP,D.ids.length)}">${ids.map((id,j)=>{const a=E.attempts(state,id);return`<a href="#q-${id}" class="${a.length?a[0].correct?'first-correct':'incorrect':''}" aria-label="Question ${g*GROUP+j+1}${a.length?', '+(a[0].correct?'correct':'missed')+' first try':''}">${g*GROUP+j+1}</a>`;}).join('')}${g<groups.length-1?'<span class="jump-divider" aria-hidden="true"></span>':''}</span>`).join('');
   const missed=D.ids.filter(id=>{const a=E.attempts(state,id);return a.length&&!a[0].correct;});
-  const skills=Object.entries(D.skills).map(([key,name])=>({key,name,ids:missed.filter(id=>D.questions[id].skill===key)})).filter(group=>group.ids.length);
-  const filters=`<div class="practice-filters" role="group" aria-label="Questions to show"><button type="button" data-practice-filter="all" aria-pressed="${!wrongOnly}">All questions</button><button type="button" data-practice-filter="wrong" aria-pressed="${wrongOnly}">Wrong only · ${missed.length}</button>${wrongOnly?'<span>First-try misses · grouped by skill</span>':''}</div>`;
-  const wrongJump=skills.map(group=>`<span class="wrong-skill-jump"><strong>${esc(group.name)}</strong>${group.ids.map(id=>`<a href="#q-${id}" class="incorrect" aria-label="Question ${D.ids.indexOf(id)+1}">${D.ids.indexOf(id)+1}</a>`).join('')}</span>`).join('');
-  const wrongQuestions=skills.map(group=>`<section class="wrong-skill-group" aria-labelledby="wrong-skill-${group.key}"><h3 id="wrong-skill-${group.key}">${esc(group.name)} <span>· ${group.ids.length} ${group.ids.length===1?'question':'questions'}</span></h3>${group.ids.map(id=>question(id,D.ids.indexOf(id))).join('')}</section>`).join('');
-  $('#practice-content').innerHTML=`<div class="scorebar"><strong>${s.answered}/${s.total} first answers recorded</strong><span>${scoreText}</span></div>${filters}<nav class="jump practice-jump" aria-label="Jump to a practice question">${wrongOnly?wrongJump:jump}</nav>${D.masteryCheck?'':reportHTML}${wrongOnly?(wrongQuestions||'<p class="no-wrong-questions">No first-try mistakes recorded yet.</p>'):D.ids.map((id,i)=>question(id,i)+(i<D.ids.length-1&&(i+1)%GROUP===0?`<hr class="question-group-divider" aria-label="End of questions ${i-GROUP+2} to ${i+1}">`:'')).join('')}${D.masteryCheck?reportHTML:''}`;
+  const skills=Object.entries(D.skills).map(([key,name])=>({
+   key,name,stats:E.stats(state,key),ids:missed.filter(id=>D.questions[id].skill===key)
+  })).filter(group=>group.stats.total);
+  const missedSkills=skills.filter(group=>group.ids.length);
+  const showWrongScores=wrongOnly&&D.masteryCheck;
+  const filters=`<div class="practice-filters" role="group" aria-label="Questions to show"><button type="button" data-practice-filter="all" aria-pressed="${!wrongOnly}">All questions</button><button type="button" data-practice-filter="wrong" aria-pressed="${wrongOnly}">Wrong only · ${missed.length}</button>${wrongOnly&&!showWrongScores?'<span>First-try misses · grouped by skill</span>':''}</div>`;
+  const wrongJump=missedSkills.map(group=>`<span class="wrong-skill-jump"><strong>${esc(group.name)}</strong>${missedQuestionLinks(group.ids)}</span>`).join('');
+  const navigation=showWrongScores?wrongSkillSummary(skills):`<nav class="jump practice-jump" aria-label="Jump to a practice question">${wrongOnly?wrongJump:jump}</nav>`;
+  const wrongQuestions=missedSkills.map(group=>{
+   const count=showWrongScores?`${group.ids.length}/${group.stats.total} wrong first try`:`${group.ids.length} ${group.ids.length===1?'question':'questions'}`;
+   return `<section class="wrong-skill-group" aria-labelledby="wrong-skill-${group.key}"><h3 id="wrong-skill-${group.key}">${esc(group.name)} <span>· ${count}</span></h3>${group.ids.map(id=>question(id,D.ids.indexOf(id))).join('')}</section>`;
+  }).join('');
+  $('#practice-content').innerHTML=`<div class="scorebar"><strong>${s.answered}/${s.total} first answers recorded</strong><span>${scoreText}</span></div>${filters}${navigation}${D.masteryCheck?'':reportHTML}${wrongOnly?(wrongQuestions||'<p class="no-wrong-questions">No first-try mistakes recorded yet.</p>'):D.ids.map((id,i)=>question(id,i)+(i<D.ids.length-1&&(i+1)%GROUP===0?`<hr class="question-group-divider" aria-label="End of questions ${i-GROUP+2} to ${i+1}">`:'')).join('')}${D.masteryCheck?reportHTML:''}`;
   statusNote();
  }
  function redraw(){
   const y=window.scrollY,hadReport=Boolean($('#skill-results'));
   render();
   const reportPanel=$('#skill-results');
-  if(!hadReport&&reportPanel&&!$('#practice').hidden) reportPanel.scrollIntoView({block:'start',behavior:'smooth'});
+  if(!wrongOnly&&!hadReport&&reportPanel&&!$('#practice').hidden) reportPanel.scrollIntoView({block:'start',behavior:'smooth'});
   else window.scrollTo(0,y);
  }
  function remote(s){state=E.merge(state,s);save(false);redraw();}
