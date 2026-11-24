@@ -22,6 +22,9 @@
   const jumpList = document.querySelector('#question-jump');
   const saveNote = document.querySelector('#save-note');
   const repeatReview = document.querySelector('#repeat-review');
+  const passagePicker = document.querySelector('#review-passage');
+  const allQuestions = document.querySelector('[data-review-filter="all"]');
+  const wrongQuestions = document.querySelector('[data-review-filter="wrong"]');
   const dashboard = window.MarcoReadingCards?.mount(course, engine, local);
   const articles = new Map();
   const jumps = new Map();
@@ -31,6 +34,7 @@
   let storageOK = true;
   let ready = local;
   let state = engine.empty();
+  let wrongOnly = params.get('wrong') === '1';
 
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -242,36 +246,70 @@
       return `<section><h4>${escapeHTML(label)}</h4><p><strong>${summary}</strong> first try</p>
         ${corrections}</section>`;
     }).join('');
-    if (repeatReview) renderRepeatReview();
+    if (archiveReview) {
+      renderRepeatReview();
+      renderPassageView();
+    }
   }
 
   function sessionLink(number, redo = false) {
     return `?session=${number}${redo ? '&redo=1' : ''}${demo ? '&demo=1' : ''}`;
   }
 
+  function renderPassageView() {
+    const selected = passagePicker.value;
+    let missedCount = 0;
+    for (const {id, ids, mockNumber} of course.passages) {
+      const inView = !selected || selected === id;
+      let passageMisses = 0;
+      for (const question of ids) {
+        const missed = engine.attempts(state, question)[0]?.correct === false;
+        if (missed) passageMisses++;
+        articles.get(question).hidden = wrongOnly && !missed;
+      }
+      if (inView) missedCount += passageMisses;
+      const group = groups.get(id);
+      group.hidden = !inView || (wrongOnly && !passageMisses);
+      const count = wrongOnly ? `${passageMisses}/${ids.length} wrong first try`
+        : `${ids.length} ${ids.length === 1 ? 'question' : 'questions'}`;
+      group.querySelector('.passage-meta').textContent = `Mock ${mockNumber} · ${count}`;
+    }
+    allQuestions.setAttribute('aria-pressed', String(!wrongOnly));
+    wrongQuestions.setAttribute('aria-pressed', String(wrongOnly));
+    wrongQuestions.textContent = `Wrong only · ${missedCount}`;
+    document.getElementById('review-filter-note').hidden = !wrongOnly || !missedCount;
+    document.getElementById('review-no-misses').hidden = !wrongOnly || Boolean(missedCount);
+  }
+
   function setupPassageGroups() {
-    const filter = document.querySelector('#review-passage');
-    filter.add(new Option(`All passages (${course.passages.length})`, ''));
-    for (const {id, title, mockNumber, passage, ids} of course.passages) {
+    passagePicker.add(new Option(`All passages (${course.passages.length})`, ''));
+    for (const {id, title, mockNumber, passage} of course.passages) {
       const group = document.createElement('section');
       group.className = 'review-group';
       group.setAttribute('aria-labelledby', `heading-${id}`);
       group.innerHTML = `<h3 id="heading-${id}">${escapeHTML(title)}</h3>
-        <p class="passage-meta">Mock ${mockNumber} · ${ids.length} ${ids.length === 1 ? 'question' : 'questions'}</p>
+        <p class="passage-meta"></p>
         <div class="reading-passage" id="passage-${id}" tabindex="-1" aria-labelledby="heading-${id}">${formatPassage(passage, false)}</div>`;
       questionList.append(group);
       groups.set(id, group);
-      filter.add(new Option(`${title} · Mock ${mockNumber}`, id));
+      passagePicker.add(new Option(`${title} · Mock ${mockNumber}`, id));
     }
-    function showPassage() {
-      for (const [id, group] of groups) group.hidden = Boolean(filter.value && filter.value !== id);
+    function showWrongOnly(enabled) {
+      wrongOnly = enabled;
+      const url = new URL(location.href);
+      if (enabled) url.searchParams.set('wrong', '1');
+      else url.searchParams.delete('wrong');
+      history.replaceState(null, '', url);
+      renderPassageView();
     }
-    filter.addEventListener('change', showPassage);
+    allQuestions.addEventListener('click', () => showWrongOnly(false));
+    wrongQuestions.addEventListener('click', () => showWrongOnly(true));
+    passagePicker.addEventListener('change', renderPassageView);
     repeatReview.addEventListener('click', event => {
       const link = event.target.closest('[data-repeat-question]');
       if (!link) return;
-      if (filter.value) filter.value = course.questions[link.dataset.repeatQuestion].passageId;
-      showPassage();
+      if (passagePicker.value) passagePicker.value = course.questions[link.dataset.repeatQuestion].passageId;
+      renderPassageView();
     });
   }
 

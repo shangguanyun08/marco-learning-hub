@@ -7,11 +7,11 @@
   <meta name="description" content="Redo earlier ISEE Middle reading misses, grouped by passage.">
   <title>Earlier Reading Review · Marco’s Daily Reading</title>
   <link rel="stylesheet" href="../../marco-daily-test-review/2026-10-04/style.css?v=4">
-  <link rel="stylesheet" href="../reading.css?v=8">
+  <link rel="stylesheet" href="../reading.css?v=9">
   <script defer src="./questions.js?v=3"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/engine.js?v=20261028-sync2"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/sync.js?v=20261028-sync2"></script>
-  <script defer src="../reading.js?v=10"></script>
+  <script defer src="../reading.js?v=11"></script>
 </head>
 <body class="earlier-reading">
   <main class="shell">
@@ -64,10 +64,16 @@
         <h2 id="session-heading">Practice by passage</h2>
         <p>First answers count toward your score. Each miss gets one retry.</p>
       </div>
+      <div class="review-question-filters" role="group" aria-label="Questions to show">
+        <button type="button" data-review-filter="all" aria-controls="questions" aria-pressed="true">All questions</button>
+        <button type="button" data-review-filter="wrong" aria-controls="questions" aria-pressed="false">Wrong only</button>
+      </div>
       <div class="review-filter">
         <label for="review-passage">Choose a passage</label>
         <select id="review-passage"></select>
       </div>
+      <p id="review-filter-note" hidden>Showing first-try misses, including questions corrected on the retry.</p>
+      <p id="review-no-misses" role="status" hidden>No first-try misses in this view.</p>
       <div id="questions"></div>
       <noscript><p>Turn on JavaScript to answer questions and save your scores.</p></noscript>
       <p class="end-links"><a href="#review-passage">Choose a passage</a> <a href="../">Back to Daily Reading</a></p>

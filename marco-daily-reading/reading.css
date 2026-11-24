@@ -99,7 +99,22 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 .review-coverage { margin-bottom: 6px; color: var(--muted); }
 .review-coverage summary { font-weight: 650; cursor: pointer; }
 .review-coverage p { margin: 8px 0; }
-.review-filter { display: grid; gap: 4px; max-width: 28rem; margin: 20px 0 0; }
+.review-question-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.review-question-filters button {
+  min-height: 44px;
+  padding: 6px 14px;
+  border: 1px solid #9eb3c8;
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+.review-question-filters button[aria-pressed=true] { border-color: var(--ink); background: var(--ink); color: white; }
+.review-question-filters button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.review-filter { display: grid; gap: 4px; max-width: 28rem; margin: 12px 0 0; }
+#review-filter-note, #review-no-misses { margin: 8px 0 0; color: var(--muted); }
 .review-filter label { font-weight: 700; }
 .review-filter select {
   box-sizing: border-box;

@@ -199,11 +199,35 @@ test('repeat choices are compared only once the retry is used', async t => {
   assert.equal(report.hidden, false);
   assert.match(report.textContent, /2 of 3 misses/);
   assert.equal(report.querySelectorAll('li').length, 2);
+  const wrongOnly = doc.querySelector('[data-review-filter="wrong"]');
+  const allQuestions = doc.querySelector('[data-review-filter="all"]');
+  const visibleQuestions = () => [...doc.querySelectorAll('.review-group:not([hidden]) .question:not([hidden])')].map(item => item.id);
+  assert.equal(wrongOnly.textContent, 'Wrong only · 3');
+  wrongOnly.click();
+  assert.equal(wrongOnly.getAttribute('aria-pressed'), 'true');
+  assert.match(review.window.location.search, /wrong=1/);
+  assert.deepEqual(visibleQuestions(), ['item-m0q3', 'item-m0q5', 'item-m0q8']);
+  assert.match(review.text('#item-m0q3 .feedback'), /Corrected on the second try/);
   const picker = doc.querySelector('#review-passage');
   picker.value = review.course.questions.m0q8.passageId;
   picker.dispatchEvent(new review.window.Event('change'));
+  assert.equal(wrongOnly.textContent, 'Wrong only · 1');
+  assert.deepEqual(visibleQuestions(), ['item-m0q8']);
+  assert.match(review.text('.review-group:not([hidden]) .passage-meta'), /1\/2 wrong first try/);
+  picker.value = review.course.questions.m0q16.passageId;
+  picker.dispatchEvent(new review.window.Event('change'));
+  assert.deepEqual(visibleQuestions(), []);
+  assert.equal(doc.querySelector('#review-no-misses').hidden, false);
   report.querySelector('[data-repeat-question="m0q3"]').click();
   assert.equal(picker.value, review.course.questions.m0q3.passageId);
+  assert.deepEqual(visibleQuestions(), ['item-m0q3', 'item-m0q5']);
+  allQuestions.click();
+  assert.equal(allQuestions.getAttribute('aria-pressed'), 'true');
+  assert.equal(doc.querySelector('#review-no-misses').hidden, true);
+  picker.value = '';
+  picker.dispatchEvent(new review.window.Event('change'));
+  assert.equal(visibleQuestions().length, 38);
+  assert.equal(review.text('#review-wrong'), '3');
 });
 
 test('reading cards use saved results and turn green after pending retries are finished', async t => {
