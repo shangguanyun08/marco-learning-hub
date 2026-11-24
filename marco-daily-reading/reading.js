@@ -25,6 +25,7 @@
   const passagePicker = document.querySelector('#review-passage');
   const allQuestions = document.querySelector('[data-review-filter="all"]');
   const wrongQuestions = document.querySelector('[data-review-filter="wrong"]');
+  const retryMisses = document.querySelector('[data-review-filter="retry"]');
   const dashboard = window.MarcoReadingCards?.mount(course, engine, local);
   const articles = new Map();
   const jumps = new Map();
@@ -34,7 +35,22 @@
   let storageOK = true;
   let ready = local;
   let state = engine.empty();
-  let wrongOnly = params.get('wrong') === '1';
+  const filters = {
+    all: {show: () => true},
+    wrong: {
+      show: tries => tries[0]?.correct === false,
+      label: 'wrong first try',
+      note: 'Showing first-try misses, including questions corrected on the retry.',
+      empty: 'No first-try misses in this view.'
+    },
+    retry: {
+      show: tries => answerStatus(tries) === 'missed',
+      label: 'still wrong after the second try',
+      note: 'Showing questions that are still wrong after the second try.',
+      empty: 'No questions are still wrong after the second try in this view.'
+    }
+  };
+  let passageFilter = params.get('wrong') === '2' ? 'retry' : params.get('wrong') === '1' ? 'wrong' : 'all';
 
   try {
     const saved = JSON.parse(localStorage.getItem(storageKey));
@@ -258,27 +274,39 @@
 
   function renderPassageView() {
     const selected = passagePicker.value;
-    let missedCount = 0;
+    const filter = filters[passageFilter];
+    let firstMissCount = 0;
+    let retryMissCount = 0;
+    let visibleCount = 0;
     for (const {id, ids, mockNumber} of course.passages) {
       const inView = !selected || selected === id;
-      let passageMisses = 0;
+      let shown = 0;
       for (const question of ids) {
-        const missed = engine.attempts(state, question)[0]?.correct === false;
-        if (missed) passageMisses++;
-        articles.get(question).hidden = wrongOnly && !missed;
+        const tries = engine.attempts(state, question);
+        if (inView && filters.wrong.show(tries)) firstMissCount++;
+        if (inView && filters.retry.show(tries)) retryMissCount++;
+        const show = filter.show(tries);
+        articles.get(question).hidden = !show;
+        if (show) shown++;
       }
-      if (inView) missedCount += passageMisses;
+      if (inView) visibleCount += shown;
       const group = groups.get(id);
-      group.hidden = !inView || (wrongOnly && !passageMisses);
-      const count = wrongOnly ? `${passageMisses}/${ids.length} wrong first try`
+      group.hidden = !inView || !shown;
+      const count = filter.label ? `${shown}/${ids.length} ${filter.label}`
         : `${ids.length} ${ids.length === 1 ? 'question' : 'questions'}`;
       group.querySelector('.passage-meta').textContent = `Mock ${mockNumber} · ${count}`;
     }
-    allQuestions.setAttribute('aria-pressed', String(!wrongOnly));
-    wrongQuestions.setAttribute('aria-pressed', String(wrongOnly));
-    wrongQuestions.textContent = `Wrong only · ${missedCount}`;
-    document.getElementById('review-filter-note').hidden = !wrongOnly || !missedCount;
-    document.getElementById('review-no-misses').hidden = !wrongOnly || Boolean(missedCount);
+    allQuestions.setAttribute('aria-pressed', String(passageFilter === 'all'));
+    wrongQuestions.setAttribute('aria-pressed', String(passageFilter === 'wrong'));
+    retryMisses.setAttribute('aria-pressed', String(passageFilter === 'retry'));
+    wrongQuestions.textContent = `Wrong only · ${firstMissCount}`;
+    retryMisses.textContent = `Still wrong after second try · ${retryMissCount}`;
+    const note = document.getElementById('review-filter-note');
+    note.textContent = filter.note || '';
+    note.hidden = !filter.note || !visibleCount;
+    const empty = document.getElementById('review-no-misses');
+    empty.textContent = filter.empty || '';
+    empty.hidden = !filter.empty || Boolean(visibleCount);
   }
 
   function setupPassageGroups() {
@@ -294,22 +322,25 @@
       groups.set(id, group);
       passagePicker.add(new Option(`${title} · Mock ${mockNumber}`, id));
     }
-    function showWrongOnly(enabled) {
-      wrongOnly = enabled;
+    function setPassageFilter(mode) {
+      passageFilter = mode;
       const url = new URL(location.href);
-      if (enabled) url.searchParams.set('wrong', '1');
-      else url.searchParams.delete('wrong');
+      if (mode === 'all') url.searchParams.delete('wrong');
+      else url.searchParams.set('wrong', mode === 'retry' ? '2' : '1');
       history.replaceState(null, '', url);
       renderPassageView();
     }
-    allQuestions.addEventListener('click', () => showWrongOnly(false));
-    wrongQuestions.addEventListener('click', () => showWrongOnly(true));
+    allQuestions.addEventListener('click', () => setPassageFilter('all'));
+    wrongQuestions.addEventListener('click', () => setPassageFilter('wrong'));
+    retryMisses.addEventListener('click', () => setPassageFilter('retry'));
     passagePicker.addEventListener('change', renderPassageView);
     repeatReview.addEventListener('click', event => {
       const link = event.target.closest('[data-repeat-question]');
       if (!link) return;
-      if (passagePicker.value) passagePicker.value = course.questions[link.dataset.repeatQuestion].passageId;
-      renderPassageView();
+      const id = link.dataset.repeatQuestion;
+      if (passagePicker.value) passagePicker.value = course.questions[id].passageId;
+      if (filters[passageFilter].show(engine.attempts(state, id))) renderPassageView();
+      else setPassageFilter('wrong');
     });
   }
 
