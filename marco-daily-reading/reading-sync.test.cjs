@@ -25,6 +25,7 @@ function open(t, session, fetch, seedAnswer = false) {
   if (seedAnswer) {
     const state = window.MarcoQR4Engine.empty();
     window.MarcoQR4Engine.submit(state, first, (correct + 1) % 4);
+    if (earlier) window.MarcoQR4Engine.submit(state, 'm1q21', course.questions.m1q21.correct);
     window.localStorage.setItem(course.appId, JSON.stringify(state));
   }
   window.eval(read('reading.js'));
@@ -90,11 +91,16 @@ test('all reading sessions migrate device answers and sync corrections after rec
     const skillTotal = a.course.ids.filter(id => a.course.questions[id].skill === skill).length;
     assert.ok(a.text('#skill-scores').includes(`0 correct · 1/${skillTotal} answered`));
     assert.match(a.text('#skill-scores'), /1 corrected on the second try/);
+    if (session === 'earlier') {
+      assert.equal(a.text('#overall-score'), '1 of 38 answered');
+      const saved = server.get(a.course.appId).state;
+      assert.equal(saved.sessions[a.course.session][0].answers.m1q21.attempts.length, 1);
+    }
   }
   assert.equal(server.size, 6);
 });
 
-test('earlier review matches the scored misses and filters questions and jumps by skill', async t => {
+test('earlier review shows selected misses with one shared text per passage', async t => {
   const review = open(t, 'earlier', async () => ({ok: true, json: async () => ({progress: null})}));
   await until(() => review.status() === 'live');
   const { window, course } = review;
@@ -104,23 +110,43 @@ test('earlier review matches the scored misses and filters questions and jumps b
     '6A 8D 11D 12C 14C 18D 21A 22C 26D 27A 28A 29B 30A 31B 33D 35D 36A'
   ];
   const expectedKeys = expected.flatMap((keys, mock) => keys.split(' ').map(key => 'm' + mock + 'q' + key));
-  const actualKeys = course.ids.map(id => id + 'ABCD'[course.questions[id].correct]);
+  const actualKeys = Object.values(course.questions).map(question => question.id + 'ABCD'[question.correct]);
   assert.deepEqual([...actualKeys].sort(), expectedKeys.sort());
+  const omitted = ['m0q7', 'm0q9', 'm0q27', 'm1q15', 'm1q21', 'm2q30'];
+  assert.deepEqual(Object.keys(course.questions).filter(id => !course.ids.includes(id)), omitted);
   const doc = window.document;
-  assert.equal(doc.querySelectorAll('.review-group').length, 6);
-  assert.equal(doc.querySelectorAll('.question').length, 44);
+  assert.equal(new Set(Object.values(course.questions).map(question => question.title)).size, 17);
+  assert.equal(doc.querySelectorAll('.review-group').length, 16);
+  assert.equal(doc.querySelectorAll('.review-group > .reading-passage').length, 16);
+  assert.equal(doc.querySelectorAll('.question .reading-passage').length, 0);
+  assert.equal(doc.querySelectorAll('.question').length, 38);
   assert.equal(doc.querySelectorAll('[data-evidence]').length, 0);
+  for (const id of course.ids) {
+    const { evidence, passageId } = course.questions[id];
+    assert.ok(evidence.length > 0);
+    const passage = doc.getElementById('passage-' + passageId);
+    assert.ok(evidence.every(clue => clue && passage.textContent.includes(clue)));
+  }
 
   review.answer(review.first, (review.correct + 1) % 4);
   const clue = doc.querySelector(`[data-evidence="${review.first}"]`);
+  const evidence = doc.getElementById(clue.getAttribute('aria-controls'));
+  assert.equal(evidence.hidden, true);
   clue.click();
-  assert.ok(doc.querySelector(`#item-${review.first} mark`));
+  assert.equal(evidence.hidden, false);
+  assert.match(evidence.querySelector('mark').textContent, /determine whether they survive/);
+  clue.click();
+  assert.equal(evidence.hidden, true);
   assert.equal(doc.querySelectorAll('[data-original]').length, 0);
 
-  const filter = doc.querySelector('#review-skill');
-  filter.value = 'inference';
+  const filter = doc.querySelector('#review-passage');
+  const gravity = course.questions.m0q25.passageId;
+  filter.value = gravity;
   filter.dispatchEvent(new window.Event('change'));
-  assert.equal(doc.querySelectorAll('.review-group:not([hidden])').length, 1);
-  assert.equal(doc.querySelectorAll('#question-jump a:not([hidden])').length,
-    course.ids.filter(id => course.questions[id].skill === 'inference').length);
+  const visible = doc.querySelectorAll('.review-group:not([hidden])');
+  assert.equal(visible.length, 1);
+  assert.equal(visible[0].querySelector('h3').textContent, 'Newton’s law of gravity');
+  assert.equal(visible[0].querySelectorAll('.question').length, 4);
+  assert.match(visible[0].querySelector('.reading-passage').textContent, /In the neighborhood/);
+  assert.equal(doc.querySelector('#item-m0q28 .read-passage').getAttribute('href'), '#passage-' + gravity);
 });

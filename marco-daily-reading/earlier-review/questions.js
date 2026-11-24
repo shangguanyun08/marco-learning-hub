@@ -10,23 +10,13 @@
     tone: 'Tone, style, and figurative language'
   };
 
-  const tips = {
-    detail: 'Circle the key words in the question. Find the sentence that proves your answer, and check what the question asks you to include or exclude.',
-    inference: 'Finish this sentence: “The passage says ___, so I can conclude ___.” Keep the conclusion close to the clue.',
-    organization: 'Give each paragraph a short job. Ask what this paragraph or detail adds and how it connects to the rest.',
-    vocabulary: 'Put your choice in place of the word or phrase. Reread the sentence and make sure the meaning still fits.',
-    main: 'Check the scope first. For a paragraph, pick the idea that covers the whole paragraph. For a passage, check that it fits the beginning, middle, and end.',
-    tone: 'Find a word or phrase that shows the writer’s attitude or creates an effect. Explain what that wording adds.'
-  };
-
   // Each adaptation keeps the original question number, skill, and answer order.
   // Double brackets mark the evidence available after the first attempt.
   const questions = {};
   function add(mock, questionNumber, skill, title, passage, prompt, choices, letter, explanation) {
     const id = 'm' + mock + 'q' + questionNumber;
     questions[id] = {
-      id, questionNumber, skill, title, passage, prompt, choices, explanation,
-      source: 'Mock ' + mock + ' · Q' + questionNumber,
+      id, mockNumber: mock, questionNumber, skill, title, passage, prompt, choices, explanation,
       correct: 'ABCD'.indexOf(letter)
     };
   }
@@ -46,7 +36,7 @@
 
   const freezes = [
     'Freezes had harmed Florida fruit before, but the Great Freeze of 1895 [[reached more growers than any earlier freeze]]. Around Keystone City, some groves escaped damage. The land there was [[higher, and the groves were close to lakes]].',
-    'A disastrous twentieth-century freeze struck in December 1962. Temperatures fell across the citrus region. When the weather warmed, [[the fruit thawed slowly]], leaving some of it usable. Growers were able to save part of their crop.'
+    '[[A disastrous twentieth-century freeze struck in December 1962. Temperatures fell across the citrus region.]] When the weather warmed, [[the fruit thawed slowly]], leaving some of it usable. Growers were able to save part of their crop.'
   ];
   add(0, 7, 'detail', 'Florida’s citrus freezes', freezes, 'Why is the 1895 freeze especially well known among citrus growers?', [
     'It was the coldest freeze ever recorded up to that point.', 'It cut the usual orange harvest exactly in half.',
@@ -65,7 +55,7 @@
 
   const posture = [
     'Friends in conversation often mirror each other without realizing it. Two people might lean on the same elbow or cross their legs the same way. This is called postural echo.',
-    'A standing guest may be invited to sit. With everyone in a similar position, it is easier to move in step and [[the group feels more at ease]]. One member can disturb that ease by taking an [[alien posture]], such as staying stiffly upright while everyone else relaxes.'
+    'A standing guest may be invited to sit. With everyone in a similar position, it is easier to move in step and [[the group feels more at ease]]. One member can disturb that ease by taking an alien posture, such as [[staying stiffly upright while everyone else relaxes]].'
   ];
   add(0, 16, 'main', 'Postural echo', posture, 'What is the main point of the paragraph about the group?', [
     'People only mirror the posture of their closest friends.', 'Groups feel more at ease when their members settle into similar postures.',
@@ -89,8 +79,8 @@
   ], 'A', 'The passage describes families traveling for work while struggling to find food and shelter.');
 
   const gravity = [
-    'People once assumed that [[the heavens and Earth followed separate rules]]. Newton proposed that the attraction that makes an apple fall also acts on the Moon. He used [[mathematical equations to account for its orbit]].',
-    'Newton’s law explained an enormous range of motion. There are limits, though. Near a very heavy star, another description of gravity is needed. At the opposite extreme, [[atoms and elementary particles]] follow rules of their own.'
+    'People once assumed that [[the heavens and Earth followed separate rules]]. [[Newton proposed that the attraction that makes an apple fall also acts on the Moon.]] He used [[mathematical equations to account for its orbit]].',
+    'Newton’s law explained an enormous range of motion. [[There are limits, though.]] In the neighborhood of a very heavy star, for example, [[the star’s gravity calls for a different description]]. At the opposite extreme, [[atoms and elementary particles]] follow rules of their own.'
   ];
   add(0, 25, 'main', 'Newton’s law of gravity', gravity, 'What is one of the main purposes of the passage?', [
     'Trace all advances in theories about how the Moon moves.', 'Explain Newton’s law of gravity and where its explanation has limits.',
@@ -103,9 +93,7 @@
   add(0, 27, 'detail', 'Newton’s law of gravity', gravity, 'What did Newton use to show that his theory could explain the Moon’s orbit?', [
     'Mathematical equations.', 'The example of an apple falling.', 'Measurements taken at several elevations.', 'A comparison with other planets’ moons.'
   ], 'A', 'The apple illustrates the idea. The passage names equations as the way Newton accounted for the orbit.');
-  add(0, 28, 'vocabulary', 'Newton’s law of gravity', [
-    'Newton’s equations work in many settings. In the neighborhood of a very heavy star, however, the effects of gravity call for a different description. The [[region immediately surrounding the star]] is where this difference matters.'
-  ], 'What does “in the neighborhood of” mean in this passage?', [
+  add(0, 28, 'vocabulary', 'Newton’s law of gravity', gravity, 'What does “in the neighborhood of” mean in this passage?', [
     'Close to.', 'Similar to.', 'Familiar with.', 'Working with.'
   ], 'A', 'Substitute “close to” and reread. The sentence describes the area immediately around the star.');
   add(0, 29, 'organization', 'Newton’s law of gravity', gravity, 'What is the “opposite extreme” from the very heavy star?', [
@@ -114,7 +102,7 @@
   ], 'D', 'The paragraph pairs a very massive object with the smallest objects. The phrase signals the contrast in scale.');
 
   const darkAges = [
-    'Scholars have [[all but stopped]] using the term “Dark Ages” for the period after the fall of the Western Roman Empire. Some societies were flourishing, and new ideas in mathematics emerged.',
+    'Scholars have all but stopped using the term “Dark Ages” for the period after the fall of the Western Roman Empire. [[The term still appears occasionally.]] Some societies were flourishing, and new ideas in mathematics emerged.',
     'One suggestion about the inception of the label looks to the [[plagues and severe loss of life]] that marked parts of the period. These hardships may have [[given the period its name]].'
   ];
   add(1, 4, 'vocabulary', 'The “Dark Ages”', darkAges, 'What does “inception” mean here?', [
@@ -129,7 +117,7 @@
   ], 'D', 'The paragraph ties hardship to the origin of the name. That is the reason the plague appears in the discussion.');
 
   const owls = [
-    'In the eye, rods detect low levels of light and cones help distinguish colors. An owl’s eyes are attuned to the dim conditions where it hunts. Compared with a human’s, an owl’s eyes are unusually sensitive in faint light. The owl’s retina has [[many more rods than cones]], which helps it spot movement at night.'
+    'In the eye, rods detect low levels of light and cones help distinguish colors. An owl’s eyes are attuned to the dim conditions where it hunts. Compared with a human’s, an owl’s eyes are [[unusually sensitive in faint light]]. The owl’s retina has [[many more rods than cones]], which helps it spot movement at night.'
   ];
   add(1, 8, 'detail', 'Owls at night', owls, 'According to the passage, how do owls differ from humans?', [
     'Owls can move their eyes without moving their heads.', 'Owls have more rods than cones in their eyes.',
@@ -166,7 +154,7 @@
   ], 'A', 'The first paragraph follows the lake from its formation to its popularity. The second follows the decline. The broad answer covers both.');
 
   const coral = [
-    'The Great Barrier Reef is a conglomeration of [[many smaller reefs]]. Coral and tiny algae live together. The coral provides shelter while the algae supply food, so [[both partners benefit]].',
+    'The Great Barrier Reef is a conglomeration of [[many smaller reefs]]. Coral and tiny algae live together. [[The coral provides shelter while the algae supply food]], so both partners benefit.',
     'In stressful conditions the coral can lose its algae and turn pale, a process called bleaching. When the reef suffers, [[other creatures can lose food and shelter]].'
   ];
   add(1, 33, 'inference', 'The Great Barrier Reef', coral, 'Which example best matches the kind of relationship between the coral and its algae?', [
@@ -183,7 +171,7 @@
 
   add(2, 6, 'organization', 'How birds share a habitat', [
     'Different kinds of birds can use the same habitat without competing for every meal. The way animals divide up food and space is known as [[resource partitioning]].',
-    'In a forest, some birds hunt on the floor while others pick insects off the ends of branches. In a lake, dabbling ducks feed on the surface while diving ducks feed deeper down.'
+    '[[In a forest, some birds hunt on the floor while others pick insects off the ends of branches.]] In a lake, dabbling ducks feed on the surface while diving ducks feed deeper down.'
   ], 'How is the passage organized?', [
     'It introduces a process and uses examples to explain it.', 'It states a claim about birds and lists research findings against it.',
     'It compares how the process differs across unrelated kinds of animals.', 'It traces the evolution of one kind of bird.'
@@ -241,7 +229,7 @@
   const ocean = [
     'The ocean stores carbon. One way carbon moves in is when carbon dioxide dissolves in seawater. In another process, some shell-building organisms release carbon dioxide while making shells. These two processes, [[the solubility and carbonate pumps, move carbon in opposite directions]].',
     'In the biological pump, [[phytoplankton near the surface use carbon dioxide as they make food]]. Some carbon moves back into the ocean through the food chain, and some eventually settles to the seafloor.',
-    'By taking up carbon, [[the ocean cushions some effects of climate change]], but its capacity is limited. As dissolved carbon builds up, [[the chemistry of seawater changes and it absorbs carbon less readily]]. The water [[becomes more acidic]], which can harm marine life.'
+    'By taking up carbon, [[the ocean cushions some effects of climate change]], but its capacity is limited. As dissolved carbon builds up, [[the chemistry of seawater changes and it absorbs carbon less readily]]. The water [[becomes more acidic, which can harm marine life]].'
   ];
   add(2, 26, 'inference', 'Carbon in the ocean', ocean, 'What does the passage imply when it describes the ocean as a buffer against some effects of climate change?', [
     'We need to build more oceans to fight climate change.', 'The ocean is completely reversing climate change.',
@@ -267,9 +255,9 @@
   ], 'A', 'Dissolving carbon dioxide takes it into seawater. Shell building releases some carbon dioxide back out, so the two processes counteract one another.');
 
   const town = [
-    'Leavenworth, Washington, used to be a center for logging. When the railroad moved, the town’s fortunes declined.',
+    'Leavenworth, Washington, used to be a center for logging. [[When the railroad moved, the town’s fortunes declined.]]',
     'Local leaders decided to give visitors a new reason to come. They settled on remaking downtown as a Bavarian village.',
-    '[[The mountains nearby reminded residents of the Alps.]] They also knew that Solvang, California, had drawn visitors by embracing a Danish theme. Together, the landscape and Solvang’s example helped shape Leavenworth’s plan.',
+    '[[The mountains nearby reminded residents of the Alps.]] They also knew that [[Solvang, California, had drawn visitors by embracing a Danish theme]]. Together, the landscape and Solvang’s example helped shape Leavenworth’s plan.',
     'Visitors were enthralled by the old-world streetscape. [[Festivals and winter lights drew crowds]], and the community turned a struggling town into a lively destination.'
   ];
   add(2, 31, 'main', 'Leavenworth’s new identity', town, 'What is the central purpose of the passage?', [
@@ -288,16 +276,36 @@
     'German festivals already held in Leavenworth.', 'A decision to promote American holidays.'
   ], 'A', 'The third paragraph explains that the mountains reminded residents of the Alps and gave them part of the idea.');
 
-  const ids = Object.keys(skills).flatMap(skill =>
-    Object.values(questions).filter(question => question.skill === skill).map(question => question.id)
-  );
+  // Keep the original items readable by the progress engine so older saved records can still merge.
+  const omitted = new Set(['m0q7', 'm0q9', 'm0q27', 'm1q15', 'm1q21', 'm2q30']);
+  // Evidence indexes refer to bracketed excerpts in the shared passage, in reading order.
+  const clueIndexes = {
+    m0q3: [1], m0q5: [0], m0q8: [1], m0q11: [2], m0q16: [0], m0q17: [1],
+    m0q21: [1], m0q24: [0], m0q25: [1, 3], m0q26: [0], m0q28: [4], m0q29: [5],
+    m1q4: [2], m1q5: [0], m1q6: [1, 2], m1q8: [1], m1q9: [0], m1q13: [0],
+    m1q33: [1], m1q34: [0], m1q35: [2],
+    m2q8: [0], m2q11: [1], m2q12: [2], m2q14: [0, 2], m2q18: [1],
+    m2q21: [0], m2q22: [1], m2q26: [2], m2q27: [3, 4], m2q28: [1], m2q29: [3],
+    m2q31: [0, 3], m2q33: [3], m2q35: [1, 2], m2q36: [1]
+  };
+  const passages = new Map();
+  for (const question of Object.values(questions)) {
+    if (omitted.has(question.id)) continue;
+    const { passage, id, title, mockNumber } = question;
+    if (!passages.has(passage)) passages.set(passage, {id: 'p-' + id, title, mockNumber, passage, ids: []});
+    const group = passages.get(passage);
+    group.ids.push(id);
+    question.passageId = group.id;
+    const clues = passage.flatMap(paragraph => Array.from(paragraph.matchAll(/\[\[([^\]]+)\]\]/g), match => match[1]));
+    question.evidence = clueIndexes[id] ? clueIndexes[id].map(index => clues[index]) : clues;
+  }
   window.MarcoQR4Data = {
     archiveReview: true,
     session: 'earlier-mocks',
     appId: 'marco-reading-nov21-earlier-mocks-v1',
-    ids,
+    passages: [...passages.values()],
+    ids: [...passages.values()].flatMap(group => group.ids),
     questions,
-    skills,
-    tips
+    skills
   };
 })();

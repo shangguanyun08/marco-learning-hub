@@ -101,13 +101,16 @@
     const result = answerStatus(attempts);
     const article = articles.get(id);
     const selected = article.querySelector('input:checked:not(:disabled)')?.value;
-    const title = question.mock ? `Mock #${question.mock} · ${question.title}` : question.title;
-    const source = question.source || (question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '');
+    const title = archiveReview ? `Question ${question.questionNumber}`
+      : question.mock ? `Mock #${question.mock} · ${question.title}` : question.title;
+    const headingTag = archiveReview ? 'h4' : 'h3';
+    const source = question.test ? `Practice Test ${question.test} · Q${question.questionNumber}` : '';
     const num = question.mock || (practiceTestReview ? question.questionNumber : course.ids.indexOf(id) + 1);
-    const canHighlight = evidenceReview && (!archiveReview || attempts.length > 0);
     const showClue = evidenceReview ? highlighted.has(id) : question.skill === 'organization' && (review || revealed);
     const showOriginal = shownOriginals.has(id);
     const original = question.originalChoice;
+    const evidenceId = archiveReview ? `evidence-${id}` : `passage-${id}`;
+    const evidenceButton = `<button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="${evidenceId}" aria-pressed="${showClue}" aria-label="Highlight evidence for ${archiveReview ? title.toLowerCase() : 'question ' + num}">Highlight evidence</button>`;
     const resultText = {
       pending: '',
       retry: 'Try once more. Reread the passage and choose a different answer.',
@@ -116,14 +119,15 @@
     };
 
     article.innerHTML = `
-      <header><h3 id="title-${id}">${escapeHTML(title)}</h3><span class="source">${escapeHTML(skills[question.skill])}</span>
-        ${source ? `<span class="source">${escapeHTML(source)}</span>` : ''}</header>
-      <div class="reading-passage" id="passage-${id}" aria-label="Passage">${formatPassage(question.passage, showClue)}</div>
-      ${canHighlight ? `<div class="review-tools">
-        <button class="evidence-toggle" type="button" data-evidence="${id}" aria-controls="passage-${id}" aria-pressed="${showClue}" aria-label="Highlight evidence for question ${num}">Highlight evidence</button>
-        ${practiceTestReview ? `<button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>` : ''}
-      </div>` : ''}
-      ${practiceTestReview ? `<p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}
+      <header><${headingTag} id="title-${id}">${escapeHTML(title)}</${headingTag}><span class="source">${escapeHTML(skills[question.skill])}</span>
+        ${source ? `<span class="source">${escapeHTML(source)}</span>` : ''}
+        ${archiveReview ? `<a class="read-passage" href="#passage-${question.passageId}">Reread passage</a>` : ''}</header>
+      ${archiveReview ? '' : `<div class="reading-passage" id="passage-${id}" aria-label="Passage">${formatPassage(question.passage, showClue)}</div>`}
+      ${practiceTestReview ? `<div class="review-tools">
+        ${evidenceButton}
+        <button class="evidence-toggle" type="button" data-original="${id}" aria-controls="original-${id}" aria-expanded="${showOriginal}">${showOriginal ? 'Hide' : 'Show'} Marco’s answer</button>
+      </div>
+      <p class="original-choice" id="original-${id}" ${showOriginal ? '' : 'hidden'}><strong>Marco picked on Practice Test 4:</strong> ${letters[original]}. ${escapeHTML(question.choices[original])}</p>` : ''}
       <form data-question="${id}">
         <fieldset class="choices">
           <legend class="prompt">${escapeHTML(question.prompt)}</legend>
@@ -140,9 +144,14 @@
         ${revealed ? '' : `<button class="primary" type="submit" ${ready ? '' : 'disabled'}>${last ? 'Check second try' : 'Check answer'}</button>`}
         <p class="feedback" data-result="${result}" tabindex="-1" role="status">${resultText[result]}</p>
       </form>
+      ${archiveReview && attempts.length ? `<div class="review-tools">${evidenceButton}</div>
+        <div class="review-evidence" id="${evidenceId}" ${showClue ? '' : 'hidden'}>
+          ${question.evidence.map(clue => `<p><mark>${escapeHTML(clue)}</mark></p>`).join('')}
+        </div>` : ''}
       ${revealed ? `<p class="reading-explanation"><strong>Answer ${letters[question.correct]}.</strong> ${escapeHTML(question.explanation)}</p>` : ''}`;
 
     const jump = jumps.get(id);
+    if (!jump) return;
     jump.dataset.result = result;
     const jumpStatus = {pending: 'unanswered', retry: 'second try available', correct: 'correct', missed: 'review explanation'};
     jump.setAttribute('aria-label', `${review ? 'Mock question' : 'Question'} ${num}, ${jumpStatus[result]}`);
@@ -169,24 +178,22 @@
     return `?session=${number}${redo ? '&redo=1' : ''}${demo ? '&demo=1' : ''}`;
   }
 
-  function setupSkillGroups() {
-    const filter = document.querySelector('#review-skill');
-    filter.add(new Option(`All skills (${course.ids.length})`, ''));
-    for (const [key, label] of Object.entries(skills)) {
-      const total = engine.stats(state, key).total;
-      if (!total) continue;
+  function setupPassageGroups() {
+    const filter = document.querySelector('#review-passage');
+    filter.add(new Option(`All passages (${course.passages.length})`, ''));
+    for (const {id, title, mockNumber, passage, ids} of course.passages) {
       const group = document.createElement('section');
       group.className = 'review-group';
-      group.setAttribute('aria-labelledby', `skill-${key}`);
-      group.innerHTML = `<h3 id="skill-${key}">${escapeHTML(label)} · ${total} ${total === 1 ? 'question' : 'questions'}</h3>
-        <p>${escapeHTML(course.tips[key])}</p>`;
+      group.setAttribute('aria-labelledby', `heading-${id}`);
+      group.innerHTML = `<h3 id="heading-${id}">${escapeHTML(title)}</h3>
+        <p class="passage-meta">Mock ${mockNumber} · ${ids.length} ${ids.length === 1 ? 'question' : 'questions'}</p>
+        <div class="reading-passage" id="passage-${id}" tabindex="-1" aria-labelledby="heading-${id}">${formatPassage(passage, false)}</div>`;
       questionList.append(group);
-      groups.set(key, group);
-      filter.add(new Option(`${label} (${total})`, key));
+      groups.set(id, group);
+      filter.add(new Option(`${title} · Mock ${mockNumber}`, id));
     }
     filter.addEventListener('change', () => {
-      for (const [skill, group] of groups) group.hidden = Boolean(filter.value && filter.value !== skill);
-      for (const [id, jump] of jumps) jump.hidden = Boolean(filter.value && filter.value !== course.questions[id].skill);
+      for (const [id, group] of groups) group.hidden = Boolean(filter.value && filter.value !== id);
     });
   }
 
@@ -221,21 +228,23 @@
       otherSession.textContent = `Open Session ${nextSession}`;
     }
 
-    if (archiveReview) setupSkillGroups();
+    if (archiveReview) setupPassageGroups();
     for (const [index, id] of course.ids.entries()) {
       const question = course.questions[id];
       const article = document.createElement('article');
       article.className = 'question';
       article.id = `item-${id}`;
       article.setAttribute('aria-labelledby', `title-${id}`);
-      (groups.get(question.skill) || questionList).append(article);
+      (groups.get(question.passageId) || questionList).append(article);
       articles.set(id, article);
 
-      const jump = document.createElement('a');
-      jump.href = `#item-${id}`;
-      jump.textContent = question.mock || (practiceTestReview ? question.questionNumber : index + 1);
-      jumpList.append(jump);
-      jumps.set(id, jump);
+      if (jumpList) {
+        const jump = document.createElement('a');
+        jump.href = `#item-${id}`;
+        jump.textContent = question.mock || (practiceTestReview ? question.questionNumber : index + 1);
+        jumpList.append(jump);
+        jumps.set(id, jump);
+      }
       renderQuestion(id);
     }
     renderResults();
@@ -274,7 +283,9 @@
     if (show) highlighted.add(id);
     else highlighted.delete(id);
     button.setAttribute('aria-pressed', String(show));
-    document.querySelector(`#passage-${id}`).innerHTML = formatPassage(course.questions[id].passage, show);
+    const target = document.getElementById(button.getAttribute('aria-controls'));
+    if (archiveReview) target.hidden = !show;
+    else target.innerHTML = formatPassage(course.questions[id].passage, show);
   });
 
   questionList.addEventListener('submit', event => {

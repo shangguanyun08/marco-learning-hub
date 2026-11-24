@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#173957">
-  <meta name="description" content="Redo earlier ISEE Middle reading misses, grouped by six reading skills.">
+  <meta name="description" content="Redo earlier ISEE Middle reading misses, grouped by passage.">
   <title>Earlier Reading Review · Marco’s Daily Reading</title>
   <link rel="stylesheet" href="../../marco-daily-test-review/2026-10-04/style.css?v=4">
-  <link rel="stylesheet" href="../reading.css?v=5">
-  <script defer src="./questions.js?v=1"></script>
+  <link rel="stylesheet" href="../reading.css?v=6">
+  <script defer src="./questions.js?v=2"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/engine.js?v=20261028-sync2"></script>
   <script defer src="../../marco-daily-test-review/2026-10-23/sync.js?v=20261028-sync2"></script>
-  <script defer src="../reading.js?v=7"></script>
+  <script defer src="../reading.js?v=8"></script>
 </head>
 <body class="earlier-reading">
   <main class="shell">
@@ -22,10 +22,10 @@
     <header class="hero">
       <p class="eyebrow">ISEE MIDDLE · EARLIER MOCKS</p>
       <h1>Earlier Reading Review</h1>
-      <p>Redo 44 misses from Mocks 0–2 with shortened passages. Pick a skill and practice it across different topics.</p>
+      <p>Work through 38 questions across 16 shortened passages from Mocks 0–2. Read each passage once, then answer its questions.</p>
       <details class="review-coverage">
         <summary>Tests included</summary>
-        <p>Mock 0 · 15 misses. Mock 1 · 12 misses, including one unanswered question. Mock 2 · 17 misses.</p>
+        <p>The original set was 44 misses across 17 passages. Mock 0 had 15 misses, Mock 1 had 12 including one unanswered question, and Mock 2 had 17.</p>
         <p>The review can be extended when the Reading results for Mocks 3–4 and the 15 summer exercises are available.</p>
       </details>
     </header>
@@ -39,26 +39,28 @@
 
     <section class="session-workspace" id="session" aria-labelledby="session-heading">
       <div class="stage-head">
-        <h2 id="session-heading">Practice by skill</h2>
+        <h2 id="session-heading">Practice by passage</h2>
         <p>First answers count toward your score. Each miss gets one retry.</p>
       </div>
       <section class="score-panel" aria-labelledby="score-title">
         <div class="score-heading">
           <h3 id="score-title">First-try results</h3>
-          <p id="overall-score" aria-live="polite">0 of 44 answered</p>
+          <p id="overall-score" aria-live="polite">0 of 38 answered</p>
         </div>
-        <div id="skill-scores" class="skill-scores"></div>
+        <details class="review-score-breakdown">
+          <summary>Scores by skill</summary>
+          <div id="skill-scores" class="skill-scores"></div>
+        </details>
         <p id="save-note" class="save-note" role="status">Loading saved progress…</p>
       </section>
 
       <div class="review-filter">
-        <label for="review-skill">Show questions by skill</label>
-        <select id="review-skill"></select>
+        <label for="review-passage">Choose a passage</label>
+        <select id="review-passage"></select>
       </div>
-      <nav id="question-jump" class="jump" aria-label="Jump to a review question"></nav>
       <div id="questions"></div>
       <noscript><p>Turn on JavaScript to answer questions and save your scores.</p></noscript>
-      <p class="end-links"><a href="#score-title">View your scores</a> <a href="../">Back to Daily Reading</a></p>
+      <p class="end-links"><a href="#review-passage">Choose a passage</a> <a href="../">Back to Daily Reading</a></p>
     </section>
   </main>
 </body>

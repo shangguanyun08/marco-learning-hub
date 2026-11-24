@@ -50,9 +50,9 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
 
 .question { scroll-margin-top: 16px; margin: 14px 0 22px; padding: 20px 24px; }
 .question header { justify-content: flex-start; flex-wrap: wrap; gap: 2px 14px; }
-.question header h3 { font-size: 1.18rem; }
+.question header :is(h3, h4) { margin: 0; font-size: 1.18rem; }
 .question .source { font-size: .875rem; }
-.question .reading-passage { margin: 14px 0; padding: 12px 16px; border-left: 4px solid #9eb9d5; border-radius: 0 8px 8px 0; background: #f0f5fa; }
+.reading-passage { margin: 14px 0; padding: 12px 16px; border-left: 4px solid #9eb9d5; border-radius: 0 8px 8px 0; background: #f0f5fa; }
 .reading-passage p { margin: 0; }
 .reading-passage p + p { margin-top: 7px; }
 .evidence-toggle { min-height: 40px; padding: 6px 12px; border: 1px solid #a17d25; border-radius: 8px; background: #fff; color: var(--ink); font: inherit; font-weight: 650; cursor: pointer; }
@@ -81,7 +81,7 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
   .reading-sessions .session-card[aria-current=page] { padding: 10px 11px; }
   .signal-guide { padding: 13px 14px; }
   .question { padding: 15px 14px; }
-  .question .reading-passage { padding: 10px 12px; }
+  .reading-passage { padding: 10px 12px; }
 }
 
 @media (max-width: 360px) {
@@ -104,6 +104,15 @@ mark { padding: 0 .15em; border-radius: 2px; background: #ffeba0; color: #241a00
   background: var(--paper);
   font: inherit;
 }
-.review-group > h3 { font-size: clamp(1.25rem, 4vw, 1.7rem); margin: 22px 0 4px; }
-.review-group > p { margin: 0 0 12px; }
+.review-score-breakdown summary { color: var(--blue); cursor: pointer; font-weight: 650; }
+.review-score-breakdown .skill-scores { margin-top: 8px; }
+.review-group { margin-top: 24px; }
+.review-group + .review-group { padding-top: 16px; border-top: 1px solid var(--line); }
+.review-group > h3 { font-size: clamp(1.25rem, 4vw, 1.7rem); margin: 0 0 4px; }
+.passage-meta { margin: 0; color: var(--muted); font-size: .875rem; }
+.review-group > .reading-passage { scroll-margin-top: 16px; }
+.read-passage { font-size: .875rem; }
+.earlier-reading .review-tools { margin-top: 10px; }
+.review-evidence { margin-top: 8px; }
+.review-evidence p { margin: 4px 0; }
 .earlier-reading [hidden] { display: none; }
