@@ -22,8 +22,8 @@ function open(t, directory, records = {}, options = {}) {
 }
 
 test('November 21 cards use the saved first-try scores on every page, including inactive sessions', async t => {
-  const directories = ['..', '.', '../session-2', '../session-3', '../session-4'];
-  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4'];
+  const directories = ['..', '.', '../session-2', '../session-3', '../session-4', '../session-5'];
+  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4', 'nov21-5'];
   const records = new Map();
   for (const [i, directory] of directories.entries()) {
     const w = open(t, directory);
@@ -68,6 +68,7 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.ok(!card('nov21-3').classList.contains('is-complete'));
     assert.match(card('nov21-3').textContent, /Not started · 0\/20 answered/);
     assert.match(card('nov21-4').textContent, /Not started · 0\/10 answered/);
+    assert.match(card('nov21-5').textContent, /Not started · 0\/6 answered/);
     assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
   }
 });
@@ -117,6 +118,52 @@ test('Session 4 lists both perfect two-question skills, plus slope totals before
   assert.ok(perfect.includes('Compare multiplication and division by fractions (2/2)'));
   assert.ok(perfect.includes('Write a fee rule with an included first unit (2/2)'));
   assert.ok(!perfect.includes('Find signed slope'));
+});
+
+test('Session 5 has four fresh slope questions and two fraction questions with first-try scores in Wrong only', t => {
+  const previous = open(t, '../session-4');
+  const prior = previous.MarcoMA5Practice;
+  const oldState = previous.MarcoQR4Engine.empty();
+  previous.MarcoQR4Engine.submit(oldState, prior.ids[0], prior.questions[prior.ids[0]].correct);
+  const priorKey = prior.appId + ':demo';
+  const saved = JSON.stringify(oldState);
+
+  const w = open(t, '../session-5', {[priorKey]: saved});
+  const d = w.document;
+  const data = w.MarcoMA5Practice;
+  assert.equal(data.appId, 'marco-math-nov21-session5-v1');
+  assert.equal(data.ids.length, 6);
+  assert.deepEqual(Object.keys(data.skills), ['slope', 'fractionScale']);
+  const earlierPrompts = new Set(Object.values(prior.questions).map(q => q.prompt));
+  assert.deepEqual(Object.keys(data.skills).map(skill => data.ids.filter(id => data.questions[id].skill === skill).length), [4, 2]);
+  for (const q of Object.values(data.questions)) {
+    assert.ok(!earlierPrompts.has(q.prompt));
+    assert.equal(new Set(q.choices).size, 4);
+  }
+  assert.deepEqual([...data.ids.map(id => data.questions[id].choices[data.questions[id].correct])], [
+    '3/5', 'n × 1/2', '−5/4', 'n × 5/4', '−1', '4'
+  ]);
+  assert.ok(d.querySelector('.math-fraction'));
+  assert.match(d.querySelector('.scorebar').textContent, /0\/6 first answers recorded/);
+
+  const [slope, fraction] = data.ids;
+  for (const id of [slope, fraction]) submit(w, id, (data.questions[id].correct + 1) % 4);
+  d.querySelector('[data-practice-filter=wrong]').click();
+  assert.equal(d.querySelectorAll('.question').length, 2);
+  assert.equal(d.querySelectorAll('.answer-reveal').length, 0);
+  submit(w, slope, data.questions[slope].correct);
+  assert.equal(d.querySelectorAll('.answer-reveal').length, 1);
+  assert.equal(d.querySelector('#skill-results'), null);
+
+  d.querySelector('[data-practice-filter=all]').click();
+  for (const id of data.ids.slice(2)) submit(w, id, data.questions[id].correct);
+  d.querySelector('[data-practice-filter=wrong]').click();
+  const summary = d.querySelector('.wrong-skill-summary');
+  assert.match(summary.querySelector('[data-skill-summary=slope]').textContent, /3 correct · 1 wrong · 4 total/);
+  assert.match(summary.querySelector('[data-skill-summary=fractionScale]').textContent, /1 correct · 1 wrong · 2 total/);
+  assert.match(d.querySelector('#skill-results').textContent, /4\/6 correct first try[\s\S]*1 corrected on a second try/);
+  assert.match(d.querySelector('#practice-tab').textContent, /4\/6 \(67%\) first try/);
+  assert.equal(w.localStorage.getItem(priorKey), saved);
 });
 
 test('the Review shows only the five missed items and preserves old saved answers', t => {
