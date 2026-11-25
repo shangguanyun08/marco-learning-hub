@@ -48,6 +48,19 @@
         'slope-1': 1, 'scale-1': 2, 'slope-2': 3, 'scale-2': 0, 'slope-3': 1, 'slope-4': 3
       }
     },
+    'nov21-6': {
+      appId: 'marco-math-nov21-session6-v1', session: 'official-middle-nov21-session6-v1', reportAfter: 6,
+      keys: {
+        'slope-1': 2, 'scale-1': 0, 'slope-2': 1, 'scale-2': 3, 'slope-3': 2, 'slope-4': 0
+      }
+    },
+    'nov21-7': {
+      appId: 'marco-math-nov21-session7-v1', session: 'official-middle-nov21-session7-v1', reportAfter: 8,
+      keys: {
+        'redo-qr18': 3, 'redo-qr20': 3, 'overlap-1': 1, 'volume-1': 2,
+        'overlap-2': 2, 'volume-2': 0, 'overlap-3': 0, 'volume-3': 1
+      }
+    },
   };
 
   function formatStatus(stats) {

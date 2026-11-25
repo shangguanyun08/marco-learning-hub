@@ -22,8 +22,8 @@ function open(t, directory, records = {}, options = {}) {
 }
 
 test('November 21 cards use the saved first-try scores on every page, including inactive sessions', async t => {
-  const directories = ['..', '.', '../session-2', '../session-3', '../session-4', '../session-5'];
-  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4', 'nov21-5'];
+  const directories = ['..', '.', '../session-2', '../session-3', '../session-4', '../session-5', '../session-6', '../session-7'];
+  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4', 'nov21-5', 'nov21-6', 'nov21-7'];
   const records = new Map();
   for (const [i, directory] of directories.entries()) {
     const w = open(t, directory);
@@ -69,6 +69,8 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.match(card('nov21-3').textContent, /Not started · 0\/20 answered/);
     assert.match(card('nov21-4').textContent, /Not started · 0\/10 answered/);
     assert.match(card('nov21-5').textContent, /Not started · 0\/6 answered/);
+    assert.match(card('nov21-6').textContent, /Not started · 0\/6 answered/);
+    assert.match(card('nov21-7').textContent, /Not started · 0\/8 answered/);
     assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
   }
 });
@@ -165,6 +167,47 @@ test('Session 5 has four fresh slope questions and two fraction questions with f
   assert.match(d.querySelector('#practice-tab').textContent, /4\/6 \(67%\) first try/);
   assert.equal(w.localStorage.getItem(priorKey), saved);
 });
+
+for (const [number, counts, answerKey] of [
+  [6, {slope: 4, fractionScale: 2}, ['−5/6', 'p × 7/6', '(−2, 0) and (7, 6)', 'n × 7/9', '4', '−18']],
+  [7, {overlap: 4, cubeVolume: 4}, ['16', '625 in³', '5', '81 cm³', '23', '2 in', '8', '27/8']]
+]) {
+  test('Session ' + number + ' checks the intended skills and keeps first-try totals after retry', t => {
+    const w = open(t, '../session-' + number);
+    const d = w.document;
+    const data = w.MarcoMA5Practice;
+    assert.equal(data.appId, 'marco-math-nov21-session' + number + '-v1');
+    assert.equal(data.ids.length, answerKey.length);
+    assert.deepEqual(Object.keys(data.skills), Object.keys(counts));
+    for (const [skill, total] of Object.entries(counts)) {
+      assert.equal(data.ids.filter(id => data.questions[id].skill === skill).length, total);
+    }
+    assert.deepEqual([...data.ids.map(id => data.questions[id].choices[data.questions[id].correct])], answerKey);
+    assert.equal(d.querySelectorAll('.answer-reveal').length, 0);
+    if (number === 7) {
+      assert.deepEqual([...data.ids.slice(0, 2)], ['redo-qr18', 'redo-qr20']);
+      assert.match(d.querySelector('#q-redo-qr18 .source').textContent, /Practice Test 6 QR · Q18 redo/);
+      assert.match(d.querySelector('#q-redo-qr20 .source').textContent, /Practice Test 6 QR · Q20 redo/);
+      assert.match(d.querySelector('#q-redo-qr20 .cube-block svg').getAttribute('aria-label'), /5 cubes across, 2 cubes deep, and 4 cubes high/);
+    }
+    const [first, second] = data.ids;
+    for (const id of [first, second]) submit(w, id, (data.questions[id].correct + 1) % 4);
+    d.querySelector('[data-practice-filter=wrong]').click();
+    assert.equal(d.querySelectorAll('.question').length, 2);
+    assert.equal(d.querySelectorAll('.answer-reveal').length, 0);
+    submit(w, first, data.questions[first].correct);
+    assert.equal(d.querySelectorAll('.answer-reveal').length, 1);
+    d.querySelector('[data-practice-filter=all]').click();
+    for (const id of data.ids.slice(2)) submit(w, id, data.questions[id].correct);
+    d.querySelector('[data-practice-filter=wrong]').click();
+    assert.equal(d.querySelectorAll('.question').length, 2);
+    for (const [skill, total] of Object.entries(counts)) {
+      const summary = d.querySelector('[data-skill-summary=' + skill + '] p').textContent;
+      assert.equal(summary.trim(), `${total - 1} correct · 1 wrong · ${total} total`);
+    }
+    assert.match(d.querySelector('#skill-results').textContent, /1 corrected on a second try/);
+  });
+}
 
 test('the Review shows only the five missed items and preserves old saved answers', t => {
   const review = open(t, '..');

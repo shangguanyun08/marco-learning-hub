@@ -109,7 +109,7 @@
     ids:Object.keys(questions).filter(id => questions[id].source),
     showSkillReport:false,
     downloadName:'marco-2026-11-21-qr-ma-review.json', formatMath, questionVisual,
-    practiceSet(number, questions) {
+    practiceSet(number, questions, skillNames = skills) {
       const coveredSkills = new Set(Object.values(questions).map(question => question.skill));
       return {
         appId: 'marco-math-nov21-session' + number + '-v1',
@@ -117,7 +117,7 @@
         title: 'November 21 · Session ' + number + ' · Five Skills',
         sessionNumber: number,
         groupSize: 5,
-        skills: Object.fromEntries([...coveredSkills].map(key => [key, skills[key]])),
+        skills: Object.fromEntries([...coveredSkills].map(key => [key, skillNames[key]])),
         nextSteps: data.nextSteps,
         formatMath,
         questionVisual,
