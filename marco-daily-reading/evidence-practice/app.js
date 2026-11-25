@@ -12,7 +12,7 @@
   run=state.articles.evidence[0];index=Math.min(run.position||0,D.questions.length-1);
   const current=()=>D.questions[index],attempts=q=>run.answers[q.id]||[];
   const paragraphs=q=>D.passages[q.passage].paragraphs;
-  function draft(q=current()){return run.drafts[q.id]??={choice:null,marks:[],updatedAt:new Date().toISOString()};}
+  function draft(q=current()){return run.drafts[q.id]??={choice:null,marks:[],eliminated:[],updatedAt:new Date().toISOString()};}
   function status(text){$('#save-status').textContent=demo?'Preview · no records saved':!storageOK?'Device storage unavailable · export records':text;$('#save-status').dataset.offline=String(!storageOK||text.startsWith('Not synced'));}
   function save(){
     if(demo){status('Preview');return;}
@@ -44,12 +44,12 @@
     }).join('')}</p>`).join('');
   }
   function highlightList(q,selected,editable){const m=C.marks(paragraphs(q),selected);return m.length?`<ul class="highlight-list"><li><q>${esc(m.map(r=>r.quote.trim()).join(' '))}</q>${editable?'<button type="button" data-remove aria-label="Remove highlight">Remove</button>':''}</li></ul>`:'<p class="empty">Highlight your supporting evidence in the passage.</p>';}
-  function canCheck(){const q=current(),d=draft();return ready&&!C.resolved(attempts(q))&&Number.isInteger(d.choice)&&!!C.highlight(paragraphs(q),d.marks);}
+  function canCheck(){const q=current(),d=draft();return ready&&!C.resolved(attempts(q))&&Number.isInteger(d.choice)&&!C.eliminations(d.eliminated).includes(d.choice)&&!!C.highlight(paragraphs(q),d.marks);}
   function setCheck(){const b=$('#check');if(b)b.disabled=!canCheck();}
   function comparison(q){
     const a=attempts(q)[0],model=C.suggestions(q,paragraphs(q));
     return `<section class="compare" aria-label="Evidence comparison"><h3>Compare the proof</h3><p class="proof-note">Does your highlight prove your answer? Compare it with the suggested evidence.</p>
-      <div class="compare-grid"><div class="compare-box"><h3>Your highlight</h3><section><p><strong>Your answer: ${'ABCD'[a.choice]} · ${a.answerOK?'correct':'incorrect'}</strong></p><p>${esc(q.choices[a.choice])}</p>${highlightList(q,a.marks,false)}<p class="meta"><time datetime="${esc(a.checkedAt)}">${esc(new Date(a.checkedAt).toLocaleString())}</time></p></section></div>
+      <div class="compare-grid"><div class="compare-box"><h3>Your highlight</h3><section><p><strong>Your answer: ${'ABCD'[a.choice]} · ${a.answerOK?'correct':'incorrect'}</strong></p><p>${esc(q.choices[a.choice])}</p>${C.eliminations(a.eliminated).length?`<p class="meta">Eliminated: ${C.eliminations(a.eliminated).map(i=>'ABCD'[i]).join(', ')}</p>`:''}${highlightList(q,a.marks,false)}<p class="meta"><time datetime="${esc(a.checkedAt)}">${esc(new Date(a.checkedAt).toLocaleString())}</time></p></section></div>
       <div class="compare-box"><h3>Suggested evidence</h3><p><strong>Answer ${'ABCD'[q.answer]} · ${esc(q.choices[q.answer])}</strong></p>${model.map(m=>`<blockquote>${esc(m.quote)}</blockquote>`).join('')}<p>${esc(q.explanation)}</p><p><strong>Watch for:</strong> ${esc(q.trap)}</p></div></div>
       <details><summary>See the highlights in the full passage</summary><div class="compare-grid"><div><h3>Your highlight</h3><div class="full-proof">${passageHTML(q,a.marks,false)}</div></div><div><h3>Suggested support</h3><div class="full-proof">${passageHTML(q,model,false)}</div></div></div></details>
       <p class="meta">Skill match: ${esc(q.source)}</p></section>`;
@@ -58,15 +58,23 @@
     updateOverview();
     if(onlyWrong&&!isWrong(current())){$('#workspace').innerHTML='<div class="panel">Choose a question above to review its evidence.</div>';return;}
     const q=current(),d=draft(),list=attempts(q),locked=C.resolved(list),first=list[0],marks=locked?first.marks:d.marks;
+    const excluded=C.eliminations(locked?first.eliminated:d.eliminated);
     $('#workspace').innerHTML=`<div class="workspace"><article class="panel"><p class="eyebrow">READ THE PASSAGE</p><h2>${esc(D.passages[q.passage].title)}</h2><p class="meta">${locked?'Your submitted highlight is shown.':'Tap one sentence, or select a passage excerpt and press Highlight selection. A new highlight replaces your previous selection.'}</p><div id="passage" class="passage">${passageHTML(q,marks,!locked)}</div>${!locked?'<button id="selection-action" type="button" class="primary" hidden>Highlight selection</button>':''}</article>
       <section class="panel" aria-label="Answer workspace"><p class="eyebrow">QUESTION ${index+1} OF ${D.questions.length} · ${esc(q.skill.toUpperCase())}</p><div class="prompt" id="prompt">${esc(q.prompt)}</div>
       ${locked?`<div class="feedback${first.answerOK?' good':''}" role="status"><strong>${esc(outcome(q))}.</strong><p>Your answer and highlight are saved. Compare the evidence below.</p></div>`:''}
-      <form id="answer-form"><fieldset class="choices"><legend>${locked?'Your submitted answer':'Choose your answer'}</legend>${q.choices.map((choice,i)=>`<label class="choice"><input type="radio" name="answer" value="${i}" ${locked?first.choice===i?'checked':'':d.choice===i?'checked':''} ${locked?'disabled':''}><strong>${'ABCD'[i]}.</strong><span>${esc(choice)}</span></label>`).join('')}</fieldset>
+      <form id="answer-form"><fieldset class="choices"><legend>${locked?'Your submitted answer':'Choose your answer'}</legend>
+      ${!locked?`<p class="meta" id="elimination-note" role="status">Optional: eliminate up to two choices. ${excluded.length}/2 eliminated.${excluded.length===2?' Compare the remaining two, or Undo to change your eliminations.':''}</p>`:''}
+      ${q.choices.map((choice,i)=>`<div class="choice-row${excluded.includes(i)?' is-eliminated':''}"><label class="choice"><input type="radio" name="answer" value="${i}" ${locked?first.choice===i?'checked':'':d.choice===i?'checked':''} ${locked||excluded.includes(i)?'disabled':''}><strong>${'ABCD'[i]}.</strong><span class="choice-text">${esc(choice)}</span></label>${!locked?`<button class="eliminate-button" type="button" data-eliminate="${i}" aria-label="${excluded.includes(i)?'Restore':'Eliminate'} choice ${'ABCD'[i]}" aria-pressed="${excluded.includes(i)}" aria-describedby="elimination-note" ${excluded.length===2&&!excluded.includes(i)?'disabled':''}>${excluded.includes(i)?'Undo':'Eliminate'}</button>`:excluded.includes(i)?'<span class="eliminated-label">Eliminated</span>':''}</div>`).join('')}</fieldset>
       ${!locked?`<p class="key-label">Your one highlight</p><div id="highlights">${highlightList(q,d.marks,true)}</div><div class="tools"><button class="primary" id="check" type="submit" ${canCheck()?'':'disabled'}>Check answer</button><button id="clear" type="button">Clear highlight</button></div><p class="meta">One try. Choose an answer and highlight one piece of supporting evidence before checking.</p>`:''}</form>
       <div class="tools"><button id="previous" type="button" ${index===0?'disabled':''}>Previous question</button><button id="next" type="button">${index===D.questions.length-1?'Review session':'Next question'}</button></div></section></div>
       ${locked?comparison(q):''}`;
     bindPassage();
     $('#answer-form').onchange=e=>{if(e.target.name==='answer'){draft().choice=Number(e.target.value);saveDraft();setCheck();}};
+    $('#answer-form').querySelectorAll('[data-eliminate]').forEach(b=>b.onclick=()=>{
+      const choice=Number(b.dataset.eliminate);
+      if(!C.toggleElimination(q,run,choice))return;
+      saveDraft();render();$('#answer-form').querySelector(`[data-eliminate="${choice}"]`)?.focus({preventScroll:true});
+    });
     $('#answer-form').onsubmit=e=>{e.preventDefault();if(!canCheck())return;const checked=C.check(q,paragraphs(q),run,new Date().toISOString());if(!checked)return;save();render();};
     if($('#clear'))$('#clear').onclick=()=>{draft().marks=[];saveDraft();refreshMarks();};
     if($('#selection-action'))$('#selection-action').onclick=()=>{const selected=C.highlight(paragraphs(q),pending);if(!selected)return;draft().marks=selected.ranges;window.getSelection()?.removeAllRanges();pending=[];saveDraft();refreshMarks();};

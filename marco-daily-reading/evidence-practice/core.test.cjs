@@ -22,6 +22,23 @@ test('an incorrect answer locks immediately and preserves its original highlight
 test('a correct answer also locks after one check',()=>{
  const a=fresh();a.drafts[q.id].choice=q.answer;core.check(q,paragraphs,a,'2026-11-25T01:00:00Z');assert.equal(core.check(q,paragraphs,a,'2026-11-25T01:01:00Z'),null);
 });
+test('optional elimination allows two choices, undo, and clears an eliminated selection',()=>{
+ const r=fresh();assert.ok(core.toggleElimination(q,r,1));assert.equal(r.drafts[q.id].choice,null);
+ assert.ok(core.toggleElimination(q,r,2));assert.deepEqual(r.drafts[q.id].eliminated,[1,2]);
+ assert.equal(core.toggleElimination(q,r,3),false);assert.deepEqual(r.drafts[q.id].eliminated,[1,2]);
+ assert.ok(core.toggleElimination(q,r,1));assert.deepEqual(r.drafts[q.id].eliminated,[2]);
+ assert.ok(core.toggleElimination(q,r,3));assert.deepEqual(r.drafts[q.id].eliminated,[2,3]);
+ r.drafts[q.id].choice=2;assert.equal(core.check(q,paragraphs,r,'2026-11-25T01:00:00Z'),null);
+ r.drafts[q.id].choice=q.answer;const a=core.check(q,paragraphs,r,'2026-11-25T01:00:00Z');
+ assert.deepEqual(a.eliminated,[2,3]);assert.equal(a.answerOK,true);
+ assert.equal(core.toggleElimination(q,r,2),false);assert.deepEqual(a.eliminated,[2,3]);
+});
+test('saved eliminations survive online merging without changing answers or highlights',()=>{
+ const r=fresh();r.drafts[q.id].eliminated=[2,3];const a=core.check(q,paragraphs,r,'2026-11-25T01:00:00Z');
+ const saved=sync.merge({version:1,articles:{evidence:[r]}},null);
+ assert.deepEqual(saved.articles.evidence[0].answers[q.id][0],a);
+ assert.equal(a.choice,1);assert.equal(a.highlight.quote,paragraphs[0].slice(0,10));
+});
 test('one continuous highlight can cross a paragraph boundary',()=>{
  const r=fresh();r.drafts[q.id].marks=[{p:0,start:paragraphs[0].length-10,end:paragraphs[0].length},{p:1,start:0,end:20}];
  const a=core.check(q,paragraphs,r,'2026-11-25T01:00:00Z');assert.equal(a.highlight.ranges.length,2);assert.equal(a.highlight.quote,paragraphs[0].slice(-10).trim()+' '+paragraphs[1].slice(0,20).trim());

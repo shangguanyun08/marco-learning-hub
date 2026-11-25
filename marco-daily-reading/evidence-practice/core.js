@@ -19,17 +19,30 @@
     return {ranges,quote:ranges.map(m=>m.quote.trim()).join(' ')};
   }
   const resolved=list=>!!list?.length;
+  const eliminations=input=>Array.isArray(input)?[...new Set(input)].filter(i=>Number.isInteger(i)&&i>=0&&i<4).slice(0,2):[];
+  function toggleElimination(q,run,choice){
+    const d=run.drafts[q.id];
+    if(!d||resolved(run.answers[q.id])||!Number.isInteger(choice)||choice<0||choice>3)return false;
+    const excluded=eliminations(d.eliminated);
+    if(excluded.includes(choice))d.eliminated=excluded.filter(i=>i!==choice);
+    else {
+      if(excluded.length===2)return false;
+      d.eliminated=[...excluded,choice];
+      if(d.choice===choice)d.choice=null;
+    }
+    return true;
+  }
   function check(q,paragraphs,run,at){
     const list=run.answers[q.id]||[],d=run.drafts[q.id];
-    if(!d||resolved(list)||!Number.isInteger(d.choice)||d.choice<0||d.choice>3||list.some(a=>a.choice===d.choice))return null;
+    if(!d||resolved(list)||!Number.isInteger(d.choice)||d.choice<0||d.choice>3||eliminations(d.eliminated).includes(d.choice))return null;
     const selected=highlight(paragraphs,d.marks);
     if(!selected)return null;
-    const answer={id:root.crypto?.randomUUID?.()||at,choice:d.choice,answerOK:d.choice===q.answer,checkedAt:at,marks:copy(selected.ranges),highlight:copy(selected)};
+    const answer={id:root.crypto?.randomUUID?.()||at,choice:d.choice,answerOK:d.choice===q.answer,checkedAt:at,marks:copy(selected.ranges),highlight:copy(selected),eliminated:eliminations(d.eliminated)};
     (run.answers[q.id]??=[]).push(answer);
     run.drafts[q.id]=copy({...d,choice:null,updatedAt:at});run.updatedAt=at;
     return answer;
   }
   function suggestions(q,paragraphs){return q.evidence.map(quote=>{const p=paragraphs.findIndex(t=>t.includes(quote));return {p,start:paragraphs[p]?.indexOf(quote),end:paragraphs[p]?.indexOf(quote)+quote.length,quote};});}
-  const api={copy,marks,highlight,resolved,check,suggestions};
+  const api={copy,marks,highlight,resolved,eliminations,toggleElimination,check,suggestions};
   if(typeof module!=='undefined')module.exports=api;else root.EvidenceCore=api;
 })(typeof window==='undefined'?globalThis:window);
