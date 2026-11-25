@@ -92,8 +92,27 @@
     // Another open tab may have cached writing since this tab last rendered.
     let other;
     try { other = JSON.parse(read(CACHE)); } catch {}
-    for (const [id, row] of Object.entries(other?.drafts || {})) {
-      if (row.text && row.text !== state.drafts[id]?.text) rememberDraft(Number(id), row);
+    const cachedDrafts = { ...state.drafts };
+    for (const [id, saved] of Object.entries(other?.drafts || {})) {
+      const local = state.drafts[id];
+      if (!local) {
+        cachedDrafts[id] = saved;
+        continue;
+      }
+      if (saved.text === local.text) {
+        if (saved.version > local.version) cachedDrafts[id] = saved;
+        continue;
+      }
+      rememberDraft(Number(id), saved);
+      const savedEdit = saved.edited_at || saved.updated_at || '';
+      const localEdit = local.edited_at || local.updated_at || '';
+      const keepSaved = local.dirty
+        ? saved.dirty && savedEdit > localEdit
+        : saved.dirty || saved.version > local.version;
+      if (keepSaved) {
+        if (local.dirty || local.version > 0) rememberDraft(Number(id), local);
+        cachedDrafts[id] = saved;
+      }
     }
     for (const row of other?.draftHistory || []) rememberDraft(row.sentence_id, row, row.archived);
     for (const row of other?.revisions || []) if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row);
@@ -107,10 +126,15 @@
       counts.set(row.sentence_id, count);
       return count <= 20;
     });
-    memoryOnly = !write(CACHE, JSON.stringify(state));
+    memoryOnly = !write(CACHE, JSON.stringify({ ...state, drafts: cachedDrafts }));
   }
   function draft(id) { return state.drafts[id] ||= { text: '', version: 0, dirty: false }; }
-  function editorText(id) { const row = draft(id), checked = latest(id); return row.dirty || !checked || row.updated_at > checked.checked_at ? row.text : checked.text; }
+  function editorText(id) {
+    const row = draft(id);
+    // The check date records when feedback arrived, not when Harry wrote the text.
+    if (row.dirty || row.version > 0 || row.text) return row.text;
+    return latest(id)?.text || '';
+  }
   function captureEditor() {
     if (displayedPart === null || $('revision').value === displayedText) return;
     const row = draft(displayedPart);
@@ -126,6 +150,7 @@
     const local = draft(remote.sentence_id);
     if (remote.version < local.version) return;
     if (local.text === remote.text) {
+      if (saving && local.dirty && remote.version === local.version) return;
       local.version = remote.version;
       local.updated_at = remote.updated_at;
       local.dirty = false;
@@ -311,7 +336,8 @@
     $('part-number').textContent = isPicture ? `${config.partNames[selected - 1].toUpperCase()} · PARAGRAPH ${selected} OF ${parts.length}` : `SECTION ${selected} OF ${parts.length}`;
     $('original').textContent = parts[selected - 1];
     if (!composing) {
-      $('revision').value = editorText(selected);
+      const text = editorText(selected);
+      if ($('revision').value !== text) $('revision').value = text;
       displayedPart = selected;
       displayedText = $('revision').value;
     }
@@ -365,7 +391,11 @@
           row.dirty = row.text !== text;
           cache();
         } catch (failure) {
-          if (failure.status === 409) { conflicts.add(id); error(failure.message); await loadWork(); }
+          if (failure.status === 409) {
+            conflicts.add(id);
+            error(failure.message);
+            try { await loadWork(); } catch (refreshFailure) { error(refreshFailure.message); }
+          }
           else { failed = true; error(failure.message); break; }
         }
       }
@@ -405,7 +435,7 @@
       draft(id).version = remote?.version || 0; draft(id).dirty = true; conflicts.delete(id); cache(); await saveDrafts();
     } catch (failure) { error(failure.message); }
   });
-  $('history-list').addEventListener('click', async event => {
+  $('history-list').addEventListener('click', event => {
     const button = event.target.closest('[data-restore-check], [data-restore-draft]');
     if (!button || busy || composing) return;
     const saved = button.dataset.restoreCheck ? state.revisions.find(row => row.id === button.dataset.restoreCheck) : state.draftHistory.find(row => row.recovery_id === button.dataset.restoreDraft);
@@ -413,22 +443,13 @@
     captureEditor();
     const id = selected, row = draft(id), text = saved.text;
     rememberDraft(id, { ...row, text: editorText(id) });
-    busy = true; render();
-    try {
-      if (connected) {
-        const work = await request('work'), remote = work.drafts.find(item => item.sentence_id === id);
-        if (remote) rememberDraft(id, remote);
-        row.version = remote?.version || 0;
-      }
-      row.text = text;
-      row.dirty = true;
-      row.edited_at = new Date().toISOString();
-      delete row.pending;
-      conflicts.delete(id);
-      feedbackSelection = null;
-      cache(); error();
-    } catch (failure) { error(failure.message); }
-    finally { busy = false; render(); saveDrafts(); }
+    // A restore uses the version already loaded. A newer online draft triggers conflict recovery.
+    row.text = text;
+    row.dirty = true;
+    row.edited_at = new Date().toISOString();
+    delete row.pending;
+    feedbackSelection = null;
+    cache(); error(); render(); void saveDrafts();
   });
   async function check(kind) {
     if (isPicture || busy || composing) return;
@@ -444,7 +465,6 @@
     try {
       const result = await request('check', { sentenceId: selected, ...row.pending });
       addRevision(result.revision); feedbackSelection = result.revision;
-      if (kind === 'revision') { row.text = result.revision.text; row.dirty = true; }
       delete row.pending; cache();
     } catch (failure) { error(failure.message); }
     finally { busy = false; render(); saveDrafts(); if (kind === 'guide' && !$('hint').hidden) $('hint').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); if (isPicture && kind === 'revision') { $('revision').scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
@@ -672,7 +692,11 @@
   $('revision').addEventListener('compositionend', () => { composing = false; captureEditor(); render(); clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900); });
   function keepWriting() { captureEditor(); cache(); void saveDrafts(); }
   window.addEventListener('pagehide', keepWriting);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) keepWriting(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) keepWriting();
+    else if (connected && loaded) void saveDrafts();
+    else syncWriting();
+  });
   window.addEventListener('storage', event => {
     if (event.key !== CACHE || !event.newValue) return;
     let incoming;
@@ -681,8 +705,11 @@
     for (const [id, remote] of Object.entries(incoming.drafts || {})) {
       const local = draft(Number(id));
       rememberDraft(Number(id), remote);
-      if (remote.dirty && remote.text !== local.text) conflicts.add(Number(id));
-      else mergeDraft({ ...remote, sentence_id: Number(id) });
+      if (remote.dirty) {
+        if (remote.text !== local.text) conflicts.add(Number(id));
+      } else {
+        mergeDraft({ ...remote, sentence_id: Number(id) });
+      }
     }
     for (const row of incoming.draftHistory || []) rememberDraft(row.sentence_id, row, row.archived);
     for (const row of incoming.revisions || []) if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row);
@@ -690,6 +717,9 @@
   });
   importEarlier();
   render();
-  if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); updateConnectionButton(); });
-  window.addEventListener('online', () => { if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => error(failure.message)); });
+  function syncWriting() {
+    if (read(SESSION)) loadWork().then(saveDrafts).catch(failure => { error(failure.message); updateConnectionButton(); });
+  }
+  syncWriting();
+  window.addEventListener('online', syncWriting);
 })();

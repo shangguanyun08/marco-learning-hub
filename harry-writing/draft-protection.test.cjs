@@ -40,7 +40,7 @@ function boot({ local, remote = savedDraft('Earlier writing.'), revisions = [], 
     throw Error('Unexpected action ' + action);
   };
   for (const file of ['activity.js', 'rewrite-diff.js', 'inline-feedback.js', 'app.js']) w.eval(fs.readFileSync(path.join(__dirname, file), 'utf8'));
-  return { w, d: w.document, reads, saves, calls, input: w.document.querySelector('#revision'), cache: () => JSON.parse(w.localStorage.getItem(CACHE)), close: () => w.close() };
+  return { w, d: w.document, reads, saves, calls, advanceRemote: text => { remote = savedDraft(text, remote.version + 1); }, input: w.document.querySelector('#revision'), cache: () => JSON.parse(w.localStorage.getItem(CACHE)), close: () => w.close() };
 }
 
 test('an older online version cannot replace a newer clean iPad draft', async () => {
@@ -115,5 +115,71 @@ test('another tab’s unsaved copy is recoverable without replacing the active e
     assert.equal(t.input.value, 'My current iPad writing.');
     assert.ok(t.cache().draftHistory.some(row => row.text === 'Other tab writing.'));
     assert.equal(t.calls.filter(row => row.action === 'draft').length, 0);
+  } finally { t.close(); }
+});
+
+const checkedAfterDraft = { id: 'late-check', sentence_id: 1, kind: 'revision', text: 'The old text sent for checking.', checked_at: '2026-11-11T20:01:00.000Z', feedback: { complete: true, clear: true, correct: true, strength: 'Clear.', nextStep: 'Read it.' } };
+
+test('the current saved draft wins over an older text whose AI check finished later', async () => {
+  const remote = savedDraft('My newer paragraph.', 2);
+  const t = boot({ remote, revisions: [checkedAfterDraft] });
+  try {
+    await settle();
+    assert.equal(t.input.value, remote.text);
+    assert.match(t.d.querySelector('#history-list').textContent, /The old text sent for checking/);
+    assert.equal(t.calls.filter(call => call.action === 'draft').length, 0);
+  } finally { t.close(); }
+});
+
+test('a deliberately emptied saved draft stays empty rather than restoring an old check', async () => {
+  const t = boot({ remote: savedDraft('', 2), revisions: [checkedAfterDraft] });
+  try { await settle(); assert.equal(t.input.value, ''); }
+  finally { t.close(); }
+});
+
+test('an idle tab saving its page state preserves another tab’s pending writing as the primary draft', async () => {
+  const original = savedDraft('Earlier writing.');
+  const t = boot({ local: original, remote: original });
+  try {
+    await settle();
+    const other = { ...original, text: 'Another tab has unsent writing.', dirty: true, edited_at: '2026-11-11T20:02:00.000Z' };
+    // A localStorage write can become visible before its storage event reaches this tab.
+    t.w.localStorage.setItem(CACHE, JSON.stringify({ ...t.cache(), drafts: { 1: other } }));
+    t.d.querySelector('[data-part="2"]').click();
+    assert.equal(t.cache().drafts[1].text, other.text);
+    assert.equal(t.cache().drafts[1].dirty, true);
+    assert.equal(t.calls.filter(call => call.action === 'draft').length, 0);
+  } finally { t.close(); }
+});
+
+test('a pending draft seen in another tab is not treated as a server acknowledgement', async () => {
+  const original = savedDraft('Earlier writing.');
+  const t = boot({ local: original, remote: original });
+  try {
+    await settle();
+    t.input.value = 'My unsent draft.';
+    t.input.dispatchEvent(new t.w.Event('input'));
+    const other = { ...t.cache(), drafts: { 1: { ...original, text: t.input.value, dirty: true } } };
+    t.w.dispatchEvent(new t.w.StorageEvent('storage', { key: CACHE, newValue: JSON.stringify(other) }));
+    t.w.dispatchEvent(new t.w.Event('pagehide'));
+    await settle();
+    assert.equal(t.calls.find(call => call.action === 'draft')?.body.text, 'My unsent draft.');
+  } finally { t.close(); }
+});
+
+
+test('restoring an older draft cannot overwrite a newer unseen online save', async () => {
+  const t = boot({ remote: savedDraft('Draft already loaded.'), revisions: [checkedAfterDraft] });
+  try {
+    await settle();
+    t.advanceRemote('Another device saved a newer paragraph.');
+    t.d.querySelector('[data-restore-check="late-check"]').click();
+    await settle();
+    const saves = t.calls.filter(call => call.action === 'draft');
+    assert.equal(saves.length, 1);
+    assert.equal(saves[0].body.expectedVersion, 1);
+    assert.equal(t.input.value, checkedAfterDraft.text);
+    assert.equal(t.d.querySelector('#resolve-conflict').hidden, false);
+    assert.match(t.d.querySelector('#history-list').textContent, /Another device saved a newer paragraph/);
   } finally { t.close(); }
 });
