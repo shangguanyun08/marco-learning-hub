@@ -17,7 +17,7 @@ function open(t, session, fetch, seedAnswer = false) {
   });
   t.after(() => window.close());
   window.fetch = fetch;
-  const content = earlier ? ['earlier-review/questions.js'] : ['practice-excerpts.js', 'practice-test-4-review.js', 'questions.js'];
+  const content = earlier ? ['earlier-review/questions.js'] : ['practice-excerpts.js', 'practice-test-4-review.js', 'earlier-review/questions.js', 'questions.js'];
   for (const script of [...content, engine, sync]) window.eval(read(script));
   const course = window.MarcoQR4Data;
   const first = course.ids[0];
@@ -263,6 +263,33 @@ test('reading cards use saved results and turn green after pending retries are f
   reading.window.dispatchEvent(new reading.window.Event('focus'));
   await until(() => card(2).classList.contains('is-complete'));
   assert.match(card(2).textContent, /Finished · 11\/12 correct first try/);
+});
+
+test('Earlier Review turns green when answered and Session 5 follows it', async t => {
+  let progress = null;
+  const reading = open(t, 1, async url => ({ok: true, json: async () => ({
+    progress: new URL(url).searchParams.get('appId') === 'marco-reading-nov21-earlier-mocks-v1' ? progress : null
+  })}));
+  await until(() => reading.status() === 'live');
+  const {window} = reading, data = window.MarcoEarlierReadingData;
+  const model = window.MarcoQR4Engine.forCourse(data), state = model.empty();
+  const card = window.document.querySelector('[data-course="earlier-review"]');
+  assert.equal(card.nextElementSibling.getAttribute('href'), './evidence-practice/');
+  assert.equal(card.classList.contains('is-complete'), false);
+  for (const [position, id] of data.ids.slice(0, -1).entries()) {
+    const key = data.questions[id].correct;
+    model.submit(state, id, position < 25 ? key : (key + 1) % 4);
+  }
+  progress = {version: 1, state};
+  window.dispatchEvent(new window.Event('focus'));
+  await until(() => /37\/38 answered/.test(card.textContent));
+  assert.equal(card.classList.contains('is-complete'), false);
+  const last = data.ids.at(-1);
+  model.submit(state, last, (data.questions[last].correct + 1) % 4);
+  progress.version += 1;
+  window.dispatchEvent(new window.Event('focus'));
+  await until(() => card.classList.contains('is-complete'));
+  assert.match(card.textContent, /Finished · 25\/38 correct first try/);
 });
 
 test('Practice Test 4 hides the original answer while a retry is available', async t => {

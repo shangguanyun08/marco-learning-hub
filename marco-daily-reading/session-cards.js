@@ -2,17 +2,19 @@
   'use strict';
 
   function mount(course, engine, local) {
-    const tabs = [...document.querySelectorAll('.reading-sessions [data-session]')];
+    const tabs = [...document.querySelectorAll('.reading-sessions [data-session], .reading-sessions [data-course="earlier-review"]')];
     const current = tabs.find(card => Number(card.dataset.session) === course.number);
     const otherSessions = tabs.filter(card => card !== current).map(card => {
-      const data = course.dashboardCourses[Number(card.dataset.session) - 1];
+      const data = card.dataset.course === 'earlier-review'
+        ? window.MarcoEarlierReadingData
+        : course.dashboardCourses[Number(card.dataset.session) - 1];
       return { card, data, model: engine.forCourse(data), remote: null };
     });
     let refreshing = false;
 
     function paint(card, data, model, state, known, fallback) {
       const score = model.stats(state);
-      const finished = score.complete && data.ids.every(id => model.reveal(state, id));
+      const finished = score.complete && (data.archiveReview || data.ids.every(id => model.reveal(state, id)));
       const result = `${score.first}/${score.total} correct first try`;
       const text = finished ? `✓ Finished · ${result}`
         : score.complete ? `First pass finished · ${result} · Retry available`

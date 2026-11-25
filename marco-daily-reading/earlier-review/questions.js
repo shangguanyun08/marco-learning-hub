@@ -307,7 +307,7 @@
     const clues = passage.flatMap(paragraph => Array.from(paragraph.matchAll(/\[\[([^\]]+)\]\]/g), match => match[1]));
     question.evidence = clueIndexes[id] ? clueIndexes[id].map(index => clues[index]) : clues;
   }
-  window.MarcoQR4Data = {
+  window.MarcoEarlierReadingData = window.MarcoQR4Data = {
     archiveReview: true,
     session: 'earlier-mocks',
     appId: 'marco-reading-nov21-earlier-mocks-v1',
