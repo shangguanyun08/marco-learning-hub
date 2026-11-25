@@ -9,19 +9,27 @@
     }
     return out.map(m=>({...m,quote:paragraphs[m.p].slice(m.start,m.end)})).filter(m=>m.quote.trim());
   }
-  const tokens=q=>q.prompt.match(/\S+\s*/g)||[];
-  const resolved=list=>!!list?.some(a=>a.answerOK)||list?.length>=2;
+  function highlight(paragraphs,input){
+    const ranges=marks(paragraphs,input);
+    if(!ranges.length)return null;
+    for(let i=1;i<ranges.length;i++){
+      const before=ranges[i-1],after=ranges[i];
+      if(after.p!==before.p+1||before.end!==paragraphs[before.p].length||after.start!==0)return null;
+    }
+    return {ranges,quote:ranges.map(m=>m.quote.trim()).join(' ')};
+  }
+  const resolved=list=>!!list?.length;
   function check(q,paragraphs,run,at){
     const list=run.answers[q.id]||[],d=run.drafts[q.id];
     if(!d||resolved(list)||!Number.isInteger(d.choice)||d.choice<0||d.choice>3||list.some(a=>a.choice===d.choice))return null;
-    const evidence=marks(paragraphs,d.marks),keywords=[...new Set(d.keywords||[])].filter(i=>Number.isInteger(i)&&i>=0&&i<tokens(q).length);
-    if(!evidence.length||!keywords.length)return null;
-    const answer={id:root.crypto?.randomUUID?.()||at,choice:d.choice,answerOK:d.choice===q.answer,checkedAt:at,marks:copy(evidence),keywords,keywordQuotes:keywords.map(i=>tokens(q)[i].trim()),why:String(d.why||'').slice(0,500)};
+    const selected=highlight(paragraphs,d.marks);
+    if(!selected)return null;
+    const answer={id:root.crypto?.randomUUID?.()||at,choice:d.choice,answerOK:d.choice===q.answer,checkedAt:at,marks:copy(selected.ranges),highlight:copy(selected)};
     (run.answers[q.id]??=[]).push(answer);
     run.drafts[q.id]=copy({...d,choice:null,updatedAt:at});run.updatedAt=at;
     return answer;
   }
   function suggestions(q,paragraphs){return q.evidence.map(quote=>{const p=paragraphs.findIndex(t=>t.includes(quote));return {p,start:paragraphs[p]?.indexOf(quote),end:paragraphs[p]?.indexOf(quote)+quote.length,quote};});}
-  const api={copy,marks,tokens,resolved,check,suggestions};
+  const api={copy,marks,highlight,resolved,check,suggestions};
   if(typeof module!=='undefined')module.exports=api;else root.EvidenceCore=api;
 })(typeof window==='undefined'?globalThis:window);

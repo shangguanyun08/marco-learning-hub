@@ -146,5 +146,5 @@
     'School fairs succeed only when every student paints.','Craft clubs should always work for longer periods.','Separating sales from painting makes every design simpler.','A workspace’s arrangement can influence how well people focus.'
   ],3,['Separating those activities can sometimes help people concentrate','changing how a room directs attention may improve work'],
   'The club illustrates a broader idea about workspace and attention. The passage does not establish a universal rule or claim that the designs became simpler.', 'Choose the idea that covers the example and the conclusion.');
-  root.EvidenceData={appId:'marco-reading-evidence-20261124-v1',revision:1,passages,questions};
+  root.EvidenceData={appId:'marco-reading-evidence-20261124-v1',revision:2,passages,questions};
 })(typeof window==='undefined'?globalThis:window);
