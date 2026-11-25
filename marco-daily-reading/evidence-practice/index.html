@@ -4,15 +4,27 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#173957"><title>Session 5 · Find the proof | Marco’s Reading</title>
   <meta name="description" content="19 original reading questions matched to missed skills. One answer, one passage highlight, then compare the evidence.">
-  <link rel="stylesheet" href="style.css?v=3">
-  <script defer src="data.js?v=2"></script><script defer src="core.js?v=3"></script><script defer src="sync.js?v=1"></script><script defer src="app.js?v=4"></script>
+  <link rel="stylesheet" href="style.css?v=4">
+  <script defer src="data.js?v=2"></script><script defer src="core.js?v=3"></script><script defer src="sync.js?v=1"></script><script defer src="app.js?v=5"></script>
   <script defer src="../../shared-activity-tracker.js?v=20261022-time3" data-app-id="marco-reading-evidence-20261124-v1" data-course="Reading · Find the proof" data-subject="reading"></script>
 </head>
 <body>
   <header class="top"><a href="../">Daily Reading</a><span id="save-status" role="status">Loading saved work…</span><button id="sync" type="button">Sync now</button></header>
   <main class="shell">
     <header class="hero"><p class="eyebrow">SESSION 5 · READING EVIDENCE LAB</p><h1>Find the proof.</h1><p class="lead">Choose an answer and highlight one piece of passage evidence that supports it. You have one try.</p><div class="steps"><span>1 · Choose an answer</span><span>2 · Highlight your proof</span><span>3 · Check</span></div></header>
-    <section class="dashboard" aria-label="Session progress"><p id="score" aria-live="polite"></p><div class="tools"><button id="review" type="button">Parent review</button><button id="export" type="button">Export records</button></div></section>
+    <section class="dashboard" aria-labelledby="results-heading">
+      <div class="dashboard-head">
+        <div><h2 id="results-heading">First-try results</h2><p id="score" aria-live="polite">Loading saved results…</p></div>
+        <div class="tools"><button id="review" type="button">Parent review</button><button id="export" type="button">Export records</button></div>
+      </div>
+      <dl class="score-counts">
+        <div class="right-count"><dt>Correct</dt><dd id="correct-count">—</dd></div>
+        <div class="wrong-count"><dt>Wrong</dt><dd id="wrong-count">—</dd></div>
+        <div><dt>Unanswered</dt><dd id="unanswered-count">—</dd></div>
+        <div><dt>Accuracy</dt><dd id="accuracy-count">—</dd></div>
+      </dl>
+      <div class="skill-results"><h3>Results by skill</h3><dl id="skill-statistics" class="skill-statistics"></dl></div>
+    </section>
     <section id="parent" class="panel" hidden><h2>Saved evidence review</h2><p>Each question saves one answer, one highlight, and the check time. Compare his highlight with the suggested evidence.</p><label>Saved history <select id="history"></select></label><div class="tools"><button id="wrong" type="button" aria-pressed="false">Show incorrect answers</button><button id="all" type="button">Show all questions</button></div><div id="report"></div><details><summary>Original missed questions & skill matches</summary><div id="sources">Loading source list…</div></details></section>
     <nav id="jump" aria-label="Jump to a question"></nav>
     <div id="workspace"></div>

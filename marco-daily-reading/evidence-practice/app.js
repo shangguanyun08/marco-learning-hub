@@ -32,11 +32,35 @@
   }
   function isWrong(q){return attempts(q)[0]?.answerOK===false;}
   function outcome(q){const a=attempts(q);return !a.length?'Not answered':a[0].answerOK?'Correct':'Incorrect';}
+  function summarizeResults(questions, getAttempts) {
+    const result = {total: questions.length, answered: 0, correct: 0, wrong: 0};
+    const skills = new Map();
+    for (const question of questions) {
+      if (!skills.has(question.skill)) skills.set(question.skill, {name: question.skill, correct: 0, wrong: 0, total: 0});
+      const skill = skills.get(question.skill);
+      skill.total++;
+      const first = getAttempts(question)[0];
+      if (!first) continue;
+      const key = first.answerOK ? 'correct' : 'wrong';
+      result.answered++;
+      result[key]++;
+      skill[key]++;
+    }
+    return {...result, skills: [...skills.values()]};
+  }
+
   function updateOverview(){
-    const answered=D.questions.filter(q=>attempts(q).length);
-    const incorrect=answered.filter(isWrong).length;
-    const score=`${answered.length} / ${D.questions.length} answered · ${answered.length-incorrect} correct · ${incorrect} incorrect`;
-    if($('#score').textContent!==score)$('#score').textContent=score;
+    const statistics = summarizeResults(D.questions, attempts);
+    const {answered, correct, wrong, total, skills} = statistics;
+    const score = `${answered} / ${total} answered`;
+    if ($('#score').textContent !== score) $('#score').textContent = score;
+    $('#correct-count').textContent = String(correct);
+    $('#wrong-count').textContent = String(wrong);
+    $('#unanswered-count').textContent = String(total - answered);
+    $('#accuracy-count').textContent = answered ? `${Math.round(correct * 100 / answered)}%` : '—';
+    $('#skill-statistics').innerHTML = skills.map(skill =>
+      `<div><dt>${esc(skill.name)}</dt><dd><span class="skill-right">${skill.correct} correct</span> <span class="skill-wrong">${skill.wrong} wrong</span>${skill.total > skill.correct + skill.wrong ? ` <small>${skill.total - skill.correct - skill.wrong} unanswered</small>` : ''}</dd></div>`
+    ).join('');
     $('#jump').innerHTML=D.questions.map(q=>`<button type="button" data-jump="${q.id}" class="${C.resolved(attempts(q))?(isWrong(q)?'miss':'done'):''}" aria-label="Jump to question ${questionNumber.get(q.id)}, ${outcome(q).toLowerCase()}">${questionNumber.get(q.id)}</button>`).join('');
     updateReport();
     $('#history').innerHTML=state.articles.evidence.map((r,i)=>`<option value="${esc(r.id)}" ${r.id===run.id?'selected':''}>${state.articles.evidence.length>1?'Saved history '+(i+1):'Current session'}${r.syncRoot?' · concurrent work preserved':''}</option>`).join('');
