@@ -12,7 +12,7 @@
   if(!state.articles.evidence.length)state.articles.evidence.push({id:'primary',startedAt:new Date().toISOString(),position:0,answers:{},drafts:{}});
   run=state.articles.evidence[0];
   const questionList=$('#workspace');
-  const questionNumber=new Map(D.questions.map((q,index)=>[q.id,index+1]));
+  const questionNumber=new Map(D.questions.map((q,index)=>[q.id,q.sourceNumber??index+1]));
   const questionCards=new Map();
   const attempts=q=>run.answers[q.id]||[];
   const paragraphs=q=>D.passages[q.passage].paragraphs;
@@ -110,25 +110,40 @@
       <p class="meta">Skill match: ${esc(q.source)}</p></section>`;
   }
   function reviewTools(q,answer){
-    const label=answer.answerOK?'Review my answer':'Show why I missed it';
+    const original=q.originalChoice;
     return `<div class="tools review-tools">
       <button type="button" data-clue aria-pressed="false" aria-controls="passage-${q.id}">Highlight clue</button>
-      <button type="button" data-reason aria-expanded="false" aria-controls="reason-${q.id}">${label}</button>
+      <button type="button" data-reason aria-expanded="false" aria-controls="reason-${q.id}">Show Marco’s answer</button>
     </div>
     <div class="review-reason" id="reason-${q.id}" hidden>
-      ${answer.answerOK?'':`<p><strong>Your choice ${'ABCD'[answer.choice]}.</strong> ${esc(q.distractors[answer.choice])}</p>`}
+      <p><strong>Marco chose ${'ABCD'[original]} on Practice 7.</strong> ${esc(q.distractors[original])}</p>
       <p><strong>Correct answer ${'ABCD'[q.answer]}.</strong> ${esc(q.choices[q.answer])} ${esc(q.explanation)}</p>
-      <p class="key-label">Your submitted highlight</p>
-      ${highlightList(q,answer.marks,false)}
+      ${answer&&!answer.answerOK&&answer.choice!==original?`<p><strong>You chose ${'ABCD'[answer.choice]} on the redo.</strong> ${esc(q.distractors[answer.choice])}</p>`:''}
+      ${answer?`<p class="key-label">Your highlight on the redo</p>${highlightList(q,answer.marks,false)}`:''}
     </div>`;
+  }
+  function highlightNote(submitted){
+    return submitted?'Your submitted highlight is shown.':'Tap a sentence, or select a passage excerpt and press Highlight selection.';
+  }
+  function paintPassage(q,card,showClue){
+    const answer=attempts(q)[0];
+    const marks=showClue?C.suggestions(q,paragraphs(q)):(answer?.marks??draft(q).marks);
+    const clue=card.querySelector('[data-clue]');
+    if(clue){
+      clue.setAttribute('aria-pressed',String(showClue));
+      clue.textContent=showClue?'Hide clue highlight':'Highlight clue';
+    }
+    card.querySelector('[data-highlight-label]').textContent=showClue?'Suggested clue is shown.':highlightNote(answer);
+    card.querySelector('[data-passage]').innerHTML=passageHTML(q,marks,!answer&&!showClue);
   }
   function renderQuestion(q,card){
     if(pendingSelection?.card===card)clearPendingSelection();
     const d=draft(q),list=attempts(q),locked=C.resolved(list),first=list[0],marks=locked?first.marks:d.marks;
     const excluded=C.eliminations(locked?first.eliminated:d.eliminated);
-    const guided=locked&&Array.isArray(q.distractors);
-    card.innerHTML=`<div class="workspace"><article class="panel"><p class="eyebrow">READ THE PASSAGE</p><h2>${esc(D.passages[q.passage].title)}</h2><p class="meta" data-highlight-label>${locked?'Your submitted highlight is shown.':'Tap one sentence, or select a passage excerpt and press Highlight selection. A new highlight replaces your previous selection.'}</p><div class="passage" id="passage-${q.id}" data-passage>${passageHTML(q,marks,!locked)}</div>${!locked?'<button data-selection-action type="button" class="primary" hidden>Highlight selection</button>':''}</article>
-      <div class="panel"><p class="eyebrow">QUESTION ${questionNumber.get(q.id)} OF ${D.questions.length} · ${esc(q.skill.toUpperCase())}</p><div class="prompt" id="prompt-${q.id}">${esc(q.prompt)}</div>
+    const guided=Number.isInteger(q.originalChoice);
+    const label=guided?`QUESTION ${q.sourceNumber}`:`QUESTION ${questionNumber.get(q.id)} OF ${D.questions.length}`;
+    card.innerHTML=`<div class="workspace"><article class="panel"><p class="eyebrow">READ THE PASSAGE</p><h2>${esc(D.passages[q.passage].title)}</h2><p class="meta" data-highlight-label>${highlightNote(first)}</p><div class="passage" id="passage-${q.id}" data-passage>${passageHTML(q,marks,!locked)}</div>${!locked?'<button data-selection-action type="button" class="primary" hidden>Highlight selection</button>':''}</article>
+      <div class="panel"><p class="eyebrow">${label} · ${esc(q.skill.toUpperCase())}</p><div class="prompt" id="prompt-${q.id}">${esc(q.prompt)}</div>
       ${locked?`<div class="feedback${first.answerOK?' good':''}" role="status" tabindex="-1"><strong>${esc(outcome(q))}.</strong><p>${guided?'Your answer and highlight are saved. Use the review buttons to compare your reasoning with the passage.':'Your answer and highlight are saved. Compare the evidence below.'}</p></div>`:''}
       <form><fieldset class="choices"><legend>${locked?'Your submitted answer':'Choose your answer'}</legend>
       ${!locked?`<p class="meta" id="elimination-note-${q.id}" role="status">Optional. Eliminate up to two choices. ${excluded.length}/2 eliminated.${excluded.length===2?' Compare the remaining two, or use Undo to restore a choice.':''}</p>`:''}
@@ -139,20 +154,18 @@
       const clue=card.querySelector('[data-clue]'),reason=card.querySelector('[data-reason]');
       clue.onclick=()=>{
         const show=clue.getAttribute('aria-pressed')==='false';
-        clue.setAttribute('aria-pressed',String(show));
-        clue.textContent=show?'Show my highlight':'Highlight clue';
-        card.querySelector('[data-highlight-label]').textContent=show?'Suggested clue is shown.':'Your submitted highlight is shown.';
-        card.querySelector('[data-passage]').innerHTML=passageHTML(q,show?C.suggestions(q,paragraphs(q)):first.marks,false);
+        if(pendingSelection?.card===card)clearPendingSelection();
+        paintPassage(q,card,show);
       };
       reason.onclick=()=>{
         const panel=card.querySelector('.review-reason');
         const show=panel.hidden;
         panel.hidden=!show;
         reason.setAttribute('aria-expanded',String(show));
-        reason.textContent=show?'Hide answer review':first.answerOK?'Review my answer':'Show why I missed it';
+        reason.textContent=show?'Hide Marco’s answer':'Show Marco’s answer';
         const rows=card.querySelectorAll('.choice-row');
         rows[q.answer].classList.toggle('review-correct',show);
-        if(!first.answerOK)rows[first.choice].classList.toggle('review-incorrect',show);
+        rows[q.originalChoice].classList.toggle('review-incorrect',show);
       };
     }
     if(locked)return;
@@ -204,7 +217,7 @@
     editDraft(q).marks=marks;
     saveDraft(q);
     if(pendingSelection?.card===card)clearPendingSelection();
-    card.querySelector('[data-passage]').innerHTML=passageHTML(q,marks,true);
+    paintPassage(q,card,false);
     card.querySelector('[data-highlights]').innerHTML=highlightList(q,marks,true);
     setCheck(q,card);
   }
@@ -245,7 +258,7 @@
     if(!passage?.contains(selection.focusNode))return;
     const card=passage.closest('.question-card');
     const button=card?.querySelector('[data-selection-action]');
-    if(!button)return;
+    if(!button||card.querySelector('[data-clue][aria-pressed="true"]'))return;
     const range=selection.getRangeAt(0),parts=[];
     for(const el of passage.querySelectorAll('.sentence')){
       if(!range.intersectsNode(el))continue;
