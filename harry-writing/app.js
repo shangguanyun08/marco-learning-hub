@@ -82,6 +82,7 @@
   let rewritingExample = false;
   const conflicts = new Set();
   const onlineDrafts = new Map();
+  const useOnlineButton = $('use-online-draft');
   const workingKey = id => CACHE + ':working:' + id;
   function readWorkingCopy(id) {
     try {
@@ -244,7 +245,7 @@
   function updateDraftControls() {
     const id = conflictPart();
     $('resolve-conflict').hidden = id === null;
-    $('use-online-draft').hidden = id === null || !onlineAlternative(id);
+    if (useOnlineButton) useOnlineButton.hidden = id === null || !onlineAlternative(id);
     const status = $('writing-save-status');
     if (status) status.textContent = conflicts.size ? 'Two versions are saved. Your current writing stays here. Choose which version to use.' : saving ? 'Saving online…' : Object.values(state.drafts).some(row => row.dirty) ? 'Saved on this device · waiting to save online' : connected ? 'Saved online' : 'Saved on this device · connect to save online';
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
@@ -496,7 +497,7 @@
     conflicts.delete(id);
     cache(); error(); render(); void saveDrafts();
   });
-  $('use-online-draft').addEventListener('click', () => {
+  useOnlineButton?.addEventListener('click', () => {
     captureEditor();
     const id = conflictPart();
     if (id === null) return;
