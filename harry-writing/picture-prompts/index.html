@@ -8,7 +8,7 @@
   <script src="../activity.js?v=20261108-new-prompts" defer></script>
   <script src="../rewrite-diff.js?v=20261108-rewrite-diff" defer></script>
   <script src="../inline-feedback.js?v=20261108-inline-corrections" defer></script>
-  <script src="picture.js?v=20261124-draft-protection" defer></script>
+  <script src="picture.js?v=20261126-working-copy" defer></script>
 </head>
 <body><main class="shell">
   <nav class="topbar"><a href="../../">← Learning hub</a><a href="../">Elephant story</a><span>HARRY’S DAILY WRITING</span></nav>
@@ -39,6 +39,7 @@
           <div class="writing-editor-wrap"><div id="revision-highlights" class="revision-highlights" aria-hidden="true"></div><textarea id="revision" rows="4" maxlength="1200" placeholder="Write a few clear sentences for this paragraph." spellcheck="true" aria-describedby="feedback word-count"></textarea><output id="word-count" class="word-count" for="revision" aria-live="polite" aria-atomic="true" title="Suggested word goal">0 / 50 words</output></div>
           <p id="writing-save-status" class="small" role="status"></p>
           <button id="resolve-conflict" class="quiet" hidden>Keep my current version</button>
+          <button id="use-online-draft" class="quiet" hidden>Use online version</button>
         </section>
         <section id="feedback" class="feedback" aria-live="polite" hidden>
           <details id="score-panel" class="writing-help-part" open hidden><summary id="score-title"><span id="score-label">Score &amp; suggestion</span><strong id="score-value" hidden></strong></summary><div id="score-text"></div></details>

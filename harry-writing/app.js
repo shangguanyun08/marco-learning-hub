@@ -81,6 +81,44 @@
   let writingChatUI = null, scoringStory = false;
   let rewritingExample = false;
   const conflicts = new Set();
+  const onlineDrafts = new Map();
+  const workingKey = id => CACHE + ':working:' + id;
+  function readWorkingCopy(id) {
+    try {
+      const row = JSON.parse(read(workingKey(id)));
+      if (row?.workingId && typeof row.text === 'string' && Number.isSafeInteger(row.version)) return row;
+    } catch {}
+    return null;
+  }
+  function saveWorkingCopy(id, row) {
+    write(workingKey(id), JSON.stringify(row));
+  }
+  function pinDraft(id, row) {
+    row.workingId = crypto.randomUUID();
+    saveWorkingCopy(id, row);
+  }
+  function syncWorkingCopy(id, row) {
+    // A delayed save can only acknowledge the draft it still owns.
+    if (row.workingId && readWorkingCopy(id)?.workingId === row.workingId) saveWorkingCopy(id, row);
+  }
+  function editDraft(id, text) {
+    const row = draft(id);
+    if (!row.dirty && row.text) rememberDraft(id, row);
+    row.text = text;
+    row.dirty = true;
+    row.edited_at = new Date().toISOString();
+    pinDraft(id, row);
+    return row;
+  }
+  function restoreWorkingCopies() {
+    for (let id = config.custom ? 0 : 1; id <= parts.length; id++) {
+      const working = readWorkingCopy(id);
+      if (!working) continue;
+      const cached = state.drafts[id];
+      if (cached && cached.text !== working.text) rememberDraft(id, cached);
+      state.drafts[id] = working;
+    }
+  }
   let displayedPart = null, displayedText = '', composing = false;
   function rememberDraft(id, row, archived = false) {
     if (typeof row.text !== 'string') return;
@@ -137,30 +175,33 @@
   }
   function captureEditor() {
     if (displayedPart === null || $('revision').value === displayedText) return;
-    const row = draft(displayedPart);
-    if (!row.dirty && row.text) rememberDraft(displayedPart, row);
-    row.text = $('revision').value;
-    row.dirty = true;
-    row.edited_at = new Date().toISOString();
+    const row = editDraft(displayedPart, $('revision').value);
     displayedText = row.text;
     if (row.pending && row.pending.text !== row.text.trim()) delete row.pending;
     cache();
   }
-  function mergeDraft(remote) {
-    const local = draft(remote.sentence_id);
+  function mergeDraft(remote, fromServer = false) {
+    const id = remote.sentence_id;
+    if (fromServer && remote.version >= (onlineDrafts.get(id)?.version ?? 0)) onlineDrafts.set(id, remote);
+    const local = draft(id);
     if (remote.version < local.version) return;
     if (local.text === remote.text) {
       if (saving && local.dirty && remote.version === local.version) return;
       local.version = remote.version;
       local.updated_at = remote.updated_at;
       local.dirty = false;
-      conflicts.delete(remote.sentence_id);
-    } else if (local.dirty || (local.version > 0 && local.version === remote.version)) {
-      rememberDraft(remote.sentence_id, remote);
-      if (local.version !== remote.version || !local.dirty) conflicts.add(remote.sentence_id);
+      conflicts.delete(id);
+    } else if (local.workingId || local.dirty || (local.version > 0 && local.version === remote.version)) {
+      rememberDraft(id, remote);
+      if (local.version !== remote.version || !local.dirty) conflicts.add(id);
+      return;
     } else {
-      if (local.text) rememberDraft(remote.sentence_id, local);
+      if (local.text) rememberDraft(id, local);
       Object.assign(local, { text: remote.text, version: remote.version, updated_at: remote.updated_at, dirty: false });
+    }
+    if (fromServer) {
+      if (!readWorkingCopy(id)) pinDraft(id, local);
+      else syncWorkingCopy(id, local);
     }
   }
   function revisions(id) { return state.revisions.filter(row => row.sentence_id === id).sort((a, b) => a.checked_at.localeCompare(b.checked_at) || a.id.localeCompare(b.id)); }
@@ -192,10 +233,20 @@
     if (!response.ok) { const failure = Error(result.error || 'Could not save your work. Please try again.'); failure.status = response.status; throw failure; }
     return result;
   }
+  function conflictPart() {
+    if (conflicts.has(selected)) return selected;
+    return config.custom && conflicts.has(0) ? 0 : null;
+  }
+  function onlineAlternative(id) {
+    const online = onlineDrafts.get(id), local = draft(id);
+    return online && online.version >= local.version && online.text !== local.text ? online : null;
+  }
   function updateDraftControls() {
-    $('resolve-conflict').hidden = !conflicts.has(selected) && !conflicts.has(0);
+    const id = conflictPart();
+    $('resolve-conflict').hidden = id === null;
+    $('use-online-draft').hidden = id === null || !onlineAlternative(id);
     const status = $('writing-save-status');
-    if (status) status.textContent = conflicts.size ? 'Another version is saved. Choose a version below.' : saving ? 'Saving online…' : Object.values(state.drafts).some(row => row.dirty) ? 'Saved on this device · waiting to save online' : connected ? 'Saved online' : 'Saved on this device · connect to save online';
+    if (status) status.textContent = conflicts.size ? 'Two versions are saved. Your current writing stays here. Choose which version to use.' : saving ? 'Saving online…' : Object.values(state.drafts).some(row => row.dirty) ? 'Saved on this device · waiting to save online' : connected ? 'Saved online' : 'Saved on this device · connect to save online';
     if (memoryOnly) error('Browser storage is unavailable. Keep this page open until your work saves online.');
   }
   function resizeRevision() {
@@ -362,7 +413,7 @@
       for (const row of work.earlierSentencePractice.revisions) history.set(row.id, row);
       earlier = { drafts: Array.from(rows.values()), revisions: Array.from(history.values()) }; state.earlier = earlier;
     }
-    for (const remote of work.drafts) { rememberDraft(remote.sentence_id, remote); mergeDraft(remote); }
+    for (const remote of work.drafts) { rememberDraft(remote.sentence_id, remote, true); mergeDraft(remote, true); }
     for (const row of work.draftHistory || []) rememberDraft(row.sentence_id, row, true);
     for (const row of work.revisions) addRevision(row);
     for (const row of work.models || []) rememberModel(row);
@@ -381,14 +432,23 @@
       for (const [key, row] of Object.entries(state.drafts)) {
         const id = Number(key);
         if (!row.dirty || conflicts.has(id)) continue;
+        const working = readWorkingCopy(id);
+        if (working && working.workingId !== row.workingId && working.text !== row.text) {
+          rememberDraft(id, working);
+          conflicts.add(id);
+          continue;
+        }
         const text = row.text;
         try {
-          const result = await request('draft', { sentenceId: id, text, expectedVersion: row.version });
-          rememberDraft(id, { ...row, text, version: result.draft.version, updated_at: result.draft.updated_at }, true);
+          const result = await request('draft', { sentenceId: id, text, expectedVersion: row.version, editorVersion: 2 });
+          const saved = { ...result.draft, text, sentence_id: id };
+          rememberDraft(id, saved, true);
+          if (saved.version >= (onlineDrafts.get(id)?.version ?? 0)) onlineDrafts.set(id, saved);
           if (result.draft.version < row.version) continue;
           row.version = result.draft.version;
           row.updated_at = result.draft.updated_at;
           row.dirty = row.text !== text;
+          syncWorkingCopy(id, row);
           cache();
         } catch (failure) {
           if (failure.status === 409) {
@@ -426,14 +486,28 @@
     if (!write(PAIRING, pairing, sessionStorage)) return error('Please allow browser storage to connect AI checking.');
     location.assign(CONNECT + '?state=' + pairing + (config.topicKey ? '&topic=' + encodeURIComponent(config.topicKey) : ''));
   });
-  $('resolve-conflict').addEventListener('click', async () => {
+  $('resolve-conflict').addEventListener('click', () => {
     captureEditor();
-    const id = config.custom && conflicts.has(0) ? 0 : selected;
-    try {
-      const work = await request('work'), remote = work.drafts.find(row => row.sentence_id === id);
-      if (remote) rememberDraft(id, remote);
-      draft(id).version = remote?.version || 0; draft(id).dirty = true; conflicts.delete(id); cache(); await saveDrafts();
-    } catch (failure) { error(failure.message); }
+    const id = conflictPart();
+    if (id === null) return;
+    const local = draft(id), online = onlineAlternative(id);
+    if (online) local.version = online.version;
+    editDraft(id, local.text);
+    conflicts.delete(id);
+    cache(); error(); render(); void saveDrafts();
+  });
+  $('use-online-draft').addEventListener('click', () => {
+    captureEditor();
+    const id = conflictPart();
+    if (id === null) return;
+    const online = onlineAlternative(id);
+    if (!online) return;
+    rememberDraft(id, draft(id));
+    const chosen = { ...online, dirty: false };
+    pinDraft(id, chosen);
+    state.drafts[id] = chosen;
+    conflicts.delete(id);
+    cache(); error(); render();
   });
   $('history-list').addEventListener('click', event => {
     const button = event.target.closest('[data-restore-check], [data-restore-draft]');
@@ -441,12 +515,10 @@
     const saved = button.dataset.restoreCheck ? state.revisions.find(row => row.id === button.dataset.restoreCheck) : state.draftHistory.find(row => row.recovery_id === button.dataset.restoreDraft);
     if (!saved || saved.sentence_id !== selected) return;
     captureEditor();
-    const id = selected, row = draft(id), text = saved.text;
-    rememberDraft(id, { ...row, text: editorText(id) });
+    const id = selected;
+    rememberDraft(id, { ...draft(id), text: editorText(id) });
     // A restore uses the version already loaded. A newer online draft triggers conflict recovery.
-    row.text = text;
-    row.dirty = true;
-    row.edited_at = new Date().toISOString();
+    const row = editDraft(id, saved.text);
     delete row.pending;
     feedbackSelection = null;
     cache(); error(); render(); void saveDrafts();
@@ -684,7 +756,7 @@
   }
   if ($('original-story')) $('original-story').textContent = parts.join(' ');
   if (config.custom) $('topic-title').addEventListener('input', () => {
-    const row = draft(0); row.text = $('topic-title').value; row.dirty = true; cache();
+    editDraft(0, $('topic-title').value); cache();
     clearTimeout(saveTimer); saveTimer = setTimeout(saveDrafts, 900);
   });
   writingChatUI = setupWritingChat();
@@ -715,6 +787,7 @@
     for (const row of incoming.revisions || []) if (!state.revisions.some(item => item.id === row.id)) state.revisions.push(row);
     render();
   });
+  restoreWorkingCopies();
   importEarlier();
   render();
   function syncWriting() {

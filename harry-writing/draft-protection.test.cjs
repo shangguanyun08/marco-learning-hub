@@ -9,7 +9,7 @@ const savedDraft = (text, version = 1) => ({ sentence_id: 1, text, version, upda
 const settle = async () => { for (let i = 0; i < 16; i++) await new Promise(resolve => setImmediate(resolve)); };
 const response = (body, status = 200) => ({ ok: status === 200, status, json: async () => body });
 
-function boot({ local, remote = savedDraft('Earlier writing.'), revisions = [], holdReads = false, holdSaves = false } = {}) {
+function boot({ local, working, remote = savedDraft('Earlier writing.'), revisions = [], holdReads = false, holdSaves = false } = {}) {
   const dom = new JSDOM(fs.readFileSync(path.join(__dirname, 'picture-prompts/index.html'), 'utf8'), { url: 'https://example.test/?topic=garden', runScripts: 'outside-only' });
   const w = dom.window, reads = [], saves = [], calls = [];
   w.HTMLElement.prototype.scrollIntoView = function () {};
@@ -19,6 +19,7 @@ function boot({ local, remote = savedDraft('Earlier writing.'), revisions = [], 
   w.ELEPHANT_PARTS = ['Begin.', 'Continue.', 'End.'];
   w.localStorage.setItem('harry-meaning-ai:connection-v1', 'fixture');
   w.localStorage.setItem(CACHE, JSON.stringify({ drafts: local ? { 1: local } : {}, revisions, models: [], selected: 1 }));
+  if (working) w.localStorage.setItem(CACHE + ':working:1', JSON.stringify(working));
   const work = () => ({ storyId: w.WRITING_STORY_ID, drafts: [remote], revisions, models: [], draftHistory: [], chats: [] });
   w.fetch = async (url, options = {}) => {
     const action = new URL(url).searchParams.get('action'), body = options.body && JSON.parse(options.body);
@@ -181,5 +182,42 @@ test('restoring an older draft cannot overwrite a newer unseen online save', asy
     assert.equal(t.input.value, checkedAfterDraft.text);
     assert.equal(t.d.querySelector('#resolve-conflict').hidden, false);
     assert.match(t.d.querySelector('#history-list').textContent, /Another device saved a newer paragraph/);
+  } finally { t.close(); }
+});
+
+
+test('a separately protected copy survives a legacy tab rewriting the cache and an online rollback', async () => {
+  const working = { ...savedDraft('Keep the paragraph Harry wrote.', 4), workingId: 'working-copy' };
+  const old = savedDraft('Older text saved by a stale tab.', 5);
+  const t = boot({ local: old, remote: old, working });
+  try {
+    assert.equal(t.input.value, working.text);
+    await settle();
+    assert.equal(t.input.value, working.text);
+    assert.equal(t.d.querySelector('#resolve-conflict').hidden, false);
+    assert.equal(t.d.querySelector('#use-online-draft').hidden, false);
+    assert.match(t.d.querySelector('#history-list').textContent, /Older text saved by a stale tab/);
+    assert.equal(t.calls.filter(call => call.action === 'draft').length, 0);
+    t.d.querySelector('#resolve-conflict').click();
+    await settle();
+    const save = t.calls.find(call => call.action === 'draft');
+    assert.equal(save.body.expectedVersion, 5);
+    assert.equal(save.body.editorVersion, 2);
+    assert.equal(save.body.text, working.text);
+    assert.equal(JSON.parse(t.w.localStorage.getItem(CACHE + ':working:1')).version, 6);
+  } finally { t.close(); }
+});
+
+test('choosing a competing online copy keeps the displaced draft and sends no overwrite request', async () => {
+  const local = { ...savedDraft('On this device.', 4), workingId: 'working-copy' };
+  const remote = savedDraft('On the other device.', 5);
+  const t = boot({ local, working: local, remote });
+  try {
+    await settle();
+    t.d.querySelector('#use-online-draft').click();
+    await settle();
+    assert.equal(t.input.value, remote.text);
+    assert.match(t.d.querySelector('#history-list').textContent, /On this device/);
+    assert.equal(t.calls.filter(call => call.action === 'draft').length, 0);
   } finally { t.close(); }
 });
