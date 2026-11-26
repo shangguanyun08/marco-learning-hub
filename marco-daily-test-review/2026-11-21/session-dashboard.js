@@ -70,6 +70,14 @@
         'decimals-1': 1, 'multiples-1': 3, 'probability-1': 2, 'slope-1': 0
       }
     },
+    'nov21-9': {
+      appId: 'marco-math-nov21-session9-v1', session: 'official-middle-nov21-session9-v1', reportAfter: 12,
+      keys: {
+        'rates-1': 2, 'median-1': 3, 'probability-1': 2, 'slope-1': 1,
+        'rates-2': 3, 'median-2': 0, 'probability-2': 0, 'slope-2': 2,
+        'rates-3': 1, 'median-3': 3, 'probability-3': 1, 'slope-3': 0
+      }
+    },
   };
 
   function formatStatus(stats) {
