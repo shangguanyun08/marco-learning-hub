@@ -2,8 +2,9 @@
   'use strict';
   const D=window.EvidenceData,C=window.EvidenceCore,S=window.ReadingSync;
   const demo=new URLSearchParams(location.search).has('demo');
-  const online=!demo&&location.hostname==='shangguanyun08.github.io';
-  const key=D.appId+(online?'':':preview');
+  const live=!demo&&location.hostname==='shangguanyun08.github.io';
+  const online=live&&D.sharedProgress!==false;
+  const key=D.appId+(live?'':':preview');
   const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   let state={version:1,articles:{evidence:[]}},run,ready=!online,onlyWrong=false,pendingSelection=null,sync,storageOK=true;
   try{if(!demo)state=S.normalize(JSON.parse(localStorage.getItem(key)||'null'));}catch{storageOK=false;}
@@ -52,15 +53,20 @@
   function updateOverview(){
     const statistics = summarizeResults(D.questions, attempts);
     const {answered, correct, wrong, total, skills} = statistics;
-    const score = `${answered} / ${total} answered`;
+    const skillStatistics = $('#skill-statistics');
+    const score = skillStatistics
+      ? `${answered} / ${total} answered`
+      : `${answered} / ${total} answered · ${correct} correct · ${wrong} incorrect`;
     if ($('#score').textContent !== score) $('#score').textContent = score;
-    $('#correct-count').textContent = String(correct);
-    $('#wrong-count').textContent = String(wrong);
-    $('#unanswered-count').textContent = String(total - answered);
-    $('#accuracy-count').textContent = answered ? `${Math.round(correct * 100 / answered)}%` : '—';
-    $('#skill-statistics').innerHTML = skills.map(skill =>
-      `<div><dt>${esc(skill.name)}</dt><dd><span class="skill-right">${skill.correct} correct</span> <span class="skill-wrong">${skill.wrong} wrong</span>${skill.total > skill.correct + skill.wrong ? ` <small>${skill.total - skill.correct - skill.wrong} unanswered</small>` : ''}</dd></div>`
-    ).join('');
+    if (skillStatistics) {
+      $('#correct-count').textContent = String(correct);
+      $('#wrong-count').textContent = String(wrong);
+      $('#unanswered-count').textContent = String(total - answered);
+      $('#accuracy-count').textContent = answered ? `${Math.round(correct * 100 / answered)}%` : '—';
+      skillStatistics.innerHTML = skills.map(skill =>
+        `<div><dt>${esc(skill.name)}</dt><dd><span class="skill-right">${skill.correct} correct</span> <span class="skill-wrong">${skill.wrong} wrong</span>${skill.total > skill.correct + skill.wrong ? ` <small>${skill.total - skill.correct - skill.wrong} unanswered</small>` : ''}</dd></div>`
+      ).join('');
+    }
     $('#jump').innerHTML=D.questions.map(q=>`<button type="button" data-jump="${q.id}" class="${C.resolved(attempts(q))?(isWrong(q)?'miss':'done'):''}" aria-label="Jump to question ${questionNumber.get(q.id)}, ${outcome(q).toLowerCase()}">${questionNumber.get(q.id)}</button>`).join('');
     updateReport();
     $('#history').innerHTML=state.articles.evidence.map((r,i)=>`<option value="${esc(r.id)}" ${r.id===run.id?'selected':''}>${state.articles.evidence.length>1?'Saved history '+(i+1):'Current session'}${r.syncRoot?' · concurrent work preserved':''}</option>`).join('');
@@ -103,18 +109,52 @@
       <details><summary>See the highlights in the full passage</summary><div class="compare-grid"><div><h3>Your highlight</h3><div class="full-proof">${passageHTML(q,a.marks,false)}</div></div><div><h3>Suggested support</h3><div class="full-proof">${passageHTML(q,model,false)}</div></div></div></details>
       <p class="meta">Skill match: ${esc(q.source)}</p></section>`;
   }
+  function reviewTools(q,answer){
+    const label=answer.answerOK?'Review my answer':'Show why I missed it';
+    return `<div class="tools review-tools">
+      <button type="button" data-clue aria-pressed="false" aria-controls="passage-${q.id}">Highlight clue</button>
+      <button type="button" data-reason aria-expanded="false" aria-controls="reason-${q.id}">${label}</button>
+    </div>
+    <div class="review-reason" id="reason-${q.id}" hidden>
+      ${answer.answerOK?'':`<p><strong>Your choice ${'ABCD'[answer.choice]}.</strong> ${esc(q.distractors[answer.choice])}</p>`}
+      <p><strong>Correct answer ${'ABCD'[q.answer]}.</strong> ${esc(q.choices[q.answer])} ${esc(q.explanation)}</p>
+      <p class="key-label">Your submitted highlight</p>
+      ${highlightList(q,answer.marks,false)}
+    </div>`;
+  }
   function renderQuestion(q,card){
     if(pendingSelection?.card===card)clearPendingSelection();
     const d=draft(q),list=attempts(q),locked=C.resolved(list),first=list[0],marks=locked?first.marks:d.marks;
     const excluded=C.eliminations(locked?first.eliminated:d.eliminated);
-    card.innerHTML=`<div class="workspace"><article class="panel"><p class="eyebrow">READ THE PASSAGE</p><h2>${esc(D.passages[q.passage].title)}</h2><p class="meta">${locked?'Your submitted highlight is shown.':'Tap one sentence, or select a passage excerpt and press Highlight selection. A new highlight replaces your previous selection.'}</p><div class="passage" data-passage>${passageHTML(q,marks,!locked)}</div>${!locked?'<button data-selection-action type="button" class="primary" hidden>Highlight selection</button>':''}</article>
+    const guided=locked&&Array.isArray(q.distractors);
+    card.innerHTML=`<div class="workspace"><article class="panel"><p class="eyebrow">READ THE PASSAGE</p><h2>${esc(D.passages[q.passage].title)}</h2><p class="meta" data-highlight-label>${locked?'Your submitted highlight is shown.':'Tap one sentence, or select a passage excerpt and press Highlight selection. A new highlight replaces your previous selection.'}</p><div class="passage" id="passage-${q.id}" data-passage>${passageHTML(q,marks,!locked)}</div>${!locked?'<button data-selection-action type="button" class="primary" hidden>Highlight selection</button>':''}</article>
       <div class="panel"><p class="eyebrow">QUESTION ${questionNumber.get(q.id)} OF ${D.questions.length} · ${esc(q.skill.toUpperCase())}</p><div class="prompt" id="prompt-${q.id}">${esc(q.prompt)}</div>
-      ${locked?`<div class="feedback${first.answerOK?' good':''}" role="status" tabindex="-1"><strong>${esc(outcome(q))}.</strong><p>Your answer and highlight are saved. Compare the evidence below.</p></div>`:''}
+      ${locked?`<div class="feedback${first.answerOK?' good':''}" role="status" tabindex="-1"><strong>${esc(outcome(q))}.</strong><p>${guided?'Your answer and highlight are saved. Use the review buttons to compare your reasoning with the passage.':'Your answer and highlight are saved. Compare the evidence below.'}</p></div>`:''}
       <form><fieldset class="choices"><legend>${locked?'Your submitted answer':'Choose your answer'}</legend>
       ${!locked?`<p class="meta" id="elimination-note-${q.id}" role="status">Optional. Eliminate up to two choices. ${excluded.length}/2 eliminated.${excluded.length===2?' Compare the remaining two, or use Undo to restore a choice.':''}</p>`:''}
       ${q.choices.map((choice,i)=>`<div class="choice-row${excluded.includes(i)?' is-eliminated':''}"><label class="choice"><input type="radio" name="answer" value="${i}" ${(locked?first.choice:d.choice)===i?'checked':''} ${locked||excluded.includes(i)?'disabled':''}><strong>${'ABCD'[i]}.</strong><span class="choice-text">${esc(choice)}</span></label>${!locked?`<button class="eliminate-button" type="button" data-eliminate="${i}" aria-label="${excluded.includes(i)?'Restore':'Eliminate'} choice ${'ABCD'[i]}" aria-pressed="${excluded.includes(i)}" aria-describedby="elimination-note-${q.id}" ${excluded.length===2&&!excluded.includes(i)?'disabled':''}>${excluded.includes(i)?'Undo':'Eliminate'}</button>`:excluded.includes(i)?'<span class="eliminated-label">Eliminated</span>':''}</div>`).join('')}</fieldset>
-      ${!locked?`<p class="key-label">Your one highlight</p><div data-highlights>${highlightList(q,d.marks,true)}</div><div class="tools"><button class="primary" data-check type="submit" ${canCheck(q)?'':'disabled'}>Check answer</button><button data-clear type="button">Clear highlight</button></div><p class="meta">One try. Choose an answer and highlight one piece of supporting evidence before checking.</p>`:''}</form></div></div>
-      ${locked?comparison(q):''}`;
+      ${!locked?`<p class="key-label">Your one highlight</p><div data-highlights>${highlightList(q,d.marks,true)}</div><div class="tools"><button class="primary" data-check type="submit" ${canCheck(q)?'':'disabled'}>Check answer</button><button data-clear type="button">Clear highlight</button></div><p class="meta">One try. Choose an answer and highlight one piece of supporting evidence before checking.</p>`:''}</form>${guided?reviewTools(q,first):''}</div></div>
+      ${locked&&!guided?comparison(q):''}`;
+    if(guided){
+      const clue=card.querySelector('[data-clue]'),reason=card.querySelector('[data-reason]');
+      clue.onclick=()=>{
+        const show=clue.getAttribute('aria-pressed')==='false';
+        clue.setAttribute('aria-pressed',String(show));
+        clue.textContent=show?'Show my highlight':'Highlight clue';
+        card.querySelector('[data-highlight-label]').textContent=show?'Suggested clue is shown.':'Your submitted highlight is shown.';
+        card.querySelector('[data-passage]').innerHTML=passageHTML(q,show?C.suggestions(q,paragraphs(q)):first.marks,false);
+      };
+      reason.onclick=()=>{
+        const panel=card.querySelector('.review-reason');
+        const show=panel.hidden;
+        panel.hidden=!show;
+        reason.setAttribute('aria-expanded',String(show));
+        reason.textContent=show?'Hide answer review':first.answerOK?'Review my answer':'Show why I missed it';
+        const rows=card.querySelectorAll('.choice-row');
+        rows[q.answer].classList.toggle('review-correct',show);
+        if(!first.answerOK)rows[first.choice].classList.toggle('review-incorrect',show);
+      };
+    }
     if(locked)return;
     const form=card.querySelector('form');
     form.onchange=event=>{
@@ -236,7 +276,7 @@
   };
   $('#export').onclick=()=>{
     const file={course:D.appId,exportedAt:new Date().toISOString(),revision:D.revision,state,questions:D.questions.map(q=>({...q,paragraphs:paragraphs(q)}))};
-    const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='marco-reading-evidence-2026-11-24.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=D.exportName||'marco-reading-evidence-2026-11-24.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
   $('#sync').hidden=!online;
   questionList.replaceChildren(...D.questions.map(mountQuestion));
@@ -267,7 +307,7 @@
     document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')sync.sync();});
     setInterval(()=>{if(document.visibilityState==='visible')sync.sync();},30000);void sync.sync();
   }
-  fetch('source-report.json').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{
+  if($('#sources'))fetch('source-report.json').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{
     $('#sources').innerHTML=`<p>${esc(data.summary)}</p><div class="table-wrap"><table><thead><tr><th>Original question</th><th>What to practise</th><th>Recorded answers</th><th>New question</th></tr></thead><tbody>${data.items.map(s=>`<tr><td>${esc(s.source)}</td><td>${esc(s.focus)}</td><td>${esc(s.record)}</td><td>Q${s.practice}</td></tr>`).join('')}</tbody></table></div><p class="meta">Verified November 24, 2026. Original test texts stay in their existing review locations; these practice passages are newly written.</p>`;
   }).catch(()=>{$('#sources').textContent='Source list unavailable. The skill match is listed with each completed question.';});
 })();

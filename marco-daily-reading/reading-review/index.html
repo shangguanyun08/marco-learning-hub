@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173957">
+  <meta name="description" content="An ISEE Middle reading review with eight questions, passage clues, and explanations for missed answers.">
+  <title>Session 6 · Reading Review | Marco’s Daily Reading</title>
+  <link rel="stylesheet" href="../evidence-practice/style.css?v=4">
+  <link rel="stylesheet" href="./review.css?v=1">
+  <script defer src="./data.js?v=1"></script>
+  <script defer src="../evidence-practice/core.js?v=3"></script>
+  <script defer src="../evidence-practice/sync.js?v=1"></script>
+  <script defer src="../evidence-practice/app.js?v=6"></script>
+</head>
+<body>
+  <header class="top">
+    <a href="../">Daily Reading</a>
+    <span id="save-status" role="status">Loading saved work…</span>
+    <button id="sync" type="button" hidden>Sync now</button>
+  </header>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">SESSION 6 · ISEE MIDDLE</p>
+      <h1>Reading Review</h1>
+      <p class="lead">Choose one answer and highlight the words that support it. After you check, reveal the passage clue and see how it supports the correct choice.</p>
+      <p class="meta">Eight new questions based on skills from earlier reviews.</p>
+    </header>
+    <section class="dashboard" aria-labelledby="score-title">
+      <div class="dashboard-head">
+        <div><h2 id="score-title">First-try results</h2><p id="score" aria-live="polite"></p></div>
+        <div class="tools">
+          <button id="review" type="button">Review results</button>
+          <button id="export" type="button">Export records</button>
+        </div>
+      </div>
+      <dl class="score-counts">
+        <div class="right-count"><dt>Correct</dt><dd id="correct-count">—</dd></div>
+        <div class="wrong-count"><dt>Wrong</dt><dd id="wrong-count">—</dd></div>
+        <div><dt>Unanswered</dt><dd id="unanswered-count">—</dd></div>
+        <div><dt>Accuracy</dt><dd id="accuracy-count">—</dd></div>
+      </dl>
+      <div class="skill-results"><h3>Results by skill</h3><dl id="skill-statistics" class="skill-statistics"></dl></div>
+    </section>
+    <section id="parent" class="panel" aria-labelledby="results-heading" hidden>
+      <h2 id="results-heading">Review results</h2>
+      <p>Open a question to see the submitted answer and highlight.</p>
+      <label>Saved session <select id="history"></select></label>
+      <div class="tools">
+        <button id="wrong" type="button" aria-pressed="false">Show incorrect answers</button>
+        <button id="all" type="button">Show all questions</button>
+      </div>
+      <div id="report"></div>
+    </section>
+    <nav id="jump" aria-label="Jump to a question"></nav>
+    <div id="workspace"></div>
+    <div class="tools session-end">
+      <a href="#jump">Back to question list</a>
+      <button id="review-end" type="button">Review session</button>
+    </div>
+    <p class="footnote">Answers and highlights are saved on this browser. Use Export records to keep a copy.</p>
+    <noscript><p>Turn on JavaScript to answer questions and highlight the passage.</p></noscript>
+  </main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+.review-tools [aria-pressed="true"] {
+  background: var(--yellow);
+  border-color: #aa7b30;
+}
+
+.review-reason {
+  margin-top: .85rem;
+  padding: .65rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f6f9fc;
+}
+
+.review-reason p {
+  margin: .45rem 0;
+}
+
+.choice-row.review-correct .choice {
+  border-color: #4e8b72;
+  background: #edf9f4;
+}
+
+.choice-row.review-incorrect .choice {
+  border-color: #a75b48;
+  background: #fff1ec;
+}
