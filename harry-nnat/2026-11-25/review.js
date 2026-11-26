@@ -3,7 +3,11 @@
   const questions = window.ZOZECK_MOCK_REVIEW;
   const find = id => document.getElementById(id);
   const questionButtons = [...document.querySelectorAll('[data-question]')];
-  const ids = questionButtons.map(button => button.dataset.question);
+  const sessionLinks = [...document.querySelectorAll('[data-session]')];
+  const sessions = new Map([...document.querySelectorAll('[data-test]')].map(section => [
+    section.dataset.test,
+    { section, ids: [...section.querySelectorAll('[data-question]')].map(button => button.dataset.question) },
+  ]));
   const form = find('mock-form');
   const choices = find('mock-choices');
   const title = find('mock-question-title');
@@ -12,9 +16,12 @@
   const check = find('mock-check');
   const reviewed = find('mock-reviewed');
   const practice = new Map();
+  const lastQuestion = new Map();
   let marked = new Set();
   let active;
+  let activeSession;
   let saved = true;
+  const sessionFromUrl = () => new URLSearchParams(location.search).get('test');
 
   try {
     const stored = JSON.parse(localStorage.getItem(key) || '[]');
@@ -22,7 +29,9 @@
   } catch {}
 
   function showProgress() {
-    const description = `${marked.size} of ${ids.length} reviewed on this device`;
+    const ids = sessions.get(activeSession).ids;
+    const count = ids.filter(id => marked.has(id)).length;
+    const description = `${count} of ${ids.length} reviewed`;
     find('mock-progress').textContent = saved ? description : `${description} · progress could not be saved`;
     reviewed.checked = marked.has(active);
     for (const button of questionButtons) {
@@ -82,6 +91,8 @@
 
   function showQuestion(id, focus = false) {
     active = id;
+    lastQuestion.set(activeSession, id);
+    const ids = sessions.get(activeSession).ids;
     const question = questions[id];
     if (!practice.has(id)) practice.set(id, { selected: '', attempts: [] });
     const position = ids.indexOf(id);
@@ -94,16 +105,32 @@
     find('mock-prev').disabled = position === 0;
     find('mock-next').disabled = position === ids.length - 1;
     for (const button of questionButtons) {
-      const current = button.dataset.question === id;
-      if (current) {
-        button.setAttribute('aria-current', 'true');
-        find('mock-focus-badge').hidden = !button.classList.contains('focus-question');
-      } else button.removeAttribute('aria-current');
+      if (button.dataset.question === id) button.setAttribute('aria-current', 'true');
+      else button.removeAttribute('aria-current');
     }
     choices.replaceChildren(...question.choices.map(makeChoice));
     updateAnswer();
     showProgress();
-    if (focus) title.focus();
+    if (focus) title.focus({ preventScroll: true });
+  }
+
+  function showSession(id, focus = false) {
+    activeSession = sessions.has(id) ? id : '1';
+    for (const [test, { section }] of sessions) section.hidden = test !== activeSession;
+    for (const link of sessionLinks) {
+      if (link.dataset.session === activeSession) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    }
+    showQuestion(lastQuestion.get(activeSession) || sessions.get(activeSession).ids[0], focus);
+  }
+
+  function step(offset) {
+    const ids = sessions.get(activeSession).ids;
+    const next = ids[ids.indexOf(active) + offset];
+    if (next) {
+      showQuestion(next, true);
+      find('mock-dashboard').scrollIntoView({ block: 'start' });
+    }
   }
 
   form.addEventListener('change', event => {
@@ -124,8 +151,19 @@
   for (const button of questionButtons) {
     button.addEventListener('click', () => showQuestion(button.dataset.question, true));
   }
+  for (const link of sessionLinks) {
+    link.addEventListener('click', event => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      if (link.dataset.session !== activeSession) {
+        history.pushState(null, '', link.href);
+        showSession(link.dataset.session, true);
+      }
+    });
+  }
   reviewed.addEventListener('change', () => markQuestion(reviewed.checked));
-  find('mock-prev').addEventListener('click', () => showQuestion(ids[ids.indexOf(active) - 1], true));
-  find('mock-next').addEventListener('click', () => showQuestion(ids[ids.indexOf(active) + 1], true));
-  showQuestion(questionButtons.find(button => button.classList.contains('focus-question')).dataset.question);
+  find('mock-prev').addEventListener('click', () => step(-1));
+  find('mock-next').addEventListener('click', () => step(1));
+  addEventListener('popstate', () => showSession(sessionFromUrl()));
+  showSession(sessionFromUrl());
 })();

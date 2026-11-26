@@ -6,112 +6,110 @@
   <meta name="theme-color" content="#183f57">
   <title>11/25/2026 · ZOZECK mock test review | Learning Hub</title>
   <link rel="stylesheet" href="../style.css?v=20261119-focus">
-  <link rel="stylesheet" href="../dates.css?v=20261125-questions">
+  <link rel="stylesheet" href="../dates.css?v=20261125-sessions">
   <script defer src="questions.js?v=20261125"></script>
-  <script defer src="review.js?v=20261125-questions"></script>
+  <script defer src="review.js?v=20261125-sessions"></script>
 </head>
-<body class="dated-nnat">
+<body class="dated-nnat mock-review-page">
   <header><a href="../">← NNAT practice</a></header>
   <main>
     <section class="intro">
       <p class="eyebrow">ZOZECK mock test review</p>
       <h1><time datetime="2026-11-25">11/25/2026</time></h1>
     </section>
-    <div class="mock-workspace">
-      <section class="mock-question" aria-labelledby="mock-question-title">
-        <div class="mock-question-heading">
-          <h2 id="mock-question-title" tabindex="-1">TEST-02 · Question 17</h2>
-          <span id="mock-focus-badge">Focus question</span>
+    <section class="mock-dashboard" id="mock-dashboard" aria-label="Practice sessions">
+      <nav class="mock-sessions" aria-label="Choose a practice session">
+        <a href="?test=1" data-session="1" aria-current="page">TEST-01 <small>12 questions</small></a>
+        <a href="?test=2" data-session="2">TEST-02 <small>18 questions</small></a>
+        <a href="?test=3" data-session="3">TEST-03 <small>11 questions</small></a>
+      </nav>
+      <div class="mock-dashboard-main">
+        <div class="mock-dashboard-heading">
+          <h2>Question numbers</h2>
+          <p id="mock-progress" class="mock-progress" role="status"></p>
         </div>
-        <img class="mock-diagram" id="mock-diagram" alt="">
-        <form id="mock-form">
-          <fieldset>
-            <legend>Choose the missing picture.</legend>
-            <div class="mock-choices" id="mock-choices"></div>
-          </fieldset>
-          <button class="primary" id="mock-check" type="submit" disabled>Check answer</button>
-          <p id="mock-feedback" role="status"></p>
-        </form>
-        <details class="mock-hint" id="mock-hint">
-          <summary>Need a hint?</summary>
-          <p id="mock-hint-text"></p>
-        </details>
-        <div class="mock-controls">
-          <label><input type="checkbox" id="mock-reviewed"> Mark reviewed</label>
-          <div class="mock-step">
-            <button type="button" class="secondary" id="mock-prev">← Previous</button>
-            <button type="button" class="secondary" id="mock-next">Next →</button>
+        <section class="mock-question-group" data-test="1" aria-label="TEST-01 question numbers">
+          <div class="mock-number-list">
+            <button type="button" data-question="test-01-q3" aria-label="TEST-01 question 3">3</button>
+            <button type="button" data-question="test-01-q10" aria-label="TEST-01 question 10">10</button>
+            <button type="button" data-question="test-01-q17" aria-label="TEST-01 question 17">17</button>
+            <button type="button" data-question="test-01-q18" aria-label="TEST-01 question 18">18</button>
+            <button type="button" data-question="test-01-q19" aria-label="TEST-01 question 19">19</button>
+            <button type="button" data-question="test-01-q22" aria-label="TEST-01 question 22">22</button>
+            <button type="button" data-question="test-01-q24" aria-label="TEST-01 question 24">24</button>
+            <button type="button" data-question="test-01-q30" aria-label="TEST-01 question 30">30</button>
+            <button type="button" data-question="test-01-q32" aria-label="TEST-01 question 32">32</button>
+            <button type="button" data-question="test-01-q42" aria-label="TEST-01 question 42">42</button>
+            <button type="button" data-question="test-01-q43" aria-label="TEST-01 question 43">43</button>
+            <button type="button" data-question="test-01-q48" aria-label="TEST-01 question 48">48</button>
           </div>
+          <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651958354124805&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-01&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
+        </section>
+        <section class="mock-question-group" data-test="2" aria-label="TEST-02 question numbers" hidden>
+          <div class="mock-number-list">
+            <button type="button" data-question="test-02-q2" aria-label="TEST-02 question 2">2</button>
+            <button type="button" data-question="test-02-q3" aria-label="TEST-02 question 3">3</button>
+            <button type="button" data-question="test-02-q8" aria-label="TEST-02 question 8">8</button>
+            <button type="button" data-question="test-02-q9" aria-label="TEST-02 question 9">9</button>
+            <button type="button" data-question="test-02-q15" aria-label="TEST-02 question 15">15</button>
+            <button type="button" data-question="test-02-q17" aria-label="TEST-02 question 17">17</button>
+            <button type="button" data-question="test-02-q18" aria-label="TEST-02 question 18">18</button>
+            <button type="button" data-question="test-02-q19" aria-label="TEST-02 question 19">19</button>
+            <button type="button" data-question="test-02-q20" aria-label="TEST-02 question 20">20</button>
+            <button type="button" data-question="test-02-q21" aria-label="TEST-02 question 21">21</button>
+            <button type="button" data-question="test-02-q22" aria-label="TEST-02 question 22">22</button>
+            <button type="button" data-question="test-02-q23" aria-label="TEST-02 question 23">23</button>
+            <button type="button" data-question="test-02-q24" aria-label="TEST-02 question 24">24</button>
+            <button type="button" data-question="test-02-q26" aria-label="TEST-02 question 26">26</button>
+            <button type="button" data-question="test-02-q33" aria-label="TEST-02 question 33">33</button>
+            <button type="button" data-question="test-02-q36" aria-label="TEST-02 question 36">36</button>
+            <button type="button" data-question="test-02-q40" aria-label="TEST-02 question 40">40</button>
+            <button type="button" data-question="test-02-q48" aria-label="TEST-02 question 48">48</button>
+          </div>
+          <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651959346438149&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-02&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
+        </section>
+        <section class="mock-question-group" data-test="3" aria-label="TEST-03 question numbers" hidden>
+          <div class="mock-number-list">
+            <button type="button" data-question="test-03-q2" aria-label="TEST-03 question 2">2</button>
+            <button type="button" data-question="test-03-q13" aria-label="TEST-03 question 13">13</button>
+            <button type="button" data-question="test-03-q18" aria-label="TEST-03 question 18">18</button>
+            <button type="button" data-question="test-03-q19" aria-label="TEST-03 question 19">19</button>
+            <button type="button" data-question="test-03-q21" aria-label="TEST-03 question 21">21</button>
+            <button type="button" data-question="test-03-q24" aria-label="TEST-03 question 24">24</button>
+            <button type="button" data-question="test-03-q25" aria-label="TEST-03 question 25">25</button>
+            <button type="button" data-question="test-03-q36" aria-label="TEST-03 question 36">36</button>
+            <button type="button" data-question="test-03-q39" aria-label="TEST-03 question 39">39</button>
+            <button type="button" data-question="test-03-q40" aria-label="TEST-03 question 40">40</button>
+            <button type="button" data-question="test-03-q42" aria-label="TEST-03 question 42">42</button>
+          </div>
+          <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651960599224325&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-03&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
+        </section>
+      </div>
+    </section>
+    <section class="mock-question" aria-labelledby="mock-question-title">
+      <h2 id="mock-question-title" tabindex="-1">TEST-01 · Question 3</h2>
+      <img class="mock-diagram" id="mock-diagram" alt="">
+      <form id="mock-form">
+        <fieldset>
+          <legend>Choose the missing picture.</legend>
+          <div class="mock-choices" id="mock-choices"></div>
+        </fieldset>
+        <button class="primary" id="mock-check" type="submit" disabled>Check answer</button>
+        <p id="mock-feedback" role="status"></p>
+      </form>
+      <details class="mock-hint" id="mock-hint">
+        <summary>Need a hint?</summary>
+        <p id="mock-hint-text"></p>
+      </details>
+      <div class="mock-controls">
+        <label><input type="checkbox" id="mock-reviewed"> Mark reviewed</label>
+        <div class="mock-step">
+          <button type="button" class="secondary" id="mock-prev">← Previous</button>
+          <button type="button" class="secondary" id="mock-next">Next →</button>
         </div>
-      </section>
-      <aside class="mock-nav">
-        <h2>Missed questions</h2>
-        <p id="mock-progress" class="mock-progress" role="status"></p>
-        <p class="mock-focus-note">Start with TEST-02, questions 17–24. These grids change several details at once.</p>
-        <nav aria-label="Choose a missed question">
-          <section class="mock-question-group" aria-labelledby="test-01-title">
-            <h3 id="test-01-title">TEST-01</h3>
-            <div class="mock-number-list">
-              <button type="button" data-question="test-01-q3" aria-label="TEST-01 question 3">3</button>
-              <button type="button" data-question="test-01-q10" aria-label="TEST-01 question 10">10</button>
-              <button type="button" data-question="test-01-q17" aria-label="TEST-01 question 17">17</button>
-              <button type="button" data-question="test-01-q18" aria-label="TEST-01 question 18">18</button>
-              <button type="button" data-question="test-01-q19" aria-label="TEST-01 question 19">19</button>
-              <button type="button" data-question="test-01-q22" aria-label="TEST-01 question 22">22</button>
-              <button type="button" data-question="test-01-q24" aria-label="TEST-01 question 24">24</button>
-              <button type="button" data-question="test-01-q30" aria-label="TEST-01 question 30">30</button>
-              <button type="button" data-question="test-01-q32" aria-label="TEST-01 question 32">32</button>
-              <button type="button" data-question="test-01-q42" aria-label="TEST-01 question 42">42</button>
-              <button type="button" data-question="test-01-q43" aria-label="TEST-01 question 43">43</button>
-              <button type="button" data-question="test-01-q48" aria-label="TEST-01 question 48">48</button>
-            </div>
-            <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651958354124805&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-01&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
-          </section>
-          <section class="mock-question-group" aria-labelledby="test-02-title">
-            <h3 id="test-02-title">TEST-02</h3>
-            <div class="mock-number-list">
-              <button type="button" data-question="test-02-q2" aria-label="TEST-02 question 2">2</button>
-              <button type="button" data-question="test-02-q3" aria-label="TEST-02 question 3">3</button>
-              <button type="button" data-question="test-02-q8" aria-label="TEST-02 question 8">8</button>
-              <button type="button" data-question="test-02-q9" aria-label="TEST-02 question 9">9</button>
-              <button type="button" data-question="test-02-q15" aria-label="TEST-02 question 15">15</button>
-              <button type="button" data-question="test-02-q17" aria-label="TEST-02 question 17, focus question" class="focus-question">17</button>
-              <button type="button" data-question="test-02-q18" aria-label="TEST-02 question 18, focus question" class="focus-question">18</button>
-              <button type="button" data-question="test-02-q19" aria-label="TEST-02 question 19, focus question" class="focus-question">19</button>
-              <button type="button" data-question="test-02-q20" aria-label="TEST-02 question 20, focus question" class="focus-question">20</button>
-              <button type="button" data-question="test-02-q21" aria-label="TEST-02 question 21, focus question" class="focus-question">21</button>
-              <button type="button" data-question="test-02-q22" aria-label="TEST-02 question 22, focus question" class="focus-question">22</button>
-              <button type="button" data-question="test-02-q23" aria-label="TEST-02 question 23, focus question" class="focus-question">23</button>
-              <button type="button" data-question="test-02-q24" aria-label="TEST-02 question 24, focus question" class="focus-question">24</button>
-              <button type="button" data-question="test-02-q26" aria-label="TEST-02 question 26">26</button>
-              <button type="button" data-question="test-02-q33" aria-label="TEST-02 question 33">33</button>
-              <button type="button" data-question="test-02-q36" aria-label="TEST-02 question 36">36</button>
-              <button type="button" data-question="test-02-q40" aria-label="TEST-02 question 40">40</button>
-              <button type="button" data-question="test-02-q48" aria-label="TEST-02 question 48">48</button>
-            </div>
-            <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651959346438149&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-02&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
-          </section>
-          <section class="mock-question-group" aria-labelledby="test-03-title">
-            <h3 id="test-03-title">TEST-03</h3>
-            <div class="mock-number-list">
-              <button type="button" data-question="test-03-q2" aria-label="TEST-03 question 2">2</button>
-              <button type="button" data-question="test-03-q13" aria-label="TEST-03 question 13">13</button>
-              <button type="button" data-question="test-03-q18" aria-label="TEST-03 question 18">18</button>
-              <button type="button" data-question="test-03-q19" aria-label="TEST-03 question 19">19</button>
-              <button type="button" data-question="test-03-q21" aria-label="TEST-03 question 21">21</button>
-              <button type="button" data-question="test-03-q24" aria-label="TEST-03 question 24">24</button>
-              <button type="button" data-question="test-03-q25" aria-label="TEST-03 question 25">25</button>
-              <button type="button" data-question="test-03-q36" aria-label="TEST-03 question 36">36</button>
-              <button type="button" data-question="test-03-q39" aria-label="TEST-03 question 39">39</button>
-              <button type="button" data-question="test-03-q40" aria-label="TEST-03 question 40">40</button>
-              <button type="button" data-question="test-03-q42" aria-label="TEST-03 question 42">42</button>
-            </div>
-            <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651960599224325&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-03&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
-          </section>
-        </nav>
-      </aside>
-    </div>
-    <noscript><p>Turn on JavaScript to practise here, or use the links to the original tests.</p></noscript>
+      </div>
+    </section>
+    <noscript><p>Turn on JavaScript to switch sessions and practise here.</p></noscript>
   </main>
 </body>
 </html>

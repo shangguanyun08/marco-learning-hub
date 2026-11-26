@@ -6,12 +6,18 @@
 .dated-nnat .date-card p { color: var(--muted); margin: 0 0 24px; }
 .dated-nnat .date-card { padding: 22px; }
 .dated-nnat a.primary { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
-.mock-workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 285px); gap: 18px; align-items: start; }
-.mock-question, .mock-nav { padding: 20px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
-.mock-question h2, .mock-nav h2 { margin: 0; font-size: 22px; }
-.mock-question-heading, .mock-controls, .mock-step { display: flex; align-items: center; gap: 10px; }
-.mock-question-heading, .mock-controls { justify-content: space-between; flex-wrap: wrap; }
-#mock-focus-badge { background: #f6ebce; color: #68470c; border-radius: 5px; padding: 4px 7px; font-size: 12px; font-weight: 700; }
+.mock-review-page .intro { padding-block: 12px 16px; }
+.mock-review-page .intro h1 { font-size: clamp(32px, 5vw, 46px); margin: 0; }
+.mock-dashboard { margin-bottom: 14px; scroll-margin-top: 12px; }
+.mock-sessions { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 8px; }
+.mock-sessions a { padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); font-weight: 700; text-decoration: none; }
+.mock-sessions a small { display: block; font-weight: 400; }
+.mock-sessions a[aria-current] { background: var(--blue); border-color: var(--blue); color: #fff; }
+.mock-question, .mock-dashboard-main { padding: 14px 18px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+.mock-question h2 { margin: 0; font-size: 22px; }
+.mock-dashboard-heading, .mock-controls, .mock-step { display: flex; align-items: center; gap: 10px; }
+.mock-dashboard-heading, .mock-controls { justify-content: space-between; flex-wrap: wrap; }
+.mock-dashboard-heading h2 { margin: 0; font-size: 16px; }
 .mock-diagram { display: block; max-width: 100%; width: 100%; height: clamp(210px, 36vh, 390px); object-fit: contain; margin: 12px auto; }
 .mock-question legend { margin-bottom: 8px; font-weight: 700; }
 .mock-choices { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
@@ -25,26 +31,19 @@
 #mock-check { margin-top: 12px; }
 #mock-feedback { margin: 8px 0 0; min-height: 1.55em; font-weight: 700; }
 .mock-hint, .mock-controls { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
-.mock-hint p, .mock-progress, .mock-focus-note { margin: 6px 0 0; font-size: 14px; }
-.mock-progress { color: var(--muted); }
-.mock-focus-note { color: #68470c; }
-.mock-question-group { margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--line); }
-.mock-question-group h3 { margin: 0 0 6px; font-size: 14px; }
-.mock-number-list { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 5px; }
-.mock-number-list button { position: relative; min-height: 36px; padding: 4px; border: 1px solid #bbcbd1; border-radius: 6px; background: #fff; color: var(--ink); }
-.mock-number-list .focus-question { background: #f6ebce; border-color: #d3ba7b; }
+.mock-hint p { margin: 6px 0 0; font-size: 14px; }
+.mock-progress { margin: 0; color: var(--muted); font-size: 14px; }
+.mock-question-group { margin-top: 8px; }
+.mock-number-list { display: flex; flex-wrap: wrap; gap: 5px; }
+.mock-number-list button { position: relative; min-width: 36px; min-height: 36px; padding: 4px; border: 1px solid #bbcbd1; border-radius: 6px; background: #fff; color: var(--ink); }
 .mock-number-list .is-reviewed::after { content: ''; position: absolute; right: 4px; top: 4px; width: 5px; height: 5px; border-radius: 50%; background: #438965; }
 .mock-number-list button[aria-current] { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
 .mock-number-list button[aria-current].is-reviewed::after { background: #a3e9b8; }
 .mock-source { display: inline-block; margin-top: 7px; font-size: 13px; }
 
-@media (max-width: 730px) {
-  .mock-workspace { grid-template-columns: 1fr; }
-  .mock-question, .mock-nav { padding: 14px; }
-}
-
 @media (max-width: 480px) {
   .date-grid { grid-template-columns: 1fr; }
+  .mock-question, .mock-dashboard-main { padding-inline: 12px; }
   .mock-choices { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .mock-choice img { height: 67px; }
 }
