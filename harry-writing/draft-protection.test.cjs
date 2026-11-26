@@ -9,9 +9,10 @@ const savedDraft = (text, version = 1) => ({ sentence_id: 1, text, version, upda
 const settle = async () => { for (let i = 0; i < 16; i++) await new Promise(resolve => setImmediate(resolve)); };
 const response = (body, status = 200) => ({ ok: status === 200, status, json: async () => body });
 
-function boot({ local, working, remote = savedDraft('Earlier writing.'), revisions = [], holdReads = false, holdSaves = false } = {}) {
+function boot({ local, working, olderMarkup, remote = savedDraft('Earlier writing.'), revisions = [], holdReads = false, holdSaves = false } = {}) {
   const dom = new JSDOM(fs.readFileSync(path.join(__dirname, 'picture-prompts/index.html'), 'utf8'), { url: 'https://example.test/?topic=garden', runScripts: 'outside-only' });
   const w = dom.window, reads = [], saves = [], calls = [];
+  if (olderMarkup) w.document.querySelector('#use-online-draft').remove();
   w.HTMLElement.prototype.scrollIntoView = function () {};
   w.AbortSignal = AbortSignal;
   w.WRITING_STORY_ID = 'harry-picture-garden-v1';
@@ -219,5 +220,19 @@ test('choosing a competing online copy keeps the displaced draft and sends no ov
     assert.equal(t.input.value, remote.text);
     assert.match(t.d.querySelector('#history-list').textContent, /On this device/);
     assert.equal(t.calls.filter(call => call.action === 'draft').length, 0);
+  } finally { t.close(); }
+});
+
+
+test('a new editor keeps saving when a browser still has the old page markup', async () => {
+  const t = boot({ olderMarkup: true });
+  try {
+    await settle();
+    t.input.value = 'My new words on the cached page.';
+    t.input.dispatchEvent(new t.w.Event('input'));
+    t.w.dispatchEvent(new t.w.Event('pagehide'));
+    await settle();
+    assert.equal(t.calls.find(call => call.action === 'draft').body.editorVersion, 2);
+    assert.equal(t.cache().drafts[1].dirty, false);
   } finally { t.close(); }
 });
