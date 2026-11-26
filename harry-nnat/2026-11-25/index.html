@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#183f57">
   <title>11/25/2026 · ZOZECK mock test review | Learning Hub</title>
   <link rel="stylesheet" href="../style.css?v=20261119-focus">
-  <link rel="stylesheet" href="../dates.css?v=20261125-sessions">
-  <script defer src="questions.js?v=20261125"></script>
-  <script defer src="review.js?v=20261125-sessions"></script>
+  <link rel="stylesheet" href="../dates.css?v=20261125-list">
+  <script defer src="questions.js?v=20261125-size"></script>
+  <script defer src="review.js?v=20261125-list"></script>
 </head>
 <body class="dated-nnat mock-review-page">
   <header><a href="../">← NNAT practice</a></header>
@@ -86,29 +86,32 @@
         </section>
       </div>
     </section>
-    <section class="mock-question" aria-labelledby="mock-question-title">
-      <h2 id="mock-question-title" tabindex="-1">TEST-01 · Question 3</h2>
-      <img class="mock-diagram" id="mock-diagram" alt="">
-      <form id="mock-form">
-        <fieldset>
-          <legend>Choose the missing picture.</legend>
-          <div class="mock-choices" id="mock-choices"></div>
-        </fieldset>
-        <button class="primary" id="mock-check" type="submit" disabled>Check answer</button>
-        <p id="mock-feedback" role="status"></p>
-      </form>
-      <details class="mock-hint" id="mock-hint">
-        <summary>Need a hint?</summary>
-        <p id="mock-hint-text"></p>
-      </details>
-      <div class="mock-controls">
-        <label><input type="checkbox" id="mock-reviewed"> Mark reviewed</label>
-        <div class="mock-step">
-          <button type="button" class="secondary" id="mock-prev">← Previous</button>
-          <button type="button" class="secondary" id="mock-next">Next →</button>
+    <section class="mock-question-list" id="mock-question-list" aria-label="TEST-01 questions"></section>
+    <template id="mock-question-template">
+      <article class="mock-question">
+        <div class="mock-question-heading">
+          <h2 tabindex="-1"></h2>
+          <button type="button" class="mock-enlarge secondary" aria-pressed="false">Enlarge images</button>
         </div>
-      </div>
-    </section>
+        <div class="mock-question-body">
+          <div class="mock-figure"></div>
+          <form>
+            <fieldset>
+              <legend>Choose the missing picture.</legend>
+              <div class="mock-choices"></div>
+            </fieldset>
+            <div class="mock-answer-status">
+              <button class="primary mock-check" type="submit" disabled>Check answer</button>
+              <p class="mock-feedback" role="status"></p>
+            </div>
+          </form>
+        </div>
+        <div class="mock-controls">
+          <label><input type="checkbox"> Mark reviewed</label>
+          <a href="#mock-dashboard">Back to question numbers ↑</a>
+        </div>
+      </article>
+    </template>
     <noscript><p>Turn on JavaScript to switch sessions and practise here.</p></noscript>
   </main>
 </body>

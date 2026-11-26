@@ -1,24 +1,17 @@
 (() => {
   const key = 'harry-nnat-zozeck-review-2026-11-25';
   const questions = window.ZOZECK_MOCK_REVIEW;
-  const find = id => document.getElementById(id);
+  const list = document.getElementById('mock-question-list');
+  const template = document.getElementById('mock-question-template');
+  const progress = document.getElementById('mock-progress');
   const questionButtons = [...document.querySelectorAll('[data-question]')];
   const sessionLinks = [...document.querySelectorAll('[data-session]')];
   const sessions = new Map([...document.querySelectorAll('[data-test]')].map(section => [
     section.dataset.test,
     { section, ids: [...section.querySelectorAll('[data-question]')].map(button => button.dataset.question) },
   ]));
-  const form = find('mock-form');
-  const choices = find('mock-choices');
-  const title = find('mock-question-title');
-  const diagram = find('mock-diagram');
-  const feedback = find('mock-feedback');
-  const check = find('mock-check');
-  const reviewed = find('mock-reviewed');
   const practice = new Map();
-  const lastQuestion = new Map();
   let marked = new Set();
-  let active;
   let activeSession;
   let saved = true;
   const sessionFromUrl = () => new URLSearchParams(location.search).get('test');
@@ -32,16 +25,15 @@
     const ids = sessions.get(activeSession).ids;
     const count = ids.filter(id => marked.has(id)).length;
     const description = `${count} of ${ids.length} reviewed`;
-    find('mock-progress').textContent = saved ? description : `${description} · progress could not be saved`;
-    reviewed.checked = marked.has(active);
+    progress.textContent = saved ? description : `${description} · progress could not be saved`;
     for (const button of questionButtons) {
       button.classList.toggle('is-reviewed', marked.has(button.dataset.question));
     }
   }
 
-  function markQuestion(value) {
-    if (value) marked.add(active);
-    else marked.delete(active);
+  function markQuestion(id, value) {
+    if (value) marked.add(id);
+    else marked.delete(id);
     try {
       localStorage.setItem(key, JSON.stringify([...marked]));
       saved = true;
@@ -49,6 +41,19 @@
       saved = false;
     }
     showProgress();
+  }
+
+  function picture({ src, width, height }, alt = '') {
+    const image = document.createElement('img');
+    image.className = 'mock-picture';
+    image.alt = alt;
+    image.width = width;
+    image.height = height;
+    image.style.setProperty('--picture-width', `${width}px`);
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.src = src;
+    return image;
   }
 
   function makeChoice(source, index) {
@@ -61,95 +66,109 @@
     input.value = letter;
     const caption = document.createElement('span');
     caption.textContent = letter;
-    const image = document.createElement('img');
-    image.src = source;
-    image.alt = '';
-    label.append(input, caption, image);
+    label.append(input, caption, picture(source));
     return label;
   }
 
-  function updateAnswer() {
-    const question = questions[active];
-    const state = practice.get(active);
-    const last = state.attempts.at(-1);
-    const correct = last === question.answer;
-    const done = correct || state.attempts.length === 2;
-    for (const input of form.elements.choice) {
-      input.checked = input.value === state.selected;
-      const alreadyMissed = !correct && state.attempts.includes(input.value);
-      input.disabled = done || alreadyMissed;
-      input.parentElement.classList.toggle('is-wrong', alreadyMissed);
-      input.parentElement.classList.toggle('is-correct', done && input.value === question.answer);
-    }
-    check.disabled = done || !state.selected || state.attempts.includes(state.selected);
-    feedback.className = correct ? 'correct' : last ? 'incorrect' : '';
-    if (correct) feedback.textContent = 'Correct!';
-    else if (done) feedback.textContent = `The correct answer is ${question.answer}. Use the hint to work out the rule.`;
-    else if (last) feedback.textContent = 'Try one more time. Check each detail before choosing.';
-    else feedback.textContent = '';
-  }
-
-  function showQuestion(id, focus = false) {
-    active = id;
-    lastQuestion.set(activeSession, id);
-    const ids = sessions.get(activeSession).ids;
+  function makeQuestion(id) {
     const question = questions[id];
-    if (!practice.has(id)) practice.set(id, { selected: '', attempts: [] });
-    const position = ids.indexOf(id);
     const [test, number] = id.split('-q');
-    title.textContent = `${test.toUpperCase()} · Question ${number}`;
-    diagram.src = question.diagram;
-    diagram.alt = `Original diagram for ${test.toUpperCase()} question ${number}`;
-    find('mock-hint-text').textContent = question.hint;
-    find('mock-hint').open = false;
-    find('mock-prev').disabled = position === 0;
-    find('mock-next').disabled = position === ids.length - 1;
-    for (const button of questionButtons) {
-      if (button.dataset.question === id) button.setAttribute('aria-current', 'true');
-      else button.removeAttribute('aria-current');
+    const article = template.content.firstElementChild.cloneNode(true);
+    article.id = id;
+    const title = article.querySelector('h2');
+    title.id = `${id}-title`;
+    title.textContent = `Question ${number}`;
+    article.setAttribute('aria-labelledby', title.id);
+    article.querySelector('.mock-figure').append(
+      picture(question.diagram, `Original diagram for ${test.toUpperCase()} question ${number}`),
+    );
+    const form = article.querySelector('form');
+    const choices = form.querySelector('.mock-choices');
+    choices.append(...question.choices.map(makeChoice));
+    const check = form.querySelector('.mock-check');
+    const feedback = form.querySelector('.mock-feedback');
+    const reviewed = article.querySelector('input[type="checkbox"]');
+    const enlarge = article.querySelector('.mock-enlarge');
+    if (!practice.has(id)) practice.set(id, { selected: '', attempts: [], enlarged: false });
+    const state = practice.get(id);
+    reviewed.checked = marked.has(id);
+    reviewed.addEventListener('change', () => markQuestion(id, reviewed.checked));
+
+    function updateSize() {
+      article.classList.toggle('is-enlarged', state.enlarged);
+      enlarge.setAttribute('aria-pressed', String(state.enlarged));
     }
-    choices.replaceChildren(...question.choices.map(makeChoice));
+    enlarge.addEventListener('click', () => {
+      state.enlarged = !state.enlarged;
+      updateSize();
+    });
+
+    function updateAnswer() {
+      const last = state.attempts.at(-1);
+      const correct = last === question.answer;
+      const done = correct || state.attempts.length === 2;
+      for (const input of form.elements.choice) {
+        input.checked = input.value === state.selected;
+        const missed = state.attempts.includes(input.value) && input.value !== question.answer;
+        input.disabled = done || missed;
+        input.parentElement.classList.toggle('is-wrong', missed);
+        input.parentElement.classList.toggle('is-correct', done && input.value === question.answer);
+      }
+      check.disabled = done || !state.selected || state.attempts.includes(state.selected);
+      feedback.classList.toggle('correct', correct);
+      feedback.classList.toggle('incorrect', Boolean(last && !correct));
+      if (correct) feedback.textContent = 'Correct!';
+      else if (done) feedback.textContent = `The correct answer is ${question.answer}.`;
+      else if (last) feedback.textContent = 'Try once more.';
+      else feedback.textContent = '';
+    }
+
+    form.addEventListener('change', event => {
+      state.selected = event.target.value;
+      updateAnswer();
+    });
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      if (check.disabled) return;
+      state.attempts.push(state.selected);
+      if (state.selected === question.answer) {
+        reviewed.checked = true;
+        markQuestion(id, true);
+      }
+      updateAnswer();
+      if (state.attempts.length === 1 && state.selected !== question.answer) {
+        choices.querySelector('input:enabled')?.focus();
+      }
+    });
+
+    updateSize();
     updateAnswer();
-    showProgress();
-    if (focus) title.focus({ preventScroll: true });
+    return article;
   }
 
-  function showSession(id, focus = false) {
-    activeSession = sessions.has(id) ? id : '1';
+  function showSession(id) {
+    const next = sessions.has(id) ? id : '1';
+    if (next === activeSession) return;
+    activeSession = next;
     for (const [test, { section }] of sessions) section.hidden = test !== activeSession;
     for (const link of sessionLinks) {
       if (link.dataset.session === activeSession) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     }
-    showQuestion(lastQuestion.get(activeSession) || sessions.get(activeSession).ids[0], focus);
+    for (const button of questionButtons) button.removeAttribute('aria-current');
+    list.setAttribute('aria-label', `TEST-0${activeSession} questions`);
+    list.replaceChildren(...sessions.get(activeSession).ids.map(makeQuestion));
+    showProgress();
   }
 
-  function step(offset) {
-    const ids = sessions.get(activeSession).ids;
-    const next = ids[ids.indexOf(active) + offset];
-    if (next) {
-      showQuestion(next, true);
-      find('mock-dashboard').scrollIntoView({ block: 'start' });
-    }
-  }
-
-  form.addEventListener('change', event => {
-    practice.get(active).selected = event.target.value;
-    updateAnswer();
-  });
-  form.addEventListener('submit', event => {
-    event.preventDefault();
-    if (check.disabled) return;
-    const state = practice.get(active);
-    state.attempts.push(state.selected);
-    if (state.selected === questions[active].answer) markQuestion(true);
-    updateAnswer();
-    if (state.attempts.length === 1 && state.selected !== questions[active].answer) {
-      choices.querySelector('input:enabled')?.focus();
-    }
-  });
   for (const button of questionButtons) {
-    button.addEventListener('click', () => showQuestion(button.dataset.question, true));
+    button.addEventListener('click', () => {
+      const target = document.getElementById(button.dataset.question);
+      for (const other of questionButtons) other.removeAttribute('aria-current');
+      button.setAttribute('aria-current', 'true');
+      target.querySelector('h2').focus({ preventScroll: true });
+      target.scrollIntoView({ block: 'start' });
+    });
   }
   for (const link of sessionLinks) {
     link.addEventListener('click', event => {
@@ -157,13 +176,10 @@
       event.preventDefault();
       if (link.dataset.session !== activeSession) {
         history.pushState(null, '', link.href);
-        showSession(link.dataset.session, true);
+        showSession(link.dataset.session);
       }
     });
   }
-  reviewed.addEventListener('change', () => markQuestion(reviewed.checked));
-  find('mock-prev').addEventListener('click', () => step(-1));
-  find('mock-next').addEventListener('click', () => step(1));
   addEventListener('popstate', () => showSession(sessionFromUrl()));
   showSession(sessionFromUrl());
 })();
