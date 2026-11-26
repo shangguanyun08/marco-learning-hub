@@ -6,6 +6,7 @@
   const online=live&&D.sharedProgress!==false;
   const key=D.appId+(live?'':':preview');
   const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const restartButton = $('#restart');
   let state={version:1,articles:{evidence:[]}},run,ready=!online,onlyWrong=false,pendingSelection=null,sync,storageOK=true;
   try{if(!demo)state=S.normalize(JSON.parse(localStorage.getItem(key)||'null'));}catch{storageOK=false;}
   state.articles.evidence??=[];
@@ -69,7 +70,13 @@
     }
     $('#jump').innerHTML=D.questions.map(q=>`<button type="button" data-jump="${q.id}" class="${C.resolved(attempts(q))?(isWrong(q)?'miss':'done'):''}" aria-label="Jump to question ${questionNumber.get(q.id)}, ${outcome(q).toLowerCase()}">${questionNumber.get(q.id)}</button>`).join('');
     updateReport();
-    $('#history').innerHTML=state.articles.evidence.map((r,i)=>`<option value="${esc(r.id)}" ${r.id===run.id?'selected':''}>${state.articles.evidence.length>1?'Saved history '+(i+1):'Current session'}${r.syncRoot?' · concurrent work preserved':''}</option>`).join('');
+    const history = state.articles.evidence;
+    $('#history').innerHTML=history.map((r,i)=>{
+      const label = restartButton
+        ? (i === 0 ? 'Current attempt' : 'Previous attempt ' + (history.length - i))
+        : (history.length > 1 ? 'Saved history ' + (i + 1) : 'Current session');
+      return `<option value="${esc(r.id)}" ${r.id===run.id?'selected':''}>${label}${r.syncRoot?' · concurrent work preserved':''}</option>`;
+    }).join('');
   }
   function updateReport(){
     const questions=onlyWrong?D.questions.filter(isWrong):D.questions;
@@ -79,6 +86,9 @@
     const button=event.target.closest('button[data-jump]');
     if(!button)return;
     const card=questionCards.get(button.dataset.jump);
+    focusQuestion(card);
+  }
+  function focusQuestion(card){
     card.focus({preventScroll:true});
     card.scrollIntoView({block:'start'});
   }
@@ -282,11 +292,36 @@
   };
   $('#wrong').onclick=()=>{onlyWrong=!onlyWrong;$('#wrong').setAttribute('aria-pressed',String(onlyWrong));updateReport();};
   $('#all').onclick=()=>{onlyWrong=false;$('#wrong').setAttribute('aria-pressed','false');updateReport();};
-  $('#history').onchange=()=>{
-    run=state.articles.evidence.find(r=>r.id===$('#history').value);
+  function showRun(nextRun){
+    run=nextRun;
     for(const q of D.questions)renderQuestion(q,questionCards.get(q.id));
     updateOverview();
+  }
+  $('#history').onchange=()=>{
+    const selected = state.articles.evidence.find(r=>r.id===$('#history').value);
+    if (selected) showRun(selected);
   };
+  if (restartButton) {
+    restartButton.onclick = () => {
+      const history = state.articles.evidence;
+      const current = history[0];
+      if (Object.keys(current.answers).length || Object.keys(current.drafts).length) {
+        history.unshift({
+          id: crypto.randomUUID(),
+          startedAt: new Date().toISOString(),
+          position: 0,
+          answers: {},
+          drafts: {}
+        });
+        save();
+      }
+      onlyWrong = false;
+      $('#wrong').setAttribute('aria-pressed', 'false');
+      $('#parent').hidden = true;
+      showRun(history[0]);
+      focusQuestion(questionCards.get(D.questions[0].id));
+    };
+  }
   $('#export').onclick=()=>{
     const file={course:D.appId,exportedAt:new Date().toISOString(),revision:D.revision,state,questions:D.questions.map(q=>({...q,paragraphs:paragraphs(q)}))};
     const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=D.exportName||'marco-reading-evidence-2026-11-24.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
