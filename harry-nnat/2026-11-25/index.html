@@ -6,8 +6,9 @@
   <meta name="theme-color" content="#183f57">
   <title>11/25/2026 · ZOZECK mock test review | Learning Hub</title>
   <link rel="stylesheet" href="../style.css?v=20261119-focus">
-  <link rel="stylesheet" href="../dates.css?v=20261125">
-  <script defer src="review.js?v=20261125"></script>
+  <link rel="stylesheet" href="../dates.css?v=20261125-questions">
+  <script defer src="questions.js?v=20261125"></script>
+  <script defer src="review.js?v=20261125-questions"></script>
 </head>
 <body class="dated-nnat">
   <header><a href="../">← NNAT practice</a></header>
@@ -15,180 +16,102 @@
     <section class="intro">
       <p class="eyebrow">ZOZECK mock test review</p>
       <h1><time datetime="2026-11-25">11/25/2026</time></h1>
-      <p>Open each test in ZOZECK, choose a question number below, and solve it again. Check it off here when you can explain the rule.</p>
     </section>
-    <section class="mock-focus" aria-labelledby="mock-focus-title">
-      <h2 id="mock-focus-title">Start with TEST-02, questions 17–24</h2>
-      <p>These grids change several details at once. Predict one feature at a time, such as shape, direction, fill, or count. Check your prediction against a completed row and column before choosing a picture.</p>
-    </section>
-    <p id="mock-progress" class="mock-progress" role="status"></p>
-    <div class="mock-grid">
-      <article class="mock-card" id="test-01" aria-labelledby="test-01-title">
-        <div class="mock-card-head">
-          <div>
-            <h2 id="test-01-title">TEST-01</h2>
-            <p>12 questions to review</p>
-          </div>
-          <a class="primary" href="https://global.zozeck.com/question/respond?sectionsId=651958354124805&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-01&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open TEST-01 in ZOZECK <span aria-hidden="true">↗</span></a>
+    <div class="mock-workspace">
+      <section class="mock-question" aria-labelledby="mock-question-title">
+        <div class="mock-question-heading">
+          <h2 id="mock-question-title" tabindex="-1">TEST-02 · Question 17</h2>
+          <span id="mock-focus-badge">Focus question</span>
         </div>
-        <details>
-          <summary>Missed questions and hints</summary>
-          <ul class="mock-cues">
-            <li>
-              <label><input type="checkbox" id="test-01-q3"><span><strong>Q3</strong> Trace the sloped edge when the shape folds into the box.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q10"><span><strong>Q10</strong> Check which color the corner cross keeps and what lands in the middle.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q17"><span><strong>Q17</strong> Work out the border colors and the inside dots separately.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q18"><span><strong>Q18</strong> Check dot count and the marks around the diamond separately.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q19"><span><strong>Q19</strong> Track the eye direction, the fill, and where the red dots land.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q22"><span><strong>Q22</strong> Choose the red center shape and the blue frame separately.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q24"><span><strong>Q24</strong> Find the fill, then locate each colored dot on the ring.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q30"><span><strong>Q30</strong> Compare the first two panels. Isolate the lines that were added.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q32"><span><strong>Q32</strong> Check horizontal and vertical spacing separately.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q42"><span><strong>Q42</strong> Continue the colors into the gap one row at a time.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q43"><span><strong>Q43</strong> Match the triangle colors along all four edges of the opening.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-01-q48"><span><strong>Q48</strong> Match the triangles along the top, then use the side edges to confirm.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-          </ul>
+        <img class="mock-diagram" id="mock-diagram" alt="">
+        <form id="mock-form">
+          <fieldset>
+            <legend>Choose the missing picture.</legend>
+            <div class="mock-choices" id="mock-choices"></div>
+          </fieldset>
+          <button class="primary" id="mock-check" type="submit" disabled>Check answer</button>
+          <p id="mock-feedback" role="status"></p>
+        </form>
+        <details class="mock-hint" id="mock-hint">
+          <summary>Need a hint?</summary>
+          <p id="mock-hint-text"></p>
         </details>
-      </article>
-      <article class="mock-card" id="test-02" aria-labelledby="test-02-title">
-        <div class="mock-card-head">
-          <div>
-            <h2 id="test-02-title">TEST-02</h2>
-            <p>18 questions to review</p>
+        <div class="mock-controls">
+          <label><input type="checkbox" id="mock-reviewed"> Mark reviewed</label>
+          <div class="mock-step">
+            <button type="button" class="secondary" id="mock-prev">← Previous</button>
+            <button type="button" class="secondary" id="mock-next">Next →</button>
           </div>
-          <a class="primary" href="https://global.zozeck.com/question/respond?sectionsId=651959346438149&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-02&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open TEST-02 in ZOZECK <span aria-hidden="true">↗</span></a>
         </div>
-        <details open>
-          <summary>Missed questions and hints</summary>
-          <ul class="mock-cues">
-            <li>
-              <label><input type="checkbox" id="test-02-q2"><span><strong>Q2</strong> Track both yellow pieces and the direction of their tabs.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q3"><span><strong>Q3</strong> Track the side and angle of each yellow flap.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q8"><span><strong>Q8</strong> Check which small symbols stay visible when the panels combine.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q9"><span><strong>Q9</strong> Check the center symbol as well as the arrows and bottom overlap.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q15"><span><strong>Q15</strong> Track the bar ends, the head, and the feet separately.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q17"><span><strong>Q17</strong> Track the head, body, and tail separately. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q18"><span><strong>Q18</strong> Track the arms, body shape, and feet separately. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q19"><span><strong>Q19</strong> Check owl color, eye state, and markings separately. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q20"><span><strong>Q20</strong> Check the head, body fill, and tail separately. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q21"><span><strong>Q21</strong> Work out the plane body, window count, and wing pattern separately. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q22"><span><strong>Q22</strong> Count wheels and windows, then check the chimney and front. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q23"><span><strong>Q23</strong> Find the big shape, then check the tiny top shape and stripe fill. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q24"><span><strong>Q24</strong> Check the ears and feet as carefully as the hair. <span class="mock-priority">Focus</span><span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q26"><span><strong>Q26</strong> Follow where the dark petals move around the flower.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q33"><span><strong>Q33</strong> Compare the first and middle panels to see which layer was added.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q36"><span><strong>Q36</strong> Separate the outer outline from the lines inside it.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q40"><span><strong>Q40</strong> Trace both edges of the blue bands through the opening.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-02-q48"><span><strong>Q48</strong> Test where the orange diagonal meets each edge of the square.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-          </ul>
-        </details>
-      </article>
-      <article class="mock-card" id="test-03" aria-labelledby="test-03-title">
-        <div class="mock-card-head">
-          <div>
-            <h2 id="test-03-title">TEST-03</h2>
-            <p>11 questions to review</p>
-          </div>
-          <a class="primary" href="https://global.zozeck.com/question/respond?sectionsId=651960599224325&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-03&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open TEST-03 in ZOZECK <span aria-hidden="true">↗</span></a>
-        </div>
-        <details>
-          <summary>Missed questions and hints</summary>
-          <ul class="mock-cues">
-            <li>
-              <label><input type="checkbox" id="test-03-q2"><span><strong>Q2</strong> Track the outside pieces and the center diamond as separate parts.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q13"><span><strong>Q13</strong> Trace where each colored block ends up when the groups combine.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q18"><span><strong>Q18</strong> Keep the orientation of the lines and green triangles when combining them.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q19"><span><strong>Q19</strong> Track the diagonal direction and how much of the square is filled.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q21"><span><strong>Q21</strong> Find the corner first, then count the curved bands.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q24"><span><strong>Q24</strong> Check bar length, direction, and placement.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q25"><span><strong>Q25</strong> Find the missing outer shape, then count its small shapes.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q36"><span><strong>Q36</strong> Check what each color becomes and what happens to the white band.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q39"><span><strong>Q39</strong> Track the shape direction and the stripe direction separately.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q40"><span><strong>Q40</strong> Follow the colors and positions of all four stripes.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-            <li>
-              <label><input type="checkbox" id="test-03-q42"><span><strong>Q42</strong> Say the three-symbol pattern aloud before filling the gap.<span class="sr-only"> · Mark reviewed</span></span></label>
-            </li>
-          </ul>
-        </details>
-      </article>
+      </section>
+      <aside class="mock-nav">
+        <h2>Missed questions</h2>
+        <p id="mock-progress" class="mock-progress" role="status"></p>
+        <p class="mock-focus-note">Start with TEST-02, questions 17–24. These grids change several details at once.</p>
+        <nav aria-label="Choose a missed question">
+          <section class="mock-question-group" aria-labelledby="test-01-title">
+            <h3 id="test-01-title">TEST-01</h3>
+            <div class="mock-number-list">
+              <button type="button" data-question="test-01-q3" aria-label="TEST-01 question 3">3</button>
+              <button type="button" data-question="test-01-q10" aria-label="TEST-01 question 10">10</button>
+              <button type="button" data-question="test-01-q17" aria-label="TEST-01 question 17">17</button>
+              <button type="button" data-question="test-01-q18" aria-label="TEST-01 question 18">18</button>
+              <button type="button" data-question="test-01-q19" aria-label="TEST-01 question 19">19</button>
+              <button type="button" data-question="test-01-q22" aria-label="TEST-01 question 22">22</button>
+              <button type="button" data-question="test-01-q24" aria-label="TEST-01 question 24">24</button>
+              <button type="button" data-question="test-01-q30" aria-label="TEST-01 question 30">30</button>
+              <button type="button" data-question="test-01-q32" aria-label="TEST-01 question 32">32</button>
+              <button type="button" data-question="test-01-q42" aria-label="TEST-01 question 42">42</button>
+              <button type="button" data-question="test-01-q43" aria-label="TEST-01 question 43">43</button>
+              <button type="button" data-question="test-01-q48" aria-label="TEST-01 question 48">48</button>
+            </div>
+            <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651958354124805&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-01&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
+          </section>
+          <section class="mock-question-group" aria-labelledby="test-02-title">
+            <h3 id="test-02-title">TEST-02</h3>
+            <div class="mock-number-list">
+              <button type="button" data-question="test-02-q2" aria-label="TEST-02 question 2">2</button>
+              <button type="button" data-question="test-02-q3" aria-label="TEST-02 question 3">3</button>
+              <button type="button" data-question="test-02-q8" aria-label="TEST-02 question 8">8</button>
+              <button type="button" data-question="test-02-q9" aria-label="TEST-02 question 9">9</button>
+              <button type="button" data-question="test-02-q15" aria-label="TEST-02 question 15">15</button>
+              <button type="button" data-question="test-02-q17" aria-label="TEST-02 question 17, focus question" class="focus-question">17</button>
+              <button type="button" data-question="test-02-q18" aria-label="TEST-02 question 18, focus question" class="focus-question">18</button>
+              <button type="button" data-question="test-02-q19" aria-label="TEST-02 question 19, focus question" class="focus-question">19</button>
+              <button type="button" data-question="test-02-q20" aria-label="TEST-02 question 20, focus question" class="focus-question">20</button>
+              <button type="button" data-question="test-02-q21" aria-label="TEST-02 question 21, focus question" class="focus-question">21</button>
+              <button type="button" data-question="test-02-q22" aria-label="TEST-02 question 22, focus question" class="focus-question">22</button>
+              <button type="button" data-question="test-02-q23" aria-label="TEST-02 question 23, focus question" class="focus-question">23</button>
+              <button type="button" data-question="test-02-q24" aria-label="TEST-02 question 24, focus question" class="focus-question">24</button>
+              <button type="button" data-question="test-02-q26" aria-label="TEST-02 question 26">26</button>
+              <button type="button" data-question="test-02-q33" aria-label="TEST-02 question 33">33</button>
+              <button type="button" data-question="test-02-q36" aria-label="TEST-02 question 36">36</button>
+              <button type="button" data-question="test-02-q40" aria-label="TEST-02 question 40">40</button>
+              <button type="button" data-question="test-02-q48" aria-label="TEST-02 question 48">48</button>
+            </div>
+            <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651959346438149&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-02&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
+          </section>
+          <section class="mock-question-group" aria-labelledby="test-03-title">
+            <h3 id="test-03-title">TEST-03</h3>
+            <div class="mock-number-list">
+              <button type="button" data-question="test-03-q2" aria-label="TEST-03 question 2">2</button>
+              <button type="button" data-question="test-03-q13" aria-label="TEST-03 question 13">13</button>
+              <button type="button" data-question="test-03-q18" aria-label="TEST-03 question 18">18</button>
+              <button type="button" data-question="test-03-q19" aria-label="TEST-03 question 19">19</button>
+              <button type="button" data-question="test-03-q21" aria-label="TEST-03 question 21">21</button>
+              <button type="button" data-question="test-03-q24" aria-label="TEST-03 question 24">24</button>
+              <button type="button" data-question="test-03-q25" aria-label="TEST-03 question 25">25</button>
+              <button type="button" data-question="test-03-q36" aria-label="TEST-03 question 36">36</button>
+              <button type="button" data-question="test-03-q39" aria-label="TEST-03 question 39">39</button>
+              <button type="button" data-question="test-03-q40" aria-label="TEST-03 question 40">40</button>
+              <button type="button" data-question="test-03-q42" aria-label="TEST-03 question 42">42</button>
+            </div>
+            <a class="mock-source" href="https://global.zozeck.com/question/respond?sectionsId=651960599224325&amp;qBankId=651938183958533&amp;apiName=getSections&amp;name=TEST-03&amp;page=1&amp;pageNum=50&amp;type=practice" target="_blank" rel="noopener">Open original test in ZOZECK <span aria-hidden="true">↗</span></a>
+          </section>
+        </nav>
+      </aside>
     </div>
+    <noscript><p>Turn on JavaScript to practise here, or use the links to the original tests.</p></noscript>
   </main>
 </body>
 </html>
