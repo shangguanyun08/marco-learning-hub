@@ -1,0 +1,20 @@
+.qr-net-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+  max-width: 31rem;
+  margin-block: 1rem;
+}
+
+.qr-net-grid figure {
+  margin: 0;
+  padding: .45rem;
+  text-align: center;
+  border: 1px solid #bdcdda;
+  border-radius: .6rem;
+}
+
+.qr-net-grid figcaption { font-weight: 700; }
+.qr-net-grid svg { display: block; width: 100%; max-width: 140px; height: auto; margin: .25rem auto; }
+.qr-triangles { margin-inline: 0; }
+.qr-triangles svg { display: block; max-width: 100%; height: auto; }

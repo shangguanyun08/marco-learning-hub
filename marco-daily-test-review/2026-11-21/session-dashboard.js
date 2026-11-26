@@ -61,6 +61,15 @@
         'overlap-2': 2, 'volume-2': 0, 'overlap-3': 0, 'volume-3': 1
       }
     },
+    'nov21-8': {
+      appId: 'marco-math-nov21-session8-v1', session: 'official-middle-nov21-session8-v1', reportAfter: 20,
+      keys: {
+        'redo-qr3': 2, 'redo-qr7': 3, 'redo-qr8': 3, 'redo-qr20': 0, 'redo-qr21': 0,
+        'redo-qr26': 2, 'redo-qr31': 3, 'redo-qr32': 2, 'redo-qr33': 3, 'redo-qr34': 1, 'redo-qr35': 3,
+        'rates-1': 1, 'nets-1': 2, 'median-1': 2, 'cost-1': 0, 'lengths-1': 1,
+        'decimals-1': 1, 'multiples-1': 3, 'probability-1': 2, 'slope-1': 0
+      }
+    },
   };
 
   function formatStatus(stats) {

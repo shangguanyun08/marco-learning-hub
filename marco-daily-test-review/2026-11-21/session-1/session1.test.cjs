@@ -22,8 +22,8 @@ function open(t, directory, records = {}, options = {}) {
 }
 
 test('November 21 cards use the saved first-try scores on every page, including inactive sessions', async t => {
-  const directories = ['..', '.', '../session-2', '../session-3', '../session-4', '../session-5', '../session-6', '../session-7'];
-  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4', 'nov21-5', 'nov21-6', 'nov21-7'];
+  const directories = ['..', '.', '../session-2', '../session-3', '../session-4', '../session-5', '../session-6', '../session-7', '../session-8'];
+  const cardIds = ['nov21-review', 'nov21-1', 'nov21-2', 'nov21-3', 'nov21-4', 'nov21-5', 'nov21-6', 'nov21-7', 'nov21-8'];
   const records = new Map();
   for (const [i, directory] of directories.entries()) {
     const w = open(t, directory);
@@ -71,6 +71,7 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.match(card('nov21-5').textContent, /Not started · 0\/6 answered/);
     assert.match(card('nov21-6').textContent, /Not started · 0\/6 answered/);
     assert.match(card('nov21-7').textContent, /Not started · 0\/8 answered/);
+    assert.match(card('nov21-8').textContent, /Not started · 0\/20 answered/);
     assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
   }
 });
@@ -80,6 +81,36 @@ function submit(w, id, choice) {
   form.querySelector('input[value="' + choice + '"]').click();
   form.dispatchEvent(new w.Event('submit', {bubbles:true, cancelable:true}));
 }
+
+test('Session 8 places 11 Practice Test 7 redos before 9 fresh questions and preserves first-try scoring', t => {
+  const w = open(t, '../session-8');
+  const d = w.document, data = w.MarcoMA5Practice;
+  const originals = [3, 7, 8, 20, 21, 26, 31, 32, 33, 34, 35];
+  assert.deepEqual([...data.ids.slice(0, 11)], originals.map(n => `redo-qr${n}`));
+  assert.deepEqual([...data.ids.slice(0, 11).map(id => data.questions[id].source)], originals.map(n => `Practice Test 7 QR · Q${n} redo`));
+  assert.equal(data.ids.slice(11).length, 9);
+  assert.equal(new Set(data.ids.slice(11).map(id => data.questions[id].skill)).size, 9);
+  assert.equal(d.querySelectorAll('#q-redo-qr7 svg[role=img]').length, 4);
+  assert.equal(d.querySelectorAll('#q-redo-qr20 tbody tr').length, 4);
+  assert.match(d.querySelector('#q-redo-qr35 svg').getAttribute('aria-label'), /No right angles are marked/);
+  assert.equal(d.querySelector('.answer-reveal'), null);
+  const misses = new Set(['redo-qr3','redo-qr34']);
+  for (const id of data.ids) {
+    assert.equal(d.querySelector('#skill-results'), null);
+    const q = data.questions[id];
+    submit(w,id,misses.has(id) ? (q.correct+1)%4 : q.correct);
+  }
+  submit(w,'redo-qr34',data.questions['redo-qr34'].correct);
+  assert.match(d.querySelector('#practice-tab').textContent, /18\/20 \(90%\) first try/);
+  d.querySelector('[data-practice-filter=wrong]').click();
+  assert.equal(d.querySelectorAll('.wrong-skill-group .question').length, 2);
+  const summary = d.querySelector('.wrong-skill-summary');
+  assert.match(summary.querySelector('[data-skill-summary=rates]').textContent, /2 correct · 1 wrong · 3 total/);
+  assert.match(summary.querySelector('[data-skill-summary=slope]').textContent, /1 correct · 1 wrong · 2 total/);
+  assert.match(summary.querySelector('[data-skill-summary=median]').textContent, /2 correct · 0 wrong · 2 total/);
+  assert.match(d.querySelector('#skill-results').textContent, /1 corrected on a second try/);
+  assert.match(d.querySelector('#skill-results .skill-strengths').textContent, /Recognize nets of solids \(2\/2\)/);
+});
 
 test('Session 4 lists both perfect two-question skills, plus slope totals before and after retries', t => {
   const w = open(t, '../session-4');
