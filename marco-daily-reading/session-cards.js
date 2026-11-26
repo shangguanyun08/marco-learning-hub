@@ -1,10 +1,35 @@
 (() => {
   'use strict';
 
+  function evidenceModel(data, sync) {
+    return {
+      valid: state => state?.version === 1 && Array.isArray(state.articles?.evidence),
+      empty: () => sync.normalize(null),
+      merge: sync.merge,
+      stats(state) {
+        const answers = state.articles.evidence?.[0]?.answers;
+        const total = data.questions.length;
+        let answered = 0;
+        let first = 0;
+        for (const {id} of data.questions) {
+          const result = answers?.[id]?.[0]?.answerOK;
+          if (typeof result !== 'boolean') continue;
+          answered++;
+          if (result) first++;
+        }
+        return {total, answered, first, complete: answered === total};
+      }
+    };
+  }
+
   function mount(course, engine, local) {
-    const tabs = [...document.querySelectorAll('.reading-sessions [data-session], .reading-sessions [data-course="earlier-review"]')];
+    const tabs = [...document.querySelectorAll('.reading-sessions [data-session], .reading-sessions [data-course]')];
     const current = tabs.find(card => Number(card.dataset.session) === course.number);
     const otherSessions = tabs.filter(card => card !== current).map(card => {
+      if (card.dataset.course === 'evidence-practice') {
+        const data = {...window.EvidenceData, singleTry: true};
+        return {card, data, model: evidenceModel(data, window.ReadingSync), remote: null};
+      }
       const data = card.dataset.course === 'earlier-review'
         ? window.MarcoEarlierReadingData
         : course.dashboardCourses[Number(card.dataset.session) - 1];
@@ -14,7 +39,7 @@
 
     function paint(card, data, model, state, known, fallback) {
       const score = model.stats(state);
-      const finished = score.complete && (data.archiveReview || data.ids.every(id => model.reveal(state, id)));
+      const finished = score.complete && (data.archiveReview || data.singleTry || data.ids.every(id => model.reveal(state, id)));
       const result = `${score.first}/${score.total} correct first try`;
       const text = finished ? `✓ Finished · ${result}`
         : score.complete ? `First pass finished · ${result} · Retry available`

@@ -28,7 +28,11 @@ function open(t, session, fetch, seedAnswer = false) {
     if (earlier) window.MarcoQR4Engine.submit(state, 'm1q21', course.questions.m1q21.correct);
     window.localStorage.setItem(course.appId, JSON.stringify(state));
   }
-  if (!earlier) window.eval(read('session-cards.js'));
+  if (!earlier) {
+    for (const script of ['evidence-practice/data.js', 'evidence-practice/sync.js', 'session-cards.js']) {
+      window.eval(read(script));
+    }
+  }
   window.eval(read('reading.js'));
   const select = selector => window.document.querySelector(selector);
   return {
@@ -290,6 +294,31 @@ test('Earlier Review turns green when answered and Session 5 follows it', async 
   window.dispatchEvent(new window.Event('focus'));
   await until(() => card.classList.contains('is-complete'));
   assert.match(card.textContent, /Finished · 25\/38 correct first try/);
+});
+
+test('Session 5 reads its one-try record and turns green once every question is checked', async t => {
+  let progress = null;
+  const appId = 'marco-reading-evidence-20261124-v1';
+  const reading = open(t, 1, async (url, options) => {
+    const requested = new URL(url).searchParams.get('appId');
+    if (requested === appId) assert.equal(options.method, 'GET');
+    return {ok: true, json: async () => ({progress: requested === appId ? progress : null})};
+  });
+  await until(() => reading.status() === 'live');
+  const {window} = reading;
+  const card = window.document.querySelector('[data-course="evidence-practice"]');
+  const questions = window.EvidenceData.questions;
+  const answers = Object.fromEntries(questions.slice(0, -1).map(({id, answer}) => [id, [{choice: answer, answerOK: true}]]));
+  progress = {version: 1, state: {version: 1, articles: {evidence: [{id: 'primary', answers}]}}};
+  window.dispatchEvent(new window.Event('focus'));
+  await until(() => /18\/19 answered/.test(card.textContent));
+  assert.equal(card.classList.contains('is-complete'), false);
+  const {id, answer} = questions.at(-1);
+  answers[id] = [{choice: (answer + 1) % 4, answerOK: false}];
+  progress.version++;
+  window.dispatchEvent(new window.Event('focus'));
+  await until(() => card.classList.contains('is-complete'));
+  assert.match(card.textContent, /Finished · 18\/19 correct first try/);
 });
 
 test('Practice Test 4 hides the original answer while a retry is available', async t => {
