@@ -116,7 +116,7 @@
       <button type="button" data-reason aria-expanded="false" aria-controls="reason-${q.id}">Show Marco’s answer</button>
     </div>
     <div class="review-reason" id="reason-${q.id}" hidden>
-      <p><strong>Marco chose ${'ABCD'[original]} on Practice 7.</strong> ${esc(q.distractors[original])}</p>
+      <p><strong>Marco chose ${'ABCD'[original]} on ${esc(D.sourceTest??'Practice 7')}.</strong> ${esc(q.distractors[original])}</p>
       <p><strong>Correct answer ${'ABCD'[q.answer]}.</strong> ${esc(q.choices[q.answer])} ${esc(q.explanation)}</p>
       ${answer&&!answer.answerOK&&answer.choice!==original?`<p><strong>You chose ${'ABCD'[answer.choice]} on the redo.</strong> ${esc(q.distractors[answer.choice])}</p>`:''}
       ${answer?`<p class="key-label">Your highlight on the redo</p>${highlightList(q,answer.marks,false)}`:''}

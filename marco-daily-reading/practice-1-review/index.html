@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#173957">
+  <meta name="description" content="Review six missed questions from ISEE Middle Practice 1 Reading Comprehension.">
+  <title>Practice 1 Reading Review | Marco’s Daily Reading</title>
+  <link rel="stylesheet" href="../evidence-practice/style.css?v=4">
+  <link rel="stylesheet" href="../reading-review/review.css?v=1">
+  <script defer src="./data.js?v=1"></script>
+  <script defer src="../evidence-practice/core.js?v=3"></script>
+  <script defer src="../evidence-practice/sync.js?v=1"></script>
+  <script defer src="../evidence-practice/app.js?v=8"></script>
+</head>
+<body>
+  <header class="top">
+    <a href="../">Daily Reading</a>
+    <span id="save-status" role="status">Loading saved work…</span>
+    <button id="sync" type="button" hidden>Sync now</button>
+  </header>
+  <main class="shell">
+    <header class="hero">
+      <p class="eyebrow">SESSION 7 · ISEE MIDDLE</p>
+      <h1>Practice 1 Reading Review</h1>
+      <p class="lead"><strong>Practice 1 score</strong> · 30 of 36 correct · 6 incorrect · 0 unanswered</p>
+      <p>Redo each missed question with one answer and one highlight. Use <strong>Highlight clue</strong> to see the evidence and <strong>Show Marco’s answer</strong> to review the original choice.</p>
+      <p class="meta">Passages and choices are shortened or paraphrased. Question numbers and answer letters match Test Innovators.</p>
+    </header>
+    <section class="dashboard" aria-labelledby="score-title">
+      <div class="dashboard-head">
+        <div><h2 id="score-title">Redo progress</h2><p id="score" aria-live="polite"></p></div>
+        <div class="tools">
+          <button id="review" type="button">Review results</button>
+          <button id="export" type="button">Export records</button>
+        </div>
+      </div>
+      <dl class="score-counts">
+        <div class="right-count"><dt>Correct</dt><dd id="correct-count">—</dd></div>
+        <div class="wrong-count"><dt>Wrong</dt><dd id="wrong-count">—</dd></div>
+        <div><dt>Unanswered</dt><dd id="unanswered-count">—</dd></div>
+        <div><dt>Accuracy</dt><dd id="accuracy-count">—</dd></div>
+      </dl>
+      <div class="skill-results"><h3>Results by skill</h3><dl id="skill-statistics" class="skill-statistics"></dl></div>
+    </section>
+    <section id="parent" class="panel" aria-labelledby="results-heading" hidden>
+      <h2 id="results-heading">Review redo results</h2>
+      <p>Open a question to see the submitted answer and highlight.</p>
+      <label>Saved session <select id="history"></select></label>
+      <div class="tools">
+        <button id="wrong" type="button" aria-pressed="false">Show incorrect answers</button>
+        <button id="all" type="button">Show all questions</button>
+      </div>
+      <div id="report"></div>
+    </section>
+    <nav id="jump" aria-label="Jump to a question"></nav>
+    <div id="workspace"></div>
+    <div class="tools session-end">
+      <a href="#jump">Back to question list</a>
+      <button id="review-end" type="button">Review session</button>
+    </div>
+    <p class="footnote">Redo answers and highlights are saved in this browser.</p>
+    <noscript><p>Turn on JavaScript to answer questions and highlight the passage.</p></noscript>
+  </main>
+</body>
+</html>
