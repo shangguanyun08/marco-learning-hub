@@ -6,7 +6,10 @@ const { setTimeout: delay } = require('node:timers/promises');
 const { JSDOM } = require('jsdom');
 
 const read = name => readFileSync(join(__dirname, name), 'utf8');
-const reviewKey = 'harry-nnat-zozeck-review-2026-11-25';
+const originalReviewKey = 'harry-nnat-zozeck-review-2026-11-25';
+const originalBucket = 'zozeck-mock-2026-11-25';
+const reviewKey = `${originalReviewKey}:round-2`;
+const bucket = `${originalBucket}-round-2`;
 const answerKey = id => `${reviewKey}:question:${id}`;
 
 function open(t, saved = [], selectedTest = 1, fetcher) {
@@ -212,9 +215,28 @@ test('sync retries after reconnecting and preserves conflicting local checks as 
   first.window.dispatchEvent(new first.window.Event('online'));
   second.window.dispatchEvent(new second.window.Event('online'));
   await until(() => [first, second].every(page => page.text('mock-save-status') === 'Synced online'));
-  const runs = service.state().articles['zozeck-mock-2026-11-25'];
+  const runs = service.state().articles[bucket];
   const checks = runs.filter(run => (run.syncRoot || run.id) === 'test-01-q3');
   assert.deepEqual(checks.map(run => run.answers['test-01-q3'].map(answer => answer.choice)), [[0], [1]]);
   first.window.dispatchEvent(new first.window.Event('focus'));
   await until(() => first.card('test-01-q10').querySelector('input[value=D]').checked);
+});
+
+test('the restart begins blank and keeps the original local and online attempts', async t => {
+  const id = 'test-01-q3';
+  const originalKey = `${originalReviewKey}:question:${id}`;
+  const originalAnswer = JSON.stringify({ selected: 'C', attempts: ['C'], reviewed: true });
+  const originalRun = { id, answers: { [id]: [{ choice: 2 }] }, drafts: {} };
+  const service = sharedProgress({ [originalBucket]: [originalRun] });
+  const page = open(t, [[originalKey, originalAnswer]], 1, service.fetch);
+  await until(() => page.text('mock-save-status') === 'Synced online');
+  assert.equal(page.text('mock-progress'), '0 of 12 checked · 0 reviewed');
+  assert.equal(page.card(id).querySelector('input:checked'), null);
+  assert.equal(service.state().articles[bucket], undefined);
+  page.click(`#${id} input[value="A"]`);
+  page.click(`#${id} .mock-check`);
+  await until(() => page.text('mock-save-status') === 'Synced online');
+  assert.equal(page.window.localStorage.getItem(originalKey), originalAnswer);
+  assert.deepEqual(service.state().articles[originalBucket][0].answers[id], [{ choice: 2 }]);
+  assert.deepEqual(service.state().articles[bucket][0].answers[id], [{ choice: 0 }]);
 });
