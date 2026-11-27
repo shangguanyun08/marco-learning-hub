@@ -188,6 +188,7 @@ test('online sync uploads existing local work and restores the retry on another 
 
   const ipad = open(t, [], 1, service.fetch);
   await until(() => ipad.text('mock-save-status') === 'Synced online');
+  assert.match(ipad.window.document.querySelector('[data-session="1"]').textContent, /0 right · 1 wrong/);
   assert.equal(ipad.card('test-01-q3').querySelector('.mock-feedback').textContent, 'Try once more.');
   assert.equal(ipad.card('test-01-q10').querySelector('input[type=checkbox]').checked, true);
   ipad.click('#test-01-q3 input[value=C]');
@@ -239,4 +240,31 @@ test('the restart begins blank and keeps the original local and online attempts'
   assert.equal(page.window.localStorage.getItem(originalKey), originalAnswer);
   assert.deepEqual(service.state().articles[originalBucket][0].answers[id], [{ choice: 2 }]);
   assert.deepEqual(service.state().articles[bucket][0].answers[id], [{ choice: 0 }]);
+});
+
+test('a test card turns green on the last retry without changing the first-try score', t => {
+  const initial = open(t);
+  const questions = initial.window.ZOZECK_MOCK_REVIEW;
+  const records = Object.entries(questions).filter(([id]) => id.startsWith('test-01-')).map(([id, { answer }]) => {
+    let attempts = [answer];
+    if (id === 'test-01-q3') attempts = ['A'];
+    if (id === 'test-01-q10') attempts = ['A', answer];
+    return [answerKey(id), JSON.stringify({ selected: attempts.at(-1), attempts })];
+  });
+  const page = open(t, records);
+  const card = page.window.document.querySelector('[data-session="1"]');
+  const otherCard = page.window.document.querySelector('[data-session="2"]');
+  assert.match(card.textContent, /First try · 10 right · 2 wrong/);
+  assert.equal(card.classList.contains('is-complete'), false);
+  assert.match(otherCard.textContent, /First try · 0 right · 0 wrong/);
+
+  page.click('#test-01-q3 input[value=B]');
+  page.click('#test-01-q3 .mock-check');
+  assert.equal(card.classList.contains('is-complete'), true);
+  assert.match(card.textContent, /Finished/);
+  assert.match(card.textContent, /First try · 10 right · 2 wrong/);
+  assert.equal(otherCard.classList.contains('is-complete'), false);
+
+  const reopened = open(t, page.saved(), 2);
+  assert.equal(reopened.window.document.querySelector('[data-session="1"]').classList.contains('is-complete'), true);
 });

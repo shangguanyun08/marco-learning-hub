@@ -33,6 +33,7 @@
   let syncStatus = '';
   const sessionFromUrl = () => new URLSearchParams(location.search).get('test');
   const isChoice = value => typeof value === 'string' && /^[A-E]$/.test(value);
+  const isFinished = (attempts, answer) => attempts.length === 2 || attempts.at(-1) === answer;
   const timestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
   const resultLabels = {
     correct: ['✓', 'Correct on the first try'],
@@ -61,7 +62,7 @@
     const correct = attempts.indexOf(questions[id].answer);
     if (correct !== -1) attempts.length = correct + 1;
     const last = attempts.at(-1);
-    const locked = correct !== -1 || attempts.length === 2;
+    const locked = isFinished(attempts, questions[id].answer);
     return {
       attempts,
       selected: locked ? last : isChoice(record?.selected) ? record.selected : last || '',
@@ -98,8 +99,29 @@
     const checked = ids.filter(id => practice.get(id).attempts.length).length;
     const reviewed = ids.filter(id => practice.get(id).reviewed).length;
     progress.textContent = `${checked} of ${ids.length} checked · ${reviewed} reviewed`;
+    showSessionScores();
     showSaveStatus();
     showDashboard();
+  }
+
+  function showSessionScores() {
+    for (const link of sessionLinks) {
+      const { ids } = sessions.get(link.dataset.session);
+      let right = 0;
+      let wrong = 0;
+      let finished = 0;
+      for (const id of ids) {
+        const { attempts } = practice.get(id);
+        const { answer } = questions[id];
+        if (attempts[0] === answer) right++;
+        else if (attempts.length) wrong++;
+        if (isFinished(attempts, answer)) finished++;
+      }
+      const complete = finished === ids.length;
+      link.classList.toggle('is-complete', complete);
+      link.querySelector('.mock-session-detail').textContent = complete ? `✓ Finished · ${ids.length} questions` : `${ids.length} questions`;
+      link.querySelector('.mock-session-score').textContent = `First try · ${right} right · ${wrong} wrong`;
+    }
   }
 
   function showDashboard() {
@@ -242,7 +264,7 @@
       reviewed.checked = state.reviewed;
       const last = state.attempts.at(-1);
       const correct = last === question.answer;
-      const done = correct || state.attempts.length === 2;
+      const done = isFinished(state.attempts, question.answer);
       for (const input of form.elements.choice) {
         input.checked = input.value === state.selected;
         const missed = state.attempts.includes(input.value) && input.value !== question.answer;
