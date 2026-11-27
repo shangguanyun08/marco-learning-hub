@@ -90,6 +90,14 @@
       appId: 'marco-math-nov21-session11-v1', session: 'official-middle-nov21-session11-v1', reportAfter: 2,
       keys: {'slope-1': 1, 'slope-2': 2}
     },
+    'nov21-12': {
+      appId: 'marco-math-nov21-session12-v1', session: 'official-middle-nov21-session12-v1', reportAfter: 2,
+      keys: {'slope-1': 0, 'slope-2': 2}
+    },
+    'nov21-13': {
+      appId: 'marco-math-nov21-session13-v1', session: 'official-middle-nov21-session13-v1', reportAfter: 2,
+      keys: {'slope-1': 1, 'slope-2': 0}
+    },
   };
 
   function formatStatus(stats) {
