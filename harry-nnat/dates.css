@@ -40,11 +40,20 @@
 .mock-controls { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 10px; font-size: 14px; }
 .mock-progress { margin: 0; color: var(--muted); font-size: 14px; }
 .mock-question-group { margin-top: 8px; }
+.mock-filters { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.mock-filters button { border: 1px solid #bbcbd1; border-radius: 7px; padding: 5px 9px; background: #fff; color: var(--ink); font-size: 13px; }
+.mock-filters button[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
+.mock-filters span { margin-left: 3px; color: inherit; font-variant-numeric: tabular-nums; font-weight: 700; }
 .mock-number-list { display: flex; flex-wrap: wrap; gap: 5px; }
-.mock-number-list button { position: relative; min-width: 36px; min-height: 36px; padding: 4px; border: 1px solid #bbcbd1; border-radius: 6px; background: #fff; color: var(--ink); }
-.mock-number-list .is-reviewed::after { content: ''; position: absolute; right: 4px; top: 4px; width: 5px; height: 5px; border-radius: 50%; background: #438965; }
-.mock-number-list button[aria-current] { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 700; }
-.mock-number-list button[aria-current].is-reviewed::after { background: #a3e9b8; }
+.mock-number-list button { position: relative; min-width: 36px; min-height: 36px; padding: 4px 7px; border: 1px solid #bbcbd1; border-radius: 6px; background: #fff; color: var(--ink); }
+.mock-number-result { padding-left: 4px; font-size: 13px; font-weight: 700; }
+.mock-number-result:empty { display: none; }
+.mock-number-list button[data-result="correct"], .mock-number-list button[data-result="corrected"] { background: #def2e5; border-color: #608f72; color: #195137; }
+.mock-number-list button[data-result="first-wrong"] { background: #fff0ed; border-color: #c06e67; color: #8e281f; }
+.mock-number-list button[data-result="wrong-twice"] { background: #edccc7; border-color: #ae4d44; color: #6f201a; }
+.mock-number-list [data-result="unchecked"].is-reviewed::after { content: ''; position: absolute; right: 4px; top: 4px; width: 5px; height: 5px; border-radius: 50%; background: #438965; }
+.mock-number-list button[aria-current] { box-shadow: 0 0 0 2px var(--blue); font-weight: 700; }
+.mock-empty { margin: 16px 0; padding: 14px 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); }
 .mock-source { display: inline-block; margin-top: 7px; font-size: 13px; }
 
 @media (max-width: 730px) {

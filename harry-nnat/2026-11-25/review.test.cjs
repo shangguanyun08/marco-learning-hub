@@ -91,3 +91,49 @@ test('a failed write leaves the answer on screen and reports that it is unsaved'
   page.click('[data-session="1"]');
   assert.equal(page.card(id).querySelector('.mock-feedback').textContent, 'Correct!');
 });
+
+test('the dashboard distinguishes correct answers, retryable misses, and two misses', t => {
+  const page = open(t);
+  const { document } = page.window;
+  const number = id => document.querySelector(`[data-question="${id}"]`);
+  const attempt = (id, choice) => {
+    page.click(`#${id} input[value="${choice}"]`);
+    page.click(`#${id} .mock-check`);
+  };
+  attempt('test-01-q3', 'C');
+  attempt('test-01-q10', 'A');
+  attempt('test-01-q17', 'A');
+  attempt('test-01-q17', 'B');
+  attempt('test-01-q18', 'A');
+  attempt('test-01-q18', 'C');
+
+  assert.equal(number('test-01-q3').dataset.result, 'correct');
+  assert.equal(number('test-01-q10').dataset.result, 'first-wrong');
+  assert.match(number('test-01-q10').getAttribute('aria-label'), /one try left/);
+  assert.equal(number('test-01-q17').dataset.result, 'wrong-twice');
+  assert.equal(number('test-01-q18').dataset.result, 'corrected');
+  assert.equal(number('test-01-q19').dataset.result, 'unchecked');
+  assert.equal(document.querySelector('[data-filter="first-wrong"] span').textContent, '3');
+  assert.equal(document.querySelector('[data-filter="wrong-twice"] span').textContent, '1');
+
+  const shown = () => [...document.querySelectorAll('.mock-question:not([hidden])')].map(card => card.id);
+  page.click('[data-filter="first-wrong"]');
+  assert.deepEqual(shown(), ['test-01-q10', 'test-01-q17', 'test-01-q18']);
+  attempt('test-01-q10', 'E');
+  assert.equal(number('test-01-q10').dataset.result, 'corrected');
+  assert.deepEqual(shown(), ['test-01-q10', 'test-01-q17', 'test-01-q18']);
+  page.click('[data-filter="wrong-twice"]');
+  assert.deepEqual(shown(), ['test-01-q17']);
+  assert.equal(number('test-01-q3').hidden, true);
+  assert.equal(number('test-01-q17').hidden, false);
+  assert.equal(page.card('test-01-q17').querySelector('.mock-check').disabled, true);
+  page.click('[data-filter="all"]');
+  assert.equal(shown().length, 12);
+
+  const reopened = open(t, page.saved());
+  assert.equal(reopened.window.document.querySelector('[data-question="test-01-q17"]').dataset.result, 'wrong-twice');
+  reopened.click('[data-session="2"]');
+  reopened.click('[data-filter="wrong-twice"]');
+  assert.equal(reopened.text('mock-empty'), 'No questions missed twice in this test.');
+  assert.equal(reopened.window.document.querySelectorAll('.mock-question:not([hidden])').length, 0);
+});

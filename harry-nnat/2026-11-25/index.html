@@ -6,9 +6,9 @@
   <meta name="theme-color" content="#183f57">
   <title>11/25/2026 · ZOZECK mock test review | Learning Hub</title>
   <link rel="stylesheet" href="../style.css?v=20261119-focus">
-  <link rel="stylesheet" href="../dates.css?v=20261125-list">
+  <link rel="stylesheet" href="../dates.css?v=20261126-results">
   <script defer src="questions.js?v=20261125-size"></script>
-  <script defer src="review.js?v=20261126-save"></script>
+  <script defer src="review.js?v=20261126-results"></script>
 </head>
 <body class="dated-nnat mock-review-page">
   <header><a href="../">← NNAT practice</a><span id="mock-save-status" class="mock-progress" role="status"></span></header>
@@ -27,6 +27,11 @@
         <div class="mock-dashboard-heading">
           <h2>Question numbers</h2>
           <p id="mock-progress" class="mock-progress" role="status"></p>
+        </div>
+        <div class="mock-filters" role="group" aria-label="Filter questions">
+          <button type="button" data-filter="all" aria-pressed="true">All questions</button>
+          <button type="button" data-filter="first-wrong" aria-pressed="false">First try wrong <span>0</span></button>
+          <button type="button" data-filter="wrong-twice" aria-pressed="false">Wrong twice <span>0</span></button>
         </div>
         <section class="mock-question-group" data-test="1" aria-label="TEST-01 question numbers">
           <div class="mock-number-list">
@@ -86,6 +91,7 @@
         </section>
       </div>
     </section>
+    <p id="mock-empty" class="mock-empty" role="status" hidden></p>
     <section class="mock-question-list" id="mock-question-list" aria-label="TEST-01 questions"></section>
     <template id="mock-question-template">
       <article class="mock-question">

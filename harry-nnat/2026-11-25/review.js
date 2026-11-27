@@ -6,7 +6,16 @@
   const template = document.getElementById('mock-question-template');
   const progress = document.getElementById('mock-progress');
   const saveStatus = document.getElementById('mock-save-status');
+  const empty = document.getElementById('mock-empty');
   const questionButtons = [...document.querySelectorAll('[data-question]')];
+  const dashboard = questionButtons.map(button => {
+    const badge = document.createElement('span');
+    badge.className = 'mock-number-result';
+    badge.setAttribute('aria-hidden', 'true');
+    button.append(badge);
+    return { button, badge, label: button.getAttribute('aria-label') };
+  });
+  const filters = [...document.querySelectorAll('[data-filter]')];
   const sessionLinks = [...document.querySelectorAll('[data-session]')];
   const sessions = new Map([...document.querySelectorAll('[data-test]')].map(section => [
     section.dataset.test,
@@ -17,9 +26,16 @@
   const enlarged = new Set();
   const refreshVisible = new Map();
   let activeSession;
+  let activeFilter = 'all';
   let storageUnavailable = false;
   const sessionFromUrl = () => new URLSearchParams(location.search).get('test');
   const isChoice = value => typeof value === 'string' && /^[A-E]$/.test(value);
+  const resultLabels = {
+    correct: ['✓', 'Correct on the first try'],
+    corrected: ['✓', 'Correct on the second try'],
+    'first-wrong': ['×', 'First try wrong, one try left'],
+    'wrong-twice': ['××', 'Wrong on both tries'],
+  };
 
   function readStored(key) {
     let value;
@@ -66,8 +82,47 @@
       const hasWork = [...practice.values()].some(state => state.selected || state.reviewed);
       saveStatus.textContent = hasWork ? 'Progress saved in this browser' : 'Progress saves in this browser';
     }
+    showDashboard();
+  }
+
+  function showDashboard() {
+    const ids = sessions.get(activeSession).ids;
+    const firstWrong = new Set();
+    const wrongTwice = new Set();
+    for (const { button, label, badge } of dashboard) {
+      const id = button.dataset.question;
+      const { attempts, reviewed } = practice.get(id);
+      const answer = questions[id].answer;
+      const [first, second] = attempts;
+      let result = 'unchecked';
+      if (first === answer) result = 'correct';
+      else if (second === answer) result = 'corrected';
+      else if (second) result = 'wrong-twice';
+      else if (first) result = 'first-wrong';
+      if (first && first !== answer) firstWrong.add(id);
+      if (result === 'wrong-twice') wrongTwice.add(id);
+      const [symbol, description] = resultLabels[result] || ['', reviewed ? 'Reviewed' : 'Unchecked'];
+      button.dataset.result = result;
+      button.classList.toggle('is-reviewed', reviewed);
+      button.setAttribute('aria-label', `${label} · ${description}`);
+      button.title = description;
+      badge.textContent = symbol;
+    }
+    const matching = { 'first-wrong': firstWrong, 'wrong-twice': wrongTwice };
+    for (const button of filters) {
+      const id = button.dataset.filter;
+      button.setAttribute('aria-pressed', String(activeFilter === id));
+      if (id !== 'all') button.querySelector('span').textContent = ids.filter(q => matching[id].has(q)).length;
+    }
+    const visible = new Set(ids.filter(id => activeFilter === 'all' || matching[activeFilter].has(id)));
     for (const button of questionButtons) {
-      button.classList.toggle('is-reviewed', practice.get(button.dataset.question).reviewed);
+      button.hidden = !visible.has(button.dataset.question);
+      if (button.hidden) button.removeAttribute('aria-current');
+    }
+    for (const id of ids) document.getElementById(id).hidden = !visible.has(id);
+    empty.hidden = visible.size > 0;
+    if (!empty.hidden) {
+      empty.textContent = activeFilter === 'wrong-twice' ? 'No questions missed twice in this test.' : 'No first-try misses in this test.';
     }
   }
 
@@ -193,6 +248,7 @@
     const next = sessions.has(id) ? id : '1';
     if (next === activeSession) return;
     activeSession = next;
+    activeFilter = 'all';
     for (const [test, { section }] of sessions) section.hidden = test !== activeSession;
     for (const link of sessionLinks) {
       if (link.dataset.session === activeSession) link.setAttribute('aria-current', 'page');
@@ -205,6 +261,12 @@
     showProgress();
   }
 
+  for (const button of filters) {
+    button.addEventListener('click', () => {
+      activeFilter = button.dataset.filter;
+      showDashboard();
+    });
+  }
   for (const button of questionButtons) {
     button.addEventListener('click', () => {
       const target = document.getElementById(button.dataset.question);
