@@ -196,7 +196,11 @@ test('online sync uploads existing local work and restores the retry on another 
   await until(() => ipad.text('mock-save-status') === 'Synced online');
   first.window.dispatchEvent(new first.window.Event('focus'));
   await until(() => first.card('test-01-q3').querySelector('.mock-feedback').textContent === 'Correct!');
-  assert.deepEqual(JSON.parse(first.window.localStorage.getItem(answerKey('test-01-q3'))).attempts, ['A', 'C']);
+  const restored = JSON.parse(first.window.localStorage.getItem(answerKey('test-01-q3')));
+  const synced = service.state().articles[bucket].find(run => run.id === 'test-01-q3');
+  assert.deepEqual(restored.attempts, ['A', 'C']);
+  assert.ok(restored.finishedAt);
+  assert.equal(restored.finishedAt, synced.completedAt);
   assert.deepEqual(service.state().articles.pattern, [old]);
 });
 
@@ -248,29 +252,44 @@ test('the restart begins blank and keeps earlier local and online attempts', asy
   assert.deepEqual(service.state().articles[bucket][0].answers[id], [{ choice: 0 }]);
 });
 
-test('a test card turns green on the last retry without changing the first-try score', t => {
+test('the last retry stamps the green test card without changing the first-try score', t => {
   const initial = open(t);
   const questions = initial.window.ZOZECK_MOCK_REVIEW;
   const records = Object.entries(questions).filter(([id]) => id.startsWith('test-01-')).map(([id, { answer }]) => {
     let attempts = [answer];
     if (id === 'test-01-q3') attempts = ['A'];
     if (id === 'test-01-q10') attempts = ['A', answer];
-    return [answerKey(id), JSON.stringify({ selected: attempts.at(-1), attempts })];
+    return [answerKey(id), JSON.stringify({ selected: attempts.at(-1), attempts, selectedAt: '2026-11-27T16:01:00.000Z' })];
   });
   const page = open(t, records);
   const card = page.window.document.querySelector('[data-session="1"]');
+  const time = card.querySelector('time');
   const otherCard = page.window.document.querySelector('[data-session="2"]');
   assert.match(card.textContent, /First try · 10 right · 2 wrong/);
   assert.equal(card.classList.contains('is-complete'), false);
+  assert.equal(time.hidden, true);
   assert.match(otherCard.textContent, /First try · 0 right · 0 wrong/);
 
+  const finalCheck = '2026-11-28T02:14:00.000Z';
+  let currentTime = finalCheck;
+  page.window.Date = class extends page.window.Date {
+    constructor(...args) { super(...(args.length ? args : [currentTime])); }
+  };
   page.click('#test-01-q3 input[value=B]');
   page.click('#test-01-q3 .mock-check');
   assert.equal(card.classList.contains('is-complete'), true);
   assert.match(card.textContent, /Finished/);
   assert.match(card.textContent, /First try · 10 right · 2 wrong/);
   assert.equal(otherCard.classList.contains('is-complete'), false);
+  assert.equal(time.hidden, false);
+  assert.equal(time.dateTime, finalCheck);
+  assert.equal(time.textContent, 'Nov 27, 2026, 6:14 PM PST');
+  currentTime = '2026-11-28T04:00:00.000Z';
+  page.click('#test-01-q3 input[type=checkbox]');
+  assert.equal(time.dateTime, finalCheck);
 
   const reopened = open(t, page.saved(), 2);
-  assert.equal(reopened.window.document.querySelector('[data-session="1"]').classList.contains('is-complete'), true);
+  const reopenedCard = reopened.window.document.querySelector('[data-session="1"]');
+  assert.equal(reopenedCard.classList.contains('is-complete'), true);
+  assert.equal(reopenedCard.querySelector('time').dateTime, finalCheck);
 });

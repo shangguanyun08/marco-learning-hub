@@ -11,6 +11,7 @@
       runs.push({
         id,
         updatedAt: [record.selectedAt, record.reviewedAt].filter(Boolean).sort().at(-1) || null,
+        completedAt: record.finishedAt,
         answers: { [id]: record.attempts.map(letter => ({ choice: letters.indexOf(letter) })) },
         drafts: {
           selection: { value: record.selected, updatedAt: record.selectedAt },
@@ -51,6 +52,7 @@
         attempts,
         selected: run.drafts.selection?.value || '',
         selectedAt: run.drafts.selection?.updatedAt || null,
+        finishedAt: run.completedAt || null,
         reviewed: marks[0]?.value === true,
         reviewedAt: marks[0]?.updatedAt || null,
       });

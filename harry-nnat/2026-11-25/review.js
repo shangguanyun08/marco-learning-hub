@@ -35,6 +35,11 @@
   const isChoice = value => typeof value === 'string' && /^[A-E]$/.test(value);
   const isFinished = (attempts, answer) => attempts.length === 2 || attempts.at(-1) === answer;
   const timestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
+  const finishFormat = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit', timeZoneName: 'short',
+  });
   const resultLabels = {
     correct: ['✓', 'Correct on the first try'],
     corrected: ['✓', 'Correct on the second try'],
@@ -63,10 +68,14 @@
     if (correct !== -1) attempts.length = correct + 1;
     const last = attempts.at(-1);
     const locked = isFinished(attempts, questions[id].answer);
+    const selectedAt = timestamp(record?.selectedAt);
+    // Earlier records stored the final check time with its selected answer.
+    const legacyFinish = record?.selected === last ? selectedAt : null;
     return {
       attempts,
       selected: locked ? last : isChoice(record?.selected) ? record.selected : last || '',
-      selectedAt: timestamp(record?.selectedAt),
+      selectedAt,
+      finishedAt: locked ? timestamp(record?.finishedAt) || legacyFinish : null,
       reviewed: typeof record?.reviewed === 'boolean' ? record.reviewed : legacyMark,
       reviewedAt: timestamp(record?.reviewedAt),
     };
@@ -110,17 +119,31 @@
       let right = 0;
       let wrong = 0;
       let finished = 0;
+      const finishTimes = [];
       for (const id of ids) {
-        const { attempts } = practice.get(id);
+        const { attempts, finishedAt } = practice.get(id);
         const { answer } = questions[id];
         if (attempts[0] === answer) right++;
         else if (attempts.length) wrong++;
-        if (isFinished(attempts, answer)) finished++;
+        if (isFinished(attempts, answer)) {
+          finished++;
+          if (finishedAt) finishTimes.push(Date.parse(finishedAt));
+        }
       }
       const complete = finished === ids.length;
       link.classList.toggle('is-complete', complete);
       link.querySelector('.mock-session-detail').textContent = complete ? `✓ Finished · ${ids.length} questions` : `${ids.length} questions`;
       link.querySelector('.mock-session-score').textContent = `First try · ${right} right · ${wrong} wrong`;
+      const time = link.querySelector('.mock-session-finished');
+      time.hidden = !complete || finishTimes.length < ids.length;
+      if (!time.hidden) {
+        const finishedAt = new Date(Math.max(...finishTimes));
+        time.dateTime = finishedAt.toISOString();
+        time.textContent = finishFormat.format(finishedAt);
+      } else {
+        time.removeAttribute('datetime');
+        time.textContent = '';
+      }
     }
   }
 
@@ -294,6 +317,7 @@
       const state = practice.get(id);
       state.attempts.push(state.selected);
       state.selectedAt = new Date().toISOString();
+      if (isFinished(state.attempts, question.answer)) state.finishedAt = state.selectedAt;
       if (state.selected === question.answer) {
         state.reviewed = true;
         state.reviewedAt = state.selectedAt;
