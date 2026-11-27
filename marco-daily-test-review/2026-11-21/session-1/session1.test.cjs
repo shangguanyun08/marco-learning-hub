@@ -87,6 +87,40 @@ function submit(w, id, choice) {
   form.dispatchEvent(new w.Event('submit', {bubbles:true, cancelable:true}));
 }
 
+test('Session 12 pairs similar practice with each original miss and keeps the eight-question score', t => {
+  const directory = '../session-12';
+  const initial = open(t, directory);
+  const data = initial.MarcoMA5Practice, engine = initial.MarcoQR4Engine;
+  const misses = ['points', 'table', 'missing'];
+  const saved = engine.empty();
+  for (const id of data.ids) {
+    const correct = data.questions[id].correct;
+    engine.submit(saved, id, misses.includes(id) ? (correct + 1) % 4 : correct);
+    if (misses.includes(id)) engine.submit(saved, id, correct);
+  }
+  const url = 'http://localhost/?demo=1&wrong=1';
+  const key = data.appId + ':demo';
+  const w = open(t, directory, {[key]: JSON.stringify(saved)}, {url});
+  const d = w.document;
+  assert.equal(d.querySelectorAll('.wrong-question-pair').length, 3);
+  assert.deepEqual([...d.querySelectorAll('.wrong-question-pair')].map(pair => [...pair.children].map(article => article.id)),
+    misses.map(id => ['q-' + id, 'q-' + data.followUps[id]]));
+  assert.match(d.querySelector('[data-practice-filter=wrong]').textContent, /Wrong only · 3/);
+  const followUp = data.followUps.points;
+  const correct = data.questions[followUp].correct;
+  submit(w, followUp, (correct + 1) % 4);
+  assert.match(d.querySelector('#q-' + followUp + ' button').textContent, /Check second try/);
+  submit(w, followUp, correct);
+  assert.match(d.querySelector('#q-' + followUp + ' .feedback').textContent, /Corrected on second try/);
+  assert.match(d.querySelector('#practice-tab').textContent, /5\/8 \(63%\) first try/);
+
+  const restored = open(t, directory, {[key]: w.localStorage.getItem(key)}, {url});
+  assert.equal(restored.document.querySelector('#q-' + followUp + ' .feedback').dataset.result, 'correct');
+  restored.document.querySelector('[data-practice-filter=all]').click();
+  assert.equal(restored.document.querySelectorAll('article.question').length, 8);
+  assert.equal(restored.document.querySelectorAll('.wrong-question-pair').length, 0);
+});
+
 test('Session 8 places 11 Practice Test 7 redos before 9 fresh questions and preserves first-try scoring', t => {
   const w = open(t, '../session-8');
   const d = w.document, data = w.MarcoMA5Practice;

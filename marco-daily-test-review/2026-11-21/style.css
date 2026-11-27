@@ -6,6 +6,9 @@
 .intercept-plot { margin: 0 0 18px; }
 .intercept-plot img { display: block; width: min(100%, 420px); height: auto; border: 1px solid #b8c8d1; border-radius: 10px; }
 .slope-plot { margin: 0 0 18px; width: min(100%, 20rem); }
+.wrong-question-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.wrong-question-pair > .question { min-width: 0; margin: 0; }
+@media (max-width: 720px) { .wrong-question-pair { grid-template-columns: 1fr; } }
 .cube-block { margin: 0 0 18px; }
 .cube-block svg { display: block; max-width: 100%; height: auto; }
 #analysis .result-table caption { text-align: left; font-weight: 700; margin-bottom: 8px; }

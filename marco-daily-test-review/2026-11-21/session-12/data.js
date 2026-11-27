@@ -62,6 +62,33 @@
   const session = root.MarcoMA5Practice.practiceSet(12, questions, skills);
   // Legacy answer keys keep saves from cached versions valid without counting these items.
   Object.assign(session.questions, {'slope-1': {correct: 0}, 'slope-2': {correct: 2}});
+  const followUps = {
+    points: {
+      prompt: 'A line crosses the x-axis at 8 and the y-axis at −6. What is its slope?',
+      choices: ['−3/4', '4/3', '3/4', '−4/3'], correct: 2,
+      tip: 'Write the two crossings as ordered pairs. Use the same point order for both differences.',
+      explanation: 'From (0, −6) to (8, 0), y rises by 6 and x increases by 8. The slope is 6/8 = 3/4.'
+    },
+    table: {
+      prompt: 'The table gives three points on a straight line. What is its slope?',
+      table: {headers: ['x', 'y'], rows: [['−5', '9'], ['−1', '3'], ['5', '−6']]},
+      choices: ['−3/2', '3/2', '−2/3', '−6'], correct: 0,
+      tip: 'Track whether y rises or falls as x increases. Divide the signed change in y by the change in x.',
+      explanation: 'From the first row to the second, y changes by −6 and x changes by 4, giving −6/4 = −3/2. The next pair gives −9/6, the same slope.'
+    },
+    missing: {
+      prompt: 'A line with slope −3/4 passes through (5, −2). Starting there, y increases by 6 along the line. What is the new x-coordinate?',
+      choices: ['−8', '13', '−3', '11'], correct: 2,
+      tip: 'Find the change in x by dividing the change in y by the slope. Then start at x = 5 and apply that change.',
+      explanation: 'The change in x is 6 ÷ (−3/4) = −8. The new x-coordinate is 5 + (−8) = −3.'
+    }
+  };
+  // Extra practice uses the same saved record. Only session.ids contributes to the original score.
+  session.followUps = Object.fromEntries(Object.entries(followUps).map(([skill, question]) => {
+    const id = `${skill}-follow-up`;
+    session.questions[id] = {id, skill, ...question};
+    return [skill, id];
+  }));
   session.title = 'Session 12 · Eight types of slope questions';
   session.groupSize = 4;
   const defaultVisual = session.questionVisual;

@@ -31,10 +31,18 @@
    </li>`).join('')}</ul>
   </section>`;
  }
- function question(id,i){
+ function question(id,i,extra=false){
   const q=D.questions[id],a=E.attempts(state,id),all=E.firstPass(state),retry=a.length===1&&!a[0].correct,reveal=E.reveal(state,id),locked=!ready||a.length>0&&!retry,choice=locked?a.at(-1)?.choice:selected.get(id)??a.at(-1)?.choice;
-  const feedback=!a.length?'No answer recorded yet.':a[0].correct?'Correct first try · 1 point.':retry?'Incorrect · Try once more. The answer and trick stay hidden until your second try.':a[1]?.correct?'Corrected on second try · first-try points unchanged.':'Incorrect on second try. The answer and trick are available below.';
-  return`<article class="question" id="q-${id}" data-study-subject="math"><header><h3>Question ${i+1} of ${D.ids.length}</h3>${q.source?'<span class="source">'+esc(q.source)+'</span>':''}${all?'<span class="source">'+esc(D.skills[q.skill])+'</span>':''}</header><p class="prompt">${math(q.prompt)}</p>${D.questionVisual?.(q)||''}${q.table?table(q.table):''}${q.diagram?V.diagram(q.diagram):''}<form data-question="${id}"><fieldset class="choices${q.graphs?' graph-choices':''}"><legend>${a.length&&!retry?'Your recorded answer':'Choose one answer'}</legend>${q.choices.map((c,j)=>`<label class="choice${reveal&&j===q.correct?' correct':''}${a.some(t=>!t.correct&&t.choice===j)?' wrong':''}"><input type="radio" name="${id}" value="${j}" ${choice===j?'checked':''} ${locked||a.some(t=>t.choice===j)?'disabled':''}><span class="letter">${'ABCD'[j]}</span><span class="choice-content">${math(c)}${q.graphs?V.plot(q.graphs[j],id+'-'+j,c+', equal x and y unit scales'):''}</span></label>`).join('')}</fieldset>${!a.length||retry?'<button class="primary" type="submit" '+(!ready?'disabled':'')+'>'+(retry?'Check second try':'Check answer')+'</button>':''}<p class="feedback" role="status" data-result="${a.length?(a.at(-1).correct?'correct':'wrong'):'pending'}">${feedback}</p></form>${reveal?'<details class="answer-reveal"><summary>Show answer, trick & explanation</summary>'+solution(q)+'</details>':''}</article>`;
+  const heading=extra?'Similar practice':`Question ${i+1} of ${D.ids.length}`;
+  const firstCorrect=extra?'Correct first try.':'Correct first try · 1 point.';
+  const secondCorrect=extra?'Corrected on second try.':'Corrected on second try · first-try points unchanged.';
+  const feedback=!a.length?'No answer recorded yet.':a[0].correct?firstCorrect:retry?'Incorrect · Try once more. The answer and trick stay hidden until your second try.':a[1]?.correct?secondCorrect:'Incorrect on second try. The answer and trick are available below.';
+  return`<article class="question" id="q-${id}" data-study-subject="math"><header><h3>${heading}</h3>${q.source?'<span class="source">'+esc(q.source)+'</span>':''}${all?'<span class="source">'+esc(D.skills[q.skill])+'</span>':''}</header><p class="prompt">${math(q.prompt)}</p>${D.questionVisual?.(q)||''}${q.table?table(q.table):''}${q.diagram?V.diagram(q.diagram):''}<form data-question="${id}"><fieldset class="choices${q.graphs?' graph-choices':''}"><legend>${a.length&&!retry?'Your recorded answer':'Choose one answer'}</legend>${q.choices.map((c,j)=>`<label class="choice${reveal&&j===q.correct?' correct':''}${a.some(t=>!t.correct&&t.choice===j)?' wrong':''}"><input type="radio" name="${id}" value="${j}" ${choice===j?'checked':''} ${locked||a.some(t=>t.choice===j)?'disabled':''}><span class="letter">${'ABCD'[j]}</span><span class="choice-content">${math(c)}${q.graphs?V.plot(q.graphs[j],id+'-'+j,c+', equal x and y unit scales'):''}</span></label>`).join('')}</fieldset>${!a.length||retry?'<button class="primary" type="submit" '+(!ready?'disabled':'')+'>'+(retry?'Check second try':'Check answer')+'</button>':''}<p class="feedback" role="status" data-result="${a.length?(a.at(-1).correct?'correct':'wrong'):'pending'}">${feedback}</p></form>${reveal?'<details class="answer-reveal"><summary>Show answer, trick & explanation</summary>'+solution(q)+'</details>':''}</article>`;
+ }
+ function reviewQuestion(id){
+  const index=D.ids.indexOf(id),original=question(id,index),followUp=D.followUps?.[id];
+  if(!followUp)return original;
+  return `<div class="wrong-question-pair">${original}${question(followUp,index,true)}</div>`;
  }
  function render(){
   const s=E.stats(state),all=E.firstPass(state),reportReady=A.ready(state),tab=$('#practice-tab');
@@ -59,7 +67,7 @@
   const navigation=showWrongScores?wrongSkillSummary(skills):`<nav class="jump practice-jump" aria-label="Jump to a practice question">${wrongOnly?wrongJump:jump}</nav>`;
   const wrongQuestions=missedSkills.map(group=>{
    const count=showWrongScores?`${group.ids.length}/${group.stats.total} wrong first try`:`${group.ids.length} ${group.ids.length===1?'question':'questions'}`;
-   return `<section class="wrong-skill-group" aria-labelledby="wrong-skill-${group.key}"><h3 id="wrong-skill-${group.key}">${esc(group.name)} <span>· ${count}</span></h3>${group.ids.map(id=>question(id,D.ids.indexOf(id))).join('')}</section>`;
+   return `<section class="wrong-skill-group" aria-labelledby="wrong-skill-${group.key}"><h3 id="wrong-skill-${group.key}">${esc(group.name)} <span>· ${count}</span></h3>${group.ids.map(reviewQuestion).join('')}</section>`;
   }).join('');
   $('#practice-content').innerHTML=`<div class="scorebar"><strong>${s.answered}/${s.total} first answers recorded</strong><span>${scoreText}</span></div>${filters}${navigation}${D.masteryCheck?'':reportHTML}${wrongOnly?(wrongQuestions||'<p class="no-wrong-questions">No first-try mistakes recorded yet.</p>'):D.ids.map((id,i)=>question(id,i)+(i<D.ids.length-1&&(i+1)%GROUP===0?`<hr class="question-group-divider" aria-label="End of questions ${i-GROUP+2} to ${i+1}">`:'')).join('')}${D.masteryCheck?reportHTML:''}`;
   statusNote();
