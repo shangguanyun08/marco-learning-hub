@@ -5,6 +5,7 @@
 .stacked-expression { font-size: 1.4rem; margin: 0 0 18px; }
 .intercept-plot { margin: 0 0 18px; }
 .intercept-plot img { display: block; width: min(100%, 420px); height: auto; border: 1px solid #b8c8d1; border-radius: 10px; }
+.slope-plot { margin: 0 0 18px; width: min(100%, 20rem); }
 .cube-block { margin: 0 0 18px; }
 .cube-block svg { display: block; max-width: 100%; height: auto; }
 #analysis .result-table caption { text-align: left; font-weight: 700; margin-bottom: 8px; }

@@ -87,16 +87,12 @@
       }
     },
     'nov21-11': {
-      appId: 'marco-math-nov21-session11-v1', session: 'official-middle-nov21-session11-v1', reportAfter: 2,
-      keys: {'slope-1': 1, 'slope-2': 2}
+      appId: 'marco-math-nov21-session11-v1', session: 'official-middle-nov21-session11-v1', reportAfter: 3,
+      keys: {'slope-1': 1, 'slope-2': 2, 'leftward-change': 3}
     },
     'nov21-12': {
-      appId: 'marco-math-nov21-session12-v1', session: 'official-middle-nov21-session12-v1', reportAfter: 2,
-      keys: {'slope-1': 0, 'slope-2': 2}
-    },
-    'nov21-13': {
-      appId: 'marco-math-nov21-session13-v1', session: 'official-middle-nov21-session13-v1', reportAfter: 2,
-      keys: {'slope-1': 1, 'slope-2': 0}
+      appId: 'marco-math-nov21-session12-v1', session: 'official-middle-nov21-session12-v1', reportAfter: 8,
+      keys: {graph: 0, points: 1, table: 2, equation: 3, compare: 0, missing: 2, rate: 3, triangles: 1}
     },
   };
 

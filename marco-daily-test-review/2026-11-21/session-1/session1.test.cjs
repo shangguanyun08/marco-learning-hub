@@ -22,8 +22,8 @@ function open(t, directory, records = {}, options = {}) {
 }
 
 test('November 21 cards use the saved first-try scores on every page, including inactive sessions', async t => {
-  const directories = ['..', '.', ...Array.from({length: 12}, (_, i) => `../session-${i + 2}`)];
-  const cardIds = ['nov21-review', ...Array.from({length: 13}, (_, i) => `nov21-${i + 1}`)];
+  const directories = ['..', '.', ...Array.from({length: 11}, (_, i) => `../session-${i + 2}`)];
+  const cardIds = ['nov21-review', ...Array.from({length: 12}, (_, i) => `nov21-${i + 1}`)];
   const records = new Map();
   for (const [i, directory] of directories.entries()) {
     const w = open(t, directory);
@@ -74,9 +74,9 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.match(card('nov21-8').textContent, /Not started · 0\/20 answered/);
     assert.match(card('nov21-9').textContent, /Not started · 0\/12 answered/);
     assert.match(card('nov21-10').textContent, /Not started · 0\/9 answered/);
-    assert.match(card('nov21-11').textContent, /Not started · 0\/2 answered/);
-    assert.match(card('nov21-12').textContent, /Not started · 0\/2 answered/);
-    assert.match(card('nov21-13').textContent, /Not started · 0\/2 answered/);
+    assert.match(card('nov21-11').textContent, /Not started · 0\/3 answered/);
+    assert.match(card('nov21-12').textContent, /Not started · 0\/8 answered/);
+    assert.equal(card('nov21-13'), null);
     assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
   }
 });
