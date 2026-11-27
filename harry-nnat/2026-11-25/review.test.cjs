@@ -8,8 +8,8 @@ const { JSDOM } = require('jsdom');
 const read = name => readFileSync(join(__dirname, name), 'utf8');
 const originalReviewKey = 'harry-nnat-zozeck-review-2026-11-25';
 const originalBucket = 'zozeck-mock-2026-11-25';
-const reviewKey = `${originalReviewKey}:round-2`;
-const bucket = `${originalBucket}-round-2`;
+const reviewKey = `${originalReviewKey}:round-3`;
+const bucket = `${originalBucket}-round-3`;
 const answerKey = id => `${reviewKey}:question:${id}`;
 
 function open(t, saved = [], selectedTest = 1, fetcher) {
@@ -223,13 +223,17 @@ test('sync retries after reconnecting and preserves conflicting local checks as 
   await until(() => first.card('test-01-q10').querySelector('input[value=D]').checked);
 });
 
-test('the restart begins blank and keeps the original local and online attempts', async t => {
+test('the restart begins blank and keeps earlier local and online attempts', async t => {
   const id = 'test-01-q3';
   const originalKey = `${originalReviewKey}:question:${id}`;
+  const previousKey = `${originalReviewKey}:round-2:question:${id}`;
+  const previousBucket = `${originalBucket}-round-2`;
   const originalAnswer = JSON.stringify({ selected: 'C', attempts: ['C'], reviewed: true });
+  const previousAnswer = JSON.stringify({ selected: 'B', attempts: ['B'], reviewed: false });
   const originalRun = { id, answers: { [id]: [{ choice: 2 }] }, drafts: {} };
-  const service = sharedProgress({ [originalBucket]: [originalRun] });
-  const page = open(t, [[originalKey, originalAnswer]], 1, service.fetch);
+  const previousRun = { id, answers: { [id]: [{ choice: 1 }] }, drafts: {} };
+  const service = sharedProgress({ [originalBucket]: [originalRun], [previousBucket]: [previousRun] });
+  const page = open(t, [[originalKey, originalAnswer], [previousKey, previousAnswer]], 1, service.fetch);
   await until(() => page.text('mock-save-status') === 'Synced online');
   assert.equal(page.text('mock-progress'), '0 of 12 checked · 0 reviewed');
   assert.equal(page.card(id).querySelector('input:checked'), null);
@@ -238,7 +242,9 @@ test('the restart begins blank and keeps the original local and online attempts'
   page.click(`#${id} .mock-check`);
   await until(() => page.text('mock-save-status') === 'Synced online');
   assert.equal(page.window.localStorage.getItem(originalKey), originalAnswer);
+  assert.equal(page.window.localStorage.getItem(previousKey), previousAnswer);
   assert.deepEqual(service.state().articles[originalBucket][0].answers[id], [{ choice: 2 }]);
+  assert.deepEqual(service.state().articles[previousBucket][0].answers[id], [{ choice: 1 }]);
   assert.deepEqual(service.state().articles[bucket][0].answers[id], [{ choice: 0 }]);
 });
 

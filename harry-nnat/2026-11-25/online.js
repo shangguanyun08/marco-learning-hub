@@ -1,5 +1,5 @@
 (() => {
-  const bucket = 'zozeck-mock-2026-11-25-round-2';
+  const bucket = 'zozeck-mock-2026-11-25-round-3';
   const letters = 'ABCDE';
   const asState = runs => ({ version: 1, articles: runs.length ? { [bucket]: runs } : {} });
   const runsOf = state => window.NNATSync.normalize(state).articles[bucket] || [];
