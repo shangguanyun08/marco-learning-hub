@@ -1,9 +1,11 @@
 (() => {
-  const key = 'harry-nnat-zozeck-review-2026-11-25';
+  const reviewKey = 'harry-nnat-zozeck-review-2026-11-25';
+  const questionKey = `${reviewKey}:question:`;
   const questions = window.ZOZECK_MOCK_REVIEW;
   const list = document.getElementById('mock-question-list');
   const template = document.getElementById('mock-question-template');
   const progress = document.getElementById('mock-progress');
+  const saveStatus = document.getElementById('mock-save-status');
   const questionButtons = [...document.querySelectorAll('[data-question]')];
   const sessionLinks = [...document.querySelectorAll('[data-session]')];
   const sessions = new Map([...document.querySelectorAll('[data-test]')].map(section => [
@@ -11,34 +13,71 @@
     { section, ids: [...section.querySelectorAll('[data-question]')].map(button => button.dataset.question) },
   ]));
   const practice = new Map();
-  let marked = new Set();
+  const unsaved = new Set();
+  const enlarged = new Set();
+  const refreshVisible = new Map();
   let activeSession;
-  let saved = true;
+  let storageUnavailable = false;
   const sessionFromUrl = () => new URLSearchParams(location.search).get('test');
+  const isChoice = value => typeof value === 'string' && /^[A-E]$/.test(value);
 
-  try {
-    const stored = JSON.parse(localStorage.getItem(key) || '[]');
-    if (Array.isArray(stored)) marked = new Set(stored.filter(id => Object.hasOwn(questions, id)));
-  } catch {}
-
-  function showProgress() {
-    const ids = sessions.get(activeSession).ids;
-    const count = ids.filter(id => marked.has(id)).length;
-    const description = `${count} of ${ids.length} reviewed`;
-    progress.textContent = saved ? description : `${description} · progress could not be saved`;
-    for (const button of questionButtons) {
-      button.classList.toggle('is-reviewed', marked.has(button.dataset.question));
+  function readStored(key) {
+    let value;
+    try {
+      value = localStorage.getItem(key);
+    } catch {
+      storageUnavailable = true;
+      return null;
+    }
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
     }
   }
 
-  function markQuestion(id, value) {
-    if (value) marked.add(id);
-    else marked.delete(id);
+  function readProgress() {
+    const storedMarks = readStored(reviewKey);
+    const legacyMarks = new Set(Array.isArray(storedMarks) ? storedMarks : []);
+    for (const id of Object.keys(questions)) {
+      if (unsaved.has(id)) continue;
+      const record = readStored(questionKey + id);
+      const attempts = Array.isArray(record?.attempts) ? record.attempts.filter(isChoice).slice(0, 2) : [];
+      const correct = attempts.indexOf(questions[id].answer);
+      if (correct !== -1) attempts.length = correct + 1;
+      const last = attempts.at(-1);
+      const locked = correct !== -1 || attempts.length === 2;
+      practice.set(id, {
+        attempts,
+        selected: locked ? last : isChoice(record?.selected) ? record.selected : last || '',
+        reviewed: typeof record?.reviewed === 'boolean' ? record.reviewed : legacyMarks.has(id),
+      });
+    }
+  }
+
+  function showProgress() {
+    const ids = sessions.get(activeSession).ids;
+    const checked = ids.filter(id => practice.get(id).attempts.length).length;
+    const reviewed = ids.filter(id => practice.get(id).reviewed).length;
+    progress.textContent = `${checked} of ${ids.length} checked · ${reviewed} reviewed`;
+    if (unsaved.size) saveStatus.textContent = 'Some changes could not be saved. Keep this tab open.';
+    else if (storageUnavailable) saveStatus.textContent = 'Saving is unavailable in this browser.';
+    else {
+      const hasWork = [...practice.values()].some(state => state.selected || state.reviewed);
+      saveStatus.textContent = hasWork ? 'Progress saved in this browser' : 'Progress saves in this browser';
+    }
+    for (const button of questionButtons) {
+      button.classList.toggle('is-reviewed', practice.get(button.dataset.question).reviewed);
+    }
+  }
+
+  function saveQuestion(id) {
     try {
-      localStorage.setItem(key, JSON.stringify([...marked]));
-      saved = true;
+      localStorage.setItem(questionKey + id, JSON.stringify(practice.get(id)));
+      unsaved.delete(id);
+      storageUnavailable = false;
     } catch {
-      saved = false;
+      unsaved.add(id);
     }
     showProgress();
   }
@@ -89,21 +128,24 @@
     const feedback = form.querySelector('.mock-feedback');
     const reviewed = article.querySelector('input[type="checkbox"]');
     const enlarge = article.querySelector('.mock-enlarge');
-    if (!practice.has(id)) practice.set(id, { selected: '', attempts: [], enlarged: false });
-    const state = practice.get(id);
-    reviewed.checked = marked.has(id);
-    reviewed.addEventListener('change', () => markQuestion(id, reviewed.checked));
+    reviewed.addEventListener('change', () => {
+      practice.get(id).reviewed = reviewed.checked;
+      saveQuestion(id);
+    });
 
     function updateSize() {
-      article.classList.toggle('is-enlarged', state.enlarged);
-      enlarge.setAttribute('aria-pressed', String(state.enlarged));
+      article.classList.toggle('is-enlarged', enlarged.has(id));
+      enlarge.setAttribute('aria-pressed', String(enlarged.has(id)));
     }
     enlarge.addEventListener('click', () => {
-      state.enlarged = !state.enlarged;
+      if (enlarged.has(id)) enlarged.delete(id);
+      else enlarged.add(id);
       updateSize();
     });
 
     function updateAnswer() {
+      const state = practice.get(id);
+      reviewed.checked = state.reviewed;
       const last = state.attempts.at(-1);
       const correct = last === question.answer;
       const done = correct || state.attempts.length === 2;
@@ -124,17 +166,17 @@
     }
 
     form.addEventListener('change', event => {
-      state.selected = event.target.value;
+      practice.get(id).selected = event.target.value;
+      saveQuestion(id);
       updateAnswer();
     });
     form.addEventListener('submit', event => {
       event.preventDefault();
       if (check.disabled) return;
+      const state = practice.get(id);
       state.attempts.push(state.selected);
-      if (state.selected === question.answer) {
-        reviewed.checked = true;
-        markQuestion(id, true);
-      }
+      if (state.selected === question.answer) state.reviewed = true;
+      saveQuestion(id);
       updateAnswer();
       if (state.attempts.length === 1 && state.selected !== question.answer) {
         choices.querySelector('input:enabled')?.focus();
@@ -143,6 +185,7 @@
 
     updateSize();
     updateAnswer();
+    refreshVisible.set(id, updateAnswer);
     return article;
   }
 
@@ -157,6 +200,7 @@
     }
     for (const button of questionButtons) button.removeAttribute('aria-current');
     list.setAttribute('aria-label', `TEST-0${activeSession} questions`);
+    refreshVisible.clear();
     list.replaceChildren(...sessions.get(activeSession).ids.map(makeQuestion));
     showProgress();
   }
@@ -181,5 +225,12 @@
     });
   }
   addEventListener('popstate', () => showSession(sessionFromUrl()));
+  addEventListener('storage', event => {
+    if (event.key && event.key !== reviewKey && !event.key.startsWith(questionKey)) return;
+    readProgress();
+    for (const refresh of refreshVisible.values()) refresh();
+    showProgress();
+  });
+  readProgress();
   showSession(sessionFromUrl());
 })();
