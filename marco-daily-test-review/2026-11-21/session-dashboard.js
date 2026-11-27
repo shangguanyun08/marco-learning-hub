@@ -87,8 +87,8 @@
       }
     },
     'nov21-11': {
-      appId: 'marco-math-nov21-session11-v1', session: 'official-middle-nov21-session11-v1', reportAfter: 3,
-      keys: {'slope-1': 1, 'slope-2': 2, 'slope-3': 0}
+      appId: 'marco-math-nov21-session11-v1', session: 'official-middle-nov21-session11-v1', reportAfter: 2,
+      keys: {'slope-1': 1, 'slope-2': 2}
     },
   };
 
