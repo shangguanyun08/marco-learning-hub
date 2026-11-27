@@ -2,21 +2,26 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
 const { join } = require('node:path');
+const { setTimeout: delay } = require('node:timers/promises');
 const { JSDOM } = require('jsdom');
 
 const read = name => readFileSync(join(__dirname, name), 'utf8');
 const reviewKey = 'harry-nnat-zozeck-review-2026-11-25';
 const answerKey = id => `${reviewKey}:question:${id}`;
 
-function open(t, saved = [], selectedTest = 1) {
+function open(t, saved = [], selectedTest = 1, fetcher) {
   const dom = new JSDOM(read('index.html'), {
-    url: `https://learning.test/harry-nnat/2026-11-25/?test=${selectedTest}`,
+    url: `https://${fetcher ? 'shangguanyun08.github.io' : 'learning.test'}/harry-nnat/2026-11-25/?test=${selectedTest}`,
     runScripts: 'outside-only',
   });
   t.after(() => dom.window.close());
   const { document, localStorage } = dom.window;
   for (const [key, value] of saved) localStorage.setItem(key, value);
-  for (const script of ['questions.js', 'review.js']) dom.window.eval(read(script));
+  if (fetcher) {
+    dom.window.fetch = fetcher;
+    dom.window.AbortSignal = AbortSignal;
+  }
+  for (const script of ['questions.js', '../sync.js', 'online.js', 'review.js']) dom.window.eval(read(script));
   return {
     window: dom.window,
     saved: () => Object.entries(localStorage),
@@ -24,6 +29,36 @@ function open(t, saved = [], selectedTest = 1) {
     card: id => document.getElementById(id),
     click: selector => document.querySelector(selector).click(),
   };
+}
+
+function sharedProgress(articles = {}) {
+  let record = { version: 1, state: { version: 1, articles } };
+  let available = true;
+  return {
+    state: () => record.state,
+    available: value => { available = value; },
+    fetch: async (_url, options) => {
+      if (!available) throw new Error('Offline');
+      let accepted = false;
+      if (options.method === 'POST') {
+        const body = JSON.parse(options.body);
+        assert.equal(body.appId, 'harry-nnat-2026-11-07-v1');
+        if (body.baseVersion === record.version) {
+          record = { version: record.version + 1, state: body.state };
+          accepted = true;
+        }
+      }
+      return { ok: true, json: async () => structuredClone({ accepted, progress: record }) };
+    },
+  };
+}
+
+async function until(assertion) {
+  for (let index = 0; index < 15; index++) {
+    if (assertion()) return;
+    await delay(40);
+  }
+  assert.ok(assertion());
 }
 
 test('draft, first miss and correct retry all return after reopening', t => {
@@ -136,4 +171,50 @@ test('the dashboard distinguishes correct answers, retryable misses, and two mis
   reopened.click('[data-filter="wrong-twice"]');
   assert.equal(reopened.text('mock-empty'), 'No questions missed twice in this test.');
   assert.equal(reopened.window.document.querySelectorAll('.mock-question:not([hidden])').length, 0);
+});
+
+test('online sync uploads existing local work and restores the retry on another device', async t => {
+  const old = { id: 'an-existing-drill', answers: {}, drafts: {}, position: 0, completedAt: null, startedAt: null };
+  const service = sharedProgress({ pattern: [old] });
+  const first = open(t, [
+    [answerKey('test-01-q3'), JSON.stringify({ selected: 'A', attempts: ['A'], reviewed: false })],
+    [reviewKey, '["test-01-q10"]'],
+  ], 1, service.fetch);
+  await until(() => first.text('mock-save-status') === 'Synced online');
+  assert.deepEqual(service.state().articles.pattern, [old]);
+
+  const ipad = open(t, [], 1, service.fetch);
+  await until(() => ipad.text('mock-save-status') === 'Synced online');
+  assert.equal(ipad.card('test-01-q3').querySelector('.mock-feedback').textContent, 'Try once more.');
+  assert.equal(ipad.card('test-01-q10').querySelector('input[type=checkbox]').checked, true);
+  ipad.click('#test-01-q3 input[value=C]');
+  ipad.click('#test-01-q3 .mock-check');
+  await until(() => ipad.text('mock-save-status') === 'Synced online');
+  first.window.dispatchEvent(new first.window.Event('focus'));
+  await until(() => first.card('test-01-q3').querySelector('.mock-feedback').textContent === 'Correct!');
+  assert.deepEqual(JSON.parse(first.window.localStorage.getItem(answerKey('test-01-q3'))).attempts, ['A', 'C']);
+  assert.deepEqual(service.state().articles.pattern, [old]);
+});
+
+test('sync retries after reconnecting and preserves conflicting local checks as separate histories', async t => {
+  const service = sharedProgress();
+  const key = answerKey('test-01-q3');
+  const otherKey = answerKey('test-01-q10');
+  const snapshot = (choice, attempts = [choice]) => JSON.stringify({ selected: choice, attempts, reviewed: false });
+  service.available(false);
+  const first = open(t, [[key, snapshot('A')]], 1, service.fetch);
+  const second = open(t, [[key, snapshot('B')], [otherKey, snapshot('D', [])]], 1, service.fetch);
+  await until(() => /Not synced/.test(first.text('mock-save-status')));
+  assert.equal(first.card('test-01-q3').querySelector('.mock-feedback').textContent, 'Try once more.');
+  assert.equal(second.card('test-01-q10').querySelector('input[value=D]').checked, true);
+
+  service.available(true);
+  first.window.dispatchEvent(new first.window.Event('online'));
+  second.window.dispatchEvent(new second.window.Event('online'));
+  await until(() => [first, second].every(page => page.text('mock-save-status') === 'Synced online'));
+  const runs = service.state().articles['zozeck-mock-2026-11-25'];
+  const checks = runs.filter(run => (run.syncRoot || run.id) === 'test-01-q3');
+  assert.deepEqual(checks.map(run => run.answers['test-01-q3'].map(answer => answer.choice)), [[0], [1]]);
+  first.window.dispatchEvent(new first.window.Event('focus'));
+  await until(() => first.card('test-01-q10').querySelector('input[value=D]').checked);
 });

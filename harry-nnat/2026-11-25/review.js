@@ -1,6 +1,7 @@
 (() => {
   const reviewKey = 'harry-nnat-zozeck-review-2026-11-25';
   const questionKey = `${reviewKey}:question:`;
+  const archiveKey = `${reviewKey}:online`;
   const questions = window.ZOZECK_MOCK_REVIEW;
   const list = document.getElementById('mock-question-list');
   const template = document.getElementById('mock-question-template');
@@ -28,8 +29,11 @@
   let activeSession;
   let activeFilter = 'all';
   let storageUnavailable = false;
+  let sync;
+  let syncStatus = '';
   const sessionFromUrl = () => new URLSearchParams(location.search).get('test');
   const isChoice = value => typeof value === 'string' && /^[A-E]$/.test(value);
+  const timestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value)) ? value : null;
   const resultLabels = {
     correct: ['✓', 'Correct on the first try'],
     corrected: ['✓', 'Correct on the second try'],
@@ -52,23 +56,41 @@
     }
   }
 
+  function normalizeRecord(id, record, legacyMark = false) {
+    const attempts = Array.isArray(record?.attempts) ? record.attempts.filter(isChoice).slice(0, 2) : [];
+    const correct = attempts.indexOf(questions[id].answer);
+    if (correct !== -1) attempts.length = correct + 1;
+    const last = attempts.at(-1);
+    const locked = correct !== -1 || attempts.length === 2;
+    return {
+      attempts,
+      selected: locked ? last : isChoice(record?.selected) ? record.selected : last || '',
+      selectedAt: timestamp(record?.selectedAt),
+      reviewed: typeof record?.reviewed === 'boolean' ? record.reviewed : legacyMark,
+      reviewedAt: timestamp(record?.reviewedAt),
+    };
+  }
+
   function readProgress() {
     const storedMarks = readStored(reviewKey);
     const legacyMarks = new Set(Array.isArray(storedMarks) ? storedMarks : []);
     for (const id of Object.keys(questions)) {
       if (unsaved.has(id)) continue;
-      const record = readStored(questionKey + id);
-      const attempts = Array.isArray(record?.attempts) ? record.attempts.filter(isChoice).slice(0, 2) : [];
-      const correct = attempts.indexOf(questions[id].answer);
-      if (correct !== -1) attempts.length = correct + 1;
-      const last = attempts.at(-1);
-      const locked = correct !== -1 || attempts.length === 2;
-      practice.set(id, {
-        attempts,
-        selected: locked ? last : isChoice(record?.selected) ? record.selected : last || '',
-        reviewed: typeof record?.reviewed === 'boolean' ? record.reviewed : legacyMarks.has(id),
-      });
+      practice.set(id, normalizeRecord(id, readStored(questionKey + id), legacyMarks.has(id)));
     }
+  }
+
+  function showSaveStatus() {
+    let message;
+    if (syncStatus === 'Synced online') message = syncStatus;
+    else if (unsaved.size) message = 'Some changes could not be saved. Keep this tab open.';
+    else if (syncStatus) message = syncStatus;
+    else if (storageUnavailable) message = 'Saving is unavailable in this browser.';
+    else {
+      const hasWork = [...practice.values()].some(state => state.selected || state.reviewed);
+      message = hasWork ? 'Progress saved in this browser' : 'Progress saves in this browser';
+    }
+    if (saveStatus.textContent !== message) saveStatus.textContent = message;
   }
 
   function showProgress() {
@@ -76,12 +98,7 @@
     const checked = ids.filter(id => practice.get(id).attempts.length).length;
     const reviewed = ids.filter(id => practice.get(id).reviewed).length;
     progress.textContent = `${checked} of ${ids.length} checked · ${reviewed} reviewed`;
-    if (unsaved.size) saveStatus.textContent = 'Some changes could not be saved. Keep this tab open.';
-    else if (storageUnavailable) saveStatus.textContent = 'Saving is unavailable in this browser.';
-    else {
-      const hasWork = [...practice.values()].some(state => state.selected || state.reviewed);
-      saveStatus.textContent = hasWork ? 'Progress saved in this browser' : 'Progress saves in this browser';
-    }
+    showSaveStatus();
     showDashboard();
   }
 
@@ -126,7 +143,7 @@
     }
   }
 
-  function saveQuestion(id) {
+  function persistQuestion(id) {
     try {
       localStorage.setItem(questionKey + id, JSON.stringify(practice.get(id)));
       unsaved.delete(id);
@@ -134,7 +151,27 @@
     } catch {
       unsaved.add(id);
     }
+  }
+
+  function saveQuestion(id, immediate = false) {
+    persistQuestion(id);
+    syncStatus = '';
     showProgress();
+    if (immediate) sync?.sync();
+    else sync?.queue();
+  }
+
+  function restoreProgress(records) {
+    let changed = false;
+    for (const [id, record] of records) {
+      const next = normalizeRecord(id, record);
+      if (JSON.stringify(practice.get(id)) === JSON.stringify(next)) continue;
+      practice.set(id, next);
+      persistQuestion(id);
+      refreshVisible.get(id)?.();
+      changed = true;
+    }
+    if (changed) showProgress();
   }
 
   function picture({ src, width, height }, alt = '') {
@@ -184,7 +221,9 @@
     const reviewed = article.querySelector('input[type="checkbox"]');
     const enlarge = article.querySelector('.mock-enlarge');
     reviewed.addEventListener('change', () => {
-      practice.get(id).reviewed = reviewed.checked;
+      const state = practice.get(id);
+      state.reviewed = reviewed.checked;
+      state.reviewedAt = new Date().toISOString();
       saveQuestion(id);
     });
 
@@ -221,7 +260,9 @@
     }
 
     form.addEventListener('change', event => {
-      practice.get(id).selected = event.target.value;
+      const state = practice.get(id);
+      state.selected = event.target.value;
+      state.selectedAt = new Date().toISOString();
       saveQuestion(id);
       updateAnswer();
     });
@@ -230,8 +271,12 @@
       if (check.disabled) return;
       const state = practice.get(id);
       state.attempts.push(state.selected);
-      if (state.selected === question.answer) state.reviewed = true;
-      saveQuestion(id);
+      state.selectedAt = new Date().toISOString();
+      if (state.selected === question.answer) {
+        state.reviewed = true;
+        state.reviewedAt = state.selectedAt;
+      }
+      saveQuestion(id, true);
       updateAnswer();
       if (state.attempts.length === 1 && state.selected !== question.answer) {
         choices.querySelector('input:enabled')?.focus();
@@ -295,4 +340,37 @@
   });
   readProgress();
   showSession(sessionFromUrl());
+  if (location.hostname === 'shangguanyun08.github.io' && window.NNATMockOnline && typeof fetch === 'function') {
+    const deviceKey = `${reviewKey}:device`;
+    let deviceId = crypto.randomUUID();
+    try {
+      deviceId = localStorage.getItem(deviceKey) || deviceId;
+      localStorage.setItem(deviceKey, deviceId);
+    } catch {}
+    sync = window.NNATMockOnline.create({
+      questions,
+      records: () => {
+        readProgress();
+        return practice;
+      },
+      restore: restoreProgress,
+      readArchive: () => readStored(archiveKey),
+      writeArchive: value => {
+        try { localStorage.setItem(archiveKey, JSON.stringify(value)); } catch {}
+      },
+      onStatus: message => {
+        syncStatus = message;
+        showSaveStatus();
+      },
+      deviceId,
+    });
+    for (const event of ['online', 'focus', 'pageshow']) addEventListener(event, () => sync.sync());
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) sync.sync();
+    });
+    setInterval(() => {
+      if (!document.hidden) sync.sync();
+    }, 30000);
+    sync.sync();
+  }
 })();
