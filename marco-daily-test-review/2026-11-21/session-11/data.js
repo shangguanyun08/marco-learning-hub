@@ -15,14 +15,6 @@
       tip: 'After finding both slopes, use a common denominator to compare the signed fractions.',
       explanation: 'Column A is (1 − 6) ÷ (2 − (−2)) = −5/4, which equals −10/8. In Column B, 8y = −7x + 24, so the slope is −7/8. Since −7/8 > −10/8, Column B is greater.'
     },
-    'slope-2': {
-      id: 'slope-2', skill: 'slope', focus: 'Recognize equal slopes when both signs cancel',
-      prompt: 'Compare the signed slopes of the two lines.',
-      comparison: ['The line through (5, 7) and (2, 3)', 'The line 12x − 9y = 27'],
-      choices, correct: 2,
-      tip: 'Keep the same point order in both differences. In the equation, divide by −9 after isolating the y term.',
-      explanation: 'Column A is (3 − 7) ÷ (2 − 5) = (−4) ÷ (−3) = 4/3. Column B gives −9y = −12x + 27, so its slope is (−12) ÷ (−9) = 4/3. The slopes are equal.'
-    },
     'leftward-change': {
       id: 'leftward-change', skill: 'slope', focus: 'Find the new y-coordinate when moving left',
       prompt: 'The line shown has slope −3/2. Start at (2, 0) and move 4 units left along the line. What is your new y-coordinate?',
@@ -34,8 +26,8 @@
   };
 
   const session = root.MarcoMA5Practice.practiceSet(11, questions, skills);
-  // Cached three-question pages may still have a saved attempt for this retired question.
-  session.questions['slope-3'] = {correct: 0};
+  // Keep saves from earlier versions valid without counting the retired questions.
+  Object.assign(session.questions, {'slope-2': {correct: 2}, 'slope-3': {correct: 0}});
   session.title = 'Session 11 · Signed slope practice';
   session.groupSize = session.ids.length;
   const defaultVisual = session.questionVisual;

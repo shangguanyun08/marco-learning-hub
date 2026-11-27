@@ -74,7 +74,7 @@ test('November 21 cards use the saved first-try scores on every page, including 
     assert.match(card('nov21-8').textContent, /Not started · 0\/20 answered/);
     assert.match(card('nov21-9').textContent, /Not started · 0\/12 answered/);
     assert.match(card('nov21-10').textContent, /Not started · 0\/9 answered/);
-    assert.match(card('nov21-11').textContent, /Not started · 0\/3 answered/);
+    assert.match(card('nov21-11').textContent, /Not started · 0\/2 answered/);
     assert.match(card('nov21-12').textContent, /Not started · 0\/8 answered/);
     assert.equal(card('nov21-13'), null);
     assert.equal(w.document.querySelectorAll('nav.view-tabs a[aria-current=page]').length, 1);
