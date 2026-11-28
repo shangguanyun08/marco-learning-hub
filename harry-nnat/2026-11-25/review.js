@@ -265,6 +265,15 @@
     const feedback = form.querySelector('.mock-feedback');
     const reviewed = article.querySelector('input[type="checkbox"]');
     const enlarge = article.querySelector('.mock-enlarge');
+    const explanation = article.querySelector('.mock-explanation');
+    const explanationTitle = explanation.querySelector('summary');
+    const steps = window.ZOZECK_MOCK_EXPLANATIONS?.[id] || [];
+    explanation.querySelector('.mock-explanation-answer').textContent = `Answer ${question.answer}`;
+    explanation.querySelector('ol').append(...steps.map(step => {
+      const item = document.createElement('li');
+      item.textContent = step;
+      return item;
+    }));
     reviewed.addEventListener('change', () => {
       const state = practice.get(id);
       state.reviewed = reviewed.checked;
@@ -288,6 +297,10 @@
       const last = state.attempts.at(-1);
       const correct = last === question.answer;
       const done = isFinished(state.attempts, question.answer);
+      const missedFirst = state.attempts.length > 0 && state.attempts[0] !== question.answer;
+      explanation.hidden = !missedFirst || !steps.length;
+      if (explanation.hidden) explanation.open = false;
+      explanationTitle.textContent = done ? 'Show explanation' : 'Show explanation (reveals answer)';
       for (const input of form.elements.choice) {
         input.checked = input.value === state.selected;
         const missed = state.attempts.includes(input.value) && input.value !== question.answer;

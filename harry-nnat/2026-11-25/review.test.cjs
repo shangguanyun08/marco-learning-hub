@@ -24,7 +24,7 @@ function open(t, saved = [], selectedTest = 1, fetcher) {
     dom.window.fetch = fetcher;
     dom.window.AbortSignal = AbortSignal;
   }
-  for (const script of ['questions.js', '../sync.js', 'online.js', 'review.js']) dom.window.eval(read(script));
+  for (const script of ['questions.js', '../sync.js', 'online.js', 'explanations.js', 'review.js']) dom.window.eval(read(script));
   return {
     window: dom.window,
     saved: () => Object.entries(localStorage),
@@ -292,4 +292,41 @@ test('the last retry stamps the green test card without changing the first-try s
   const reopenedCard = reopened.window.document.querySelector('[data-session="1"]');
   assert.equal(reopenedCard.classList.contains('is-complete'), true);
   assert.equal(reopenedCard.querySelector('time').dateTime, finalCheck);
+});
+
+test('explanations are available for every question and appear only after a first miss', t => {
+  const page = open(t);
+  const { document, ZOZECK_MOCK_REVIEW: questions, ZOZECK_MOCK_EXPLANATIONS: explanations } = page.window;
+  assert.deepEqual(Object.keys(explanations).sort(), Object.keys(questions).sort());
+  for (const steps of Object.values(explanations)) {
+    assert.ok(steps.length >= 2 && steps.every(step => typeof step === 'string' && step.trim()));
+  }
+  const details = id => page.card(id).querySelector('.mock-explanation');
+  const attempt = (id, choice) => {
+    page.click(`#${id} input[value="${choice}"]`);
+    page.click(`#${id} .mock-check`);
+  };
+  const first = 'test-01-q3';
+  const second = 'test-01-q10';
+  assert.equal(details(first).hidden, true);
+  attempt(first, 'A');
+  assert.equal(details(first).hidden, false);
+  assert.equal(details(first).open, false);
+  assert.match(details(first).querySelector('summary').textContent, /reveals answer/);
+  assert.equal(details(first).querySelector('.mock-explanation-answer').textContent, 'Answer C');
+  assert.match(details(first).querySelector('ol').textContent, /fold line/);
+  attempt(first, 'C');
+  attempt(second, 'A');
+  attempt(second, 'B');
+  assert.equal(details(first).hidden, false);
+  assert.equal(details(second).hidden, false);
+  assert.equal(details(first).querySelector('summary').textContent, 'Show explanation');
+  attempt('test-01-q17', 'D');
+  assert.equal(details('test-01-q17').hidden, true);
+  page.click('[data-filter="wrong-twice"]');
+  assert.equal(page.card(first).hidden, true);
+  assert.equal(page.card(second).hidden, false);
+  const reopened = open(t, page.saved());
+  assert.equal(reopened.card(first).querySelector('.mock-explanation').hidden, false);
+  assert.equal(document.querySelectorAll('.mock-explanation:not([hidden])').length, 2);
 });
